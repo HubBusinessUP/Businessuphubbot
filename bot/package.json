@@ -1,0 +1,18 @@
+{
+  "name": "businessup-bot",
+  "version": "1.0.0",
+  "description": "Business UP Telegram Bot - Lead qualification and nurturing",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "grammy": "^1.24.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
