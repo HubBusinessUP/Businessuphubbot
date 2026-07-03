@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Sondaggio - Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --blue-dim: rgba(76, 110, 245, 0.16);
+    --flame-1: #ff8a3d;
+    --flame-2: #ff4d6d;
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh;
+    background: var(--ink);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 22px 18px 40px; }
+
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .top-ico {
+    width: 40px; height: 40px; border-radius: 13px;
+    background: linear-gradient(150deg, var(--flame-1), var(--flame-2));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .top h1 { font-size: 20px; font-weight: 800; }
+  .top p { font-size: 13px; color: var(--text-dim); margin-top: 1px; }
+
+  .progress { display: flex; gap: 5px; margin-bottom: 24px; }
+  .progress span { flex: 1; height: 5px; border-radius: 3px; background: var(--panel); }
+  .progress span.on { background: var(--blue); }
+
+  .q label { display: block; font-size: 19px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.01em; }
+  .opt {
+    display: block; width: 100%; text-align: left;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 15px 16px; border-radius: 14px;
+    font-size: 15px; font-weight: 600; margin-bottom: 10px; cursor: pointer;
+    font-family: inherit;
+  }
+  .opt:active, .opt.selected { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
+  input[type=text] {
+    width: 100%; background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 15px 16px; border-radius: 14px; font-size: 15px;
+    margin-bottom: 14px; font-family: inherit;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--blue); }
+  .btn {
+    width: 100%; padding: 15px; border: none; border-radius: 14px;
+    font-weight: 700; font-size: 15px; cursor: pointer;
+    background: var(--blue); color: #fff;
+  }
+  .btn-skip { background: transparent; color: var(--text-dim); border: 1px solid var(--border); margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <div class="top-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 11h6M9 15h4"/></svg></div>
+      <div>
+        <h1>Il tuo profilo</h1>
+        <p id="progText">Domanda 1 di 7</p>
+      </div>
+    </div>
+    <div class="progress" id="bar"></div>
+    <form id="form"></form>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    const initData = tg?.initData || "";
+
+    const SURVEY = [
+      { key: "nome", type: "text", q: "Come ti chiami?" },
+      { key: "livello_trading", type: "choice", q: "Il tuo livello di trading?", opts: ["Principiante", "Intermedio", "Avanzato"] },
+      { key: "esperienza_broker", type: "choice", q: "Hai già operato con broker reali?", opts: ["No mai", "Sì da meno di 6 mesi", "Sì da più di 6 mesi"] },
+      { key: "capitale", type: "choice", q: "Quanto capitale dedicheresti?", opts: ["Meno di 500 euro", "500-2.000 euro", "2.000-10.000 euro", "10.000+ euro"] },
+      { key: "prodotto_preferito", type: "choice", q: "Quale metodo ti interessa?", opts: ["Broker vs Broker", "Prop vs Broker", "Bonus ADM", "Voglio capire prima"] },
+      { key: "willingness_to_pay", type: "choice", q: "Disposto a pagare per un metodo testato?", opts: ["Solo se gratis", "Una tantum 50-200", "Una tantum 200-500", "Abbonamento", "Profit share"] },
+      { key: "note_libere", type: "text", optional: true, q: "Domande o dubbi? (facoltativo)" },
+    ];
+
+    let step = 0;
+    const data = {};
+    const form = document.getElementById("form");
+
+    function renderBar() {
+      const bar = document.getElementById("bar");
+      bar.innerHTML = "";
+      SURVEY.forEach((_, i) => {
+        const s = document.createElement("span");
+        if (i < step) s.className = "on";
+        bar.appendChild(s);
+      });
+    }
+
+    function render() {
+      const q = SURVEY[step];
+      renderBar();
+      document.getElementById("progText").textContent = `Domanda ${step + 1} di ${SURVEY.length}`;
+
+      form.innerHTML = "";
+      const wrap = document.createElement("div");
+      wrap.className = "q";
+      const label = document.createElement("label");
+      label.textContent = q.q;
+      wrap.appendChild(label);
+
+      if (q.type === "choice") {
+        q.opts.forEach((opt) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "opt";
+          btn.textContent = opt;
+          btn.onclick = () => { data[q.key] = opt; next(); };
+          wrap.appendChild(btn);
+        });
+      } else {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Scrivi qui...";
+        wrap.appendChild(input);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn";
+        btn.textContent = "Continua";
+        btn.onclick = () => { data[q.key] = input.value.trim(); next(); };
+        wrap.appendChild(btn);
+        if (q.optional) {
+          const skip = document.createElement("button");
+          skip.type = "button";
+          skip.className = "btn btn-skip";
+          skip.textContent = "Salta";
+          skip.onclick = () => { data[q.key] = ""; next(); };
+          wrap.appendChild(skip);
+        }
+      }
+      form.appendChild(wrap);
+    }
+
+    async function next() {
+      step++;
+      if (step >= SURVEY.length) { await submit(); return; }
+      render();
+    }
+
+    async function submit() {
+      document.getElementById("progText").textContent = "Invio in corso...";
+      try {
+        const res = await fetch(`${API_URL}/sondaggio`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+          body: JSON.stringify(data),
+        });
+        await res.json();
+        window.location.replace("dashboard.html");
+      } catch (e) {
+        document.getElementById("progText").textContent = "Errore, riprova.";
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

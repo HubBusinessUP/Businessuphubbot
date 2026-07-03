@@ -1,146 +1,370 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>La mia Dashboard - Business UP</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root { --bg: var(--tg-theme-bg-color,#0a0a0a); --card: var(--tg-theme-secondary-bg-color,#1a1a1a);
-      --text: var(--tg-theme-text-color,#fff); --muted: var(--tg-theme-hint-color,#8a8a8a); --accent:#0d9e88; }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); padding:18px 14px 36px; line-height:1.5; }
-    h1 { font-size:20px; font-weight:700; color:var(--accent); margin-bottom:2px; }
-    .sub { font-size:13px; color:var(--muted); margin-bottom:16px; }
-    .card { background:var(--card); border-radius:14px; padding:16px; margin-bottom:12px; }
-    .row { display:flex; justify-content:space-between; padding:6px 0; font-size:14px; }
-    .row span { color:var(--muted); }
-    .badge { display:inline-block; background:rgba(13,158,136,.18); color:var(--accent); font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; }
-    .sect { font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:18px 0 8px; }
-    .item { display:flex; justify-content:space-between; align-items:center; background:var(--card); border-radius:12px; padding:14px 16px; margin-bottom:8px; cursor:pointer; }
-    .item b { font-size:15px; }
-    .item .ch { color:var(--muted); }
-    .hidden { display:none; }
-    .ptext { font-size:13px; color:var(--muted); white-space:pre-line; }
-    .btn { width:100%; padding:13px; border:none; border-radius:12px; font-weight:600; font-size:14px; cursor:pointer; margin-top:10px; }
-    .btn-accent { background:var(--accent); color:#042; }
-    .btn-danger { background:#3a1a1a; color:#ff6b6b; }
-    .btn-ghost { background:var(--card); color:var(--text); }
-    .err { text-align:center; color:var(--muted); padding:40px 20px; font-size:14px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --blue-dim: rgba(76, 110, 245, 0.16);
+    --flame-1: #ff8a3d;
+    --flame-2: #ff4d6d;
+    --grape-1: #8b5cf6;
+    --grape-2: #d946ef;
+    --lime: #34d399;
+    --lime-dim: rgba(52, 211, 153, 0.16);
+    --amber: #fbbf24;
+    --coral: #f2554d;
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh;
+    background: var(--ink);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+    padding-bottom: 90px;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px; }
+
+  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .badge {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 100px; padding: 7px 12px 7px 7px; font-size: 14px; font-weight: 700;
+  }
+  .badge .dot { width: 23px; height: 23px; border-radius: 50%; background: var(--amber); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .badge .dot svg { width: 12px; height: 12px; }
+  .badge.stat { flex: 1; justify-content: center; }
+  .avatar-pill {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(150deg, var(--grape-1), var(--grape-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 800; flex-shrink: 0;
+  }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    background: linear-gradient(135deg, var(--flame-1) 0%, var(--flame-2) 100%);
+    border-radius: 22px; padding: 20px; overflow: hidden; margin-bottom: 14px;
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -30px; top: -30px;
+    width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.14);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
+  .hero-ico { width: 42px; height: 42px; border-radius: 13px; background: rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; }
+  .hero-count { font-size: 13px; font-weight: 800; background: rgba(0,0,0,0.22); color: #fff; padding: 5px 12px; border-radius: 100px; }
+  .hero h2 { font-size: 23px; font-weight: 800; color: #fff; margin-top: 14px; letter-spacing: -0.01em; }
+  .hero p { font-size: 14.5px; color: rgba(255,255,255,0.85); margin-top: 4px; }
+  .hero-progress { display: flex; gap: 5px; margin-top: 14px; }
+  .hero-progress span { flex: 1; height: 5px; border-radius: 3px; background: rgba(0,0,0,0.22); }
+  .hero-progress span.on { background: #fff; }
+
+  /* Tabs */
+  .tabs { display: flex; background: var(--panel); border: 1px solid var(--border); border-radius: 100px; padding: 4px; margin-bottom: 16px; }
+  .tab { flex: 1; text-align: center; padding: 11px 0; border-radius: 100px; font-size: 13.5px; font-weight: 700; color: var(--text-dim); cursor: pointer; border: none; background: none; font-family: inherit; }
+  .tab.active { background: var(--blue); color: #fff; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fade 0.2s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Tiles */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .tile { border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 22px; color: #fff; }
+  .tile.grape { background: linear-gradient(150deg, var(--grape-1), var(--grape-2)); }
+  .tile.dark { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+  .t-ico { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+  .tile.dark .t-ico { background: var(--lime-dim); color: var(--lime); }
+  .t-label { font-size: 14px; font-weight: 700; }
+  .t-value { font-size: 24px; font-weight: 800; }
+  .tile.dark .t-value { color: var(--lime); }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  h2.section-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
+
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 2px 10px; }
+  .section-head h3 { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; }
+
+  .rows { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; }
+  .r-avatar { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; }
+  .r-body { flex: 1; min-width: 0; }
+  .r-name { font-size: 14.5px; font-weight: 700; }
+  .r-meta { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
+  .r-value { font-size: 15px; font-weight: 800; flex-shrink: 0; }
+
+  .link-box { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+  .link-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 11px; font-size: 12px; margin-bottom: 10px; font-family: monospace; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 13px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--blue); color: #fff; }
+
+  .service-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+  .service-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+  .service-title { font-size: 15px; font-weight: 700; }
+  .stato-badge { font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
+  .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
+  .service-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4; }
+  .service-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+  .cat-title { font-size: 12.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin: 16px 0 10px; }
+  .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: rgba(11,13,19,0.92); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border); padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: none; font-family: inherit; }
+  .nav-ico { width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+  .nav-item.on .nav-ico { background: var(--blue-dim); color: var(--blue); }
+  .nav-item span { font-size: 10.5px; font-weight: 700; color: var(--text-dim); }
+  .nav-item.on span { color: var(--blue); }
+</style>
 </head>
 <body>
-  <div id="app"><div class="err">Caricamento...</div></div>
+  <div class="container">
+    <div class="topbar">
+      <div class="badge">
+        <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#0b0d13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
+        <span id="stageLabel">-</span>
+      </div>
+      <div class="badge stat" id="guadagniBadge">
+        <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#0b0d13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <span id="guadagniText">€0 stimati</span>
+      </div>
+      <div class="avatar-pill" id="avatarInitials">--</div>
+    </div>
 
+    <div class="hero" id="heroCard">
+      <div class="hero-top">
+        <div class="hero-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7C10 4 6 3 5 5s1 2 3 2h4ZM12 7c2-3 6-4 7-2s-1 2-3 2h-4Z"/></svg></div>
+        <div class="hero-count" id="heroCount">0 / 3</div>
+      </div>
+      <h2 id="heroTitle">Sblocca il tuo link</h2>
+      <p id="heroDesc">Invita 3 persone per iniziare a guadagnare</p>
+      <div class="hero-progress" id="heroProgress"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="profilo">Profilo</button>
+      <button class="tab" data-tab="business">Servizi</button>
+      <button class="tab" data-tab="rete">Rete</button>
+    </div>
+
+    <!-- PROFILO -->
+    <div class="panel active" id="panel-profilo">
+      <div class="tiles">
+        <div class="tile grape">
+          <div class="t-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.6"/><circle cx="18" cy="7" r="2.6"/><circle cx="12" cy="17" r="2.6"/><path d="M7.6 8.8 10.6 15M16.4 8.8 13.4 15"/></svg></div>
+          <div>
+            <div class="t-label">La tua rete</div>
+            <div class="t-value" id="tileInvitati">0</div>
+          </div>
+        </div>
+        <div class="tile dark">
+          <div class="t-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+          <div>
+            <div class="t-label">Attivati</div>
+            <div class="t-value" id="tileAttivati">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">Il tuo profilo</h2>
+        <div id="profiloDettagli" class="rows"></div>
+      </div>
+    </div>
+
+    <!-- BUSINESS LIST -->
+    <div class="panel" id="panel-business">
+      <div id="businessList"><p class="empty">Caricamento...</p></div>
+    </div>
+
+    <!-- AFFILIAZIONE -->
+    <div class="panel" id="panel-rete">
+      <div class="link-box">
+        <input type="text" class="link-input" id="refLink" readonly>
+        <button class="btn btn-primary" onclick="copyLink()">Copia link</button>
+      </div>
+      <div class="section-head"><h3>Membri della rete</h3></div>
+      <div class="rows" id="reteRows"><p class="empty">Nessun invito ancora.</p></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item on" onclick="switchTab('profilo')">
+      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+      <span>Profilo</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('business')">
+      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+      <span>Servizi</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('rete')">
+      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M7.6 8.6 10.6 15.2M16.4 8.6 13.4 15.2"/></svg></div>
+      <span>Rete</span>
+    </button>
+    <button class="nav-item" onclick="window.location.href='sondaggio.html'">
+      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 11h6M9 15h4"/></svg></div>
+      <span>Sondaggio</span>
+    </button>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    const TG = window.Telegram ? window.Telegram.WebApp : null;
-    if (TG) { TG.ready(); TG.expand(); }
-    const EDGE = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
-    const app = document.getElementById("app");
-    const STAGE = { nuovo:"Nuovo", qualificato:"Qualificato", squalificato:"Non idoneo ora", contattato:"In contatto", cliente:"Cliente" };
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    const initData = tg?.initData || "";
 
-    function close() { if (TG) TG.close(); }
+    const STAGE_LABEL = { nuovo: "Nuovo", qualificato: "Qualificato", squalificato: "Non idoneo ora", contattato: "In contatto", cliente: "Cliente" };
 
-    async function load() {
-      if (!TG || !TG.initData) { app.innerHTML = '<div class="err">Apri questa pagina dal bot Telegram.</div>'; return; }
-      let d;
-      try {
-        const r = await fetch(EDGE + "/me", { headers: { "x-telegram-init-data": TG.initData } });
-        d = await r.json();
-        if (!r.ok) throw 0;
-      } catch { app.innerHTML = '<div class="err">Errore. Riapri dal bot.</div>'; return; }
-      let aff = {};
-      try { const ra = await fetch(EDGE + "/my-affiliate", { headers: { "x-telegram-init-data": TG.initData } }); if (ra.ok) aff = await ra.json(); } catch {}
-      render(d, aff);
-    }
-
-    function render(d, aff) {
-      aff = aff || {};
-      const l = d.lead || {};
-      const s = d.sondaggio;
-      const tutDone = (d.tutorial || []).filter(t => t.completato).length;
-      const servizi = d.servizi || [];
-      let profilo = '<div class="ptext">Sondaggio non ancora fatto.</div>';
-      if (s) profilo = `
-        <div class="row"><span>Livello</span><b>${s.livello_trading || "-"}</b></div>
-        <div class="row"><span>Esperienza</span><b>${s.broker_usati || "-"}</b></div>
-        <div class="row"><span>Capitale</span><b>${s.capitale || "-"}</b></div>
-        <div class="row"><span>Interesse</span><b>${s.prodotto_preferito || "-"}</b></div>`;
-      const serviziHtml = servizi.length
-        ? servizi.map(x => `<div class="row"><span>${x.nome}</span><b>${x.stato}</b></div>`).join("")
-        : '<div class="ptext">Nessun servizio attivo.</div>';
-
-      app.innerHTML = `
-        <h1>Ciao ${l.nome || ""}</h1>
-        <div class="sub">La tua dashboard personale</div>
-        <div class="card">
-          <div class="row"><span>Stato</span><span class="badge">${STAGE[l.pipeline_stage] || l.pipeline_stage || "-"}</span></div>
-          <div class="row"><span>Tutorial completati</span><b>${tutDone}/4</b></div>
-        </div>
-        <div class="sect">Il tuo profilo</div>
-        <div class="card">${profilo}</div>
-        <div class="sect">I tuoi servizi</div>
-        <div class="card">${serviziHtml}</div>
-        <div class="sect">Affiliazione</div>
-        <div class="card">
-          <div class="ptext" style="margin-bottom:8px">Il tuo link da condividere. Chi entra da qui e attiva un servizio su cui sei affiliato, usa il TUO ref.</div>
-          <div style="word-break:break-all;font-size:13px;color:var(--accent);margin-bottom:8px">${aff.ref_url || "-"}</div>
-          <button class="btn btn-ghost" id="copyRef">Copia link</button>
-        </div>
-        <div class="card">
-          <div class="ptext" style="margin-bottom:8px">Diventa affiliato di un servizio (serve essere attivo; valutiamo la richiesta):</div>
-          <select id="affServ" style="width:100%;padding:11px;border-radius:10px;background:var(--bg);color:var(--text);border:1px solid var(--muted);margin-bottom:8px">
-            ${(aff.servizi || []).map(s => `<option value="${s.id}">${s.nome}</option>`).join("")}
-          </select>
-          <input id="affLink" placeholder="Incolla il tuo ref link" style="width:100%;padding:11px;border-radius:10px;background:var(--bg);color:var(--text);border:1px solid var(--muted);margin-bottom:8px" />
-          <button class="btn btn-accent" id="affSend">Invia richiesta</button>
-          <div id="affList" style="margin-top:10px">${(aff.links || []).map(l => `<div class="row"><span>${l.nome}</span><b style="color:${l.approvato ? "var(--accent)" : "var(--muted)"}">${l.approvato ? "Approvato" : "In attesa"}</b></div>`).join("")}</div>
-        </div>
-        <div class="sect">Menu</div>
-        <div class="item" id="privacyItem"><b>🔒 Privacy e dati</b><span class="ch">›</span></div>
-        <div id="privacyPanel" class="card hidden">
-          <div class="ptext" id="privacyText"></div>
-          <button class="btn btn-danger" id="delBtn">Cancella i miei dati</button>
-        </div>
-        <button class="btn btn-accent" id="back">Torna al bot</button>`;
-
-      document.getElementById("privacyItem").addEventListener("click", () => {
-        const p = document.getElementById("privacyPanel");
-        document.getElementById("privacyText").textContent =
-          "Informativa privacy - Business UP\n\nTitolare: Business UP (antonybusinesshub@gmail.com).\nDati: ID/username Telegram, nome, risposte sondaggio, uso del bot.\nFinalita: indirizzarti ai metodi adatti e contattarti.\nBase: il tuo consenso. Non vendiamo i tuoi dati.\nPuoi cancellare tutto qui sotto in qualsiasi momento.";
-        p.classList.toggle("hidden");
-      });
-      document.getElementById("delBtn").addEventListener("click", async () => {
-        const ok = TG && TG.showConfirm
-          ? await new Promise(res => TG.showConfirm("Cancellare TUTTI i tuoi dati? Azione definitiva.", res))
-          : confirm("Cancellare TUTTI i tuoi dati?");
-        if (!ok) return;
-        await fetch(EDGE + "/delete-me", { method:"POST", headers:{ "x-telegram-init-data": TG.initData } });
-        app.innerHTML = '<div class="err">Dati cancellati. Scrivi /start al bot per ricominciare.</div>';
-      });
-      document.getElementById("back").addEventListener("click", close);
-
-      const copyBtn = document.getElementById("copyRef");
-      if (copyBtn) copyBtn.addEventListener("click", () => {
-        const url = aff.ref_url || "";
-        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
-        copyBtn.textContent = "Copiato ✓";
-        setTimeout(() => copyBtn.textContent = "Copia link", 1500);
-      });
-      const affSend = document.getElementById("affSend");
-      if (affSend) affSend.addEventListener("click", async () => {
-        const sid = document.getElementById("affServ").value;
-        const link = document.getElementById("affLink").value.trim();
-        if (!sid || !link) return;
-        affSend.disabled = true; affSend.textContent = "Invio...";
-        try {
-          await fetch(EDGE + "/affiliate-request", { method: "POST", headers: { "Content-Type": "application/json", "x-telegram-init-data": TG.initData }, body: JSON.stringify({ servizio_id: parseInt(sid), ref_link: link }) });
-          affSend.textContent = "✓ Richiesta inviata";
-          if (TG && TG.showAlert) TG.showAlert("Richiesta inviata. Ti avviso quando viene approvata.");
-        } catch { affSend.disabled = false; affSend.textContent = "Invia richiesta"; }
+    function switchTab(name) {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+      document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${name}`));
+      document.querySelectorAll(".bottom-nav .nav-item").forEach((n, i) => {
+        const map = ["profilo", "business", "rete"];
+        n.classList.toggle("on", map[i] === name);
       });
     }
-    load();
+    document.querySelectorAll(".tab").forEach((tab) => tab.onclick = () => switchTab(tab.dataset.tab));
+
+    function initials(name) {
+      if (!name) return "--";
+      return name.trim().slice(0, 2).toUpperCase();
+    }
+
+    async function loadMe() {
+      const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData } });
+      const data = await res.json();
+      const lead = data.lead || {};
+      const sond = data.sondaggio || {};
+
+      document.getElementById("avatarInitials").textContent = initials(lead.nome);
+      const stage = lead.pipeline_stage || "nuovo";
+      document.getElementById("stageLabel").textContent = STAGE_LABEL[stage] || stage;
+      document.getElementById("tileInvitati").textContent = data.rete_count || 0;
+
+      const dettagli = document.getElementById("profiloDettagli");
+      if (sond.livello_trading) {
+        dettagli.innerHTML = `
+          <div class="row"><div class="r-body"><div class="r-name">Livello</div></div><div class="r-value">${sond.livello_trading}</div></div>
+          <div class="row"><div class="r-body"><div class="r-name">Capitale</div></div><div class="r-value">${sond.capitale || "-"}</div></div>
+          <div class="row"><div class="r-body"><div class="r-name">Interesse</div></div><div class="r-value">${sond.prodotto_preferito || "-"}</div></div>`;
+      } else {
+        dettagli.innerHTML = `<p class="empty">Sondaggio non ancora completato.</p>`;
+      }
+    }
+
+    async function loadBusinessList() {
+      const res = await fetch(`${API_URL}/business-list`);
+      const data = await res.json();
+      const el = document.getElementById("businessList");
+      el.innerHTML = "";
+      const cats = data.categorie || [];
+      if (!cats.length) { el.innerHTML = '<p class="empty">Nessun servizio disponibile al momento.</p>'; return; }
+      cats.forEach((cat) => {
+        const title = document.createElement("div");
+        title.className = "cat-title";
+        title.textContent = cat.nome;
+        el.appendChild(title);
+        (cat.servizi || []).forEach((s) => {
+          const card = document.createElement("div");
+          card.className = "service-card";
+          card.innerHTML = `
+            <div class="service-head">
+              <div class="service-title">${s.nome}</div>
+              <div class="stato-badge ${s.stato}">${s.stato}</div>
+            </div>
+            <div class="service-desc">${s.descrizione || ""}</div>
+            <div class="service-meta">${s.split_percent ? `Split ${s.split_percent}%` : ""}${s.prezzo ? " · " + s.prezzo : ""}</div>
+            <button class="btn btn-primary" data-id="${s.id}">Sono interessato</button>
+          `;
+          card.querySelector("button").onclick = async (e) => {
+            e.target.textContent = "...";
+            await fetch(`${API_URL}/attiva`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+              body: JSON.stringify({ servizio_id: s.id }),
+            });
+            e.target.textContent = "Interesse registrato";
+            e.target.disabled = true;
+          };
+          el.appendChild(card);
+        });
+      });
+    }
+
+    async function loadAffiliazione() {
+      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData } });
+      const data = await res.json();
+      document.getElementById("refLink").value = data.ref_link || "";
+      const invitati = data.rete?.invitati_count || 0;
+      const attivati = data.rete?.attivati_count || 0;
+      document.getElementById("tileAttivati").textContent = attivati;
+      document.getElementById("guadagniText").textContent = `€${data.guadagni_totali || 0} stimati`;
+
+      const need = Math.min(invitati, 3);
+      document.getElementById("heroCount").textContent = `${need} / 3`;
+      const bar = document.getElementById("heroProgress");
+      bar.innerHTML = "";
+      for (let i = 0; i < 3; i++) {
+        const s = document.createElement("span");
+        if (i < need) s.className = "on";
+        bar.appendChild(s);
+      }
+      if (invitati >= 3) {
+        document.getElementById("heroTitle").textContent = "Link sbloccato";
+        document.getElementById("heroDesc").textContent = "Ora puoi guadagnare da chi inviti";
+      } else {
+        document.getElementById("heroDesc").textContent = `Invita ancora ${3 - invitati} person${3 - invitati === 1 ? "a" : "e"} per iniziare a guadagnare`;
+      }
+
+      const rows = document.getElementById("reteRows");
+      const members = data.rete?.membri || [];
+      if (!members.length) {
+        rows.innerHTML = '<p class="empty">Nessun invito ancora. Condividi il tuo link!</p>';
+        return;
+      }
+      const palette = [["var(--lime)", "#0ea56f"], ["var(--amber)", "#d97706"], ["var(--coral)", "#b91c3c"], ["var(--blue)", "#2f4ee0"]];
+      rows.innerHTML = members.map((m, i) => {
+        const [c1, c2] = palette[i % palette.length];
+        const positive = m.stato === "qualificato" || m.stato === "cliente";
+        return `
+          <div class="row">
+            <div class="r-avatar" style="background:linear-gradient(150deg,${c1},${c2})">${m.nome_mascherato.replace(/\./g, "")}</div>
+            <div class="r-body"><div class="r-name">${m.nome_mascherato}</div><div class="r-meta">${m.sondaggio_completato ? m.stato_label : "Sondaggio in corso"}</div></div>
+            <div class="r-value" style="color:${positive ? "var(--lime)" : "var(--text-dim)"}">${positive ? "Attiva" : "—"}</div>
+          </div>`;
+      }).join("");
+    }
+
+    function copyLink() {
+      const el = document.getElementById("refLink");
+      el.select();
+      document.execCommand("copy");
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+      else alert("Link copiato!");
+    }
+
+    if (!initData) {
+      document.getElementById("avatarInitials").textContent = "!!";
+    } else {
+      loadMe();
+      loadBusinessList();
+      loadAffiliazione();
+    }
   </script>
 </body>
 </html>
