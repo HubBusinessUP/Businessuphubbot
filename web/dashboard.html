@@ -87,14 +87,22 @@
 
   /* Tiles */
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .tile { border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 22px; color: #fff; }
+  .tile {
+    border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 22px; color: #fff;
+    border: none; text-align: left; font-family: inherit; cursor: pointer; position: relative;
+    transition: transform 0.15s ease;
+  }
+  .tile:active { transform: scale(0.97); }
   .tile.grape { background: linear-gradient(150deg, var(--grape-1), var(--grape-2)); }
   .tile.dark { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+  .t-top { display: flex; align-items: center; justify-content: space-between; }
   .t-ico { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
   .tile.dark .t-ico { background: var(--lime-dim); color: var(--lime); }
-  .t-label { font-size: 14px; font-weight: 700; }
-  .t-value { font-size: 24px; font-weight: 800; }
-  .tile.dark .t-value { color: var(--lime); }
+  .t-arrow { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; }
+  .tile.dark .t-arrow { background: rgba(244,246,251,0.06); color: var(--text-dim); }
+  .t-label { font-size: 14.5px; font-weight: 700; }
+  .t-value { font-size: 13px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
+  .tile.dark .t-value { color: var(--text-dim); opacity: 1; }
 
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
   h2.section-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
@@ -184,20 +192,26 @@
     <!-- PROFILO -->
     <div class="panel active" id="panel-profilo">
       <div class="tiles">
-        <div class="tile grape">
-          <div class="t-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.6"/><circle cx="18" cy="7" r="2.6"/><circle cx="12" cy="17" r="2.6"/><path d="M7.6 8.8 10.6 15M16.4 8.8 13.4 15"/></svg></div>
+        <button class="tile dark" onclick="switchTab('business')">
+          <div class="t-top">
+            <div class="t-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <div class="t-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
+          </div>
+          <div>
+            <div class="t-label">Business List</div>
+            <div class="t-value" id="tileServizi">Scopri i servizi</div>
+          </div>
+        </button>
+        <button class="tile grape" onclick="switchTab('rete')">
+          <div class="t-top">
+            <div class="t-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.6"/><circle cx="18" cy="7" r="2.6"/><circle cx="12" cy="17" r="2.6"/><path d="M7.6 8.8 10.6 15M16.4 8.8 13.4 15"/></svg></div>
+            <div class="t-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
+          </div>
           <div>
             <div class="t-label">La tua rete</div>
-            <div class="t-value" id="tileInvitati">0</div>
+            <div class="t-value" id="tileInvitati">0 invitati</div>
           </div>
-        </div>
-        <div class="tile dark">
-          <div class="t-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-          <div>
-            <div class="t-label">Attivati</div>
-            <div class="t-value" id="tileAttivati">0</div>
-          </div>
-        </div>
+        </button>
       </div>
       <div class="card">
         <h2 class="section-title">Il tuo profilo</h2>
@@ -234,7 +248,7 @@
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M7.6 8.6 10.6 15.2M16.4 8.6 13.4 15.2"/></svg></div>
       <span>Rete</span>
     </button>
-    <button class="nav-item" onclick="window.location.href='sondaggio.html?v=3'">
+    <button class="nav-item" onclick="window.location.href='sondaggio.html?v=4'">
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 11h6M9 15h4"/></svg></div>
       <span>Sondaggio</span>
     </button>
@@ -289,7 +303,6 @@
 
       const stage = lead.pipeline_stage || "nuovo";
       document.getElementById("stageLabel").textContent = STAGE_LABEL[stage] || stage;
-      document.getElementById("tileInvitati").textContent = data.rete_count || 0;
 
       const dettagli = document.getElementById("profiloDettagli");
       if (sond.livello_trading) {
@@ -309,12 +322,15 @@
       el.innerHTML = "";
       const cats = data.categorie || [];
       if (!cats.length) { el.innerHTML = '<p class="empty">Nessun servizio disponibile al momento.</p>'; return; }
+      let totale = 0, attivi = 0;
       cats.forEach((cat) => {
         const title = document.createElement("div");
         title.className = "cat-title";
         title.textContent = cat.nome;
         el.appendChild(title);
         (cat.servizi || []).forEach((s) => {
+          totale++;
+          if (s.stato === "attivo") attivi++;
           const card = document.createElement("div");
           card.className = "service-card";
           card.innerHTML = `
@@ -339,6 +355,7 @@
           el.appendChild(card);
         });
       });
+      document.getElementById("tileServizi").textContent = `${totale} servizi · ${attivi} attivi`;
     }
 
     async function loadAffiliazione() {
@@ -347,7 +364,7 @@
       document.getElementById("refLink").value = data.ref_link || "";
       const invitati = data.rete?.invitati_count || 0;
       const attivati = data.rete?.attivati_count || 0;
-      document.getElementById("tileAttivati").textContent = attivati;
+      document.getElementById("tileInvitati").textContent = `${invitati} invitat${invitati === 1 ? "o" : "i"} · ${attivati} attiv${attivati === 1 ? "o" : "i"}`;
       document.getElementById("guadagniText").textContent = `€${data.guadagni_totali || 0} stimati`;
 
       const need = Math.min(invitati, 3);
