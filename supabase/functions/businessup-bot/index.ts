@@ -138,17 +138,26 @@ async function apiSondaggioSave(telegramId: number, body: any) {
   const row = { telegram_id: telegramId, nome, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere }
 
   const { data: ex } = await supabase.from("sondaggio_risposte").select("id").eq("telegram_id", telegramId).maybeSingle()
-  if (ex) await supabase.from("sondaggio_risposte").update(row).eq("id", ex.id)
-  else await supabase.from("sondaggio_risposte").insert(row)
+  const saveResult = ex
+    ? await supabase.from("sondaggio_risposte").update(row).eq("id", ex.id)
+    : await supabase.from("sondaggio_risposte").insert(row)
+  if (saveResult.error) {
+    console.error("sondaggio_risposte save failed:", saveResult.error)
+    return json({ error: "save_failed", detail: saveResult.error.message }, 500)
+  }
 
   const ql = qualifica(row as Record<string, string>)
-  await supabase.from("leads").update({
+  const leadUpdate = await supabase.from("leads").update({
     sondaggio_completato: true,
     sondaggio_completato_at: new Date().toISOString(),
     pipeline_stage: ql.stage,
     motivo_squalifica: ql.motivo,
     nome: nome ?? undefined,
   }).eq("telegram_id", telegramId)
+  if (leadUpdate.error) {
+    console.error("leads update failed:", leadUpdate.error)
+    return json({ error: "save_failed", detail: leadUpdate.error.message }, 500)
+  }
 
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "sondaggio_completato", dettaglio: ql.stage })
 
