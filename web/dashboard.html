@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Business UP</title>
 <style>
   :root {
@@ -215,7 +218,7 @@
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M7.6 8.6 10.6 15.2M16.4 8.6 13.4 15.2"/></svg></div>
       <span>Rete</span>
     </button>
-    <button class="nav-item" onclick="window.location.href='sondaggio.html'">
+    <button class="nav-item" onclick="window.location.href='sondaggio.html?v=2'">
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 11h6M9 15h4"/></svg></div>
       <span>Sondaggio</span>
     </button>
@@ -246,7 +249,7 @@
     }
 
     async function loadMe() {
-      const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData } });
+      const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
       const lead = data.lead || {};
       const sond = data.sondaggio || {};
@@ -268,7 +271,7 @@
     }
 
     async function loadBusinessList() {
-      const res = await fetch(`${API_URL}/business-list`);
+      const res = await fetch(`${API_URL}/business-list`, { cache: "no-store" });
       const data = await res.json();
       const el = document.getElementById("businessList");
       el.innerHTML = "";
@@ -307,7 +310,7 @@
     }
 
     async function loadAffiliazione() {
-      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData } });
+      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
       document.getElementById("refLink").value = data.ref_link || "";
       const invitati = data.rete?.invitati_count || 0;

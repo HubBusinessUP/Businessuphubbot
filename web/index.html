@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Business UP</title>
 <style>
   :root {
@@ -114,17 +117,17 @@
     const initData = tg?.initData || "";
 
     const ctaBtn = document.getElementById("ctaBtn");
-    let target = "sondaggio.html";
+    let target = "sondaggio.html?v=2";
     ctaBtn.onclick = () => window.location.href = target;
 
     async function checkStatus() {
       if (!initData) return;
       try {
-        const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData } });
+        const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         if (data.lead?.sondaggio_completato) {
-          target = "dashboard.html";
+          target = "dashboard.html?v=2";
           document.getElementById("ctaText").textContent = "Vai alla Dashboard";
           document.getElementById("heroTitle").textContent = "Bentornato";
           document.getElementById("heroDesc").textContent = "Controlla i tuoi servizi, la tua rete e i guadagni stimati.";
