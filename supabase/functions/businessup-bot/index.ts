@@ -109,7 +109,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   await sendMessage(
     chatId,
     `Ciao ${from.first_name || ""}! 👋\n\nBenvenuto in Business UP.\n\nUsa il bottone Menu qui sotto (accanto a dove scrivi) per aprire l'app.`,
-    { inline_keyboard: [[{ text: "🚀 Apri Business UP", web_app: { url: WEBAPP_URL + "/index.html?v=4" } }]] },
+    { inline_keyboard: [[{ text: "🚀 Apri Business UP", web_app: { url: WEBAPP_URL + "/index.html?_=" + Date.now() } }]] },
   )
 }
 
