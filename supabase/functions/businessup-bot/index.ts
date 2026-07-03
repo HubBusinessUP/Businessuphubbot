@@ -83,12 +83,31 @@ async function resolveRefLink(telegramId: number, servizioId: number): Promise<s
   return sv?.link_principale || null
 }
 
+// Genera un codice referral opaco (non rivela il telegram_id) e lo salva sulla lead, se non presente.
+function generateRefCode(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+  let code = ""
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  return code
+}
+async function getOrCreateRefCode(telegramId: number): Promise<string> {
+  const { data: lead } = await supabase.from("leads").select("ref_code").eq("telegram_id", telegramId).maybeSingle()
+  if (lead?.ref_code) return lead.ref_code
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateRefCode()
+    const { error } = await supabase.from("leads").update({ ref_code: code }).eq("telegram_id", telegramId)
+    if (!error) return code
+  }
+  return String(telegramId)
+}
+
 // ---------- BOT ----------
 async function handleStart(chatId: number, from: any, payload?: string) {
   let refBy: number | undefined
   if (payload?.startsWith("ref_")) {
-    const refId = parseInt(payload.slice(4))
-    if (refId && refId !== from.id) refBy = refId
+    const code = payload.slice(4)
+    const { data: referrer } = await supabase.from("leads").select("telegram_id").eq("ref_code", code).maybeSingle()
+    if (referrer && referrer.telegram_id !== from.id) refBy = referrer.telegram_id
   }
 
   const { data: existing } = await supabase.from("leads").select("referred_by, start_count").eq("telegram_id", from.id).maybeSingle()
@@ -186,6 +205,7 @@ async function apiAffiliazione(telegramId: number) {
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: pagamenti } = await supabase.from("pagamenti").select("importo").eq("telegram_id", telegramId)
   const guadagni = (pagamenti ?? []).reduce((s: number, p: any) => s + Number(p.importo || 0), 0)
+  const refCode = await getOrCreateRefCode(telegramId)
 
   const membri = (invitati ?? []).map((i: any) => ({
     nome_mascherato: maskName(i.nome, i.telegram_id),
@@ -195,7 +215,7 @@ async function apiAffiliazione(telegramId: number) {
   }))
 
   return json({
-    ref_link: `https://t.me/${BOT_USERNAME}?start=ref_${telegramId}`,
+    ref_link: `https://t.me/${BOT_USERNAME}?start=ref_${refCode}`,
     is_cliente: lead?.is_cliente ?? false,
     can_insert_reflinks: lead?.can_insert_reflinks ?? false,
     rete: {
