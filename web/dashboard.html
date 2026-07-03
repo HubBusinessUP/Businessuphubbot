@@ -35,6 +35,19 @@
   }
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px; }
 
+  .profile-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .avatar-wrap { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; position: relative; }
+  .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; border: 2px solid var(--border); }
+  .avatar-fallback {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: linear-gradient(150deg, var(--grape-1), var(--grape-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 800; color: #fff;
+  }
+  .profile-info { flex: 1; min-width: 0; }
+  .greet-name { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+  .greet-name span { color: var(--blue); }
+
   .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
   .badge {
     display: flex; align-items: center; gap: 7px;
@@ -44,12 +57,6 @@
   .badge .dot { width: 23px; height: 23px; border-radius: 50%; background: var(--amber); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .badge .dot svg { width: 12px; height: 12px; }
   .badge.stat { flex: 1; justify-content: center; }
-  .avatar-pill {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(150deg, var(--grape-1), var(--grape-2));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12.5px; font-weight: 800; flex-shrink: 0;
-  }
 
   /* Hero */
   .hero {
@@ -137,6 +144,16 @@
 </head>
 <body>
   <div class="container">
+    <div class="profile-row">
+      <div class="avatar-wrap">
+        <img class="avatar-img" id="avatarImg" alt="" />
+        <div class="avatar-fallback" id="avatarFallback">--</div>
+      </div>
+      <div class="profile-info">
+        <div class="greet-name">Ciao <span id="userName">Utente</span></div>
+      </div>
+    </div>
+
     <div class="topbar">
       <div class="badge">
         <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#0b0d13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
@@ -146,7 +163,6 @@
         <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#0b0d13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
         <span id="guadagniText">€0 stimati</span>
       </div>
-      <div class="avatar-pill" id="avatarInitials">--</div>
     </div>
 
     <div class="hero" id="heroCard">
@@ -218,7 +234,7 @@
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M7.6 8.6 10.6 15.2M16.4 8.6 13.4 15.2"/></svg></div>
       <span>Rete</span>
     </button>
-    <button class="nav-item" onclick="window.location.href='sondaggio.html?v=2'">
+    <button class="nav-item" onclick="window.location.href='sondaggio.html?v=3'">
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 11h6M9 15h4"/></svg></div>
       <span>Sondaggio</span>
     </button>
@@ -248,13 +264,29 @@
       return name.trim().slice(0, 2).toUpperCase();
     }
 
+    function renderTelegramProfile() {
+      const user = tg?.initDataUnsafe?.user;
+      const firstName = user?.first_name || "";
+      document.getElementById("userName").textContent = firstName || "Utente";
+
+      const img = document.getElementById("avatarImg");
+      const fallback = document.getElementById("avatarFallback");
+      if (user?.photo_url) {
+        img.src = user.photo_url;
+        img.onload = () => { img.style.display = "block"; fallback.style.display = "none"; };
+        img.onerror = () => { img.style.display = "none"; fallback.style.display = "flex"; };
+      } else {
+        fallback.textContent = initials(firstName);
+      }
+    }
+    renderTelegramProfile();
+
     async function loadMe() {
       const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
       const lead = data.lead || {};
       const sond = data.sondaggio || {};
 
-      document.getElementById("avatarInitials").textContent = initials(lead.nome);
       const stage = lead.pipeline_stage || "nuovo";
       document.getElementById("stageLabel").textContent = STAGE_LABEL[stage] || stage;
       document.getElementById("tileInvitati").textContent = data.rete_count || 0;
@@ -362,7 +394,7 @@
     }
 
     if (!initData) {
-      document.getElementById("avatarInitials").textContent = "!!";
+      document.getElementById("userName").textContent = "!!";
     } else {
       loadMe();
       loadBusinessList();
