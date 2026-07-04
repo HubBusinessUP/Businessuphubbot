@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --grape: #9d5cf0;
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; background: var(--ink); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+    display: flex; justify-content: center;
+  }
+  .container { max-width: 460px; width: 100%; padding: 40px 20px 40px; text-align: center; }
+
+  .avatar { width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 16px; overflow: hidden; background: var(--grape); display: flex; align-items: center; justify-content: center; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar span { font-size: 26px; font-weight: 800; color: #fff; }
+
+  h1 { font-size: 20px; font-weight: 800; }
+  .titolo { font-size: 14px; color: var(--blue); font-weight: 700; margin-top: 3px; }
+  .bio { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; margin-top: 12px; max-width: 380px; margin-left: auto; margin-right: auto; }
+
+  .links { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; text-align: left; }
+  .link-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 15px 16px; text-decoration: none; color: var(--text); display: block;
+    transition: transform 0.12s ease;
+  }
+  .link-card:active { transform: scale(0.98); }
+  .link-name { font-size: 14.5px; font-weight: 700; }
+  .link-desc { font-size: 12px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
+
+  .empty, .notfound { color: var(--text-dim); font-size: 13.5px; margin-top: 40px; }
+  .footer { margin-top: 36px; font-size: 11.5px; color: var(--text-dim); }
+  .footer a { color: var(--blue); text-decoration: none; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="container" id="root">
+    <p class="empty">Caricamento...</p>
+  </div>
+
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const code = new URLSearchParams(window.location.search).get("c") || "";
+
+    function initials(name) {
+      if (!name) return "??";
+      return name.trim().slice(0, 2).toUpperCase();
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function safeUrl(u) {
+      try {
+        const parsed = new URL(u, window.location.href);
+        return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : "";
+      } catch {
+        return "";
+      }
+    }
+
+    async function load() {
+      const root = document.getElementById("root");
+      if (!code) { root.innerHTML = '<p class="notfound">Pagina non trovata.</p>'; return; }
+
+      const res = await fetch(`${API_URL}/pagina-pubblica?c=${encodeURIComponent(code)}`, { cache: "no-store" });
+      if (!res.ok) { root.innerHTML = '<p class="notfound">Questa pagina non è disponibile.</p>'; return; }
+      const data = await res.json();
+
+      const linksHtml = (data.link || []).length
+        ? data.link.map((l) => {
+            const safeHref = safeUrl(l.ref_link);
+            if (!safeHref) return "";
+            return `
+            <a class="link-card" href="${escapeHtml(safeHref)}" target="_blank" rel="noopener nofollow">
+              <div class="link-name">${escapeHtml(l.nome)}</div>
+              ${l.descrizione ? `<div class="link-desc">${escapeHtml(l.descrizione)}</div>` : ""}
+            </a>
+          `;
+          }).join("")
+        : '<p class="empty">Nessun link disponibile al momento.</p>';
+
+      const safeFoto = safeUrl(data.bio_foto_url);
+      root.innerHTML = `
+        <div class="avatar">
+          ${safeFoto ? `<img src="${escapeHtml(safeFoto)}" alt="" onerror="this.remove()" />` : `<span>${escapeHtml(initials(data.nome))}</span>`}
+        </div>
+        <h1>${escapeHtml(data.nome)}</h1>
+        ${data.bio_titolo ? `<div class="titolo">${escapeHtml(data.bio_titolo)}</div>` : ""}
+        ${data.bio_testo ? `<p class="bio">${escapeHtml(data.bio_testo)}</p>` : ""}
+        <div class="links">${linksHtml}</div>
+        <div class="footer">Creato con <a href="https://t.me/hubbusinessup_bot" target="_blank" rel="noopener">Business UP</a></div>
+      `;
+    }
+
+    load();
+  </script>
+</body>
+</html>

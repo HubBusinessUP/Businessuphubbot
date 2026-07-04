@@ -261,6 +261,62 @@ async function apiAffiliateLinkSave(telegramId: number, body: any) {
   return json({ ok: true })
 }
 
+async function apiPaginaGet(telegramId: number) {
+  const { data: lead } = await supabase.from("leads").select("nome, cognome, is_cliente, bio_titolo, bio_testo, bio_foto_url").eq("telegram_id", telegramId).maybeSingle()
+  const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
+  const { data: servizi } = await supabase.from("servizi").select("id, nome")
+  const svcMap: Record<number, string> = {}
+  for (const s of servizi ?? []) svcMap[(s as any).id] = (s as any).nome
+  const links = (mieiLink ?? []).map((l: any) => ({ ...l, servizio_nome: svcMap[l.servizio_id] || "?" }))
+  const refCode = await getOrCreateRefCode(telegramId)
+  return json({
+    is_cliente: lead?.is_cliente ?? false,
+    bio_titolo: lead?.bio_titolo || "",
+    bio_testo: lead?.bio_testo || "",
+    bio_foto_url: lead?.bio_foto_url || "",
+    link_pagina: `${WEBAPP_URL}/u.html?c=${refCode}`,
+    miei_link: links,
+  })
+}
+
+async function apiPaginaSave(telegramId: number, body: any) {
+  const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.is_cliente) return json({ error: "non_autorizzato" }, 403)
+
+  const { bio_titolo, bio_testo, bio_foto_url } = body
+  const { error } = await supabase.from("leads").update({ bio_titolo, bio_testo, bio_foto_url }).eq("telegram_id", telegramId)
+  if (error) {
+    console.error("pagina save failed:", error)
+    return json({ error: "save_failed", detail: error.message }, 500)
+  }
+  return json({ ok: true })
+}
+
+async function apiPaginaPubblica(code: string) {
+  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, is_cliente, bio_titolo, bio_testo, bio_foto_url").eq("ref_code", code).maybeSingle()
+  if (!lead || !lead.is_cliente) return json({ error: "not_found" }, 404)
+
+  const { data: links } = await supabase.from("affiliate_link").select("servizio_id, ref_link").eq("telegram_id", lead.telegram_id).eq("approvato", true)
+  const servizioIds = (links ?? []).map((l: any) => l.servizio_id)
+  const { data: servizi } = servizioIds.length
+    ? await supabase.from("servizi").select("id, nome, descrizione").in("id", servizioIds)
+    : { data: [] }
+  const svcMap: Record<number, any> = {}
+  for (const s of servizi ?? []) svcMap[(s as any).id] = s
+
+  return json({
+    nome: lead.nome || "Utente",
+    bio_titolo: lead.bio_titolo || "",
+    bio_testo: lead.bio_testo || "",
+    bio_foto_url: lead.bio_foto_url || "",
+    link: (links ?? []).map((l: any) => ({
+      nome: svcMap[l.servizio_id]?.nome || "Link",
+      descrizione: svcMap[l.servizio_id]?.descrizione || "",
+      ref_link: l.ref_link,
+    })),
+  })
+}
+
 async function apiAttiva(telegramId: number, body: any) {
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
   if (!lead?.sondaggio_completato) return json({ error: "anagrafica_richiesta" }, 403)
@@ -412,6 +468,23 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiAttiva(tid, await req.json())
+    }
+
+    if (sub === "pagina" && req.method === "GET") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiPaginaGet(tid)
+    }
+
+    if (sub === "pagina" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiPaginaSave(tid, await req.json())
+    }
+
+    if (sub === "pagina-pubblica" && req.method === "GET") {
+      const code = url.searchParams.get("c") || ""
+      return await apiPaginaPubblica(code)
     }
 
     if (sub.startsWith("admin/")) {

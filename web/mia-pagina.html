@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>La mia pagina - Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --blue-dim: rgba(76, 110, 245, 0.16);
+    --grape: #9d5cf0;
+    --lime: #34d399;
+    --lime-dim: rgba(52, 211, 153, 0.16);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.14);
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh; background: var(--ink); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
+
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+  .top h1 { font-size: 19px; font-weight: 800; }
+  .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+  .field input, .field textarea {
+    width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
+    padding: 12px; border-radius: 9px; font-size: 14px; font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--blue); }
+  .hint { font-size: 11.5px; color: var(--text-dim); margin-top: 5px; }
+
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 9px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-done { background: var(--lime-dim); color: var(--lime); }
+  .btn-secondary { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+
+  .link-box { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 9px; padding: 12px; font-size: 12.5px; word-break: break-all; color: var(--blue); margin-bottom: 12px; }
+
+  .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .row-body { flex: 1; min-width: 0; }
+  .row-name { font-size: 13.5px; font-weight: 700; }
+  .row-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+  .row-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
+  .row-badge.pending { background: var(--amber-dim); color: var(--amber); }
+  .empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 12px 0; }
+
+  .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px 20px; text-align: center; }
+  .lock-ico { width: 48px; height: 48px; border-radius: 12px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .lock-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .lock-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <button class="back" onclick="window.location.href='rete.html?_=' + Date.now()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div>
+        <h1>La mia pagina</h1>
+        <p>Bio, foto e i tuoi link in un'unica pagina pubblica</p>
+      </div>
+    </div>
+
+    <div id="lockCard" class="lock-card" style="display:none">
+      <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h3>Diventa cliente per sbloccarla</h3>
+      <p>La pagina personale è disponibile per chi ha attivato almeno un servizio. Attivane uno dalla Business List per crearla.</p>
+      <button class="btn btn-primary" onclick="window.location.href='dashboard.html?_=' + Date.now()">Vai alla Business List</button>
+    </div>
+
+    <div id="content" style="display:none">
+      <div class="card">
+        <div class="section-title">Il tuo link pubblico</div>
+        <div class="link-box" id="linkPagina">-</div>
+        <button class="btn btn-secondary" onclick="copiaLinkPagina()">Copia link pagina</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Bio e foto</div>
+        <div class="field"><label>Titolo (es. "Trader indipendente")</label><input id="fTitolo" maxlength="60" /></div>
+        <div class="field">
+          <label>Descrizione</label>
+          <textarea id="fTesto" maxlength="400"></textarea>
+        </div>
+        <div class="field">
+          <label>Foto (link a un'immagine pubblica)</label>
+          <input id="fFoto" placeholder="https://..." />
+          <div class="hint">Facoltativo. Se lo lasci vuoto, la pagina mostra le tue iniziali.</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
+      <p class="hint" id="saveNote" style="text-align:center;margin-top:10px"></p>
+
+      <div class="card" style="margin-top:14px">
+        <div class="section-title">I tuoi link</div>
+        <p class="hint" style="margin-bottom:10px">Si aggiungono da ogni scheda servizio, sezione "Diventa affiliato". Solo i link approvati compaiono nella pagina pubblica.</p>
+        <div id="mieiLinkRows"><p class="empty">Non hai ancora inserito link affiliato.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
+  </script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    const initData = tg?.initData || "";
+
+    let currentLinkPagina = "";
+
+    function copiaLinkPagina() {
+      if (!currentLinkPagina) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(currentLinkPagina).catch(() => {});
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+      else alert("Link copiato!");
+    }
+
+    async function load() {
+      const res = await fetch(`${API_URL}/pagina`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+
+      if (!data.is_cliente) {
+        document.getElementById("lockCard").style.display = "block";
+        return;
+      }
+
+      currentLinkPagina = data.link_pagina || "";
+      document.getElementById("linkPagina").textContent = currentLinkPagina || "-";
+      document.getElementById("fTitolo").value = data.bio_titolo || "";
+      document.getElementById("fTesto").value = data.bio_testo || "";
+      document.getElementById("fFoto").value = data.bio_foto_url || "";
+
+      const miei = data.miei_link || [];
+      const el = document.getElementById("mieiLinkRows");
+      if (miei.length) {
+        el.innerHTML = miei.map((l) => `
+          <div class="row">
+            <div class="row-body">
+              <div class="row-name">${l.servizio_nome}</div>
+              <div class="row-sub" style="word-break:break-all">${l.ref_link}</div>
+            </div>
+            <div class="row-badge ${l.approvato ? "" : "pending"}">${l.approvato ? "Approvato" : "In attesa"}</div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("content").style.display = "block";
+    }
+
+    document.getElementById("saveBtn").onclick = async () => {
+      const btn = document.getElementById("saveBtn");
+      btn.textContent = "Salvataggio...";
+      btn.disabled = true;
+
+      const body = {
+        bio_titolo: document.getElementById("fTitolo").value.trim(),
+        bio_testo: document.getElementById("fTesto").value.trim(),
+        bio_foto_url: document.getElementById("fFoto").value.trim(),
+      };
+
+      const res = await fetch(`${API_URL}/pagina`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        btn.className = "btn btn-done";
+        btn.textContent = "✓ Salvato";
+        document.getElementById("saveNote").textContent = "Le modifiche sono live sulla tua pagina pubblica.";
+        setTimeout(() => { btn.className = "btn btn-primary"; btn.textContent = "Salva modifiche"; btn.disabled = false; }, 2000);
+      } else {
+        btn.textContent = "Salva modifiche";
+        btn.disabled = false;
+        document.getElementById("saveNote").textContent = "Errore, riprova.";
+      }
+    };
+
+    load();
+  </script>
+</body>
+</html>
