@@ -153,8 +153,10 @@ async function apiMe(telegramId: number) {
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
-  const { nome, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere } = body
-  const row = { telegram_id: telegramId, nome, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere }
+  const { nome, cognome, email, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato } = body
+  if (!disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
+
+  const row = { telegram_id: telegramId, nome, cognome, email, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato: true }
 
   const { data: ex } = await supabase.from("sondaggio_risposte").select("id").eq("telegram_id", telegramId).maybeSingle()
   const saveResult = ex
@@ -172,6 +174,7 @@ async function apiSondaggioSave(telegramId: number, body: any) {
     pipeline_stage: ql.stage,
     motivo_squalifica: ql.motivo,
     nome: nome ?? undefined,
+    cognome: cognome ?? undefined,
   }).eq("telegram_id", telegramId)
   if (leadUpdate.error) {
     console.error("leads update failed:", leadUpdate.error)
