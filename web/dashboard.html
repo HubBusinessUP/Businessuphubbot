@@ -30,9 +30,8 @@
     background: var(--ink);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
-    padding-bottom: 90px;
   }
-  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px; }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 30px; }
 
   .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
   .avatar-wrap {
@@ -158,23 +157,10 @@
   .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
-  /* Bottom nav */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    background: rgba(11,13,19,0.92); backdrop-filter: blur(14px);
-    border-top: 1px solid var(--border); padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
-    z-index: 50;
-  }
   .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px 20px; text-align: center; }
   .lock-ico { width: 48px; height: 48px; border-radius: 12px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
   .lock-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
   .lock-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: none; font-family: inherit; }
-  .nav-ico { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
-  .nav-item.on .nav-ico { background: var(--blue-dim); color: var(--blue); }
-  .nav-item span { font-size: 10.5px; font-weight: 700; color: var(--text-dim); }
-  .nav-item.on span { color: var(--blue); }
 
   /* Share sheet */
   .share-overlay {
@@ -300,21 +286,6 @@
     </div>
   </div>
 
-  <div class="bottom-nav">
-    <button class="nav-item on" onclick="goProfilo()">
-      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-      <span>Profilo</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('business')">
-      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-      <span>Business</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('rete')">
-      <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M7.6 8.6 10.6 15.2M16.4 8.6 13.4 15.2"/></svg></div>
-      <span>Rete</span>
-    </button>
-  </div>
-
   <div class="share-overlay" id="shareOverlay" onclick="if(event.target===this) closeShareSheet()">
     <div class="share-sheet">
       <div class="share-handle"></div>
@@ -362,10 +333,6 @@
     function switchTab(name) {
       document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
       document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${name}`));
-      document.querySelectorAll(".bottom-nav .nav-item").forEach((n, i) => {
-        const map = ["profilo", "business", "rete"];
-        n.classList.toggle("on", map[i] === name);
-      });
     }
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.onclick = tab.dataset.tab === "profilo" ? () => goProfilo() : () => switchTab(tab.dataset.tab);
