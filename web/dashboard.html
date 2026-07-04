@@ -172,6 +172,27 @@
   .nav-item.on .nav-ico { background: var(--blue-dim); color: var(--blue); }
   .nav-item span { font-size: 10.5px; font-weight: 700; color: var(--text-dim); }
   .nav-item.on span { color: var(--blue); }
+
+  /* Share sheet */
+  .share-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .share-overlay.open { display: flex; }
+  .share-sheet {
+    background: var(--ink); border: 1px solid var(--border); border-radius: 16px 16px 0 0;
+    width: 100%; max-width: 480px; padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  }
+  .share-handle { width: 36px; height: 4px; border-radius: 3px; background: var(--border); margin: 0 auto 16px; }
+  .share-sheet h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; text-align: center; }
+  .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .share-opt {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    background: none; border: none; color: var(--text); font-family: inherit;
+    text-decoration: none; cursor: pointer;
+  }
+  .share-ico { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .share-opt span { font-size: 11px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -185,7 +206,7 @@
         <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#0b0d13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
         <span>Ciao <b id="userName">Utente</b></span>
       </div>
-      <button class="icon-circle" onclick="shareRefLink()" aria-label="Condividi il tuo link">
+      <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
       </button>
     </div>
@@ -291,6 +312,32 @@
       <div class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M7.6 8.6 10.6 15.2M16.4 8.6 13.4 15.2"/></svg></div>
       <span>Rete</span>
     </button>
+  </div>
+
+  <div class="share-overlay" id="shareOverlay" onclick="if(event.target===this) closeShareSheet()">
+    <div class="share-sheet">
+      <div class="share-handle"></div>
+      <h3>Condividi il tuo link</h3>
+      <div class="share-grid">
+        <a class="share-opt" id="shareWhatsapp" target="_blank" rel="noopener" onclick="setTimeout(closeShareSheet, 200)">
+          <div class="share-ico" style="background:#25D366"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3C8.5 21.5 10.2 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.1c-1.6 0-3.1-.4-4.5-1.2l-.3-.2-3.3.9.9-3.2-.2-.3C3.7 14 3.3 12.5 3.3 12c0-4.8 3.9-8.7 8.7-8.7s8.7 3.9 8.7 8.7-3.9 8.7-8.7 8.7z"/></svg></div>
+          <span>WhatsApp</span>
+        </a>
+        <a class="share-opt" id="shareTelegram" target="_blank" rel="noopener" onclick="return openTelegramShare(event)">
+          <div class="share-ico" style="background:#29a9eb"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
+          <span>Telegram</span>
+        </a>
+        <button class="share-opt" onclick="shareViaEmail()">
+          <div class="share-ico" style="background:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7 10-7"/></svg></div>
+          <span>Email</span>
+        </button>
+        <button class="share-opt" onclick="copyRefLinkFromSheet()">
+          <div class="share-ico" style="background:var(--panel-2, #1f2433)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+          <span>Copia link</span>
+        </button>
+      </div>
+      <button class="btn btn-secondary" onclick="closeShareSheet()" style="margin-top:6px">Chiudi</button>
+    </div>
   </div>
 
   <script>
@@ -465,29 +512,48 @@
       else alert("Link copiato!");
     }
 
-    function shareRefLink() {
+    const SHARE_TEXT = "Entra in Business UP con il mio link:";
+
+    function openTelegramShare(e) {
+      if (tg?.openTelegramLink) {
+        e.preventDefault();
+        tg.openTelegramLink(e.currentTarget.href);
+        closeShareSheet();
+        return false;
+      }
+      return true;
+    }
+
+    function openShareSheet() {
       if (!window.currentRefLink) {
         if (tg?.showAlert) tg.showAlert("Apri il tab Rete un attimo per generare il tuo link.");
         return;
       }
-      const text = "Entra in Business UP con il mio link:";
       const link = window.currentRefLink;
+      document.getElementById("shareWhatsapp").href = `https://wa.me/?text=${encodeURIComponent(SHARE_TEXT + " " + link)}`;
+      document.getElementById("shareTelegram").href = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(SHARE_TEXT)}`;
+      document.getElementById("shareOverlay").classList.add("open");
+    }
 
-      const fallback = () => {
-        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
-        if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
-        else window.open(shareUrl, "_blank");
-      };
+    function closeShareSheet() {
+      document.getElementById("shareOverlay").classList.remove("open");
+    }
 
-      if (navigator.share) {
-        try {
-          navigator.share({ title: "Business UP", text, url: link }).catch(fallback);
-        } catch (e) {
-          fallback();
-        }
-      } else {
-        fallback();
+    function shareViaEmail() {
+      const link = window.currentRefLink;
+      window.location.href = `mailto:?subject=${encodeURIComponent("Business UP")}&body=${encodeURIComponent(SHARE_TEXT + " " + link)}`;
+    }
+
+    function copyRefLinkFromSheet() {
+      const link = window.currentRefLink;
+      if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+      else {
+        const el = document.getElementById("refLink");
+        if (el) { el.select(); document.execCommand("copy"); }
       }
+      closeShareSheet();
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+      else alert("Link copiato!");
     }
 
     async function init() {
