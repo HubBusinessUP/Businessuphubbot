@@ -142,18 +142,21 @@
   .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
   .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
   .cat-title { font-size: 12.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin: 16px 0 10px; }
-  .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; grid-column: 1 / -1; }
+  .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; }
 
-  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .cat-grid { display: flex; flex-direction: column; gap: 9px; }
   .cat-card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px;
-    cursor: pointer; text-align: center; font-family: inherit; transition: transform 0.12s ease;
+    padding: 13px; display: flex; align-items: center; gap: 13px;
+    cursor: pointer; text-align: left; font-family: inherit; width: 100%;
+    transition: transform 0.12s ease;
   }
-  .cat-card:active { transform: scale(0.96); }
-  .cat-ico { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; }
-  .cat-name { font-size: 12px; font-weight: 700; line-height: 1.25; }
-  .cat-count { font-size: 10.5px; color: var(--text-dim); }
+  .cat-card:active { transform: scale(0.98); }
+  .cat-ico { width: 42px; height: 42px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .cat-body { flex: 1; min-width: 0; }
+  .cat-name { font-size: 14.5px; font-weight: 700; }
+  .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
   /* Bottom nav */
   .bottom-nav {
@@ -439,8 +442,11 @@
         card.className = "cat-card";
         card.innerHTML = `
           <div class="cat-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${CAT_ICON_SVG}</div>
-          <div class="cat-name">${cat.nome}</div>
-          <div class="cat-count">${servizi.length} serviz${servizi.length === 1 ? "io" : "i"}</div>
+          <div class="cat-body">
+            <div class="cat-name">${cat.nome}</div>
+            <div class="cat-count">${servizi.length} serviz${servizi.length === 1 ? "io" : "i"}</div>
+          </div>
+          <svg class="cat-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
         `;
         card.onclick = () => window.location.href = `categoria.html?id=${cat.id}&_=${Date.now()}`;
         el.appendChild(card);
