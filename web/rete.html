@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>La tua rete - Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --blue-dim: rgba(76, 110, 245, 0.16);
+    --grape: #9d5cf0;
+    --lime: #34d399;
+    --lime-dim: rgba(52, 211, 153, 0.16);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.14);
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh; background: var(--ink); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
+
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+  .top h1 { font-size: 19px; font-weight: 800; }
+  .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .stat-box .n { font-size: 22px; font-weight: 800; }
+  .stat-box .l { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  .link-box { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 9px; padding: 12px; font-size: 12.5px; word-break: break-all; color: var(--blue); margin-bottom: 12px; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 9px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--blue); color: #fff; }
+
+  .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .row-ico { width: 34px; height: 34px; border-radius: 9px; background: var(--blue-dim); color: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 800; }
+  .row-body { flex: 1; min-width: 0; }
+  .row-name { font-size: 13.5px; font-weight: 700; }
+  .row-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+  .row-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
+  .row-badge.pending { background: var(--amber-dim); color: var(--amber); }
+
+  .empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 18px 0; }
+
+  .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px 20px; text-align: center; }
+  .lock-ico { width: 48px; height: 48px; border-radius: 12px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .lock-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .lock-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <button class="back" onclick="window.location.href='dashboard.html?_=' + Date.now()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div>
+        <h1>La tua rete</h1>
+        <p>Il tuo link e chi hai invitato</p>
+      </div>
+    </div>
+
+    <div id="lockRete" class="lock-card" style="display:none">
+      <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h3>Completa la tua anagrafica</h3>
+      <p>Per sbloccare il tuo link personale e vedere la rete, completa prima l'anagrafica.</p>
+      <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
+    </div>
+
+    <div id="reteContent" style="display:none">
+      <div class="stat-grid">
+        <div class="stat-box"><div class="n" id="statInvitati">0</div><div class="l">Invitati</div></div>
+        <div class="stat-box"><div class="n" id="statAttivati">0</div><div class="l">Attivati</div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Il tuo link personale</div>
+        <div class="link-box" id="refLinkText">-</div>
+        <button class="btn btn-primary" onclick="copyRefLink()">Copia link</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Chi hai invitato</div>
+        <div id="reteRows"><p class="empty">Nessun invitato ancora.</p></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">I tuoi link affiliato</div>
+        <div id="mieiLinkRows"><p class="empty">Non hai ancora inserito link affiliato.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
+    (function () {
+      const loadedAt = Date.now();
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && Date.now() - loadedAt > 4000) window.location.reload();
+      });
+    })();
+  </script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    const initData = tg?.initData || "";
+
+    let currentRefLink = "";
+    let servizioNames = {};
+
+    function loadServizioNames() {
+      return fetch(`${API_URL}/business-list`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((data) => {
+          (data.categorie || []).forEach((cat) => {
+            (cat.servizi || []).forEach((s) => { servizioNames[s.id] = s.nome; });
+          });
+        })
+        .catch(() => {});
+    }
+
+    function copyRefLink() {
+      if (!currentRefLink) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(currentRefLink).catch(() => {});
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+      else alert("Link copiato!");
+    }
+
+    async function load() {
+      const meRes = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const meData = await meRes.json();
+      const completato = !!(meData.lead || {}).sondaggio_completato;
+
+      if (!completato) {
+        document.getElementById("lockRete").style.display = "block";
+        return;
+      }
+
+      const [res] = await Promise.all([
+        fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" }),
+        loadServizioNames(),
+      ]);
+      const data = await res.json();
+
+      currentRefLink = data.ref_link || "";
+      document.getElementById("refLinkText").textContent = currentRefLink || "-";
+      document.getElementById("statInvitati").textContent = data.rete?.invitati_count || 0;
+      document.getElementById("statAttivati").textContent = data.rete?.attivati_count || 0;
+
+      const membri = data.rete?.membri || [];
+      const reteEl = document.getElementById("reteRows");
+      if (membri.length) {
+        reteEl.innerHTML = membri.map((m) => `
+          <div class="row">
+            <div class="row-ico">${(m.nome_mascherato || "??").slice(0, 2).toUpperCase()}</div>
+            <div class="row-body">
+              <div class="row-name">${m.nome_mascherato || "Utente"}</div>
+              <div class="row-sub">${m.stato_label || "Nuova"}</div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      const miei = data.miei_reflink || [];
+      const mieiEl = document.getElementById("mieiLinkRows");
+      if (miei.length) {
+        mieiEl.innerHTML = miei.map((l) => `
+          <div class="row">
+            <div class="row-body">
+              <div class="row-name">${servizioNames[l.servizio_id] || "Servizio"}</div>
+              <div class="row-sub" style="word-break:break-all">${l.ref_link || ""}</div>
+            </div>
+            <div class="row-badge ${l.approvato ? "" : "pending"}">${l.approvato ? "Approvato" : "In attesa"}</div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("reteContent").style.display = "block";
+    }
+
+    load();
+  </script>
+</body>
+</html>
