@@ -196,10 +196,18 @@ async function apiBusinessList() {
 async function apiServizio(telegramId: number, servizioId: number) {
   const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
   if (!servizio) return json({ error: "not_found" }, 404)
-  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente, can_insert_reflinks").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refLink = await resolveRefLink(telegramId, servizioId)
-  return json({ servizio, gia_interessato: !!interesse, ref_link: refLink, sondaggio_completato: !!lead?.sondaggio_completato })
+  return json({
+    servizio,
+    gia_interessato: !!interesse,
+    ref_link: refLink,
+    sondaggio_completato: !!lead?.sondaggio_completato,
+    can_insert_reflinks: !!lead?.can_insert_reflinks,
+    mio_link: mioLink || null,
+  })
 }
 
 function maskName(nome: string | null, telegramId: number): string {
@@ -259,6 +267,9 @@ async function apiAttiva(telegramId: number, body: any) {
 
   const { servizio_id } = body
   await supabase.from("lead_servizi").insert({ telegram_id: telegramId, servizio_id, stato: "interessato" })
+  // Attivare un servizio rende l'utente cliente e gli sblocca la possibilità di proporre un proprio link affiliato
+  // (l'approvazione del singolo link resta comunque un controllo admin separato).
+  await supabase.from("leads").update({ is_cliente: true, can_insert_reflinks: true }).eq("telegram_id", telegramId)
   const refLink = await resolveRefLink(telegramId, servizio_id)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_attivato", dettaglio: `servizio:${servizio_id}` })
   return json({ ok: true, ref_link: refLink })
@@ -310,6 +321,37 @@ async function apiAdminServiziSave(body: any) {
 async function apiAdminServiziDelete(body: any) {
   const { id } = body
   const { error } = await supabase.from("servizi").delete().eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+// ---------- ADMIN: LINK AFFILIATO ----------
+async function apiAdminAffiliateLinksList() {
+  const { data: links } = await supabase.from("affiliate_link").select("*").order("created_at", { ascending: false })
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, cognome, username")
+  const { data: servizi } = await supabase.from("servizi").select("id, nome")
+  const leadMap: Record<number, any> = {}
+  for (const l of leads ?? []) leadMap[(l as any).telegram_id] = l
+  const svcMap: Record<number, string> = {}
+  for (const s of servizi ?? []) svcMap[(s as any).id] = (s as any).nome
+  const list = (links ?? []).map((l: any) => ({
+    ...l,
+    utente_nome: [leadMap[l.telegram_id]?.nome, leadMap[l.telegram_id]?.cognome].filter(Boolean).join(" ") || leadMap[l.telegram_id]?.username || `ID ${l.telegram_id}`,
+    servizio_nome: svcMap[l.servizio_id] || "?",
+  }))
+  return json({ links: list })
+}
+
+async function apiAdminAffiliateLinkApprove(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("affiliate_link").update({ approvato: true }).eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+async function apiAdminAffiliateLinkDelete(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("affiliate_link").delete().eq("id", id)
   if (error) return json({ error: error.message }, 500)
   return json({ ok: true })
 }
@@ -388,6 +430,10 @@ serve(async (req) => {
       if (sub === "admin/servizi" && req.method === "GET") return await apiAdminServiziList()
       if (sub === "admin/servizi/save" && req.method === "POST") return await apiAdminServiziSave(await req.json())
       if (sub === "admin/servizi/delete" && req.method === "POST") return await apiAdminServiziDelete(await req.json())
+
+      if (sub === "admin/affiliate-links" && req.method === "GET") return await apiAdminAffiliateLinksList()
+      if (sub === "admin/affiliate-links/approve" && req.method === "POST") return await apiAdminAffiliateLinkApprove(await req.json())
+      if (sub === "admin/affiliate-links/delete" && req.method === "POST") return await apiAdminAffiliateLinkDelete(await req.json())
     }
 
     return json({ service: "businessup-bot", status: "ready" })

@@ -65,6 +65,11 @@
   .btn-primary { background: var(--blue); color: #fff; }
   .btn-done { background: var(--lime-dim); color: var(--lime); }
   .link-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 9px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; }
+
+  .aff-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 9px; font-size: 13.5px; margin-bottom: 10px; font-family: inherit; }
+  .aff-status { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 10px 12px; border-radius: 9px; }
+  .aff-status.pending { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .aff-status.approved { background: var(--lime-dim); color: var(--lime); }
 </style>
 </head>
 <body>
@@ -101,6 +106,16 @@
 
     <button class="btn btn-primary" id="attivaBtn">Attiva questo servizio</button>
     <div class="link-box" id="linkBox" style="display:none"></div>
+
+    <div class="card" id="affCard" style="display:none">
+      <h2>Diventa affiliato di questo servizio</h2>
+      <div id="affForm">
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.5">Inserisci il tuo link personale per questo servizio. Chi inviti tramite la tua rete vedrà questo link invece di quello principale, una volta approvato.</p>
+        <input type="text" class="aff-input" id="affLinkInput" placeholder="https://..." />
+        <button class="btn btn-primary" id="affSubmitBtn">Invia per approvazione</button>
+      </div>
+      <div id="affStatus" style="display:none"></div>
+    </div>
   </div>
 
   <script>
@@ -188,9 +203,50 @@
             document.getElementById("linkBox").style.display = "block";
             document.getElementById("linkBox").textContent = result.ref_link;
           }
+          renderAffiliateCard({ ...data, can_insert_reflinks: true });
+        };
+      }
+
+      renderAffiliateCard(data);
+    }
+
+    function renderAffiliateCard(data) {
+      if (!data.can_insert_reflinks) return;
+      const card = document.getElementById("affCard");
+      card.style.display = "block";
+
+      if (data.mio_link) {
+        document.getElementById("affForm").style.display = "none";
+        const status = document.getElementById("affStatus");
+        status.style.display = "flex";
+        if (data.mio_link.approvato) {
+          status.className = "aff-status approved";
+          status.textContent = "✓ Link approvato — attivo per la tua rete";
+        } else {
+          status.className = "aff-status pending";
+          status.textContent = "In attesa di approvazione";
+        }
+      } else {
+        document.getElementById("affSubmitBtn").onclick = async () => {
+          const link = document.getElementById("affLinkInput").value.trim();
+          if (!link) return;
+          const submitBtn = document.getElementById("affSubmitBtn");
+          submitBtn.textContent = "Invio...";
+          submitBtn.disabled = true;
+          await fetch(`${API_URL}/affiliate-link`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+            body: JSON.stringify({ servizio_id: parseInt(servizioId), ref_link: link }),
+          });
+          document.getElementById("affForm").style.display = "none";
+          const status = document.getElementById("affStatus");
+          status.style.display = "flex";
+          status.className = "aff-status pending";
+          status.textContent = "In attesa di approvazione";
         };
       }
     }
+
     load();
   </script>
 </body>

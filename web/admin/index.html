@@ -59,6 +59,9 @@
   .badge.attivo { background: var(--lime-dim); color: var(--lime); }
   .badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
   .badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
+  .badge.pending { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .badge.approved { background: var(--lime-dim); color: var(--lime); }
+  .link-preview { font-size: 11.5px; color: var(--text-dim); font-family: monospace; word-break: break-all; margin-top: 6px; }
 
   /* Form modal */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
@@ -121,6 +124,13 @@
         <button class="btn-add" onclick="openServizioForm()">+ Nuovo servizio</button>
       </div>
       <div id="serviziList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Link affiliato da approvare</h2>
+      </div>
+      <div id="affLinksList"></div>
     </div>
   </div>
 
@@ -221,6 +231,40 @@
       const svcRes = await (await api("admin/servizi")).json();
       servizi = svcRes.servizi || [];
       renderServizi();
+
+      const linksRes = await (await api("admin/affiliate-links")).json();
+      renderAffLinks(linksRes.links || []);
+    }
+
+    function renderAffLinks(links) {
+      const el = document.getElementById("affLinksList");
+      if (!links.length) { el.innerHTML = '<p class="empty">Nessun link inviato dagli affiliati.</p>'; return; }
+      el.innerHTML = links.map((l) => `
+        <div class="item">
+          <div class="item-head">
+            <div>
+              <div class="item-title">${l.utente_nome} <span class="badge ${l.approvato ? "approved" : "pending"}">${l.approvato ? "approvato" : "in attesa"}</span></div>
+              <div class="item-meta">${l.servizio_nome}</div>
+              <div class="link-preview">${l.ref_link}</div>
+            </div>
+            <div class="item-actions">
+              ${l.approvato ? "" : `<button class="icon-btn" onclick="approveAffLink(${l.id})" title="Approva">✓</button>`}
+              <button class="icon-btn danger" onclick="deleteAffLink(${l.id})" title="Rifiuta/Elimina">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function approveAffLink(id) {
+      await api("admin/affiliate-links/approve", { method: "POST", body: JSON.stringify({ id }) });
+      loadAll();
+    }
+
+    async function deleteAffLink(id) {
+      if (!confirm("Rimuovere questo link?")) return;
+      await api("admin/affiliate-links/delete", { method: "POST", body: JSON.stringify({ id }) });
+      loadAll();
     }
 
     function renderCategorie() {

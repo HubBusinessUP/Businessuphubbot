@@ -290,6 +290,9 @@
         </div>
         <div class="section-head"><h3>Membri della rete</h3></div>
         <div class="rows" id="reteRows"><p class="empty">Nessun invito ancora.</p></div>
+
+        <div class="section-head" style="margin-top:14px"><h3>I miei link affiliato</h3></div>
+        <div class="rows" id="mieiLinkRows"><p class="empty">Nessun link inserito. Vai su un servizio per proporne uno.</p></div>
       </div>
     </div>
   </div>
@@ -432,9 +435,11 @@
       const cats = data.categorie || [];
       if (!cats.length) { el.innerHTML = '<p class="empty">Nessun servizio disponibile al momento.</p>'; return; }
 
+      window.servizioNames = {};
       let totale = 0, attivi = 0;
       cats.forEach((cat, idx) => {
         const servizi = cat.servizi || [];
+        servizi.forEach((s) => { window.servizioNames[s.id] = s.nome; });
         totale += servizi.length;
         attivi += servizi.filter((s) => s.stato === "attivo").length;
 
@@ -485,19 +490,34 @@
       const members = data.rete?.membri || [];
       if (!members.length) {
         rows.innerHTML = '<p class="empty">Nessun invito ancora. Condividi il tuo link!</p>';
-        return;
+      } else {
+        const palette = ["var(--lime)", "var(--amber)", "var(--coral)", "var(--blue)"];
+        rows.innerHTML = members.map((m, i) => {
+          const color = palette[i % palette.length];
+          const positive = m.stato === "qualificato" || m.stato === "cliente";
+          return `
+            <div class="row">
+              <div class="r-avatar" style="background:${color}">${m.nome_mascherato.replace(/\./g, "")}</div>
+              <div class="r-body"><div class="r-name">${m.nome_mascherato}</div><div class="r-meta">${m.sondaggio_completato ? m.stato_label : "Sondaggio in corso"}</div></div>
+              <div class="r-value" style="color:${positive ? "var(--lime)" : "var(--text-dim)"}">${positive ? "Attiva" : "—"}</div>
+            </div>`;
+        }).join("");
       }
-      const palette = ["var(--lime)", "var(--amber)", "var(--coral)", "var(--blue)"];
-      rows.innerHTML = members.map((m, i) => {
-        const color = palette[i % palette.length];
-        const positive = m.stato === "qualificato" || m.stato === "cliente";
-        return `
-          <div class="row">
-            <div class="r-avatar" style="background:${color}">${m.nome_mascherato.replace(/\./g, "")}</div>
-            <div class="r-body"><div class="r-name">${m.nome_mascherato}</div><div class="r-meta">${m.sondaggio_completato ? m.stato_label : "Sondaggio in corso"}</div></div>
-            <div class="r-value" style="color:${positive ? "var(--lime)" : "var(--text-dim)"}">${positive ? "Attiva" : "—"}</div>
-          </div>`;
-      }).join("");
+
+      const linkRows = document.getElementById("mieiLinkRows");
+      const mieiLink = data.miei_reflink || [];
+      if (!mieiLink.length) {
+        linkRows.innerHTML = '<p class="empty">Nessun link inserito. Vai su un servizio per proporne uno.</p>';
+      } else {
+        linkRows.innerHTML = mieiLink.map((l) => {
+          const nome = (window.servizioNames && window.servizioNames[l.servizio_id]) || `Servizio #${l.servizio_id}`;
+          return `
+            <div class="row">
+              <div class="r-body"><div class="r-name">${nome}</div><div class="r-meta">${l.approvato ? "Approvato" : "In attesa di approvazione"}</div></div>
+              <div class="r-value" style="color:${l.approvato ? "var(--lime)" : "var(--amber)"}">${l.approvato ? "✓" : "…"}</div>
+            </div>`;
+        }).join("");
+      }
     }
 
     function copyLink() {
