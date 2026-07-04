@@ -190,6 +190,14 @@ async function apiBusinessList() {
   return json({ categorie: list })
 }
 
+async function apiServizio(telegramId: number, servizioId: number) {
+  const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
+  if (!servizio) return json({ error: "not_found" }, 404)
+  const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const refLink = await resolveRefLink(telegramId, servizioId)
+  return json({ servizio, gia_interessato: !!interesse, ref_link: refLink })
+}
+
 function maskName(nome: string | null, telegramId: number): string {
   const src = (nome || `U${telegramId}`).trim()
   const parts = src.split(/\s+/)
@@ -280,6 +288,13 @@ serve(async (req) => {
 
     if (sub === "business-list" && req.method === "GET") {
       return await apiBusinessList()
+    }
+
+    if (sub === "servizio" && req.method === "GET") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      const servizioId = parseInt(url.searchParams.get("id") || "0")
+      return await apiServizio(tid, servizioId)
     }
 
     if (sub === "affiliazione" && req.method === "GET") {

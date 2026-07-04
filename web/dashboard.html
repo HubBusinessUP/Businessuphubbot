@@ -123,15 +123,21 @@
   .btn { width: 100%; padding: 14px; border: none; border-radius: 13px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
   .btn-primary { background: var(--blue); color: #fff; }
 
-  .service-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
-  .service-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
-  .service-title { font-size: 15px; font-weight: 700; }
-  .stato-badge { font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .service-row {
+    display: flex; align-items: center; gap: 13px; padding: 13px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    margin-bottom: 9px; cursor: pointer; border: none; width: 100%; text-align: left; font-family: inherit;
+    transition: transform 0.12s ease;
+  }
+  .service-row:active { transform: scale(0.98); }
+  .service-ico { width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .service-body { flex: 1; min-width: 0; }
+  .service-title { font-size: 14.5px; font-weight: 700; }
+  .service-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
   .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
   .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
   .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
-  .service-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4; }
-  .service-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
   .cat-title { font-size: 12.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin: 16px 0 10px; }
   .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; }
 
@@ -315,6 +321,14 @@
       }
     }
 
+    const SERVICE_ICON_BG = [
+      "var(--blue)",
+      "linear-gradient(150deg, var(--flame-1), var(--flame-2))",
+      "linear-gradient(150deg, var(--grape-1), var(--grape-2))",
+      "var(--lime)",
+    ];
+    const SERVICE_ICON_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7C10 4 6 3 5 5s1 2 3 2h4ZM12 7c2-3 6-4 7-2s-1 2-3 2h-4Z"/></svg>';
+
     async function loadBusinessList() {
       const res = await fetch(`${API_URL}/business-list`, { cache: "no-store" });
       const data = await res.json();
@@ -322,7 +336,7 @@
       el.innerHTML = "";
       const cats = data.categorie || [];
       if (!cats.length) { el.innerHTML = '<p class="empty">Nessun servizio disponibile al momento.</p>'; return; }
-      let totale = 0, attivi = 0;
+      let totale = 0, attivi = 0, idx = 0;
       cats.forEach((cat) => {
         const title = document.createElement("div");
         title.className = "cat-title";
@@ -331,28 +345,19 @@
         (cat.servizi || []).forEach((s) => {
           totale++;
           if (s.stato === "attivo") attivi++;
-          const card = document.createElement("div");
-          card.className = "service-card";
-          card.innerHTML = `
-            <div class="service-head">
+          const row = document.createElement("button");
+          row.className = "service-row";
+          row.innerHTML = `
+            <div class="service-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${SERVICE_ICON_SVG}</div>
+            <div class="service-body">
               <div class="service-title">${s.nome}</div>
-              <div class="stato-badge ${s.stato}">${s.stato}</div>
+              <div class="service-sub">${s.split_percent ? `Split ${s.split_percent}%` : cat.nome}</div>
             </div>
-            <div class="service-desc">${s.descrizione || ""}</div>
-            <div class="service-meta">${s.split_percent ? `Split ${s.split_percent}%` : ""}${s.prezzo ? " · " + s.prezzo : ""}</div>
-            <button class="btn btn-primary" data-id="${s.id}">Sono interessato</button>
+            <div class="stato-badge ${s.stato}">${s.stato}</div>
           `;
-          card.querySelector("button").onclick = async (e) => {
-            e.target.textContent = "...";
-            await fetch(`${API_URL}/attiva`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
-              body: JSON.stringify({ servizio_id: s.id }),
-            });
-            e.target.textContent = "Interesse registrato";
-            e.target.disabled = true;
-          };
-          el.appendChild(card);
+          row.onclick = () => window.location.href = `servizio.html?id=${s.id}&_=${Date.now()}`;
+          el.appendChild(row);
+          idx++;
         });
       });
       document.getElementById("tileServizi").textContent = `${totale} servizi · ${attivi} attivi`;

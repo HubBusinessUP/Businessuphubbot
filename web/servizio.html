@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Servizio - Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --blue-dim: rgba(76, 110, 245, 0.16);
+    --flame-1: #ff8a3d;
+    --flame-2: #ff4d6d;
+    --lime: #34d399;
+    --lime-dim: rgba(52, 211, 153, 0.16);
+    --amber: #fbbf24;
+    --coral: #f2554d;
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh; background: var(--ink); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
+
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .back { width: 36px; height: 36px; border-radius: 11px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+
+  .hero { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 14px; }
+  .hero-top { display: flex; align-items: center; gap: 14px; }
+  .hero-ico { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(150deg, var(--flame-1), var(--flame-2)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hero-title { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .stato-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 5px; }
+  .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
+  .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
+  .hero-desc { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; margin-top: 14px; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 13px; text-align: center; }
+  .stat-box .label { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-box .value { font-size: 17px; font-weight: 800; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .card h2 { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
+
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; }
+  .step-num { width: 26px; height: 26px; border-radius: 9px; background: var(--blue-dim); color: var(--blue); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-text { font-size: 13.5px; line-height: 1.4; padding-top: 3px; }
+  .step-text b { display: block; font-size: 14px; margin-bottom: 2px; }
+
+  .req-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .req-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .req-row .k { color: var(--text-dim); }
+  .req-row .v { font-weight: 700; text-align: right; max-width: 60%; }
+
+  .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-done { background: var(--lime-dim); color: var(--lime); }
+  .link-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <button class="back" onclick="history.back()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+    </div>
+
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7C10 4 6 3 5 5s1 2 3 2h4ZM12 7c2-3 6-4 7-2s-1 2-3 2h-4Z"/></svg></div>
+        <div>
+          <div class="hero-title" id="titolo">Caricamento...</div>
+          <div class="stato-badge" id="statoBadge"></div>
+        </div>
+      </div>
+      <p class="hero-desc" id="descrizione"></p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box"><div class="label">Split</div><div class="value" id="split">-</div></div>
+      <div class="stat-box"><div class="label">Prezzo</div><div class="value" id="prezzo">-</div></div>
+    </div>
+
+    <div class="card" id="reqCard" style="display:none">
+      <h2>Dettagli</h2>
+      <div id="reqRows"></div>
+    </div>
+
+    <div class="card">
+      <h2>Come funziona</h2>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><b>Guarda il tutorial completo</b>Trovi la spiegazione passo-passo di questo metodo (in arrivo qui).</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><b>Verifica i requisiti</b>Controlla capitale e strumenti richiesti qui sopra.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><b>Attiva il servizio</b>Premi il bottone qui sotto per segnalare il tuo interesse.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text"><b>Ricevi il tuo link</b>Ti diamo il link giusto per iniziare, personale o dell'affiliato che ti ha invitato.</div></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="attivaBtn">Attiva questo servizio</button>
+    <div class="link-box" id="linkBox" style="display:none"></div>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    const initData = tg?.initData || "";
+    const servizioId = new URLSearchParams(window.location.search).get("id");
+
+    async function load() {
+      const res = await fetch(`${API_URL}/servizio?id=${servizioId}`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      const s = data.servizio;
+      if (!s) { document.getElementById("titolo").textContent = "Servizio non trovato"; return; }
+
+      document.getElementById("titolo").textContent = s.nome;
+      document.getElementById("descrizione").textContent = s.descrizione || "";
+      document.getElementById("split").textContent = s.split_percent ? `${s.split_percent}%` : "-";
+      document.getElementById("prezzo").textContent = s.prezzo || "-";
+
+      const badge = document.getElementById("statoBadge");
+      badge.className = `stato-badge ${s.stato}`;
+      badge.textContent = s.stato;
+
+      if (s.requisiti || s.costi) {
+        document.getElementById("reqCard").style.display = "block";
+        const rows = document.getElementById("reqRows");
+        let html = "";
+        if (s.requisiti) html += `<div class="req-row"><span class="k">Requisiti</span><span class="v">${s.requisiti}</span></div>`;
+        if (s.costi) html += `<div class="req-row"><span class="k">Costi</span><span class="v">${s.costi}</span></div>`;
+        rows.innerHTML = html;
+      }
+
+      const btn = document.getElementById("attivaBtn");
+      if (data.gia_interessato) {
+        btn.className = "btn btn-done";
+        btn.textContent = "✓ Interesse già registrato";
+        btn.disabled = true;
+        if (data.ref_link) {
+          document.getElementById("linkBox").style.display = "block";
+          document.getElementById("linkBox").textContent = data.ref_link;
+        }
+      } else {
+        btn.onclick = async () => {
+          btn.textContent = "...";
+          btn.disabled = true;
+          const r = await fetch(`${API_URL}/attiva`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+            body: JSON.stringify({ servizio_id: parseInt(servizioId) }),
+          });
+          const result = await r.json();
+          btn.className = "btn btn-done";
+          btn.textContent = "✓ Interesse registrato";
+          if (result.ref_link) {
+            document.getElementById("linkBox").style.display = "block";
+            document.getElementById("linkBox").textContent = result.ref_link;
+          }
+        };
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
