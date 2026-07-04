@@ -196,9 +196,10 @@ async function apiBusinessList() {
 async function apiServizio(telegramId: number, servizioId: number) {
   const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
   if (!servizio) return json({ error: "not_found" }, 404)
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refLink = await resolveRefLink(telegramId, servizioId)
-  return json({ servizio, gia_interessato: !!interesse, ref_link: refLink })
+  return json({ servizio, gia_interessato: !!interesse, ref_link: refLink, sondaggio_completato: !!lead?.sondaggio_completato })
 }
 
 function maskName(nome: string | null, telegramId: number): string {
@@ -253,6 +254,9 @@ async function apiAffiliateLinkSave(telegramId: number, body: any) {
 }
 
 async function apiAttiva(telegramId: number, body: any) {
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.sondaggio_completato) return json({ error: "anagrafica_richiesta" }, 403)
+
   const { servizio_id } = body
   await supabase.from("lead_servizi").insert({ telegram_id: telegramId, servizio_id, stato: "interessato" })
   const refLink = await resolveRefLink(telegramId, servizio_id)

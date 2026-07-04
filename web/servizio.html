@@ -163,6 +163,9 @@
           document.getElementById("linkBox").style.display = "block";
           document.getElementById("linkBox").textContent = data.ref_link;
         }
+      } else if (!data.sondaggio_completato) {
+        btn.textContent = "Completa l'anagrafica per attivare";
+        btn.onclick = () => window.location.href = `sondaggio.html?_=${Date.now()}`;
       } else {
         btn.onclick = async () => {
           btn.textContent = "...";
@@ -173,6 +176,12 @@
             body: JSON.stringify({ servizio_id: parseInt(servizioId) }),
           });
           const result = await r.json();
+          if (result.error === "anagrafica_richiesta") {
+            btn.textContent = "Completa l'anagrafica per attivare";
+            btn.disabled = false;
+            btn.onclick = () => window.location.href = `sondaggio.html?_=${Date.now()}`;
+            return;
+          }
           btn.className = "btn btn-done";
           btn.textContent = "✓ Interesse registrato";
           if (result.ref_link) {
