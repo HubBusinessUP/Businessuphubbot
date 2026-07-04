@@ -13,8 +13,7 @@
     --panel: #171b26;
     --blue: #4c6ef5;
     --blue-dim: rgba(76, 110, 245, 0.16);
-    --flame-1: #ff8a3d;
-    --flame-2: #ff4d6d;
+    --flame: #ff5c48;
     --lime: #34d399;
     --lime-dim: rgba(52, 211, 153, 0.16);
     --amber: #fbbf24;
@@ -31,29 +30,29 @@
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
 
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .back { width: 36px; height: 36px; border-radius: 11px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
 
-  .hero { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 14px; }
+  .hero { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
   .hero-top { display: flex; align-items: center; gap: 14px; }
-  .hero-ico { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(150deg, var(--flame-1), var(--flame-2)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hero-ico { width: 52px; height: 52px; border-radius: 12px; background: var(--flame); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .hero-title { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
-  .stato-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 5px; }
+  .stato-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 5px; }
   .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
   .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
   .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
   .hero-desc { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; margin-top: 14px; }
 
   .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 13px; text-align: center; }
+  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 13px; text-align: center; }
   .stat-box .label { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
   .stat-box .value { font-size: 17px; font-weight: 800; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
   .card h2 { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
   .steps { display: flex; flex-direction: column; gap: 12px; }
   .step { display: flex; gap: 12px; align-items: flex-start; }
-  .step-num { width: 26px; height: 26px; border-radius: 9px; background: var(--blue-dim); color: var(--blue); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-num { width: 26px; height: 26px; border-radius: 7px; background: var(--blue-dim); color: var(--blue); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .step-text { font-size: 13.5px; line-height: 1.4; padding-top: 3px; }
   .step-text b { display: block; font-size: 14px; margin-bottom: 2px; }
 
@@ -62,10 +61,10 @@
   .req-row .k { color: var(--text-dim); }
   .req-row .v { font-weight: 700; text-align: right; max-width: 60%; }
 
-  .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn { width: 100%; padding: 16px; border: none; border-radius: 9px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
   .btn-primary { background: var(--blue); color: #fff; }
   .btn-done { background: var(--lime-dim); color: var(--lime); }
-  .link-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; }
+  .link-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 9px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; }
 </style>
 </head>
 <body>

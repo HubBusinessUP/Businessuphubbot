@@ -13,8 +13,7 @@
     --panel: #171b26;
     --blue: #4c6ef5;
     --blue-dim: rgba(76, 110, 245, 0.16);
-    --flame-1: #ff8a3d;
-    --flame-2: #ff4d6d;
+    --flame: #ff5c48;
     --text: #f4f6fb;
     --text-dim: #8890a6;
     --border: rgba(244, 246, 251, 0.07);
@@ -30,8 +29,8 @@
 
   .top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
   .top-ico {
-    width: 40px; height: 40px; border-radius: 13px;
-    background: linear-gradient(150deg, var(--flame-1), var(--flame-2));
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--flame);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .top h1 { font-size: 20px; font-weight: 800; }
@@ -45,19 +44,19 @@
   .opt {
     display: block; width: 100%; text-align: left;
     background: var(--panel); border: 1px solid var(--border);
-    color: var(--text); padding: 15px 16px; border-radius: 14px;
+    color: var(--text); padding: 15px 16px; border-radius: 9px;
     font-size: 15px; font-weight: 600; margin-bottom: 10px; cursor: pointer;
     font-family: inherit;
   }
   .opt:active, .opt.selected { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
   input[type=text] {
     width: 100%; background: var(--panel); border: 1px solid var(--border);
-    color: var(--text); padding: 15px 16px; border-radius: 14px; font-size: 15px;
+    color: var(--text); padding: 15px 16px; border-radius: 9px; font-size: 15px;
     margin-bottom: 14px; font-family: inherit;
   }
   input[type=text]:focus { outline: none; border-color: var(--blue); }
   .btn {
-    width: 100%; padding: 15px; border: none; border-radius: 14px;
+    width: 100%; padding: 15px; border: none; border-radius: 9px;
     font-weight: 700; font-size: 15px; cursor: pointer;
     background: var(--blue); color: #fff;
   }
