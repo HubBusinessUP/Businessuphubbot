@@ -319,11 +319,7 @@
 
     window.sondaggioCompletato = false;
     function goProfilo() {
-      if (!window.sondaggioCompletato) {
-        window.location.href = `sondaggio.html?_=${Date.now()}`;
-      } else {
-        switchTab("profilo");
-      }
+      window.location.href = `sondaggio.html?_=${Date.now()}`;
     }
 
     function initials(name) {
@@ -477,14 +473,21 @@
       const text = "Entra in Business UP con il mio link:";
       const link = window.currentRefLink;
 
-      if (navigator.share) {
-        navigator.share({ title: "Business UP", text, url: link }).catch(() => {});
-        return;
-      }
+      const fallback = () => {
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+        if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
+        else window.open(shareUrl, "_blank");
+      };
 
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
-      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
-      else window.open(shareUrl, "_blank");
+      if (navigator.share) {
+        try {
+          navigator.share({ title: "Business UP", text, url: link }).catch(fallback);
+        } catch (e) {
+          fallback();
+        }
+      } else {
+        fallback();
+      }
     }
 
     async function init() {
