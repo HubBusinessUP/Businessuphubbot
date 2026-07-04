@@ -257,6 +257,56 @@ async function apiAttiva(telegramId: number, body: any) {
   return json({ ok: true, ref_link: refLink })
 }
 
+// ---------- ADMIN: CATEGORIE & SERVIZI ----------
+async function apiAdminCategorieList() {
+  const { data } = await supabase.from("categorie").select("*").order("ordine")
+  return json({ categorie: data ?? [] })
+}
+
+async function apiAdminCategorieSave(body: any) {
+  const { id, nome, descrizione, ordine } = body
+  if (id) {
+    const { error } = await supabase.from("categorie").update({ nome, descrizione, ordine }).eq("id", id)
+    if (error) return json({ error: error.message }, 500)
+  } else {
+    const { error } = await supabase.from("categorie").insert({ nome, descrizione, ordine: ordine ?? 0 })
+    if (error) return json({ error: error.message }, 500)
+  }
+  return json({ ok: true })
+}
+
+async function apiAdminCategorieDelete(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("categorie").delete().eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+async function apiAdminServiziList() {
+  const { data } = await supabase.from("servizi").select("*").order("ordine")
+  return json({ servizi: data ?? [] })
+}
+
+async function apiAdminServiziSave(body: any) {
+  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps } = body
+  const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [] }
+  if (id) {
+    const { error } = await supabase.from("servizi").update(row).eq("id", id)
+    if (error) return json({ error: error.message }, 500)
+  } else {
+    const { error } = await supabase.from("servizi").insert(row)
+    if (error) return json({ error: error.message }, 500)
+  }
+  return json({ ok: true })
+}
+
+async function apiAdminServiziDelete(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("servizi").delete().eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
 // ---------- MAIN SERVER ----------
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS })
@@ -315,11 +365,22 @@ serve(async (req) => {
       return await apiAttiva(tid, await req.json())
     }
 
-    if (sub === "admin/stats" && req.method === "GET") {
+    if (sub.startsWith("admin/")) {
       if (req.headers.get("x-admin-key") !== ADMIN_API_KEY) return json({ error: "unauthorized" }, 401)
-      const { count: leads } = await supabase.from("leads").select("*", { count: "exact", head: true })
-      const { count: qualificati } = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("pipeline_stage", "qualificato")
-      return json({ leads, qualificati })
+
+      if (sub === "admin/stats" && req.method === "GET") {
+        const { count: leads } = await supabase.from("leads").select("*", { count: "exact", head: true })
+        const { count: qualificati } = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("pipeline_stage", "qualificato")
+        return json({ leads, qualificati })
+      }
+
+      if (sub === "admin/categorie" && req.method === "GET") return await apiAdminCategorieList()
+      if (sub === "admin/categorie/save" && req.method === "POST") return await apiAdminCategorieSave(await req.json())
+      if (sub === "admin/categorie/delete" && req.method === "POST") return await apiAdminCategorieDelete(await req.json())
+
+      if (sub === "admin/servizi" && req.method === "GET") return await apiAdminServiziList()
+      if (sub === "admin/servizi/save" && req.method === "POST") return await apiAdminServiziSave(await req.json())
+      if (sub === "admin/servizi/delete" && req.method === "POST") return await apiAdminServiziDelete(await req.json())
     }
 
     return json({ service: "businessup-bot", status: "ready" })

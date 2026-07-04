@@ -95,13 +95,8 @@
     </div>
 
     <div class="card">
-      <h2>Come funziona</h2>
-      <div class="steps">
-        <div class="step"><div class="step-num">1</div><div class="step-text"><b>Guarda il tutorial completo</b>Trovi la spiegazione passo-passo di questo metodo (in arrivo qui).</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text"><b>Verifica i requisiti</b>Controlla capitale e strumenti richiesti qui sopra.</div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text"><b>Attiva il servizio</b>Premi il bottone qui sotto per segnalare il tuo interesse.</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text"><b>Ricevi il tuo link</b>Ti diamo il link giusto per iniziare, personale o dell'affiliato che ti ha invitato.</div></div>
-      </div>
+      <h2 id="stepsTitle">Come funziona</h2>
+      <div class="steps" id="stepsList"></div>
     </div>
 
     <button class="btn btn-primary" id="attivaBtn">Attiva questo servizio</button>
@@ -130,6 +125,22 @@
       const badge = document.getElementById("statoBadge");
       badge.className = `stato-badge ${s.stato}`;
       badge.textContent = s.stato;
+
+      const stepsList = document.getElementById("stepsList");
+      const customSteps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
+      if (customSteps.length) {
+        document.getElementById("stepsTitle").textContent = "Come funziona";
+        stepsList.innerHTML = customSteps.map((st, i) => `
+          <div class="step"><div class="step-num">${i + 1}</div><div class="step-text"><b>${st.titolo}</b>${st.testo}</div></div>
+        `).join("");
+      } else {
+        stepsList.innerHTML = `
+          <div class="step"><div class="step-num">1</div><div class="step-text"><b>Guarda il tutorial completo</b>Trovi la spiegazione passo-passo di questo metodo (in arrivo qui).</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text"><b>Verifica i requisiti</b>Controlla capitale e strumenti richiesti qui sopra.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text"><b>Attiva il servizio</b>Premi il bottone qui sotto per segnalare il tuo interesse.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text"><b>Ricevi il tuo link</b>Ti diamo il link giusto per iniziare, personale o dell'affiliato che ti ha invitato.</div></div>
+        `;
+      }
 
       if (s.requisiti || s.costi) {
         document.getElementById("reqCard").style.display = "block";
