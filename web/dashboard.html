@@ -472,7 +472,14 @@
         return;
       }
       const text = "Entra in Business UP con il mio link:";
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.currentRefLink)}&text=${encodeURIComponent(text)}`;
+      const link = window.currentRefLink;
+
+      if (navigator.share) {
+        navigator.share({ title: "Business UP", text, url: link }).catch(() => {});
+        return;
+      }
+
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
       if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
       else window.open(shareUrl, "_blank");
     }
