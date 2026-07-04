@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Categoria - Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --flame: #ff5c48;
+    --grape: #9d5cf0;
+    --lime: #34d399;
+    --lime-dim: rgba(52, 211, 153, 0.16);
+    --amber: #fbbf24;
+    --coral: #f2554d;
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh; background: var(--ink); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
+
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+  .top h1 { font-size: 19px; font-weight: 800; }
+  .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
+
+  .filter-row { margin-bottom: 14px; }
+  .filter-row select {
+    width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 14px; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: inherit;
+    appearance: none; -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%238890a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+  }
+
+  .service-row {
+    display: flex; align-items: center; gap: 13px; padding: 13px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 9px; cursor: pointer; border: none; width: 100%; text-align: left; font-family: inherit;
+    transition: transform 0.12s ease;
+  }
+  .service-row:active { transform: scale(0.98); }
+  .service-ico { width: 42px; height: 42px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .service-body { flex: 1; min-width: 0; }
+  .service-title { font-size: 14.5px; font-weight: 700; }
+  .service-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
+  .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
+  .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
+  .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <button class="back" onclick="history.back()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div>
+        <h1 id="catNome">Caricamento...</h1>
+        <p id="catCount"></p>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <select id="filtro">
+        <option value="tutti">Tutti i servizi</option>
+        <option value="attivo">Solo attivi</option>
+        <option value="pausa">In pausa</option>
+        <option value="fermo">Fermi</option>
+      </select>
+    </div>
+
+    <div id="list"><p class="empty">Caricamento...</p></div>
+  </div>
+
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const catId = parseInt(new URLSearchParams(window.location.search).get("id"));
+    const ICON_BG = ["var(--blue)", "var(--flame)", "var(--grape)", "var(--lime)"];
+    const ICON_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7C10 4 6 3 5 5s1 2 3 2h4ZM12 7c2-3 6-4 7-2s-1 2-3 2h-4Z"/></svg>';
+
+    let allServizi = [];
+
+    function render(filtro) {
+      const el = document.getElementById("list");
+      const filtered = filtro === "tutti" ? allServizi : allServizi.filter((s) => s.stato === filtro);
+      if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun servizio in questa vista.</p>'; return; }
+      el.innerHTML = filtered.map((s, i) => `
+        <button class="service-row" onclick="window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
+          <div class="service-ico" style="background:${ICON_BG[i % ICON_BG.length]}">${ICON_SVG}</div>
+          <div class="service-body">
+            <div class="service-title">${s.nome}</div>
+            <div class="service-sub">${s.split_percent ? `Split ${s.split_percent}%` : ""}${s.prezzo ? " · " + s.prezzo : ""}</div>
+          </div>
+          <div class="stato-badge ${s.stato}">${s.stato}</div>
+        </button>
+      `).join("");
+    }
+
+    async function load() {
+      const res = await fetch(`${API_URL}/business-list`, { cache: "no-store" });
+      const data = await res.json();
+      const cat = (data.categorie || []).find((c) => c.id === catId);
+      if (!cat) { document.getElementById("catNome").textContent = "Categoria non trovata"; return; }
+
+      document.getElementById("catNome").textContent = cat.nome;
+      allServizi = cat.servizi || [];
+      document.getElementById("catCount").textContent = `${allServizi.length} serviz${allServizi.length === 1 ? "io" : "i"}`;
+      render("tutti");
+    }
+
+    document.getElementById("filtro").onchange = (e) => render(e.target.value);
+    load();
+  </script>
+</body>
+</html>
