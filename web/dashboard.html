@@ -373,7 +373,8 @@
 
     window.sondaggioCompletato = false;
     function goProfilo() {
-      window.location.href = `sondaggio.html?_=${Date.now()}`;
+      const target = window.sondaggioCompletato ? "account.html" : "sondaggio.html";
+      window.location.href = `${target}?_=${Date.now()}`;
     }
 
     function initials(name) {

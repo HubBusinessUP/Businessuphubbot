@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Il mio account - Business UP</title>
+<style>
+  :root {
+    --ink: #0b0d13;
+    --panel: #171b26;
+    --blue: #4c6ef5;
+    --blue-dim: rgba(76, 110, 245, 0.16);
+    --lime: #34d399;
+    --lime-dim: rgba(52, 211, 153, 0.16);
+    --text: #f4f6fb;
+    --text-dim: #8890a6;
+    --border: rgba(244, 246, 251, 0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  body {
+    min-height: 100vh; background: var(--ink); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
+
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+  .top h1 { font-size: 19px; font-weight: 800; }
+  .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+  .field input, .field select, .field textarea {
+    width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
+    padding: 12px; border-radius: 9px; font-size: 14px; font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--blue); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn { width: 100%; padding: 15px; border: none; border-radius: 9px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-done { background: var(--lime-dim); color: var(--lime); }
+  .save-note { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <button class="back" onclick="window.location.href='dashboard.html?_=' + Date.now()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div>
+        <h1>Il mio account</h1>
+        <p>Modifica i tuoi dati quando vuoi</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Dati anagrafici</h2>
+      <div class="field"><label>Nome</label><input id="fNome" /></div>
+      <div class="field"><label>Cognome</label><input id="fCognome" /></div>
+      <div class="field"><label>Email</label><input id="fEmail" type="email" /></div>
+      <div class="field"><label>Città</label><input id="fCitta" /></div>
+    </div>
+
+    <div class="card">
+      <h2>Il tuo profilo</h2>
+      <div class="field">
+        <label>Livello di trading</label>
+        <select id="fLivello">
+          <option>Principiante</option>
+          <option>Intermedio</option>
+          <option>Avanzato</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Esperienza con broker reali</label>
+        <select id="fEsperienza">
+          <option>No mai</option>
+          <option>Sì da meno di 6 mesi</option>
+          <option>Sì da più di 6 mesi</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Capitale</label>
+          <select id="fCapitale">
+            <option>Meno di 500 euro</option>
+            <option>500-2.000 euro</option>
+            <option>2.000-10.000 euro</option>
+            <option>10.000+ euro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Interesse</label>
+          <select id="fProdotto">
+            <option>Broker vs Broker</option>
+            <option>Prop vs Broker</option>
+            <option>Bonus ADM</option>
+            <option>Voglio capire prima</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Disposto a pagare</label>
+        <select id="fPay">
+          <option>Solo se gratis</option>
+          <option>Una tantum 50-200</option>
+          <option>Una tantum 200-500</option>
+          <option>Abbonamento</option>
+          <option>Profit share</option>
+        </select>
+      </div>
+      <div class="field"><label>Note libere</label><textarea id="fNote"></textarea></div>
+    </div>
+
+    <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
+    <p class="save-note" id="saveNote"></p>
+  </div>
+
+  <script>
+    window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
+  </script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    const initData = tg?.initData || "";
+
+    async function load() {
+      const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      const sond = data.sondaggio || {};
+      const lead = data.lead || {};
+
+      document.getElementById("fNome").value = sond.nome || lead.nome || "";
+      document.getElementById("fCognome").value = sond.cognome || lead.cognome || "";
+      document.getElementById("fEmail").value = sond.email || "";
+      document.getElementById("fCitta").value = sond.citta || "";
+      if (sond.livello_trading) document.getElementById("fLivello").value = sond.livello_trading;
+      if (sond.esperienza_broker) document.getElementById("fEsperienza").value = sond.esperienza_broker;
+      if (sond.capitale) document.getElementById("fCapitale").value = sond.capitale;
+      if (sond.prodotto_preferito) document.getElementById("fProdotto").value = sond.prodotto_preferito;
+      if (sond.willingness_to_pay) document.getElementById("fPay").value = sond.willingness_to_pay;
+      document.getElementById("fNote").value = sond.note_libere || "";
+    }
+
+    document.getElementById("saveBtn").onclick = async () => {
+      const btn = document.getElementById("saveBtn");
+      btn.textContent = "Salvataggio...";
+      btn.disabled = true;
+
+      const body = {
+        nome: document.getElementById("fNome").value.trim(),
+        cognome: document.getElementById("fCognome").value.trim(),
+        email: document.getElementById("fEmail").value.trim(),
+        citta: document.getElementById("fCitta").value.trim(),
+        livello_trading: document.getElementById("fLivello").value,
+        esperienza_broker: document.getElementById("fEsperienza").value,
+        capitale: document.getElementById("fCapitale").value,
+        prodotto_preferito: document.getElementById("fProdotto").value,
+        willingness_to_pay: document.getElementById("fPay").value,
+        note_libere: document.getElementById("fNote").value.trim(),
+        disclaimer_accettato: true,
+      };
+
+      const res = await fetch(`${API_URL}/sondaggio`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        btn.className = "btn btn-done";
+        btn.textContent = "✓ Salvato";
+        document.getElementById("saveNote").textContent = "Le modifiche sono state salvate.";
+        setTimeout(() => { btn.className = "btn btn-primary"; btn.textContent = "Salva modifiche"; btn.disabled = false; }, 2000);
+      } else {
+        btn.textContent = "Salva modifiche";
+        btn.disabled = false;
+        document.getElementById("saveNote").textContent = "Errore, riprova.";
+      }
+    };
+
+    load();
+  </script>
+</body>
+</html>
