@@ -139,6 +139,13 @@
       </div>
       <div id="affLinksList"></div>
     </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Suggerimenti dagli utenti</h2>
+      </div>
+      <div id="suggerimentiList"></div>
+    </div>
   </div>
 
   <!-- Modal Macro Categoria -->
@@ -261,6 +268,35 @@
 
       const linksRes = await (await api("admin/affiliate-links")).json();
       renderAffLinks(linksRes.links || []);
+
+      const sugRes = await (await api("admin/suggerimenti")).json();
+      renderSuggerimenti(sugRes.suggerimenti || []);
+    }
+
+    function renderSuggerimenti(suggerimenti) {
+      const el = document.getElementById("suggerimentiList");
+      if (!suggerimenti.length) { el.innerHTML = '<p class="empty">Nessun suggerimento dagli utenti.</p>'; return; }
+      el.innerHTML = suggerimenti.map((s) => `
+        <div class="item">
+          <div class="item-head">
+            <div>
+              <div class="item-title">${s.nome}</div>
+              <div class="item-meta">da ${s.utente_nome} · ${new Date(s.created_at).toLocaleDateString("it-IT")}</div>
+              ${s.descrizione ? `<div class="item-meta">${s.descrizione}</div>` : ""}
+              ${s.link ? `<div class="link-preview">${s.link}</div>` : ""}
+            </div>
+            <div class="item-actions">
+              <button class="icon-btn danger" onclick="deleteSuggerimento(${s.id})" title="Elimina">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function deleteSuggerimento(id) {
+      if (!confirm("Eliminare questo suggerimento?")) return;
+      await api("admin/suggerimenti/delete", { method: "POST", body: JSON.stringify({ id }) });
+      loadAll();
     }
 
     function renderAffLinks(links) {

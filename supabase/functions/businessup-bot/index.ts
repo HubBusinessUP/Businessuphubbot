@@ -389,6 +389,39 @@ async function apiStepProgressSave(telegramId: number, body: any) {
   return json({ ok: true, ultimo_step: row.ultimo_step, completato: row.completato })
 }
 
+async function apiSuggerisci(telegramId: number, body: any) {
+  const nome = String(body?.nome || "").trim()
+  if (!nome) return json({ error: "nome_richiesto" }, 400)
+  const descrizione = String(body?.descrizione || "").trim()
+  const link = String(body?.link || "").trim()
+
+  const { error } = await supabase.from("suggerimenti").insert({ telegram_id: telegramId, nome, descrizione, link })
+  if (error) return json({ error: error.message }, 500)
+
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "suggerimento_inviato", dettaglio: nome })
+  await sendMessage(ADMIN_ID, `💡 Nuovo suggerimento per la Business List\n\n${nome}${descrizione ? "\n" + descrizione : ""}${link ? "\n" + link : ""}`)
+  return json({ ok: true })
+}
+
+async function apiAdminSuggerimentiList() {
+  const { data: suggerimenti } = await supabase.from("suggerimenti").select("*").order("created_at", { ascending: false })
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username")
+  const leadMap: Record<number, any> = {}
+  for (const l of leads ?? []) leadMap[(l as any).telegram_id] = l
+  const list = (suggerimenti ?? []).map((s: any) => ({
+    ...s,
+    utente_nome: leadMap[s.telegram_id]?.nome || leadMap[s.telegram_id]?.username || `ID ${s.telegram_id}`,
+  }))
+  return json({ suggerimenti: list })
+}
+
+async function apiAdminSuggerimentiDelete(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("suggerimenti").delete().eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
 // ---------- ADMIN: CATEGORIE & SERVIZI ----------
 async function apiAdminMacroCategorieList() {
   const { data } = await supabase.from("macro_categorie").select("*").order("ordine")
@@ -569,6 +602,12 @@ serve(async (req) => {
       return await apiStepProgressSave(tid, await req.json())
     }
 
+    if (sub === "suggerisci" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiSuggerisci(tid, await req.json())
+    }
+
     if (sub === "pagina" && req.method === "GET") {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
@@ -606,6 +645,9 @@ serve(async (req) => {
       if (sub === "admin/servizi" && req.method === "GET") return await apiAdminServiziList()
       if (sub === "admin/servizi/save" && req.method === "POST") return await apiAdminServiziSave(await req.json())
       if (sub === "admin/servizi/delete" && req.method === "POST") return await apiAdminServiziDelete(await req.json())
+
+      if (sub === "admin/suggerimenti" && req.method === "GET") return await apiAdminSuggerimentiList()
+      if (sub === "admin/suggerimenti/delete" && req.method === "POST") return await apiAdminSuggerimentiDelete(await req.json())
 
       if (sub === "admin/affiliate-links" && req.method === "GET") return await apiAdminAffiliateLinksList()
       if (sub === "admin/affiliate-links/approve" && req.method === "POST") return await apiAdminAffiliateLinkApprove(await req.json())
