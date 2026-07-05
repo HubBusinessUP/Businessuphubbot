@@ -32,14 +32,17 @@
   }
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 30px; }
 
-  .top-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 14px; }
+  .top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .logo { font-size: 17px; font-weight: 800; }
+  .top-actions { display: flex; gap: 10px; }
   .icon-circle {
     width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0;
     background: var(--panel); color: var(--text);
     display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
   }
 
-  .greet-card { display: flex; align-items: center; gap: 13px; background: var(--panel); border-radius: 4px; padding: 16px; margin-bottom: 14px; }
+  .greet-card { background: var(--panel); border-radius: 4px; padding: 16px; margin-bottom: 14px; }
+  .greet-top { display: flex; align-items: center; gap: 13px; }
   .avatar-wrap {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; position: relative;
     border: none; padding: 0; cursor: pointer;
@@ -53,6 +56,12 @@
   }
   .greet { font-size: 16px; font-weight: 700; }
   .greet-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+
+  .stats-bar { display: flex; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .stat-item { flex: 1; }
+  .stat-label { font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
+  .stat-value { font-size: 15px; font-weight: 700; }
+  .stat-value.lime { color: var(--lime); }
 
   .hero-strip {
     display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; font-family: inherit; cursor: pointer;
@@ -76,7 +85,6 @@
   .stato-badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
   .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; }
 
-  .cat-grid { display: flex; flex-direction: column; gap: 9px; }
   .cat-card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
     padding: 13px; display: flex; align-items: center; gap: 13px;
@@ -89,6 +97,14 @@
   .cat-name { font-size: 14.5px; font-weight: 700; }
   .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
+
+  .list-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px 16px; }
+  .list-item {
+    display: flex; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; font-family: inherit; color: inherit;
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item:active { opacity: 0.8; }
 
   .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 24px 20px; text-align: center; margin-bottom: 14px; }
   .lock-ico { width: 48px; height: 48px; border-radius: 4px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
@@ -120,25 +136,40 @@
 </head>
 <body>
   <div class="container">
-    <div class="top-actions">
-      <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
-      </button>
-      <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-      </button>
+    <div class="top-row">
+      <div class="logo">Business UP</div>
+      <div class="top-actions">
+        <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
+        </button>
+        <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+      </div>
     </div>
 
-    <button class="greet-card" onclick="goProfilo()" aria-label="Il tuo profilo">
-      <div class="avatar-wrap">
-        <img class="avatar-img" id="avatarImg" alt="" />
-        <div class="avatar-fallback" id="avatarFallback">--</div>
+    <div class="greet-card">
+      <button class="greet-top" onclick="goProfilo()" aria-label="Il tuo profilo" style="background:none;border:none;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;gap:13px;text-align:left;font-family:inherit;color:inherit">
+        <div class="avatar-wrap">
+          <img class="avatar-img" id="avatarImg" alt="" />
+          <div class="avatar-fallback" id="avatarFallback">--</div>
+        </div>
+        <div>
+          <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
+          <div class="greet-sub">Tocca per vedere il tuo profilo</div>
+        </div>
+      </button>
+      <div class="stats-bar" id="statsBar" style="display:none">
+        <div class="stat-item">
+          <div class="stat-label">Invitati</div>
+          <div class="stat-value" id="statInvitati">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Stato</div>
+          <div class="stat-value lime" id="statStato">Iscritto</div>
+        </div>
       </div>
-      <div style="text-align:left">
-        <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
-        <div class="greet-sub">Tocca per vedere il tuo profilo</div>
-      </div>
-    </button>
+    </div>
 
     <button class="hero-strip" id="heroCard" onclick="goRete()" style="display:none">
       <div class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#06110b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7"/></svg></div>
@@ -162,11 +193,8 @@
       <svg class="cat-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
     </button>
 
-    <div class="card" id="businessBanner">
-      <h2 class="section-title">Business List</h2>
-      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.5">Scegli una categoria per vedere i servizi disponibili e i tutorial per attivarli.</p>
-    </div>
-    <div class="cat-grid" id="businessList"><p class="empty">Caricamento...</p></div>
+    <h2 class="section-title">Business List</h2>
+    <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
   </div>
 
   <div class="share-overlay" id="shareOverlay" onclick="if(event.target===this) closeShareSheet()">
@@ -250,6 +278,7 @@
       const lead = data.lead || {};
       const completato = !!lead.sondaggio_completato;
       window.sondaggioCompletato = completato;
+      window.isCliente = !!lead.is_cliente;
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
       document.getElementById("paginaLink").style.display = completato ? "flex" : "none";
       return completato;
@@ -268,9 +297,9 @@
 
       cats.forEach((cat, idx) => {
         const servizi = cat.servizi || [];
-        const card = document.createElement("button");
-        card.className = "cat-card";
-        card.innerHTML = `
+        const row = document.createElement("button");
+        row.className = "list-item";
+        row.innerHTML = `
           <div class="cat-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${CAT_ICON_SVG}</div>
           <div class="cat-body">
             <div class="cat-name">${cat.nome}</div>
@@ -278,8 +307,8 @@
           </div>
           <svg class="cat-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
         `;
-        card.onclick = () => window.location.href = `categoria.html?id=${cat.id}&_=${Date.now()}`;
-        el.appendChild(card);
+        row.onclick = () => window.location.href = `categoria.html?id=${cat.id}&_=${Date.now()}`;
+        el.appendChild(row);
       });
     }
 
@@ -290,6 +319,10 @@
       const data = await res.json();
       window.currentRefLink = data.ref_link || "";
       document.getElementById("heroCard").style.display = "flex";
+
+      document.getElementById("statInvitati").textContent = data.rete?.invitati_count || 0;
+      document.getElementById("statStato").textContent = window.isCliente ? "Cliente attivo" : "Iscritto";
+      document.getElementById("statsBar").style.display = "flex";
     }
 
     const SHARE_TEXT = "Entra in Business UP con il mio link:";

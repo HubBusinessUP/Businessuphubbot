@@ -134,7 +134,7 @@ async function handleUpdate(u: any) {
 async function apiMe(telegramId: number) {
   const { data: lead } = await supabase.from("leads").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
-  const { data: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
+  const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
   return json({ lead, sondaggio, rete_count: invitati ?? 0 })
 }
 
