@@ -208,6 +208,17 @@
         <div class="field"><label>Link principale</label><input id="svcLink" /></div>
         <div class="field"><label>Ordine</label><input id="svcOrdine" type="number" value="0" /></div>
       </div>
+      <div class="row2">
+        <div class="field"><label>Tempo stimato (es. 5 min)</label><input id="svcTempo" /></div>
+        <div class="field"><label>Difficoltà</label>
+          <select id="svcDifficolta">
+            <option value="">—</option>
+            <option value="Facile">Facile</option>
+            <option value="Medio">Medio</option>
+            <option value="Avanzato">Avanzato</option>
+          </select>
+        </div>
+      </div>
 
       <div class="field">
         <label>Tutorial — step "Come funziona"</label>
@@ -508,6 +519,8 @@
       document.getElementById("svcCosti").value = s?.costi || "";
       document.getElementById("svcLink").value = s?.link_principale || "";
       document.getElementById("svcOrdine").value = s?.ordine ?? 0;
+      document.getElementById("svcTempo").value = s?.tempo_stimato || "";
+      document.getElementById("svcDifficolta").value = s?.difficolta || "";
 
       const catSelect = document.getElementById("svcCategoria");
       catSelect.innerHTML = categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
@@ -539,6 +552,8 @@
         costi: document.getElementById("svcCosti").value.trim(),
         link_principale: document.getElementById("svcLink").value.trim(),
         ordine: parseInt(document.getElementById("svcOrdine").value) || 0,
+        tempo_stimato: document.getElementById("svcTempo").value.trim(),
+        difficolta: document.getElementById("svcDifficolta").value,
         tutorial_steps: steps,
       };
       await api("admin/servizi/save", { method: "POST", body: JSON.stringify(body) });

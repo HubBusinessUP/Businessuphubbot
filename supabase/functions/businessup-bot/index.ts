@@ -627,8 +627,8 @@ async function apiAdminServiziList() {
 }
 
 async function apiAdminServiziSave(body: any) {
-  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps } = body
-  const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [] }
+  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta } = body
+  const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta }
   if (id) {
     const { error } = await supabase.from("servizi").update(row).eq("id", id)
     if (error) return json({ error: error.message }, 500)

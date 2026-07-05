@@ -185,6 +185,41 @@
 
   .section-gap { height: 1px; background: var(--border); margin: 24px 6px; }
 
+  /* Scheda prodotto inline ad accordion */
+  .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+  .biz.open .biz-detail { max-height: 1400px; }
+  .biz-inner { padding: 4px 2px 16px; }
+  .biz-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .biz-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border); color: var(--text-dim); }
+  .biz-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.55; margin-bottom: 12px; }
+  .biz-rows { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 2px 12px; margin-bottom: 12px; }
+  .biz-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .biz-row:last-child { border-bottom: none; }
+  .biz-row .k { color: var(--text-dim); }
+  .biz-row .v { font-weight: 700; text-align: right; }
+
+  .chk { margin-bottom: 12px; }
+  .chk-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 9px; }
+  .chk-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+  .chk-box { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--ink); color: var(--text-dim); font-size: 10px; font-weight: 700; margin-top: 1px; }
+  .chk-row.done .chk-box { background: var(--lime); border-color: var(--lime); color: #06110b; }
+  .chk-row.current .chk-box { border-color: var(--blue); color: var(--blue); }
+  .chk-body { flex: 1; min-width: 0; font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+  .chk-body b { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .chk-row.locked .chk-body b { color: var(--text-dim); }
+  .chk-done-btn { margin-top: 7px; padding: 7px 12px; border: none; border-radius: 4px; background: var(--blue); color: #fff; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+  .biz-cta { width: 100%; padding: 13px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .biz-cta:disabled { opacity: 0.6; }
+  .biz-linkbox { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: monospace; font-size: 10.5px; word-break: break-all; color: var(--blue); }
+  .biz-foot { display: flex; gap: 8px; margin-top: 10px; }
+  .biz-foot a, .biz-foot button {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none;
+  }
+  .biz-update { background: var(--amber-dim); border: 1px solid rgba(232,179,76,0.3); border-radius: 4px; padding: 8px 11px; font-size: 11px; color: var(--amber); margin-bottom: 12px; }
+
   /* Tema chiaro: attivato da tg.colorScheme */
   body.light {
     --ink: #f2f3f6;
@@ -241,7 +276,7 @@
           <img class="avatar-img" id="avatarImg" alt="" />
           <div class="avatar-fallback" id="avatarFallback">--</div>
         </div>
-        <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
+        <div class="greet">Ciao, <span id="userName">Utente</span></div>
       </button>
       <div class="top-actions">
         <button class="icon-circle plus" onclick="openSuggestSheet()" aria-label="Candida un business">
@@ -436,7 +471,7 @@
         document.getElementById("resumeSub").textContent = `Sei allo step ${r.ultimo_step} di ${r.totale_step} — continua da dove eri`;
         const card = document.getElementById("resumeCard");
         card.style.display = "flex";
-        card.onclick = () => window.location.href = `servizio.html?id=${r.servizio_id}&_=${Date.now()}`;
+        card.onclick = () => toggleBiz(r.servizio_id);
       }
       return completato;
     }
@@ -549,16 +584,19 @@
         const rank = rankMap[s.id];
         const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
         return `
-        <div class="list-item" onclick="haptic('light'); window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
-          <div class="cat-ico" style="background:${color}">${CAT_ICON_SVG}</div>
-          <div class="cat-body">
-            <div class="cat-name">${rank ? `<span class="rank-chip rank-${rank}">#${rank}</span>` : ""}${s.nome}${isNew(s) ? '<span class="new-badge">Nuovo</span>' : ""}</div>
-            <div class="cat-count">${s.categoria_nome || ""}</div>
+        <div class="biz" id="biz-${s.id}">
+          <div class="list-item" onclick="toggleBiz(${s.id})">
+            <div class="cat-ico" style="background:${color}">${CAT_ICON_SVG}</div>
+            <div class="cat-body">
+              <div class="cat-name">${rank ? `<span class="rank-chip rank-${rank}">#${rank}</span>` : ""}${s.nome}${isNew(s) ? '<span class="new-badge">Nuovo</span>' : ""}</div>
+              <div class="cat-count">${s.categoria_nome || ""}</div>
+            </div>
+            <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
+              <span class="vote-num">${s.voti || 0}</span>
+            </button>
           </div>
-          <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
-            <span class="vote-num">${s.voti || 0}</span>
-          </button>
+          <div class="biz-detail"><div class="biz-inner" id="bizd-${s.id}"></div></div>
         </div>
       `;
       }).join("");
@@ -570,7 +608,148 @@
         more.onclick = () => { haptic("light"); visibleCount += PAGE_SIZE; renderList(); };
         el.appendChild(more);
       }
+
+      // Riapre l'accordion attivo dopo un re-render (voto, filtro, carica altri).
+      if (openBizId && document.getElementById(`biz-${openBizId}`) && bizCache[openBizId]) {
+        document.getElementById(`biz-${openBizId}`).classList.add("open");
+        document.getElementById(`bizd-${openBizId}`).innerHTML = buildDetail(openBizId, bizCache[openBizId]);
+      }
     }
+
+    let openBizId = null;
+    const bizCache = {};
+
+    async function toggleBiz(id) {
+      haptic("light");
+      const box = document.getElementById(`biz-${id}`);
+      if (!box) return;
+
+      if (openBizId === id) {
+        box.classList.remove("open");
+        openBizId = null;
+        return;
+      }
+      if (openBizId) document.getElementById(`biz-${openBizId}`)?.classList.remove("open");
+      openBizId = id;
+
+      const inner = document.getElementById(`bizd-${id}`);
+      if (!bizCache[id]) {
+        inner.innerHTML = '<div class="skeleton-row" style="border:none"><div class="sk" style="width:100%;height:60px"></div></div>';
+        box.classList.add("open");
+        const res = await fetch(`${API_URL}/servizio?id=${id}`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+        if (!res.ok) { inner.innerHTML = '<p class="empty">Errore di caricamento.</p>'; return; }
+        bizCache[id] = await res.json();
+      } else {
+        box.classList.add("open");
+      }
+      inner.innerHTML = buildDetail(id, bizCache[id]);
+      setTimeout(() => box.scrollIntoView({ behavior: "smooth", block: "start" }), 320);
+    }
+    window.toggleBiz = toggleBiz;
+
+    const DIFF_DOT = { facile: "🟢", medio: "🟡", avanzato: "🔴" };
+    const FALLBACK_STEPS = [
+      { titolo: "Apri il link ufficiale", testo: "Usa il bottone qui sotto per iscriverti." },
+      { titolo: "Verifica il tuo account", testo: "Completa la registrazione sul sito." },
+      { titolo: "Torna qui e segna come fatto", testo: "Così teniamo traccia dei tuoi progressi." },
+    ];
+
+    function buildDetail(id, data) {
+      const s = data.servizio || {};
+      const steps = Array.isArray(s.tutorial_steps) && s.tutorial_steps.length ? s.tutorial_steps : FALLBACK_STEPS;
+      const prog = data.step_progress || { ultimo_step: 0, completato: false };
+
+      const chips = [];
+      if (s.tempo_stimato) chips.push(`<span class="biz-chip">🕒 ${s.tempo_stimato}</span>`);
+      if (s.difficolta) chips.push(`<span class="biz-chip">${DIFF_DOT[(s.difficolta || "").toLowerCase()] || "🟢"} ${s.difficolta}</span>`);
+      chips.push(`<span class="biz-chip">${(s.stato || "").toUpperCase()}</span>`);
+
+      const rows = [];
+      if (s.prezzo) rows.push(`<div class="biz-row"><span class="k">Prezzo</span><span class="v">${s.prezzo}</span></div>`);
+      if (s.split_percent) rows.push(`<div class="biz-row"><span class="k">Split</span><span class="v">${s.split_percent}%</span></div>`);
+      if (s.requisiti) rows.push(`<div class="biz-row"><span class="k">Requisiti</span><span class="v">${s.requisiti}</span></div>`);
+      if (s.costi) rows.push(`<div class="biz-row"><span class="k">Attenzione</span><span class="v">${s.costi}</span></div>`);
+
+      const chkRows = steps.map((st, i) => {
+        const state = i < prog.ultimo_step ? "done" : i === prog.ultimo_step ? "current" : "locked";
+        const boxContent = state === "done" ? "✓" : (i + 1);
+        const btn = state === "current" ? `<button class="chk-done-btn" onclick="bizStepDone(${id}, ${i}, ${i === steps.length - 1})">Segna come fatto</button>` : "";
+        return `<div class="chk-row ${state}"><div class="chk-box">${boxContent}</div><div class="chk-body"><b>${st.titolo}</b>${st.testo || ""}${btn}</div></div>`;
+      }).join("");
+
+      let cta;
+      if (!window.sondaggioCompletato) {
+        cta = `<button class="biz-cta" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica per iscriverti</button>`;
+      } else if (data.gia_interessato) {
+        cta = `<button class="biz-cta" onclick="apriRefLink(${id})">Apri il tuo link di iscrizione</button>
+               <div class="biz-linkbox">${data.ref_link || ""}</div>`;
+      } else {
+        cta = `<button class="biz-cta" id="bizcta-${id}" onclick="attivaBiz(${id})">Iscriviti con il link — supporto prioritario</button>
+               <div class="biz-linkbox" id="bizlink-${id}" style="display:none"></div>`;
+      }
+
+      return `
+        <div class="biz-chips">${chips.join("")}</div>
+        ${s.descrizione ? `<div class="biz-desc">${s.descrizione}</div>` : ""}
+        ${rows.length ? `<div class="biz-rows">${rows.join("")}</div>` : ""}
+        <div class="chk"><div class="chk-title">Checklist di avvio</div>${chkRows}</div>
+        ${cta}
+        <div class="biz-foot">
+          <button onclick="shareBiz('${(s.nome || "").replace(/'/g, "\\'")}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg> Condividi</button>
+          <a href="https://t.me/antonybusinesshub" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg> Hai problemi? Scrivici</a>
+        </div>
+      `;
+    }
+
+    async function bizStepDone(id, stepIndex, isLast) {
+      haptic("light");
+      const res = await fetch(`${API_URL}/step-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ servizio_id: id, step_index: stepIndex, is_last: isLast }),
+      });
+      if (!res.ok) return;
+      const result = await res.json();
+      if (bizCache[id]) bizCache[id].step_progress = { ultimo_step: result.ultimo_step, completato: result.completato };
+      document.getElementById(`bizd-${id}`).innerHTML = buildDetail(id, bizCache[id]);
+    }
+    window.bizStepDone = bizStepDone;
+
+    async function attivaBiz(id) {
+      haptic("light");
+      const btn = document.getElementById(`bizcta-${id}`);
+      btn.disabled = true;
+      btn.textContent = "...";
+      const res = await fetch(`${API_URL}/attiva`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ servizio_id: id }),
+      });
+      if (!res.ok) { btn.disabled = false; btn.textContent = "Iscriviti con il link — supporto prioritario"; return; }
+      const result = await res.json();
+      if (bizCache[id]) { bizCache[id].gia_interessato = true; bizCache[id].ref_link = result.ref_link; }
+      document.getElementById(`bizd-${id}`).innerHTML = buildDetail(id, bizCache[id]);
+      if (result.ref_link) window.open(result.ref_link, "_blank");
+    }
+    window.attivaBiz = attivaBiz;
+
+    function apriRefLink(id) {
+      haptic("light");
+      const link = bizCache[id]?.ref_link;
+      if (link) window.open(link, "_blank");
+    }
+    window.apriRefLink = apriRefLink;
+
+    async function shareBiz(nome) {
+      haptic("light");
+      if (!window.currentRefLink) await loadAffiliazione();
+      if (!window.currentRefLink) return;
+      const text = `Guarda "${nome}" su Business UP:`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.currentRefLink)}&text=${encodeURIComponent(text)}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
+      else window.open(shareUrl, "_blank");
+    }
+    window.shareBiz = shareBiz;
 
     async function vota(servizioId, btn) {
       if (!initData) return;
