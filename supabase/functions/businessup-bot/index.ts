@@ -58,6 +58,15 @@ async function validateInitData(initData: string): Promise<number | null> {
   }
 }
 
+// Estrae l'oggetto user dall'initData; da usare SOLO dopo che validateInitData è passata.
+function parseInitDataUser(initData: string): any {
+  try {
+    return JSON.parse(new URLSearchParams(initData).get("user") || "{}")
+  } catch {
+    return {}
+  }
+}
+
 // Quale ref link mostrare per (utente, servizio): quello del referrer se ha un suo link approvato per quel servizio, altrimenti quello principale.
 async function resolveRefLink(telegramId: number, servizioId: number): Promise<string | null> {
   const { data: lead } = await supabase.from("leads").select("referred_by").eq("telegram_id", telegramId).maybeSingle()
@@ -131,7 +140,14 @@ async function handleUpdate(u: any) {
 }
 
 // ---------- API: MINI APP ----------
-async function apiMe(telegramId: number) {
+async function apiMe(telegramId: number, tgUser?: any) {
+  // Tiene aggiornati foto/username presi dall'initData validato, così la rete dello sponsor mostra dati Telegram reali.
+  if (tgUser?.id === telegramId) {
+    await supabase.from("leads").update({
+      username: tgUser.username ?? null,
+      foto_url: tgUser.photo_url ?? null,
+    }).eq("telegram_id", telegramId)
+  }
   const { data: lead } = await supabase.from("leads").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
@@ -202,13 +218,6 @@ async function apiServizio(telegramId: number, servizioId: number) {
   })
 }
 
-function maskName(nome: string | null, telegramId: number): string {
-  const src = (nome || `U${telegramId}`).trim()
-  const parts = src.split(/\s+/)
-  if (parts.length > 1) return `${parts[0][0]}. ${parts[1][0]}.`.toUpperCase()
-  return `${src.slice(0, 1)}.`.toUpperCase()
-}
-
 // Etichetta di stato di un invitato dal punto di vista dello sponsor, basata solo su segnali reali (non su qualifica capitale).
 function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolean }): string {
   if (i.is_cliente) return "Cliente attivo"
@@ -218,17 +227,28 @@ function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolea
 
 async function apiAffiliazione(telegramId: number) {
   const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
-  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: pagamenti } = await supabase.from("pagamenti").select("importo").eq("telegram_id", telegramId)
   const guadagni = (pagamenti ?? []).reduce((s: number, p: any) => s + Number(p.importo || 0), 0)
   const refCode = await getOrCreateRefCode(telegramId)
 
+  // Servizi attivati da ciascun invitato, in una sola query.
+  const invitatiIds = (invitati ?? []).map((i: any) => i.telegram_id)
+  const { data: attivazioni } = invitatiIds.length
+    ? await supabase.from("lead_servizi").select("telegram_id").in("telegram_id", invitatiIds)
+    : { data: [] }
+  const serviziCount: Record<number, number> = {}
+  for (const a of attivazioni ?? []) serviziCount[(a as any).telegram_id] = (serviziCount[(a as any).telegram_id] ?? 0) + 1
+
   const membri = (invitati ?? []).map((i: any) => ({
-    nome_mascherato: maskName(i.nome, i.telegram_id),
+    nome: i.nome || i.username || "Utente",
+    username: i.username || "",
+    foto_url: i.foto_url || "",
     is_cliente: !!i.is_cliente,
     sondaggio_completato: !!i.sondaggio_completato,
     stato_label: membroStatoLabel(i),
+    servizi_count: serviziCount[i.telegram_id] ?? 0,
   }))
 
   return json({
@@ -502,9 +522,10 @@ serve(async (req) => {
     }
 
     if (sub === "me" && req.method === "GET") {
-      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      const rawInitData = req.headers.get("x-telegram-init-data") || ""
+      const tid = await validateInitData(rawInitData)
       if (!tid) return json({ error: "unauthorized" }, 401)
-      return await apiMe(tid)
+      return await apiMe(tid, parseInitDataUser(rawInitData))
     }
 
     if (sub === "sondaggio" && req.method === "POST") {

@@ -52,9 +52,13 @@
 
   .aff-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .aff-row:last-child { border-bottom: none; }
-  .aff-ico { width: 32px; height: 32px; border-radius: 4px; background: var(--slate, #3a4358); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 700; }
+  .aff-foto { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--slate, #3a4358); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+  .aff-foto img { width: 100%; height: 100%; object-fit: cover; }
+  .aff-body { flex: 1; min-width: 0; }
   .aff-name { font-size: 13px; font-weight: 700; }
   .aff-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .aff-count { font-size: 12px; font-weight: 700; color: var(--lime); flex-shrink: 0; text-align: right; }
+  .aff-count.zero { color: var(--text-dim); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -138,11 +142,8 @@
 
     <div class="card" style="margin-top:14px">
       <h2>Affiliazione</h2>
-      <div class="row2" style="margin-bottom:14px">
-        <div class="field" style="margin-bottom:0"><label>Invitati</label><div style="font-size:20px;font-weight:700" id="affInvitati">0</div></div>
-        <div class="field" style="margin-bottom:0"><label>Attivati</label><div style="font-size:20px;font-weight:700;color:var(--lime)" id="affAttivati">0</div></div>
-      </div>
-      <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun invitato ancora.</p></div>
+      <div class="field" style="margin-bottom:14px"><label>Iscritti fatti</label><div style="font-size:26px;font-weight:700" id="affInvitati">0</div></div>
+      <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
     </div>
   </div>
 
@@ -228,7 +229,11 @@
       });
     };
 
-    function maskInitials(nome) {
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function initialsOf(nome) {
       const n = (nome || "").trim();
       return n ? n.slice(0, 2).toUpperCase() : "??";
     }
@@ -237,19 +242,25 @@
       const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
       document.getElementById("affInvitati").textContent = data.rete?.invitati_count || 0;
-      document.getElementById("affAttivati").textContent = data.rete?.attivati_count || 0;
 
       const membri = data.rete?.membri || [];
       if (!membri.length) return;
-      document.getElementById("affRows").innerHTML = membri.map((m) => `
+      document.getElementById("affRows").innerHTML = membri.map((m) => {
+        const foto = m.foto_url
+          ? `<img src="${escapeHtml(m.foto_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />`
+          : "";
+        const n = m.servizi_count || 0;
+        return `
         <div class="aff-row">
-          <div class="aff-ico">${maskInitials(m.nome_mascherato)}</div>
-          <div>
-            <div class="aff-name">${m.nome_mascherato || "Utente"}</div>
-            <div class="aff-sub">${m.stato_label || "Iscritto"}</div>
+          <div class="aff-foto">${foto}<span style="${foto ? "display:none" : ""}">${escapeHtml(initialsOf(m.nome))}</span></div>
+          <div class="aff-body">
+            <div class="aff-name">${escapeHtml(m.nome || "Utente")}</div>
+            <div class="aff-sub">${m.username ? "@" + escapeHtml(m.username) : escapeHtml(m.stato_label || "Iscritto")}</div>
           </div>
+          <div class="aff-count ${n ? "" : "zero"}">${n} serviz${n === 1 ? "io" : "i"}</div>
         </div>
-      `).join("");
+      `;
+      }).join("");
     }
 
     load();
