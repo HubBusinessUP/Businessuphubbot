@@ -203,7 +203,7 @@
             document.getElementById("linkBox").style.display = "block";
             document.getElementById("linkBox").textContent = result.ref_link;
           }
-          renderAffiliateCard({ ...data, can_insert_reflinks: true });
+          renderAffiliateCard({ ...data, is_cliente: true });
         };
       }
 
@@ -211,7 +211,7 @@
     }
 
     function renderAffiliateCard(data) {
-      if (!data.can_insert_reflinks) return;
+      if (!data.is_cliente) return;
       const card = document.getElementById("affCard");
       card.style.display = "block";
 

@@ -107,7 +107,7 @@
 
     <div class="stat-grid">
       <div class="stat-box"><div class="label">Leads totali</div><div class="value" id="statLeads">-</div></div>
-      <div class="stat-box"><div class="label">Qualificati</div><div class="value" id="statQualificati">-</div></div>
+      <div class="stat-box"><div class="label">Clienti</div><div class="value" id="statQualificati">-</div></div>
     </div>
 
     <div class="section">
@@ -222,7 +222,7 @@
     async function loadAll() {
       const stats = await (await api("admin/stats")).json();
       document.getElementById("statLeads").textContent = stats.leads ?? 0;
-      document.getElementById("statQualificati").textContent = stats.qualificati ?? 0;
+      document.getElementById("statQualificati").textContent = stats.clienti ?? 0;
 
       const catRes = await (await api("admin/categorie")).json();
       categorie = catRes.categorie || [];

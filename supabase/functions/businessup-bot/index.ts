@@ -58,17 +58,6 @@ async function validateInitData(initData: string): Promise<number | null> {
   }
 }
 
-// Qualifica: capitale >= 2.000, esperienza broker reale, disposto a investire su di sé
-function qualifica(r: Record<string, string>): { stage: string; motivo: string | null } {
-  const capOk = r.capitale === "2.000-10.000 euro" || r.capitale === "10.000+ euro"
-  const brokerOk = !!r.esperienza_broker && r.esperienza_broker !== "No mai"
-  const payOk = !!r.willingness_to_pay && r.willingness_to_pay !== "Solo se gratis"
-  if (!capOk) return { stage: "squalificato", motivo: "capitale_insufficiente" }
-  if (!brokerOk) return { stage: "squalificato", motivo: "no_esperienza_broker" }
-  if (!payOk) return { stage: "squalificato", motivo: "no_budget_mentale" }
-  return { stage: "qualificato", motivo: null }
-}
-
 // Quale ref link mostrare per (utente, servizio): quello del referrer se affiliato approvato, altrimenti quello principale.
 async function resolveRefLink(telegramId: number, servizioId: number): Promise<string | null> {
   const { data: lead } = await supabase.from("leads").select("referred_by").eq("telegram_id", telegramId).maybeSingle()
@@ -167,12 +156,9 @@ async function apiSondaggioSave(telegramId: number, body: any) {
     return json({ error: "save_failed", detail: saveResult.error.message }, 500)
   }
 
-  const ql = qualifica(row as Record<string, string>)
   const leadUpdate = await supabase.from("leads").update({
     sondaggio_completato: true,
     sondaggio_completato_at: new Date().toISOString(),
-    pipeline_stage: ql.stage,
-    motivo_squalifica: ql.motivo,
     nome: nome ?? undefined,
     cognome: cognome ?? undefined,
   }).eq("telegram_id", telegramId)
@@ -181,9 +167,9 @@ async function apiSondaggioSave(telegramId: number, body: any) {
     return json({ error: "save_failed", detail: leadUpdate.error.message }, 500)
   }
 
-  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "sondaggio_completato", dettaglio: ql.stage })
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "sondaggio_completato" })
 
-  return json({ stage: ql.stage, motivo: ql.motivo })
+  return json({ ok: true })
 }
 
 async function apiBusinessList() {
@@ -196,7 +182,7 @@ async function apiBusinessList() {
 async function apiServizio(telegramId: number, servizioId: number) {
   const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
   if (!servizio) return json({ error: "not_found" }, 404)
-  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente, can_insert_reflinks").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refLink = await resolveRefLink(telegramId, servizioId)
@@ -205,7 +191,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
     gia_interessato: !!interesse,
     ref_link: refLink,
     sondaggio_completato: !!lead?.sondaggio_completato,
-    can_insert_reflinks: !!lead?.can_insert_reflinks,
+    is_cliente: !!lead?.is_cliente,
     mio_link: mioLink || null,
   })
 }
@@ -217,11 +203,16 @@ function maskName(nome: string | null, telegramId: number): string {
   return `${src.slice(0, 1)}.`.toUpperCase()
 }
 
-const STAGE_LABEL: Record<string, string> = { nuovo: "Nuovo", qualificato: "Attivo", squalificato: "Non idonea ora", contattato: "In contatto", cliente: "Cliente" }
+// Etichetta di stato di un invitato dal punto di vista dello sponsor, basata solo su segnali reali (non su qualifica capitale).
+function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolean }): string {
+  if (i.is_cliente) return "Cliente attivo"
+  if (i.sondaggio_completato) return "Anagrafica completata"
+  return "Iscritto"
+}
 
 async function apiAffiliazione(telegramId: number) {
-  const { data: lead } = await supabase.from("leads").select("is_cliente, can_insert_reflinks").eq("telegram_id", telegramId).maybeSingle()
-  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, sondaggio_completato, pipeline_stage, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
+  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: pagamenti } = await supabase.from("pagamenti").select("importo").eq("telegram_id", telegramId)
   const guadagni = (pagamenti ?? []).reduce((s: number, p: any) => s + Number(p.importo || 0), 0)
@@ -229,18 +220,17 @@ async function apiAffiliazione(telegramId: number) {
 
   const membri = (invitati ?? []).map((i: any) => ({
     nome_mascherato: maskName(i.nome, i.telegram_id),
-    stato: i.pipeline_stage || "nuovo",
-    stato_label: STAGE_LABEL[i.pipeline_stage] || "Nuova",
-    sondaggio_completato: i.sondaggio_completato,
+    is_cliente: !!i.is_cliente,
+    sondaggio_completato: !!i.sondaggio_completato,
+    stato_label: membroStatoLabel(i),
   }))
 
   return json({
     ref_link: `https://t.me/${BOT_USERNAME}?start=ref_${refCode}`,
     is_cliente: lead?.is_cliente ?? false,
-    can_insert_reflinks: lead?.can_insert_reflinks ?? false,
     rete: {
       invitati_count: membri.length,
-      attivati_count: membri.filter((m: any) => m.stato === "qualificato" || m.stato === "cliente").length,
+      attivati_count: membri.filter((m: any) => m.is_cliente).length,
       membri,
     },
     guadagni_totali: guadagni,
@@ -249,8 +239,8 @@ async function apiAffiliazione(telegramId: number) {
 }
 
 async function apiAffiliateLinkSave(telegramId: number, body: any) {
-  const { data: lead } = await supabase.from("leads").select("can_insert_reflinks").eq("telegram_id", telegramId).maybeSingle()
-  if (!lead?.can_insert_reflinks) return json({ error: "non_autorizzato" }, 403)
+  const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.is_cliente) return json({ error: "non_autorizzato" }, 403)
 
   const { servizio_id, ref_link } = body
   await supabase.from("affiliate_link").upsert(
@@ -351,7 +341,7 @@ async function apiAttiva(telegramId: number, body: any) {
   await supabase.from("lead_servizi").insert({ telegram_id: telegramId, servizio_id, stato: "interessato" })
   // Attivare un servizio rende l'utente cliente e gli sblocca la possibilità di proporre un proprio link affiliato
   // (l'approvazione del singolo link resta comunque un controllo admin separato).
-  await supabase.from("leads").update({ is_cliente: true, can_insert_reflinks: true }).eq("telegram_id", telegramId)
+  await supabase.from("leads").update({ is_cliente: true }).eq("telegram_id", telegramId)
   const refLink = await resolveRefLink(telegramId, servizio_id)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_attivato", dettaglio: `servizio:${servizio_id}` })
   return json({ ok: true, ref_link: refLink })
@@ -518,8 +508,8 @@ serve(async (req) => {
 
       if (sub === "admin/stats" && req.method === "GET") {
         const { count: leads } = await supabase.from("leads").select("*", { count: "exact", head: true })
-        const { count: qualificati } = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("pipeline_stage", "qualificato")
-        return json({ leads, qualificati })
+        const { count: clienti } = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("is_cliente", true)
+        return json({ leads, clienti })
       }
 
       if (sub === "admin/categorie" && req.method === "GET") return await apiAdminCategorieList()
