@@ -166,7 +166,11 @@ async function apiMe(telegramId: number, tgUser?: any) {
     }
   }
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa })
+  // Performance profilo: proposte inviate e approvate.
+  const { count: suggeriti } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId)
+  const { count: approvati } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId).eq("stato", "approvato")
+
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0 })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
@@ -300,13 +304,19 @@ async function apiAffiliazione(telegramId: number) {
   const guadagni = (pagamenti ?? []).reduce((s: number, p: any) => s + Number(p.importo || 0), 0)
   const refCode = await getOrCreateRefCode(telegramId)
 
-  // Servizi attivati da ciascun invitato, in una sola query.
+  // Servizi attivati e business approvati di ciascun invitato, in due query totali.
   const invitatiIds = (invitati ?? []).map((i: any) => i.telegram_id)
   const { data: attivazioni } = invitatiIds.length
     ? await supabase.from("lead_servizi").select("telegram_id").in("telegram_id", invitatiIds)
     : { data: [] }
   const serviziCount: Record<number, number> = {}
   for (const a of attivazioni ?? []) serviziCount[(a as any).telegram_id] = (serviziCount[(a as any).telegram_id] ?? 0) + 1
+
+  const { data: approvatiMembri } = invitatiIds.length
+    ? await supabase.from("suggerimenti").select("telegram_id").eq("stato", "approvato").in("telegram_id", invitatiIds)
+    : { data: [] }
+  const approvatiCount: Record<number, number> = {}
+  for (const a of approvatiMembri ?? []) approvatiCount[(a as any).telegram_id] = (approvatiCount[(a as any).telegram_id] ?? 0) + 1
 
   const membri = (invitati ?? []).map((i: any) => ({
     nome: i.nome || i.username || "Utente",
@@ -316,6 +326,7 @@ async function apiAffiliazione(telegramId: number) {
     sondaggio_completato: !!i.sondaggio_completato,
     stato_label: membroStatoLabel(i),
     servizi_count: serviziCount[i.telegram_id] ?? 0,
+    business_approvati: approvatiCount[i.telegram_id] ?? 0,
   }))
 
   return json({
@@ -456,30 +467,102 @@ async function apiStepProgressSave(telegramId: number, body: any) {
   return json({ ok: true, ultimo_step: row.ultimo_step, completato: row.completato })
 }
 
+// Candidatura moderata: tutti i campi obbligatori, utenti bloccati esclusi, ref link accettato solo da profili verificati.
 async function apiSuggerisci(telegramId: number, body: any) {
-  const nome = String(body?.nome || "").trim()
-  if (!nome) return json({ error: "nome_richiesto" }, 400)
-  const descrizione = String(body?.descrizione || "").trim()
-  const link = String(body?.link || "").trim()
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, sugg_bloccato").eq("telegram_id", telegramId).maybeSingle()
+  if (lead?.sugg_bloccato) return json({ error: "funzione_bloccata" }, 403)
 
-  const { error } = await supabase.from("suggerimenti").insert({ telegram_id: telegramId, nome, descrizione, link })
+  const nome = String(body?.nome || "").trim()
+  const link = String(body?.link || "").trim()
+  const categoriaId = parseInt(body?.categoria_id) || null
+  const motivazione = String(body?.motivazione || "").trim()
+  if (!nome || !link || !categoriaId || !motivazione) return json({ error: "campi_obbligatori" }, 400)
+
+  const verificato = !!lead?.sondaggio_completato
+  const refLinkUtente = verificato ? String(body?.ref_link_utente || "").trim() : ""
+
+  const { error } = await supabase.from("suggerimenti").insert({
+    telegram_id: telegramId, nome, link, categoria_id: categoriaId, motivazione,
+    ref_link_utente: refLinkUtente || null, stato: "in_revisione",
+  })
   if (error) return json({ error: error.message }, 500)
 
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "suggerimento_inviato", dettaglio: nome })
-  await sendMessage(ADMIN_ID, `💡 Nuovo suggerimento per la Business List\n\n${nome}${descrizione ? "\n" + descrizione : ""}${link ? "\n" + link : ""}`)
+  await sendMessage(ADMIN_ID, `💡 Nuova candidatura per la Business List\n\n${nome}\n${link}\nPerché: ${motivazione}${refLinkUtente ? "\nRef link utente: " + refLinkUtente : ""}\n\nVai nell'admin per approvare o rifiutare.`)
   return json({ ok: true })
+}
+
+// I suggerimenti dell'utente con lo stato, per la sezione profilo.
+async function apiMieiSuggerimenti(telegramId: number) {
+  const { data } = await supabase.from("suggerimenti").select("id, nome, stato, causale_rifiuto, created_at").eq("telegram_id", telegramId).order("created_at", { ascending: false })
+  return json({ suggerimenti: data ?? [] })
 }
 
 async function apiAdminSuggerimentiList() {
   const { data: suggerimenti } = await supabase.from("suggerimenti").select("*").order("created_at", { ascending: false })
   const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username")
+  const { data: cats } = await supabase.from("categorie").select("id, nome")
   const leadMap: Record<number, any> = {}
   for (const l of leads ?? []) leadMap[(l as any).telegram_id] = l
+  const catMap: Record<number, string> = {}
+  for (const c of cats ?? []) catMap[(c as any).id] = (c as any).nome
   const list = (suggerimenti ?? []).map((s: any) => ({
     ...s,
     utente_nome: leadMap[s.telegram_id]?.nome || leadMap[s.telegram_id]?.username || `ID ${s.telegram_id}`,
+    categoria_nome: catMap[s.categoria_id] || "—",
   }))
   return json({ suggerimenti: list })
+}
+
+// Approva: crea il servizio in lista, opzionalmente inserisce il ref link dell'utente come reward, e lo avvisa.
+async function apiAdminSuggerimentoApprova(body: any) {
+  const { id, inserisci_link_utente } = body
+  const { data: sug } = await supabase.from("suggerimenti").select("*").eq("id", id).maybeSingle()
+  if (!sug) return json({ error: "not_found" }, 404)
+  if (sug.stato === "approvato") return json({ error: "gia_approvato" }, 409)
+
+  const { data: nuovo, error } = await supabase.from("servizi").insert({
+    nome: sug.nome, categoria_id: sug.categoria_id, descrizione: sug.motivazione,
+    link_principale: sug.link, stato: "attivo", tutorial_steps: [],
+  }).select("id").single()
+  if (error) return json({ error: error.message }, 500)
+
+  await supabase.from("suggerimenti").update({ stato: "approvato", servizio_id: nuovo.id }).eq("id", id)
+
+  let reward = false
+  if (inserisci_link_utente && sug.ref_link_utente) {
+    await supabase.from("affiliate_link").upsert(
+      { telegram_id: sug.telegram_id, servizio_id: nuovo.id, ref_link: sug.ref_link_utente, approvato: true },
+      { onConflict: "telegram_id,servizio_id" },
+    )
+    reward = true
+  }
+
+  await sendMessage(sug.telegram_id, `✅ La tua candidatura "${sug.nome}" è stata approvata!\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`)
+  notificaNuovoServizio(sug.nome, sug.categoria_id).catch((e) => console.error("notifica:", e))
+  return json({ ok: true, servizio_id: nuovo.id })
+}
+
+const CAUSALI_RIFIUTO: Record<string, string> = {
+  non_conforme: "Non conforme alle linee guida dell'HUB",
+  dati_mancanti: "Dati insufficienti o non verificabili",
+  sospetto_scam: "Sospetto schema non trasparente (Ponzi/rendite garantite)",
+}
+
+// Rifiuta con causale predefinita: l'utente riceve il motivo via Telegram; opzionale il blocco della funzione.
+async function apiAdminSuggerimentoRifiuta(body: any) {
+  const { id, causale, blocca } = body
+  const { data: sug } = await supabase.from("suggerimenti").select("*").eq("id", id).maybeSingle()
+  if (!sug) return json({ error: "not_found" }, 404)
+
+  const testoCausale = CAUSALI_RIFIUTO[causale] || CAUSALI_RIFIUTO.non_conforme
+  const { error } = await supabase.from("suggerimenti").update({ stato: "rifiutato", causale_rifiuto: testoCausale }).eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+
+  if (blocca) await supabase.from("leads").update({ sugg_bloccato: true }).eq("telegram_id", sug.telegram_id)
+
+  await sendMessage(sug.telegram_id, `❌ La tua candidatura "${sug.nome}" non è stata approvata.\n\nMotivo: ${testoCausale}${blocca ? "\n\n⚠️ La funzione suggerimenti è stata disattivata per il tuo profilo." : ""}`)
+  return json({ ok: true })
 }
 
 async function apiAdminSuggerimentiDelete(body: any) {
@@ -709,6 +792,12 @@ serve(async (req) => {
       return await apiSuggerisci(tid, await req.json())
     }
 
+    if (sub === "miei-suggerimenti" && req.method === "GET") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiMieiSuggerimenti(tid)
+    }
+
     if (sub === "pagina" && req.method === "GET") {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
@@ -748,6 +837,8 @@ serve(async (req) => {
       if (sub === "admin/servizi/delete" && req.method === "POST") return await apiAdminServiziDelete(await req.json())
 
       if (sub === "admin/suggerimenti" && req.method === "GET") return await apiAdminSuggerimentiList()
+      if (sub === "admin/suggerimenti/approva" && req.method === "POST") return await apiAdminSuggerimentoApprova(await req.json())
+      if (sub === "admin/suggerimenti/rifiuta" && req.method === "POST") return await apiAdminSuggerimentoRifiuta(await req.json())
       if (sub === "admin/suggerimenti/delete" && req.method === "POST") return await apiAdminSuggerimentiDelete(await req.json())
 
       if (sub === "admin/affiliate-links" && req.method === "GET") return await apiAdminAffiliateLinksList()

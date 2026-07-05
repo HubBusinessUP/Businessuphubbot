@@ -53,9 +53,6 @@
   }
   .greet { font-size: 15px; font-weight: 700; }
 
-  .slogan-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px; text-align: center; margin-bottom: 14px; }
-  .slogan-card h3 { font-size: 15.5px; font-weight: 800; line-height: 1.35; }
-  .slogan-card h3 span { color: var(--lime); }
 
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
 
@@ -261,10 +258,6 @@
       </div>
     </div>
 
-    <div class="slogan-card">
-      <h3>Il tuo <span>business online</span> parte da qui.</h3>
-    </div>
-
     <div class="lock-card" id="anagraficaPrompt" style="display:none">
       <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <h3>Completa la tua anagrafica</h3>
@@ -329,16 +322,22 @@
   <div class="share-overlay" id="suggestOverlay" onclick="if(event.target===this) closeSuggestSheet()">
     <div class="share-sheet">
       <div class="share-handle"></div>
-      <h3>Suggerisci un business</h3>
+      <h3>Candida un business</h3>
       <div id="suggestForm">
-        <input class="sheet-input" id="sugNome" placeholder="Nome del servizio o prodotto" maxlength="80" />
-        <textarea class="sheet-input" id="sugDescrizione" placeholder="Perché lo consigli? (facoltativo)" maxlength="300" rows="3"></textarea>
-        <input class="sheet-input" id="sugLink" placeholder="Link al sito (facoltativo)" maxlength="200" />
-        <button class="btn btn-primary" id="sugSubmit" onclick="submitSuggest()" style="margin-top:4px">Invia suggerimento</button>
+        <input class="sheet-input sug-req" id="sugNome" placeholder="Nome del business *" maxlength="80" />
+        <input class="sheet-input sug-req" id="sugLink" placeholder="Link al sito ufficiale *" maxlength="200" />
+        <select class="sheet-input sug-req" id="sugCategoria"><option value="">Categoria *</option></select>
+        <textarea class="sheet-input sug-req" id="sugMotivazione" placeholder="Perché è solido? Spiega in due righe *" maxlength="300" rows="3"></textarea>
+        <input class="sheet-input" id="sugRefLink" placeholder="Il tuo link di affiliazione (facoltativo)" maxlength="200" style="display:none" />
+        <p class="save-hint" id="sugRefHint" style="display:none;font-size:11px;color:var(--text-dim);margin:-4px 0 10px;line-height:1.4">Sarà visibile solo se il business supererà la valutazione di qualità.</p>
+        <div style="background:var(--amber-dim);border:1px solid rgba(232,179,76,0.3);border-radius:4px;padding:11px 12px;margin-bottom:10px">
+          <p style="font-size:11px;color:var(--amber);line-height:1.5">⚠️ Ogni proposta viene vagliata manualmente. Business basati su schemi Ponzi, rendite garantite o mancanza di trasparenza vengono rifiutati e portano al blocco della funzione suggerimenti.</p>
+        </div>
+        <button class="btn btn-primary" id="sugSubmit" onclick="submitSuggest()" disabled style="margin-top:2px;opacity:0.5">Invia candidatura</button>
       </div>
       <div id="suggestDone" style="display:none;text-align:center;padding:14px 0">
-        <p style="font-size:14px;font-weight:700;color:var(--lime)">✓ Suggerimento inviato</p>
-        <p style="font-size:12.5px;color:var(--text-dim);margin-top:6px">Grazie! Lo valuteremo per la Business List.</p>
+        <p style="font-size:14px;font-weight:700;color:var(--lime)">✓ Candidatura inviata</p>
+        <p style="font-size:12.5px;color:var(--text-dim);margin-top:6px">È in revisione: riceverai l'esito su Telegram. Puoi seguirne lo stato dal tuo profilo.</p>
       </div>
       <button class="btn btn-secondary" onclick="closeSuggestSheet()" style="margin-top:10px">Chiudi</button>
     </div>
@@ -719,9 +718,24 @@
       else alert("Link copiato!");
     }
 
+    // Il tasto Invia resta disabilitato finché tutti i campi obbligatori non sono compilati.
+    function checkSuggestValid() {
+      const ok = [...document.querySelectorAll(".sug-req")].every((el) => el.value.trim());
+      const btn = document.getElementById("sugSubmit");
+      btn.disabled = !ok;
+      btn.style.opacity = ok ? "1" : "0.5";
+    }
+    document.querySelectorAll(".sug-req").forEach((el) => el.addEventListener("input", checkSuggestValid));
+
     function openSuggestSheet() {
+      const catSel = document.getElementById("sugCategoria");
+      catSel.innerHTML = '<option value="">Categoria *</option>' + categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+      const verified = !!window.sondaggioCompletato;
+      document.getElementById("sugRefLink").style.display = verified ? "block" : "none";
+      document.getElementById("sugRefHint").style.display = verified ? "block" : "none";
       document.getElementById("suggestForm").style.display = "block";
       document.getElementById("suggestDone").style.display = "none";
+      checkSuggestValid();
       document.getElementById("suggestOverlay").classList.add("open");
     }
     function closeSuggestSheet() {
@@ -730,12 +744,7 @@
     window.openSuggestSheet = openSuggestSheet;
     window.closeSuggestSheet = closeSuggestSheet;
 
-    async function submitSuggest() {
-      const nome = document.getElementById("sugNome").value.trim();
-      if (!nome) {
-        if (tg?.showAlert) tg.showAlert("Inserisci almeno il nome del servizio.");
-        return;
-      }
+    async function doSubmitSuggest() {
       const btn = document.getElementById("sugSubmit");
       btn.textContent = "Invio...";
       btn.disabled = true;
@@ -744,24 +753,36 @@
         method: "POST",
         headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
         body: JSON.stringify({
-          nome,
-          descrizione: document.getElementById("sugDescrizione").value.trim(),
+          nome: document.getElementById("sugNome").value.trim(),
           link: document.getElementById("sugLink").value.trim(),
+          categoria_id: document.getElementById("sugCategoria").value,
+          motivazione: document.getElementById("sugMotivazione").value.trim(),
+          ref_link_utente: document.getElementById("sugRefLink").value.trim(),
         }),
       });
 
-      btn.textContent = "Invia suggerimento";
+      btn.textContent = "Invia candidatura";
       btn.disabled = false;
 
       if (res.ok) {
-        document.getElementById("sugNome").value = "";
-        document.getElementById("sugDescrizione").value = "";
-        document.getElementById("sugLink").value = "";
+        ["sugNome", "sugLink", "sugMotivazione", "sugRefLink"].forEach((id) => document.getElementById(id).value = "");
+        document.getElementById("sugCategoria").value = "";
         document.getElementById("suggestForm").style.display = "none";
         document.getElementById("suggestDone").style.display = "block";
-      } else if (tg?.showAlert) {
-        tg.showAlert("Errore, riprova.");
+        haptic("light");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        const msg = err.error === "funzione_bloccata"
+          ? "La funzione suggerimenti è disattivata per il tuo profilo."
+          : "Errore, riprova.";
+        if (tg?.showAlert) tg.showAlert(msg);
       }
+    }
+
+    function submitSuggest() {
+      const conferma = "Confermi l'invio? Ogni proposta viene vagliata manualmente: business non trasparenti portano al blocco della funzione.";
+      if (tg?.showConfirm) tg.showConfirm(conferma, (ok) => { if (ok) doSubmitSuggest(); });
+      else if (confirm(conferma)) doSubmitSuggest();
     }
     window.submitSuggest = submitSuggest;
 

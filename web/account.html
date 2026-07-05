@@ -50,15 +50,49 @@
   .btn-done { background: var(--lime-dim); color: var(--lime); }
   .save-note { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
 
+  .profile-head { display: flex; align-items: center; gap: 14px; }
+  .ph-avatar { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #3a4358; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px; font-weight: 800; }
+  .ph-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .ph-name { font-size: 17px; font-weight: 700; }
+  .ph-user { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
+  .ph-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 4px; margin-top: 7px; background: rgba(232,179,76,0.14); color: #e8b34c; }
+  .ph-badge.ok { background: var(--lime-dim); color: var(--lime); }
+
+  .perf-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .perf-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 8px; text-align: center; }
+  .perf-box .n { font-size: 20px; font-weight: 700; }
+  .perf-box .n.lime { color: var(--lime); }
+  .perf-box .l { font-size: 10px; color: var(--text-dim); margin-top: 3px; line-height: 1.3; }
+
+  .invite-row { display: flex; align-items: center; gap: 8px; }
+  .invite-link { flex: 1; min-width: 0; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; padding: 11px 12px; font-size: 11.5px; color: var(--blue); word-break: break-all; }
+  .invite-copy { width: 40px; height: 40px; border-radius: 4px; background: var(--blue); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+  .sugg-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .sugg-row:last-child { border-bottom: none; }
+  .sugg-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; }
+  .sugg-stato { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; flex-shrink: 0; }
+  .sugg-stato.in_revisione { background: rgba(232,179,76,0.14); color: #e8b34c; }
+  .sugg-stato.approvato { background: var(--lime-dim); color: var(--lime); }
+  .sugg-stato.rifiutato { background: rgba(226,87,74,0.12); color: #e2574a; }
+  .sugg-why { background: none; border: none; color: #e2574a; cursor: pointer; font-size: 14px; flex-shrink: 0; padding: 2px; }
+
+  .rete-search {
+    width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 4px; font-size: 13px; font-family: inherit; margin-bottom: 10px;
+  }
+  .rete-search:focus { outline: none; border-color: var(--blue); }
+
   .aff-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .aff-row:last-child { border-bottom: none; }
-  .aff-foto { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--slate, #3a4358); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+  .aff-foto { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #3a4358; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; }
   .aff-foto img { width: 100%; height: 100%; object-fit: cover; }
   .aff-body { flex: 1; min-width: 0; }
   .aff-name { font-size: 13px; font-weight: 700; }
   .aff-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
-  .aff-count { font-size: 12px; font-weight: 700; color: var(--lime); flex-shrink: 0; text-align: right; }
+  .aff-count { font-size: 11px; font-weight: 700; color: var(--lime); flex-shrink: 0; text-align: right; }
   .aff-count.zero { color: var(--text-dim); font-weight: 500; }
+  .aff-chat { width: 32px; height: 32px; border-radius: 4px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; }
 </style>
 </head>
 <body>
@@ -67,8 +101,38 @@
       <button class="back" onclick="window.location.href='dashboard.html?_=' + Date.now()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
       <div>
         <h1>Il mio account</h1>
-        <p>Modifica i tuoi dati quando vuoi</p>
+        <p>Profilo, performance e rete</p>
       </div>
+    </div>
+
+    <div class="card profile-head">
+      <div class="ph-avatar" id="phAvatar"><span id="phInitials">--</span></div>
+      <div class="ph-body">
+        <div class="ph-name" id="phName">Utente</div>
+        <div class="ph-user" id="phUser"></div>
+        <div class="ph-badge" id="phBadge">In attesa di verifica</div>
+      </div>
+    </div>
+
+    <div class="perf-row">
+      <div class="perf-box"><div class="n" id="perfSuggeriti">0</div><div class="l">Business suggeriti</div></div>
+      <div class="perf-box"><div class="n lime" id="perfApprovati">0</div><div class="l">Business approvati</div></div>
+      <div class="perf-box"><div class="n lime" id="perfRete">0</div><div class="l">Utenti in rete</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Il tuo link invito</h2>
+      <div class="invite-row">
+        <div class="invite-link" id="inviteLink">-</div>
+        <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card" id="suggStatiCard" style="display:none">
+      <h2>Le tue candidature</h2>
+      <div id="suggStatiRows"></div>
     </div>
 
     <div class="card">
@@ -141,8 +205,8 @@
     <p class="save-note" id="saveNote"></p>
 
     <div class="card" style="margin-top:14px">
-      <h2>Affiliazione</h2>
-      <div class="field" style="margin-bottom:14px"><label>Iscritti fatti</label><div style="font-size:26px;font-weight:700" id="affInvitati">0</div></div>
+      <h2>La mia rete</h2>
+      <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
       <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
     </div>
   </div>
@@ -238,18 +302,82 @@
       return n ? n.slice(0, 2).toUpperCase() : "??";
     }
 
-    async function loadAffiliazione() {
-      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
-      const data = await res.json();
-      document.getElementById("affInvitati").textContent = data.rete?.invitati_count || 0;
+    // Header identità: dati presi direttamente da Telegram.
+    (function renderHeader() {
+      const user = tg?.initDataUnsafe?.user;
+      const nome = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "Utente";
+      document.getElementById("phName").textContent = nome;
+      document.getElementById("phUser").textContent = user?.username ? "@" + user.username : "";
+      if (user?.photo_url) {
+        document.getElementById("phAvatar").innerHTML = `<img src="${escapeHtml(user.photo_url)}" alt="" onerror="this.remove()" />`;
+      } else {
+        document.getElementById("phInitials").textContent = initialsOf(nome);
+      }
+    })();
 
-      const membri = data.rete?.membri || [];
-      if (!membri.length) return;
-      document.getElementById("affRows").innerHTML = membri.map((m) => {
+    async function loadPerformance() {
+      const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      document.getElementById("perfSuggeriti").textContent = data.suggeriti_count || 0;
+      document.getElementById("perfApprovati").textContent = data.approvati_count || 0;
+      document.getElementById("perfRete").textContent = data.rete_count || 0;
+      const badge = document.getElementById("phBadge");
+      if (data.lead?.sondaggio_completato) {
+        badge.textContent = "Stato: Verificato";
+        badge.classList.add("ok");
+      } else {
+        badge.textContent = "Stato: In attesa di verifica";
+      }
+    }
+
+    let inviteLink = "";
+    function copiaInvito() {
+      if (!inviteLink) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(inviteLink).catch(() => {});
+      try { tg?.HapticFeedback?.impactOccurred("light"); } catch (e) {}
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+    }
+    window.copiaInvito = copiaInvito;
+
+    async function loadSuggerimenti() {
+      const res = await fetch(`${API_URL}/miei-suggerimenti`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      const rows = data.suggerimenti || [];
+      if (!rows.length) return;
+      const LABEL = { in_revisione: "In revisione", approvato: "Approvato", rifiutato: "Rifiutato" };
+      document.getElementById("suggStatiCard").style.display = "block";
+      document.getElementById("suggStatiRows").innerHTML = rows.map((s) => `
+        <div class="sugg-row">
+          <div class="sugg-name">${escapeHtml(s.nome)}</div>
+          <span class="sugg-stato ${s.stato}">${LABEL[s.stato] || s.stato}</span>
+          ${s.stato === "rifiutato" && s.causale_rifiuto ? `<button class="sugg-why" onclick="mostraCausale('${escapeHtml(s.causale_rifiuto).replace(/'/g, "\\'")}')" aria-label="Motivo del rifiuto">&#9888;</button>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function mostraCausale(testo) {
+      if (tg?.showAlert) tg.showAlert("Motivo del rifiuto: " + testo);
+      else alert("Motivo del rifiuto: " + testo);
+    }
+    window.mostraCausale = mostraCausale;
+
+    let membriRete = [];
+
+    function renderRete(filtro) {
+      const term = (filtro || "").toLowerCase();
+      const visibili = term
+        ? membriRete.filter((m) => (m.nome || "").toLowerCase().includes(term) || (m.username || "").toLowerCase().includes(term))
+        : membriRete;
+      const el = document.getElementById("affRows");
+      if (!visibili.length) {
+        el.innerHTML = '<p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">' + (membriRete.length ? "Nessun risultato." : "Nessun iscritto ancora.") + "</p>";
+        return;
+      }
+      el.innerHTML = visibili.map((m) => {
         const foto = m.foto_url
           ? `<img src="${escapeHtml(m.foto_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />`
           : "";
-        const n = m.servizi_count || 0;
+        const n = m.business_approvati || 0;
         return `
         <div class="aff-row">
           <div class="aff-foto">${foto}<span style="${foto ? "display:none" : ""}">${escapeHtml(initialsOf(m.nome))}</span></div>
@@ -257,13 +385,27 @@
             <div class="aff-name">${escapeHtml(m.nome || "Utente")}</div>
             <div class="aff-sub">${m.username ? "@" + escapeHtml(m.username) : escapeHtml(m.stato_label || "Iscritto")}</div>
           </div>
-          <div class="aff-count ${n ? "" : "zero"}">${n} serviz${n === 1 ? "io" : "i"}</div>
+          <div class="aff-count ${n ? "" : "zero"}">Business: ${n}</div>
+          ${m.username ? `<a class="aff-chat" href="https://t.me/${escapeHtml(m.username)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Scrivi su Telegram"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>` : ""}
         </div>
       `;
       }).join("");
     }
 
+    async function loadAffiliazione() {
+      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      inviteLink = data.ref_link || "";
+      document.getElementById("inviteLink").textContent = inviteLink || "-";
+      membriRete = data.rete?.membri || [];
+      renderRete("");
+    }
+
+    document.getElementById("reteSearch").addEventListener("input", (e) => renderRete(e.target.value.trim()));
+
     load();
+    loadPerformance();
+    loadSuggerimenti();
     loadAffiliazione();
   </script>
 </body>
