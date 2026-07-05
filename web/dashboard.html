@@ -257,7 +257,7 @@
       const completato = !!lead.sondaggio_completato;
       window.sondaggioCompletato = completato;
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
-      document.getElementById("paginaLink").style.display = lead.is_cliente ? "flex" : "none";
+      document.getElementById("paginaLink").style.display = completato ? "flex" : "none";
       return completato;
     }
 

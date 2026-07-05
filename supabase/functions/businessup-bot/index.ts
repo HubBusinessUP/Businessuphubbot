@@ -58,15 +58,12 @@ async function validateInitData(initData: string): Promise<number | null> {
   }
 }
 
-// Quale ref link mostrare per (utente, servizio): quello del referrer se affiliato approvato, altrimenti quello principale.
+// Quale ref link mostrare per (utente, servizio): quello del referrer se ha un suo link approvato per quel servizio, altrimenti quello principale.
 async function resolveRefLink(telegramId: number, servizioId: number): Promise<string | null> {
   const { data: lead } = await supabase.from("leads").select("referred_by").eq("telegram_id", telegramId).maybeSingle()
   if (lead?.referred_by) {
-    const { data: referrer } = await supabase.from("leads").select("is_cliente").eq("telegram_id", lead.referred_by).maybeSingle()
-    if (referrer?.is_cliente) {
-      const { data: al } = await supabase.from("affiliate_link").select("ref_link").eq("telegram_id", lead.referred_by).eq("servizio_id", servizioId).eq("approvato", true).maybeSingle()
-      if (al?.ref_link) return al.ref_link
-    }
+    const { data: al } = await supabase.from("affiliate_link").select("ref_link").eq("telegram_id", lead.referred_by).eq("servizio_id", servizioId).eq("approvato", true).maybeSingle()
+    if (al?.ref_link) return al.ref_link
   }
   const { data: sv } = await supabase.from("servizi").select("link_principale").eq("id", servizioId).maybeSingle()
   return sv?.link_principale || null
@@ -239,8 +236,8 @@ async function apiAffiliazione(telegramId: number) {
 }
 
 async function apiAffiliateLinkSave(telegramId: number, body: any) {
-  const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
-  if (!lead?.is_cliente) return json({ error: "non_autorizzato" }, 403)
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.sondaggio_completato) return json({ error: "non_autorizzato" }, 403)
 
   const { servizio_id, ref_link } = body
   await supabase.from("affiliate_link").upsert(
@@ -273,7 +270,7 @@ function sanitizeSocialLinks(input: any): { tipo: string; url: string }[] {
 }
 
 async function apiPaginaGet(telegramId: number) {
-  const { data: lead } = await supabase.from("leads").select("nome, cognome, is_cliente, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("nome, cognome, sondaggio_completato, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: servizi } = await supabase.from("servizi").select("id, nome")
   const svcMap: Record<number, string> = {}
@@ -281,7 +278,7 @@ async function apiPaginaGet(telegramId: number) {
   const links = (mieiLink ?? []).map((l: any) => ({ ...l, servizio_nome: svcMap[l.servizio_id] || "?" }))
   const refCode = await getOrCreateRefCode(telegramId)
   return json({
-    is_cliente: lead?.is_cliente ?? false,
+    sondaggio_completato: lead?.sondaggio_completato ?? false,
     bio_titolo: lead?.bio_titolo || "",
     bio_testo: lead?.bio_testo || "",
     bio_foto_url: lead?.bio_foto_url || "",
@@ -292,8 +289,8 @@ async function apiPaginaGet(telegramId: number) {
 }
 
 async function apiPaginaSave(telegramId: number, body: any) {
-  const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
-  if (!lead?.is_cliente) return json({ error: "non_autorizzato" }, 403)
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.sondaggio_completato) return json({ error: "non_autorizzato" }, 403)
 
   const { bio_titolo, bio_testo, bio_foto_url, social_links } = body
   const { error } = await supabase.from("leads").update({
@@ -308,8 +305,8 @@ async function apiPaginaSave(telegramId: number, body: any) {
 }
 
 async function apiPaginaPubblica(code: string) {
-  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, is_cliente, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
-  if (!lead || !lead.is_cliente) return json({ error: "not_found" }, 404)
+  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, sondaggio_completato, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
+  if (!lead || !lead.sondaggio_completato) return json({ error: "not_found" }, 404)
 
   const { data: links } = await supabase.from("affiliate_link").select("servizio_id, ref_link").eq("telegram_id", lead.telegram_id).eq("approvato", true)
   const servizioIds = (links ?? []).map((l: any) => l.servizio_id)
@@ -416,8 +413,18 @@ async function apiAdminAffiliateLinksList() {
 
 async function apiAdminAffiliateLinkApprove(body: any) {
   const { id } = body
+  const { data: link } = await supabase.from("affiliate_link").select("servizio_id, ref_link").eq("id", id).maybeSingle()
+  if (!link) return json({ error: "not_found" }, 404)
+
   const { error } = await supabase.from("affiliate_link").update({ approvato: true }).eq("id", id)
   if (error) return json({ error: error.message }, 500)
+
+  // Se il servizio non ha ancora un link di default, questo diventa il link base per tutti finché l'admin non ne imposta uno.
+  const { data: sv } = await supabase.from("servizi").select("link_principale").eq("id", link.servizio_id).maybeSingle()
+  if (sv && !sv.link_principale) {
+    await supabase.from("servizi").update({ link_principale: link.ref_link }).eq("id", link.servizio_id)
+  }
+
   return json({ ok: true })
 }
 
