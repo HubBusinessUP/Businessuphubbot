@@ -49,6 +49,12 @@
   .btn-primary { background: var(--lime); color: #06110b; }
   .btn-done { background: var(--lime-dim); color: var(--lime); }
   .save-note { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
+
+  .aff-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .aff-row:last-child { border-bottom: none; }
+  .aff-ico { width: 32px; height: 32px; border-radius: 4px; background: var(--slate, #3a4358); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 700; }
+  .aff-name { font-size: 13px; font-weight: 700; }
+  .aff-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
 </style>
 </head>
 <body>
@@ -66,6 +72,13 @@
       <div class="field"><label>Nome</label><input id="fNome" /></div>
       <div class="field"><label>Cognome</label><input id="fCognome" /></div>
       <div class="field"><label>Email</label><input id="fEmail" type="email" /></div>
+      <div class="field">
+        <label>Telefono</label>
+        <div style="display:flex;gap:8px">
+          <input id="fTelefono" type="tel" placeholder="+39..." style="flex:1" />
+          <button type="button" class="btn" style="width:auto;padding:0 14px;background:var(--panel);border:1px solid var(--border);color:var(--text)" id="btnContatto">Da Telegram</button>
+        </div>
+      </div>
       <div class="field"><label>Città</label><input id="fCitta" /></div>
     </div>
 
@@ -122,6 +135,15 @@
 
     <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
     <p class="save-note" id="saveNote"></p>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Affiliazione</h2>
+      <div class="row2" style="margin-bottom:14px">
+        <div class="field" style="margin-bottom:0"><label>Invitati</label><div style="font-size:20px;font-weight:700" id="affInvitati">0</div></div>
+        <div class="field" style="margin-bottom:0"><label>Attivati</label><div style="font-size:20px;font-weight:700;color:var(--lime)" id="affAttivati">0</div></div>
+      </div>
+      <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun invitato ancora.</p></div>
+    </div>
   </div>
 
   <script>
@@ -143,6 +165,7 @@
       document.getElementById("fNome").value = sond.nome || lead.nome || "";
       document.getElementById("fCognome").value = sond.cognome || lead.cognome || "";
       document.getElementById("fEmail").value = sond.email || "";
+      document.getElementById("fTelefono").value = sond.telefono || "";
       document.getElementById("fCitta").value = sond.citta || "";
       if (sond.livello_trading) document.getElementById("fLivello").value = sond.livello_trading;
       if (sond.esperienza_broker) document.getElementById("fEsperienza").value = sond.esperienza_broker;
@@ -161,6 +184,7 @@
         nome: document.getElementById("fNome").value.trim(),
         cognome: document.getElementById("fCognome").value.trim(),
         email: document.getElementById("fEmail").value.trim(),
+        telefono: document.getElementById("fTelefono").value.trim(),
         citta: document.getElementById("fCitta").value.trim(),
         livello_trading: document.getElementById("fLivello").value,
         esperienza_broker: document.getElementById("fEsperienza").value,
@@ -189,7 +213,47 @@
       }
     };
 
+    document.getElementById("btnContatto").onclick = () => {
+      if (!tg?.requestContact) {
+        if (tg?.showAlert) tg.showAlert("Il tuo Telegram non supporta questa funzione, inseriscilo a mano.");
+        return;
+      }
+      tg.requestContact((shared, response) => {
+        const phone = response?.responseUnsafe?.contact?.phone_number;
+        if (shared && phone) {
+          document.getElementById("fTelefono").value = phone.startsWith("+") ? phone : `+${phone}`;
+        } else if (tg?.showAlert) {
+          tg.showAlert("Nessun numero condiviso, inseriscilo a mano.");
+        }
+      });
+    };
+
+    function maskInitials(nome) {
+      const n = (nome || "").trim();
+      return n ? n.slice(0, 2).toUpperCase() : "??";
+    }
+
+    async function loadAffiliazione() {
+      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      document.getElementById("affInvitati").textContent = data.rete?.invitati_count || 0;
+      document.getElementById("affAttivati").textContent = data.rete?.attivati_count || 0;
+
+      const membri = data.rete?.membri || [];
+      if (!membri.length) return;
+      document.getElementById("affRows").innerHTML = membri.map((m) => `
+        <div class="aff-row">
+          <div class="aff-ico">${maskInitials(m.nome_mascherato)}</div>
+          <div>
+            <div class="aff-name">${m.nome_mascherato || "Utente"}</div>
+            <div class="aff-sub">${m.stato_label || "Iscritto"}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
     load();
+    loadAffiliazione();
   </script>
 </body>
 </html>

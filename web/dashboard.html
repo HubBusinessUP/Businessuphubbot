@@ -38,8 +38,7 @@
     display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
   }
 
-  .greet-card { background: var(--panel); border-radius: 4px; padding: 16px; margin-bottom: 14px; }
-  .greet-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 16px; margin-bottom: 14px; }
   .greet-identity { display: flex; align-items: center; gap: 13px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
   .top-actions { display: flex; gap: 10px; flex-shrink: 0; }
   .avatar-wrap {
@@ -55,14 +54,28 @@
   }
   .greet { font-size: 16px; font-weight: 700; }
 
-  .hero-banner { padding: 4px 2px 14px; }
-  .hero-banner h2 { font-size: 15px; font-weight: 700; }
-  .hero-banner p { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin-top: 4px; }
+  .hero-banner { background: var(--blue); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
+  .hero-banner h2 { font-size: 16px; font-weight: 700; color: #fff; }
+  .hero-banner p { font-size: 12.5px; color: rgba(255,255,255,0.85); line-height: 1.5; margin-top: 4px; }
 
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
 
   .btn { width: 100%; padding: 14px; border: none; border-radius: 4px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
   .btn-primary { background: var(--lime); color: #06110b; }
+
+  .section-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; }
+  .section-date { font-size: 11px; color: var(--text-dim); }
+
+  .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .filter-row select {
+    width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 26px 10px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; font-family: inherit;
+    appearance: none; -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%238b90a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
+    background-repeat: no-repeat; background-position: right 8px center; background-size: 14px;
+  }
+  .filter-row select:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
   .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
@@ -122,29 +135,27 @@
 <body>
   <div class="container">
     <div class="greet-card">
-      <div class="greet-top">
-        <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
-          <div class="avatar-wrap">
-            <img class="avatar-img" id="avatarImg" alt="" />
-            <div class="avatar-fallback" id="avatarFallback">--</div>
-          </div>
-          <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
-        </button>
-        <div class="top-actions">
-          <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
-          </button>
-          <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-          </button>
+      <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
+        <div class="avatar-wrap">
+          <img class="avatar-img" id="avatarImg" alt="" />
+          <div class="avatar-fallback" id="avatarFallback">--</div>
         </div>
+        <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
+      </button>
+      <div class="top-actions">
+        <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
+        </button>
+        <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
       </div>
     </div>
 
     <div class="lock-card" id="anagraficaPrompt" style="display:none">
       <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <h3>Completa la tua anagrafica</h3>
-      <p>Per sbloccare il tuo link personale e la rete, compila nome, contatti e qualche domanda veloce.</p>
+      <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
       <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
     </div>
 
@@ -158,9 +169,21 @@
     </button>
 
     <div class="hero-banner">
-      <h2>Esplora Business List</h2>
-      <p>Scegli una categoria per vedere i servizi disponibili e i tutorial per attivarli.</p>
+      <h2>Benvenuto nell'app!</h2>
+      <p>Cerca il business che fa per te nella directory qui sotto.</p>
     </div>
+
+    <div class="section-row">
+      <div class="section-title">Business list</div>
+      <div class="section-date" id="sectionDate"></div>
+    </div>
+
+    <div class="filter-row">
+      <select id="filtroCategoria"><option value="">Categoria</option></select>
+      <select id="filtroSottocategoria"><option value="">Sottocategoria</option></select>
+      <select id="filtroExtra" disabled><option value="">Filtri</option></select>
+    </div>
+
     <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
   </div>
 
@@ -209,8 +232,7 @@
     window.sondaggioCompletato = false;
 
     function goProfilo() {
-      const target = window.sondaggioCompletato ? "account.html" : "sondaggio.html";
-      window.location.href = `${target}?_=${Date.now()}`;
+      window.location.href = `account.html?_=${Date.now()}`;
     }
 
     function initials(name) {
@@ -235,6 +257,8 @@
     }
     renderTelegramProfile();
 
+    document.getElementById("sectionDate").textContent = "Aggiornato al " + new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
+
     async function loadMe() {
       const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
@@ -250,30 +274,62 @@
     const SERVICE_ICON_BG = ["var(--blue)", "var(--lime)", "var(--amber)", "var(--slate)"];
     const CAT_ICON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
 
+    let allServizi = [];
+    let macroCategorie = [];
+    let categorie = [];
+
+    function populateSottocategoria(macroId) {
+      const sel = document.getElementById("filtroSottocategoria");
+      const cats = macroId ? categorie.filter((c) => String(c.macro_categoria_id) === String(macroId)) : categorie;
+      sel.innerHTML = '<option value="">Sottocategoria</option>' + cats.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+    }
+
+    function renderList() {
+      const macroId = document.getElementById("filtroCategoria").value;
+      const catId = document.getElementById("filtroSottocategoria").value;
+      const el = document.getElementById("businessList");
+
+      let filtered = allServizi;
+      if (catId) filtered = filtered.filter((s) => String(s.categoria_id) === String(catId));
+      else if (macroId) {
+        const catIds = categorie.filter((c) => String(c.macro_categoria_id) === String(macroId)).map((c) => c.id);
+        filtered = filtered.filter((s) => catIds.includes(s.categoria_id));
+      }
+
+      if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun servizio in questa vista.</p>'; return; }
+
+      el.innerHTML = filtered.map((s, idx) => `
+        <button class="list-item" onclick="window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
+          <div class="cat-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${CAT_ICON_SVG}</div>
+          <div class="cat-body">
+            <div class="cat-name">${s.nome}</div>
+            <div class="cat-count">${s.categoria_nome || ""}</div>
+          </div>
+          <div class="stato-badge ${s.stato}">${s.stato}</div>
+        </button>
+      `).join("");
+    }
+
     async function loadBusinessList() {
       const res = await fetch(`${API_URL}/business-list`, { cache: "no-store" });
       const data = await res.json();
-      const el = document.getElementById("businessList");
-      el.innerHTML = "";
-      const cats = data.categorie || [];
-      if (!cats.length) { el.innerHTML = '<p class="empty">Nessun servizio disponibile al momento.</p>'; return; }
+      macroCategorie = data.macro_categorie || [];
+      categorie = data.categorie || [];
 
-      cats.forEach((cat, idx) => {
-        const servizi = cat.servizi || [];
-        const row = document.createElement("button");
-        row.className = "list-item";
-        row.innerHTML = `
-          <div class="cat-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${CAT_ICON_SVG}</div>
-          <div class="cat-body">
-            <div class="cat-name">${cat.nome}</div>
-            <div class="cat-count">${servizi.length} serviz${servizi.length === 1 ? "io" : "i"}</div>
-          </div>
-          <svg class="cat-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
-        `;
-        row.onclick = () => window.location.href = `categoria.html?id=${cat.id}&_=${Date.now()}`;
-        el.appendChild(row);
+      allServizi = [];
+      categorie.forEach((c) => {
+        (c.servizi || []).forEach((s) => allServizi.push({ ...s, categoria_nome: c.nome }));
       });
+
+      const macroSel = document.getElementById("filtroCategoria");
+      macroSel.innerHTML = '<option value="">Categoria</option>' + macroCategorie.map((m) => `<option value="${m.id}">${m.nome}</option>`).join("");
+      populateSottocategoria("");
+
+      renderList();
     }
+
+    document.getElementById("filtroCategoria").onchange = (e) => { populateSottocategoria(e.target.value); renderList(); };
+    document.getElementById("filtroSottocategoria").onchange = renderList;
 
     window.currentRefLink = "";
 
@@ -297,7 +353,7 @@
 
     function openShareSheet() {
       if (!window.currentRefLink) {
-        if (tg?.showAlert) tg.showAlert("Completa l'anagrafica per generare il tuo link.");
+        if (tg?.showAlert) tg.showAlert("Un attimo, il tuo link si sta ancora generando.");
         return;
       }
       const link = window.currentRefLink;
@@ -324,9 +380,9 @@
     }
 
     async function init() {
-      const completato = await loadMe();
+      await loadMe();
       loadBusinessList();
-      if (completato) loadAffiliazione();
+      loadAffiliazione();
     }
 
     if (!initData) {

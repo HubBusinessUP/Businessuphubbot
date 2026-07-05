@@ -139,10 +139,10 @@ async function apiMe(telegramId: number) {
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
-  const { nome, cognome, email, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato } = body
+  const { nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato } = body
   if (!disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
 
-  const row = { telegram_id: telegramId, nome, cognome, email, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato: true }
+  const row = { telegram_id: telegramId, nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato: true }
 
   const { data: ex } = await supabase.from("sondaggio_risposte").select("id").eq("telegram_id", telegramId).maybeSingle()
   const saveResult = ex
@@ -170,10 +170,17 @@ async function apiSondaggioSave(telegramId: number, body: any) {
 }
 
 async function apiBusinessList() {
+  const { data: macroCategorie } = await supabase.from("macro_categorie").select("*").order("ordine")
   const { data: categorie } = await supabase.from("categorie").select("*").order("ordine")
-  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine").order("ordine")
+  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at").order("created_at", { ascending: false })
+
   const list = (categorie ?? []).map((c: any) => ({ ...c, servizi: (servizi ?? []).filter((s: any) => s.categoria_id === c.id) }))
-  return json({ categorie: list })
+  const macroList = (macroCategorie ?? []).map((m: any) => ({
+    ...m,
+    categorie: list.filter((c: any) => c.macro_categoria_id === m.id),
+  }))
+
+  return json({ macro_categorie: macroList, categorie: list })
 }
 
 async function apiServizio(telegramId: number, servizioId: number) {
@@ -182,6 +189,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const { data: progress } = await supabase.from("tutorial_progress").select("ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refLink = await resolveRefLink(telegramId, servizioId)
   return json({
     servizio,
@@ -190,6 +198,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
     sondaggio_completato: !!lead?.sondaggio_completato,
     is_cliente: !!lead?.is_cliente,
     mio_link: mioLink || null,
+    step_progress: { ultimo_step: progress?.ultimo_step ?? 0, completato: !!progress?.completato },
   })
 }
 
@@ -345,19 +354,58 @@ async function apiAttiva(telegramId: number, body: any) {
   return json({ ok: true, ref_link: refLink })
 }
 
+// Segna completato uno step del tutorial; sblocca il successivo solo se gli step precedenti sono già fatti.
+async function apiStepProgressSave(telegramId: number, body: any) {
+  const { servizio_id, step_index, is_last } = body
+  const { data: existing } = await supabase.from("tutorial_progress").select("id, ultimo_step").eq("telegram_id", telegramId).eq("servizio_id", servizio_id).maybeSingle()
+  const attuale = existing?.ultimo_step ?? 0
+  if (step_index !== attuale) return json({ error: "step_non_in_sequenza" }, 409)
+
+  const row = { telegram_id: telegramId, servizio_id, ultimo_step: attuale + 1, completato: !!is_last, updated_at: new Date().toISOString() }
+  const { error } = existing
+    ? await supabase.from("tutorial_progress").update(row).eq("id", existing.id)
+    : await supabase.from("tutorial_progress").insert(row)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true, ultimo_step: row.ultimo_step, completato: row.completato })
+}
+
 // ---------- ADMIN: CATEGORIE & SERVIZI ----------
+async function apiAdminMacroCategorieList() {
+  const { data } = await supabase.from("macro_categorie").select("*").order("ordine")
+  return json({ macro_categorie: data ?? [] })
+}
+
+async function apiAdminMacroCategorieSave(body: any) {
+  const { id, nome, ordine } = body
+  if (id) {
+    const { error } = await supabase.from("macro_categorie").update({ nome, ordine }).eq("id", id)
+    if (error) return json({ error: error.message }, 500)
+  } else {
+    const { error } = await supabase.from("macro_categorie").insert({ nome, ordine: ordine ?? 0 })
+    if (error) return json({ error: error.message }, 500)
+  }
+  return json({ ok: true })
+}
+
+async function apiAdminMacroCategorieDelete(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("macro_categorie").delete().eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
 async function apiAdminCategorieList() {
   const { data } = await supabase.from("categorie").select("*").order("ordine")
   return json({ categorie: data ?? [] })
 }
 
 async function apiAdminCategorieSave(body: any) {
-  const { id, nome, descrizione, ordine } = body
+  const { id, nome, descrizione, ordine, macro_categoria_id } = body
   if (id) {
-    const { error } = await supabase.from("categorie").update({ nome, descrizione, ordine }).eq("id", id)
+    const { error } = await supabase.from("categorie").update({ nome, descrizione, ordine, macro_categoria_id }).eq("id", id)
     if (error) return json({ error: error.message }, 500)
   } else {
-    const { error } = await supabase.from("categorie").insert({ nome, descrizione, ordine: ordine ?? 0 })
+    const { error } = await supabase.from("categorie").insert({ nome, descrizione, ordine: ordine ?? 0, macro_categoria_id })
     if (error) return json({ error: error.message }, 500)
   }
   return json({ ok: true })
@@ -494,6 +542,12 @@ serve(async (req) => {
       return await apiAttiva(tid, await req.json())
     }
 
+    if (sub === "step-progress" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiStepProgressSave(tid, await req.json())
+    }
+
     if (sub === "pagina" && req.method === "GET") {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
@@ -519,6 +573,10 @@ serve(async (req) => {
         const { count: clienti } = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("is_cliente", true)
         return json({ leads, clienti })
       }
+
+      if (sub === "admin/macro-categorie" && req.method === "GET") return await apiAdminMacroCategorieList()
+      if (sub === "admin/macro-categorie/save" && req.method === "POST") return await apiAdminMacroCategorieSave(await req.json())
+      if (sub === "admin/macro-categorie/delete" && req.method === "POST") return await apiAdminMacroCategorieDelete(await req.json())
 
       if (sub === "admin/categorie" && req.method === "GET") return await apiAdminCategorieList()
       if (sub === "admin/categorie/save" && req.method === "POST") return await apiAdminCategorieSave(await req.json())

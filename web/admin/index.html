@@ -111,6 +111,14 @@
 
     <div class="section">
       <div class="section-head">
+        <h2>Macro categorie</h2>
+        <button class="btn-add" onclick="openMacroForm()">+ Nuova macro categoria</button>
+      </div>
+      <div id="macroList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
         <h2>Categorie</h2>
         <button class="btn-add" onclick="openCategoriaForm()">+ Nuova categoria</button>
       </div>
@@ -133,12 +141,27 @@
     </div>
   </div>
 
+  <!-- Modal Macro Categoria -->
+  <div class="overlay" id="macroOverlay">
+    <div class="modal">
+      <h3 id="macroModalTitle">Nuova macro categoria</h3>
+      <input type="hidden" id="macroId" />
+      <div class="field"><label>Nome</label><input id="macroNome" /></div>
+      <div class="field"><label>Ordine</label><input id="macroOrdine" type="number" value="0" /></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('macroOverlay')">Annulla</button>
+        <button class="btn btn-primary" onclick="saveMacro()">Salva</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Categoria -->
   <div class="overlay" id="catOverlay">
     <div class="modal">
       <h3 id="catModalTitle">Nuova categoria</h3>
       <input type="hidden" id="catId" />
       <div class="field"><label>Nome</label><input id="catNome" /></div>
+      <div class="field"><label>Macro categoria</label><select id="catMacro"></select></div>
       <div class="field"><label>Descrizione</label><textarea id="catDescrizione"></textarea></div>
       <div class="field"><label>Ordine</label><input id="catOrdine" type="number" value="0" /></div>
       <div class="modal-actions">
@@ -195,6 +218,7 @@
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     let ADMIN_KEY = localStorage.getItem("bu_admin_key") || "";
+    let macroCategorie = [];
     let categorie = [];
     let servizi = [];
 
@@ -222,6 +246,10 @@
       const stats = await (await api("admin/stats")).json();
       document.getElementById("statLeads").textContent = stats.leads ?? 0;
       document.getElementById("statQualificati").textContent = stats.clienti ?? 0;
+
+      const macroRes = await (await api("admin/macro-categorie")).json();
+      macroCategorie = macroRes.macro_categorie || [];
+      renderMacro();
 
       const catRes = await (await api("admin/categorie")).json();
       categorie = catRes.categorie || [];
@@ -266,15 +294,58 @@
       loadAll();
     }
 
+    function renderMacro() {
+      const el = document.getElementById("macroList");
+      if (!macroCategorie.length) { el.innerHTML = '<p class="empty">Nessuna macro categoria.</p>'; return; }
+      el.innerHTML = macroCategorie.map((m) => `
+        <div class="item">
+          <div class="item-head">
+            <div class="item-title">${m.nome}</div>
+            <div class="item-actions">
+              <button class="icon-btn" onclick='openMacroForm(${JSON.stringify(m)})'>✎</button>
+              <button class="icon-btn danger" onclick="deleteMacro(${m.id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openMacroForm(m) {
+      document.getElementById("macroModalTitle").textContent = m ? "Modifica macro categoria" : "Nuova macro categoria";
+      document.getElementById("macroId").value = m?.id || "";
+      document.getElementById("macroNome").value = m?.nome || "";
+      document.getElementById("macroOrdine").value = m?.ordine ?? 0;
+      openModal("macroOverlay");
+    }
+
+    async function saveMacro() {
+      const body = {
+        id: document.getElementById("macroId").value || undefined,
+        nome: document.getElementById("macroNome").value.trim(),
+        ordine: parseInt(document.getElementById("macroOrdine").value) || 0,
+      };
+      await api("admin/macro-categorie/save", { method: "POST", body: JSON.stringify(body) });
+      closeModal("macroOverlay");
+      loadAll();
+    }
+
+    async function deleteMacro(id) {
+      if (!confirm("Eliminare questa macro categoria? Le categorie collegate resteranno senza macro.")) return;
+      await api("admin/macro-categorie/delete", { method: "POST", body: JSON.stringify({ id }) });
+      loadAll();
+    }
+
     function renderCategorie() {
       const el = document.getElementById("categorieList");
       if (!categorie.length) { el.innerHTML = '<p class="empty">Nessuna categoria.</p>'; return; }
-      el.innerHTML = categorie.map((c) => `
+      el.innerHTML = categorie.map((c) => {
+        const macro = macroCategorie.find((m) => m.id === c.macro_categoria_id);
+        return `
         <div class="item">
           <div class="item-head">
             <div>
               <div class="item-title">${c.nome}</div>
-              <div class="item-meta">${c.descrizione || ""}</div>
+              <div class="item-meta">${macro ? macro.nome : "Nessuna macro"} ${c.descrizione ? "· " + c.descrizione : ""}</div>
             </div>
             <div class="item-actions">
               <button class="icon-btn" onclick='openCategoriaForm(${JSON.stringify(c)})'>✎</button>
@@ -282,7 +353,8 @@
             </div>
           </div>
         </div>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function renderServizi() {
@@ -314,6 +386,9 @@
       document.getElementById("catModalTitle").textContent = c ? "Modifica categoria" : "Nuova categoria";
       document.getElementById("catId").value = c?.id || "";
       document.getElementById("catNome").value = c?.nome || "";
+      const macroSel = document.getElementById("catMacro");
+      macroSel.innerHTML = '<option value="">— Nessuna —</option>' + macroCategorie.map((m) => `<option value="${m.id}">${m.nome}</option>`).join("");
+      macroSel.value = c?.macro_categoria_id || "";
       document.getElementById("catDescrizione").value = c?.descrizione || "";
       document.getElementById("catOrdine").value = c?.ordine ?? 0;
       openModal("catOverlay");
@@ -323,6 +398,7 @@
       const body = {
         id: document.getElementById("catId").value || undefined,
         nome: document.getElementById("catNome").value.trim(),
+        macro_categoria_id: document.getElementById("catMacro").value || null,
         descrizione: document.getElementById("catDescrizione").value.trim(),
         ordine: parseInt(document.getElementById("catOrdine").value) || 0,
       };
