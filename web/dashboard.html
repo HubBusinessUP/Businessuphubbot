@@ -32,30 +32,29 @@
   }
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 30px; }
 
+  .hero-banner { background: var(--blue); border-radius: 4px; padding: 16px 18px 18px; margin-bottom: 14px; }
+  .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+  .greet-identity { display: flex; align-items: center; gap: 11px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: #fff; min-width: 0; }
+  .top-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .icon-circle {
-    width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0;
-    background: var(--panel); color: var(--text);
+    width: 34px; height: 34px; border-radius: 4px; flex-shrink: 0;
+    background: rgba(255,255,255,0.16); color: #fff;
     display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
   }
-
-  .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 16px; margin-bottom: 14px; }
-  .greet-identity { display: flex; align-items: center; gap: 13px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
-  .top-actions { display: flex; gap: 10px; flex-shrink: 0; }
   .avatar-wrap {
-    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; position: relative;
-    border: none; padding: 0; cursor: pointer;
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; position: relative;
+    border: 2px solid rgba(255,255,255,0.35); padding: 0; cursor: pointer; overflow: hidden;
   }
   .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; }
   .avatar-fallback {
     width: 100%; height: 100%; border-radius: 50%;
-    background: var(--slate);
+    background: rgba(255,255,255,0.2);
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 800; color: #fff;
+    font-size: 13px; font-weight: 800; color: #fff;
   }
-  .greet { font-size: 16px; font-weight: 700; }
+  .greet { font-size: 15px; font-weight: 700; }
 
-  .hero-banner { background: var(--blue); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
-  .hero-banner h2 { font-size: 16px; font-weight: 700; color: #fff; }
+  .hero-banner h2 { font-size: 17px; font-weight: 700; color: #fff; }
   .hero-banner p { font-size: 12.5px; color: rgba(255,255,255,0.85); line-height: 1.5; margin-top: 4px; }
 
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
@@ -158,22 +157,26 @@
 </head>
 <body>
   <div class="container">
-    <div class="greet-card">
-      <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
-        <div class="avatar-wrap">
-          <img class="avatar-img" id="avatarImg" alt="" />
-          <div class="avatar-fallback" id="avatarFallback">--</div>
+    <div class="hero-banner">
+      <div class="hero-top">
+        <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
+          <div class="avatar-wrap">
+            <img class="avatar-img" id="avatarImg" alt="" />
+            <div class="avatar-fallback" id="avatarFallback">--</div>
+          </div>
+          <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
+        </button>
+        <div class="top-actions">
+          <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
+          </button>
+          <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
         </div>
-        <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
-      </button>
-      <div class="top-actions">
-        <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
-        </button>
-        <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-        </button>
       </div>
+      <h2>Benvenuto nel Tuo HUB!</h2>
+      <p>Cerca il business che fa per te nella directory qui sotto.</p>
     </div>
 
     <div class="lock-card" id="anagraficaPrompt" style="display:none">
@@ -181,20 +184,6 @@
       <h3>Completa la tua anagrafica</h3>
       <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
       <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
-    </div>
-
-    <button class="cat-card" id="paginaLink" style="display:none;margin-bottom:14px" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">
-      <div class="cat-ico" style="background:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div>
-      <div class="cat-body">
-        <div class="cat-name">La tua pagina personale</div>
-        <div class="cat-count">Bio, foto e i tuoi link in un'unica pagina pubblica</div>
-      </div>
-      <svg class="cat-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
-    </button>
-
-    <div class="hero-banner">
-      <h2>Benvenuto nel Tuo HUB!</h2>
-      <p>Cerca il business che fa per te nella directory qui sotto.</p>
     </div>
 
     <div class="section-row">
@@ -336,7 +325,6 @@
       window.sondaggioCompletato = completato;
       window.isCliente = !!lead.is_cliente;
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
-      document.getElementById("paginaLink").style.display = completato ? "flex" : "none";
       return completato;
     }
 
