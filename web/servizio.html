@@ -82,6 +82,8 @@
   <div class="container">
     <div class="top">
       <button class="back" onclick="history.back()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div style="flex:1"></div>
+      <button class="back" onclick="shareServizio()" aria-label="Condividi questo business"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg></button>
     </div>
 
     <div class="hero">
@@ -270,6 +272,23 @@
         };
       }
     }
+
+    let cachedRefLink = "";
+    async function shareServizio() {
+      try { tg?.HapticFeedback?.impactOccurred("light"); } catch (e) {}
+      if (!cachedRefLink) {
+        const r = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+        const d = await r.json();
+        cachedRefLink = d.ref_link || "";
+      }
+      if (!cachedRefLink) return;
+      const nome = document.getElementById("titolo").textContent;
+      const text = `Guarda "${nome}" su Business UP:`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(cachedRefLink)}&text=${encodeURIComponent(text)}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
+      else window.open(shareUrl, "_blank");
+    }
+    window.shareServizio = shareServizio;
 
     load();
   </script>

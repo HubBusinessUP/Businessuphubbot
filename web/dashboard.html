@@ -144,6 +144,69 @@
   .vote-btn.voted { border-color: var(--lime); background: var(--lime-dim); color: var(--lime); }
   .vote-btn.voted .vote-num { color: var(--lime); }
 
+  .search-row { margin-bottom: 10px; }
+  .search-input {
+    width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 11px 12px 11px 36px; border-radius: 4px; font-size: 13px; font-family: inherit;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%238b90a0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>');
+    background-repeat: no-repeat; background-position: 11px center; background-size: 15px;
+  }
+  .search-input:focus { outline: none; border-color: var(--blue); }
+
+  .new-badge { font-size: 8.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: var(--blue-dim); color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; vertical-align: 2px; margin-left: 6px; }
+
+  .rank-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 16px; padding: 0 4px; border-radius: 4px; font-size: 9.5px; font-weight: 800; margin-right: 6px; vertical-align: 1px; }
+  .rank-1 { background: rgba(255,199,44,0.18); color: #ffc72c; }
+  .rank-2 { background: rgba(190,197,210,0.16); color: #bec5d2; }
+  .rank-3 { background: rgba(217,144,90,0.16); color: #d9905a; }
+
+  .resume-card {
+    display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--blue); border-radius: 4px;
+    padding: 12px 14px; margin-bottom: 12px; width: 100%; text-align: left; font-family: inherit; color: inherit; cursor: pointer;
+  }
+  .resume-ico { width: 34px; height: 34px; border-radius: 4px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .resume-body { flex: 1; min-width: 0; }
+  .resume-title { font-size: 12.5px; font-weight: 700; }
+  .resume-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+  .load-more { display: block; width: 100%; padding: 12px; margin-top: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: var(--text-dim); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center; }
+
+  .list-item, .cat-card, .vote-btn, .icon-circle, .resume-card { transition: transform 0.1s ease, opacity 0.1s ease; }
+  .list-item:active, .resume-card:active { transform: scale(0.985); }
+  .vote-btn:active, .fav-btn:active, .mini-share:active { transform: scale(0.88); }
+
+  .fav-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; flex-shrink: 0;
+    background: none; border: none; color: var(--text-dim); cursor: pointer; font-family: inherit;
+    transition: transform 0.1s ease;
+  }
+  .fav-btn.faved { color: var(--amber); }
+
+  .skeleton-row { display: flex; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .skeleton-row:last-child { border-bottom: none; }
+  .sk { background: linear-gradient(90deg, var(--border) 25%, rgba(255,255,255,0.08) 50%, var(--border) 75%); background-size: 200% 100%; animation: sk-shimmer 1.3s infinite; border-radius: 4px; }
+  @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  .suggest-cta { border-color: rgba(46,204,113,0.4); animation: cta-glow 2.4s ease-in-out infinite; }
+  @keyframes cta-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); }
+    50% { box-shadow: 0 0 14px 0 rgba(46,204,113,0.25); }
+  }
+
+  /* Tema chiaro: attivato da tg.colorScheme */
+  body.light {
+    --ink: #f2f3f6;
+    --panel: #ffffff;
+    --slate: #c4cad6;
+    --text: #171a22;
+    --text-dim: #6b7180;
+    --border: #e3e5ea;
+  }
+  body.light .icon-circle { background: #eceef2; }
+  body.light .vote-btn { background: #f6f7f9; }
+  body.light .sk { background: linear-gradient(90deg, #e8eaee 25%, #f5f6f8 50%, #e8eaee 75%); background-size: 200% 100%; }
+
   .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 24px 20px; text-align: center; margin-bottom: 14px; }
   .lock-ico { width: 48px; height: 48px; border-radius: 4px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
   .lock-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
@@ -209,9 +272,22 @@
       <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
     </div>
 
+    <button class="resume-card" id="resumeCard" style="display:none">
+      <div class="resume-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
+      <div class="resume-body">
+        <div class="resume-title" id="resumeTitle">Riprendi da dove eri</div>
+        <div class="resume-sub" id="resumeSub"></div>
+      </div>
+      <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+
     <div class="section-row">
       <div class="section-title"><span class="live-dot"></span>Business list</div>
       <div class="section-date" id="sectionDate"></div>
+    </div>
+
+    <div class="search-row">
+      <input class="search-input" id="searchInput" placeholder="Cerca un business..." maxlength="60" />
     </div>
 
     <div class="filter-row">
@@ -240,7 +316,7 @@
 
     <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
 
-    <button class="cat-card" style="margin-top:14px" onclick="openSuggestSheet()">
+    <button class="cat-card suggest-cta" style="margin-top:14px" onclick="openSuggestSheet()">
       <div class="cat-ico" style="background:var(--lime)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06110b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
       <div class="cat-body">
         <div class="cat-name">Manca un business che usi?</div>
@@ -340,6 +416,20 @@
 
     document.getElementById("sectionDate").textContent = "Aggiornato al " + new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+    // Tema chiaro/scuro in base alle impostazioni Telegram, aggiornato live se l'utente cambia tema.
+    function applyTheme() {
+      document.body.classList.toggle("light", tg?.colorScheme === "light");
+    }
+    applyTheme();
+    if (tg?.onEvent) tg.onEvent("themeChanged", applyTheme);
+
+    function haptic(kind) {
+      try {
+        if (kind === "select") tg?.HapticFeedback?.selectionChanged();
+        else tg?.HapticFeedback?.impactOccurred(kind || "light");
+      } catch (e) {}
+    }
+
     async function loadMe() {
       const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
@@ -348,10 +438,19 @@
       window.sondaggioCompletato = completato;
       window.isCliente = !!lead.is_cliente;
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
+
+      if (data.ripresa) {
+        const r = data.ripresa;
+        document.getElementById("resumeTitle").textContent = `Riprendi: ${r.servizio_nome}`;
+        document.getElementById("resumeSub").textContent = `Sei allo step ${r.ultimo_step} di ${r.totale_step} — continua da dove eri`;
+        const card = document.getElementById("resumeCard");
+        card.style.display = "flex";
+        card.onclick = () => window.location.href = `servizio.html?id=${r.servizio_id}&_=${Date.now()}`;
+      }
       return completato;
     }
 
-    const SERVICE_ICON_BG = ["var(--blue)", "var(--lime)", "var(--amber)", "var(--slate)"];
+    const MACRO_COLORS = ["var(--blue)", "var(--lime)", "var(--amber)", "var(--slate)", "#9b6ef0", "#e2574a"];
     const CAT_ICON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
 
     let allServizi = [];
@@ -391,10 +490,14 @@
       });
     }
 
+    // Filtri dinamici: mostra solo sottocategorie con almeno un servizio.
     function populateSottocategoria(macroId) {
-      const cats = macroId ? categorie.filter((c) => String(c.macro_categoria_id) === String(macroId)) : categorie;
+      let cats = macroId ? categorie.filter((c) => String(c.macro_categoria_id) === String(macroId)) : categorie;
+      cats = cats.filter((c) => (c.servizi || []).length > 0);
       fillDd("ddSottocategoria", "Sottocategoria", cats.map((c) => ({ value: String(c.id), label: c.nome })), (v) => {
+        haptic("select");
         filtri.catId = v;
+        visibleCount = PAGE_SIZE;
         renderList();
       });
       const dd = document.getElementById("ddSottocategoria");
@@ -404,40 +507,88 @@
     }
 
     let mieiVoti = new Set();
+    let mieiPreferiti = new Set();
+    let searchTerm = "";
+    const PAGE_SIZE = 10;
+    let visibleCount = PAGE_SIZE;
+    let macroColorById = {};
+    let catToMacro = {};
 
+    // Preferiti in primo piano, poi classifica per voti (spareggio: più recente prima).
     function sortServizi() {
-      allServizi.sort((a, b) => (b.voti || 0) - (a.voti || 0) || (a.created_at < b.created_at ? 1 : -1));
+      allServizi.sort((a, b) =>
+        (mieiPreferiti.has(b.id) - mieiPreferiti.has(a.id)) ||
+        (b.voti || 0) - (a.voti || 0) ||
+        (a.created_at < b.created_at ? 1 : -1)
+      );
+    }
+
+    function isNew(s) {
+      return s.created_at && (Date.now() - new Date(s.created_at).getTime()) < 7 * 86400000;
+    }
+
+    function showSkeleton() {
+      document.getElementById("businessList").innerHTML = Array.from({ length: 4 }, () => `
+        <div class="skeleton-row">
+          <div class="sk" style="width:42px;height:42px"></div>
+          <div style="flex:1"><div class="sk" style="width:60%;height:13px;margin-bottom:7px"></div><div class="sk" style="width:35%;height:10px"></div></div>
+          <div class="sk" style="width:44px;height:44px"></div>
+        </div>
+      `).join("");
     }
 
     function renderList() {
       const el = document.getElementById("businessList");
 
+      // Podio: classifica globale per voti, indipendente da filtri e ricerca.
+      const rankMap = {};
+      [...allServizi].sort((a, b) => (b.voti || 0) - (a.voti || 0) || (a.created_at < b.created_at ? 1 : -1))
+        .slice(0, 3).forEach((s, i) => { if ((s.voti || 0) > 0) rankMap[s.id] = i + 1; });
+
       let filtered = allServizi;
+      if (searchTerm) filtered = filtered.filter((s) => (s.nome || "").toLowerCase().includes(searchTerm));
       if (filtri.catId) filtered = filtered.filter((s) => String(s.categoria_id) === String(filtri.catId));
       else if (filtri.macroId) {
         const catIds = categorie.filter((c) => String(c.macro_categoria_id) === String(filtri.macroId)).map((c) => c.id);
         filtered = filtered.filter((s) => catIds.includes(s.categoria_id));
       }
 
-      if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun servizio in questa vista.</p>'; return; }
+      if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun business in questa vista.</p>'; return; }
 
-      el.innerHTML = filtered.map((s, idx) => `
-        <div class="list-item" onclick="window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
-          <div class="cat-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${CAT_ICON_SVG}</div>
+      const visible = filtered.slice(0, visibleCount);
+      el.innerHTML = visible.map((s) => {
+        const rank = rankMap[s.id];
+        const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
+        return `
+        <div class="list-item" onclick="haptic('light'); window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
+          <div class="cat-ico" style="background:${color}">${CAT_ICON_SVG}</div>
           <div class="cat-body">
-            <div class="cat-name">${s.nome}</div>
+            <div class="cat-name">${rank ? `<span class="rank-chip rank-${rank}">#${rank}</span>` : ""}${s.nome}${isNew(s) ? '<span class="new-badge">Nuovo</span>' : ""}</div>
             <div class="cat-count">${s.categoria_nome || ""}</div>
           </div>
-          <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo servizio">
+          <button class="fav-btn ${mieiPreferiti.has(s.id) ? "faved" : ""}" onclick="event.stopPropagation(); preferisci(${s.id}, this)" aria-label="Salva nei preferiti">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="${mieiPreferiti.has(s.id) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z"/></svg>
+          </button>
+          <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
             <span class="vote-num">${s.voti || 0}</span>
           </button>
         </div>
-      `).join("");
+      `;
+      }).join("");
+
+      if (filtered.length > visibleCount) {
+        const more = document.createElement("button");
+        more.className = "load-more";
+        more.textContent = `Carica altri (${filtered.length - visibleCount})`;
+        more.onclick = () => { haptic("light"); visibleCount += PAGE_SIZE; renderList(); };
+        el.appendChild(more);
+      }
     }
 
     async function vota(servizioId, btn) {
       if (!initData) return;
+      haptic("light");
       btn.disabled = true;
       const res = await fetch(`${API_URL}/vota`, {
         method: "POST",
@@ -457,12 +608,40 @@
     }
     window.vota = vota;
 
+    async function preferisci(servizioId, btn) {
+      if (!initData) return;
+      haptic("light");
+      btn.disabled = true;
+      const res = await fetch(`${API_URL}/preferito`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ servizio_id: servizioId }),
+      });
+      btn.disabled = false;
+      if (!res.ok) return;
+      const result = await res.json();
+
+      if (result.preferito) mieiPreferiti.add(servizioId);
+      else mieiPreferiti.delete(servizioId);
+      sortServizi();
+      renderList();
+    }
+    window.preferisci = preferisci;
+
     async function loadBusinessList() {
+      showSkeleton();
       const res = await fetch(`${API_URL}/business-list`, { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" });
       const data = await res.json();
       macroCategorie = data.macro_categorie || [];
       categorie = data.categorie || [];
       mieiVoti = new Set(data.miei_voti || []);
+      mieiPreferiti = new Set(data.miei_preferiti || []);
+
+      // Colore distintivo stabile per macro-categoria, applicato alle icone dei suoi servizi.
+      macroColorById = {};
+      macroCategorie.forEach((m, i) => { macroColorById[m.id] = MACRO_COLORS[i % MACRO_COLORS.length]; });
+      catToMacro = {};
+      categorie.forEach((c) => { catToMacro[c.id] = c.macro_categoria_id; });
 
       allServizi = [];
       categorie.forEach((c) => {
@@ -470,8 +649,14 @@
       });
       sortServizi();
 
-      fillDd("ddCategoria", "Categoria", macroCategorie.map((m) => ({ value: String(m.id), label: m.nome })), (v) => {
+      // Filtri dinamici: solo macro-categorie con almeno un servizio.
+      const macroConServizi = macroCategorie.filter((m) =>
+        categorie.some((c) => c.macro_categoria_id === m.id && (c.servizi || []).length > 0)
+      );
+      fillDd("ddCategoria", "Categoria", macroConServizi.map((m) => ({ value: String(m.id), label: m.nome })), (v) => {
+        haptic("select");
         filtri.macroId = v;
+        visibleCount = PAGE_SIZE;
         populateSottocategoria(v);
         renderList();
       });
@@ -479,6 +664,12 @@
 
       renderList();
     }
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      searchTerm = e.target.value.trim().toLowerCase();
+      visibleCount = PAGE_SIZE;
+      renderList();
+    });
 
     window.currentRefLink = "";
 

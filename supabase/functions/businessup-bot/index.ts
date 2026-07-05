@@ -151,7 +151,22 @@ async function apiMe(telegramId: number, tgUser?: any) {
   const { data: lead } = await supabase.from("leads").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
-  return json({ lead, sondaggio, rete_count: invitati ?? 0 })
+
+  // Tutorial iniziato ma non completato più recente, per la card "Riprendi da dove eri".
+  let ripresa = null
+  const { data: progress } = await supabase.from("tutorial_progress")
+    .select("servizio_id, ultimo_step")
+    .eq("telegram_id", telegramId).eq("completato", false).gt("ultimo_step", 0)
+    .order("updated_at", { ascending: false }).limit(1).maybeSingle()
+  if (progress) {
+    const { data: sv } = await supabase.from("servizi").select("nome, tutorial_steps").eq("id", progress.servizio_id).maybeSingle()
+    if (sv) {
+      const totale = Array.isArray(sv.tutorial_steps) && sv.tutorial_steps.length ? sv.tutorial_steps.length : 4
+      ripresa = { servizio_id: progress.servizio_id, servizio_nome: sv.nome, ultimo_step: progress.ultimo_step, totale_step: totale }
+    }
+  }
+
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
@@ -202,13 +217,35 @@ async function apiBusinessList(telegramId?: number | null) {
     .map((s: any) => ({ ...s, voti: votiCount[s.id] ?? 0 }))
     .sort((a: any, b: any) => b.voti - a.voti || (a.created_at < b.created_at ? 1 : -1))
 
+  let mieiPreferiti: number[] = []
+  if (telegramId) {
+    const { data: pref } = await supabase.from("preferiti").select("servizio_id").eq("telegram_id", telegramId)
+    mieiPreferiti = (pref ?? []).map((p: any) => p.servizio_id)
+  }
+
   const list = (categorie ?? []).map((c: any) => ({ ...c, servizi: serviziConVoti.filter((s: any) => s.categoria_id === c.id) }))
   const macroList = (macroCategorie ?? []).map((m: any) => ({
     ...m,
     categorie: list.filter((c: any) => c.macro_categoria_id === m.id),
   }))
 
-  return json({ macro_categorie: macroList, categorie: list, miei_voti: mieiVoti })
+  return json({ macro_categorie: macroList, categorie: list, miei_voti: mieiVoti, miei_preferiti: mieiPreferiti })
+}
+
+// Toggle preferito: un business salvato resta in primo piano nella lista dell'utente.
+async function apiPreferito(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id)
+  if (!servizioId) return json({ error: "servizio_richiesto" }, 400)
+
+  const { data: existing } = await supabase.from("preferiti").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  if (existing) {
+    const { error } = await supabase.from("preferiti").delete().eq("id", existing.id)
+    if (error) return json({ error: error.message }, 500)
+  } else {
+    const { error } = await supabase.from("preferiti").insert({ telegram_id: telegramId, servizio_id: servizioId })
+    if (error) return json({ error: error.message }, 500)
+  }
+  return json({ ok: true, preferito: !existing })
 }
 
 // Un voto per utente per servizio (vincolo UNIQUE a DB); rivotare lo stesso servizio toglie il voto.
@@ -515,8 +552,28 @@ async function apiAdminServiziSave(body: any) {
   } else {
     const { error } = await supabase.from("servizi").insert(row)
     if (error) return json({ error: error.message }, 500)
+    notificaNuovoServizio(nome, categoria_id).catch((e) => console.error("notifica nuovo servizio:", e))
   }
   return json({ ok: true })
+}
+
+// Avvisa via bot gli utenti che hanno preferiti nella stessa categoria del nuovo servizio.
+async function notificaNuovoServizio(nomeServizio: string, categoriaId: number) {
+  if (!categoriaId) return
+  const { data: serviziCategoria } = await supabase.from("servizi").select("id").eq("categoria_id", categoriaId)
+  const ids = (serviziCategoria ?? []).map((s: any) => s.id)
+  if (!ids.length) return
+  const { data: pref } = await supabase.from("preferiti").select("telegram_id").in("servizio_id", ids)
+  const destinatari = [...new Set((pref ?? []).map((p: any) => p.telegram_id))]
+  const { data: cat } = await supabase.from("categorie").select("nome").eq("id", categoriaId).maybeSingle()
+
+  for (const tid of destinatari) {
+    await sendMessage(
+      tid,
+      `🆕 Nuovo business nella categoria ${cat?.nome || "che segui"}!\n\n${nomeServizio} è appena arrivato nella Business List.`,
+      { inline_keyboard: [[{ text: "Guardalo ora", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
+    )
+  }
 }
 
 async function apiAdminServiziDelete(body: any) {
@@ -607,6 +664,12 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiVota(tid, await req.json())
+    }
+
+    if (sub === "preferito" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiPreferito(tid, await req.json())
     }
 
     if (sub === "servizio" && req.method === "GET") {
