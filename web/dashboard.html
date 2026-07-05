@@ -9,20 +9,19 @@
 <title>Business UP</title>
 <style>
   :root {
-    --ink: #0b0d13;
-    --panel: #171b26;
-    --blue: #4c6ef5;
-    --blue-dim: rgba(76, 110, 245, 0.16);
-    --flame: #ff5c48;
-    --grape: #9d5cf0;
-    --lime: #34d399;
-    --lime-dim: rgba(52, 211, 153, 0.16);
-    --amber: #fbbf24;
-    --amber-dim: rgba(251, 191, 36, 0.14);
-    --coral: #f2554d;
-    --text: #f4f6fb;
-    --text-dim: #8890a6;
-    --border: rgba(244, 246, 251, 0.07);
+    --ink: #0d0e15;
+    --panel: #171a28;
+    --blue: #4a90e2;
+    --blue-dim: rgba(74, 144, 226, 0.16);
+    --slate: #3a4358;
+    --lime: #2ecc71;
+    --lime-dim: rgba(46, 204, 113, 0.16);
+    --amber: #e8b34c;
+    --amber-dim: rgba(232, 179, 76, 0.14);
+    --coral: #e2574a;
+    --text: #f2f3f7;
+    --text-dim: #8b90a0;
+    --border: #1e2130;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body {
@@ -33,74 +32,67 @@
   }
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 30px; }
 
-  .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .top-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 14px; }
+  .icon-circle {
+    width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0;
+    background: var(--panel); color: var(--text);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
+  }
+
+  .greet-card { display: flex; align-items: center; gap: 13px; background: var(--panel); border-radius: 4px; padding: 16px; margin-bottom: 14px; }
   .avatar-wrap {
-    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; position: relative;
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; position: relative;
     border: none; padding: 0; cursor: pointer;
   }
-  .avatar-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; display: none; }
+  .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; }
   .avatar-fallback {
-    width: 100%; height: 100%; border-radius: 10px;
-    background: var(--grape);
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--slate);
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800; color: #fff;
+    font-size: 15px; font-weight: 800; color: #fff;
   }
-  .greet { flex: 1; font-size: 15px; font-weight: 700; }
-  .greet b { color: var(--blue); }
-  .icon-circle {
-    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-    background: var(--panel); color: var(--text);
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
-  }
+  .greet { font-size: 16px; font-weight: 700; }
+  .greet-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
 
-  /* Hero */
-  .hero {
-    position: relative; width: 100%; text-align: left; border: none; font-family: inherit; cursor: pointer;
-    background: var(--flame);
-    border-radius: 12px; padding: 20px; overflow: hidden; margin-bottom: 14px;
+  .hero-strip {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; font-family: inherit; cursor: pointer;
+    background: var(--panel); border-radius: 4px; padding: 13px 14px; margin-bottom: 14px;
   }
-  .hero::after {
-    content: ""; position: absolute; right: -20px; top: -20px;
-    width: 110px; height: 110px; border-radius: 24px; background: rgba(255,255,255,0.1);
-  }
-  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
-  .hero-ico { width: 42px; height: 42px; border-radius: 10px; background: rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; }
-  .hero-count { font-size: 13px; font-weight: 800; background: rgba(0,0,0,0.22); color: #fff; padding: 5px 12px; border-radius: 8px; }
-  .hero h2 { font-size: 23px; font-weight: 800; color: #fff; margin-top: 14px; letter-spacing: -0.01em; }
-  .hero p { font-size: 14.5px; color: rgba(255,255,255,0.85); margin-top: 4px; }
-  .hero-progress { display: flex; gap: 5px; margin-top: 14px; }
-  .hero-progress span { flex: 1; height: 5px; border-radius: 3px; background: rgba(0,0,0,0.22); }
-  .hero-progress span.on { background: #fff; }
+  .hero-strip .ico { width: 30px; height: 30px; border-radius: 4px; background: var(--lime); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hero-strip .txt { flex: 1; min-width: 0; }
+  .hero-strip .t1 { font-size: 13px; font-weight: 700; color: var(--text); }
+  .hero-strip .t2 { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+  .hero-strip .arrow { color: var(--text-dim); flex-shrink: 0; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
   h2.section-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
-  .btn { width: 100%; padding: 14px; border: none; border-radius: 9px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
-  .btn-primary { background: var(--blue); color: #fff; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 4px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--lime); color: #06110b; }
 
-  .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
+  .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
   .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
-  .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
-  .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
+  .stato-badge.pausa { background: var(--amber-dim); color: var(--amber); }
+  .stato-badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
   .empty { text-align: center; color: var(--text-dim); font-size: 13.5px; padding: 24px 0; }
 
   .cat-grid { display: flex; flex-direction: column; gap: 9px; }
   .cat-card {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
     padding: 13px; display: flex; align-items: center; gap: 13px;
     cursor: pointer; text-align: left; font-family: inherit; width: 100%;
     transition: transform 0.12s ease;
   }
   .cat-card:active { transform: scale(0.98); }
-  .cat-ico { width: 42px; height: 42px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .cat-ico { width: 42px; height: 42px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
   .cat-body { flex: 1; min-width: 0; }
   .cat-name { font-size: 14.5px; font-weight: 700; }
   .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
-  .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px 20px; text-align: center; margin-bottom: 14px; }
-  .lock-ico { width: 48px; height: 48px; border-radius: 12px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
-  .lock-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 24px 20px; text-align: center; margin-bottom: 14px; }
+  .lock-ico { width: 48px; height: 48px; border-radius: 4px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .lock-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
   .lock-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
 
   /* Share sheet */
@@ -110,30 +102,25 @@
   }
   .share-overlay.open { display: flex; }
   .share-sheet {
-    background: var(--ink); border: 1px solid var(--border); border-radius: 16px 16px 0 0;
+    background: var(--ink); border: 1px solid var(--border); border-radius: 4px 4px 0 0;
     width: 100%; max-width: 480px; padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
   }
   .share-handle { width: 36px; height: 4px; border-radius: 3px; background: var(--border); margin: 0 auto 16px; }
-  .share-sheet h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; text-align: center; }
+  .share-sheet h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-align: center; }
   .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
   .share-opt {
     display: flex; flex-direction: column; align-items: center; gap: 7px;
     background: none; border: none; color: var(--text); font-family: inherit;
     text-decoration: none; cursor: pointer;
   }
-  .share-ico { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .share-ico { width: 46px; height: 46px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
   .share-opt span { font-size: 11px; font-weight: 600; }
   .btn-secondary { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
 </style>
 </head>
 <body>
   <div class="container">
-    <div class="topbar">
-      <button class="avatar-wrap" onclick="goProfilo()" aria-label="Il tuo profilo">
-        <img class="avatar-img" id="avatarImg" alt="" />
-        <div class="avatar-fallback" id="avatarFallback">--</div>
-      </button>
-      <div class="greet">Ciao <b id="userName">Utente</b></div>
+    <div class="top-actions">
       <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
       </button>
@@ -142,14 +129,21 @@
       </button>
     </div>
 
-    <button class="hero" id="heroCard" onclick="goRete()">
-      <div class="hero-top">
-        <div class="hero-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7C10 4 6 3 5 5s1 2 3 2h4ZM12 7c2-3 6-4 7-2s-1 2-3 2h-4Z"/></svg></div>
-        <div class="hero-count" id="heroCount">0 / 3</div>
+    <button class="greet-card" onclick="goProfilo()" aria-label="Il tuo profilo">
+      <div class="avatar-wrap">
+        <img class="avatar-img" id="avatarImg" alt="" />
+        <div class="avatar-fallback" id="avatarFallback">--</div>
       </div>
-      <h2 id="heroTitle">Sblocca il tuo link</h2>
-      <p id="heroDesc">Invita 3 persone per iniziare a guadagnare</p>
-      <div class="hero-progress" id="heroProgress"><span></span><span></span><span></span></div>
+      <div style="text-align:left">
+        <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
+        <div class="greet-sub">Tocca per vedere il tuo profilo</div>
+      </div>
+    </button>
+
+    <button class="hero-strip" id="heroCard" onclick="goRete()" style="display:none">
+      <div class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#06110b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7"/></svg></div>
+      <div class="txt"><div class="t1" id="heroTitle">Il tuo link è pronto</div><div class="t2" id="heroDesc">Condividilo per far crescere la tua rete</div></div>
+      <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
     </button>
 
     <div class="lock-card" id="anagraficaPrompt" style="display:none">
@@ -160,7 +154,7 @@
     </div>
 
     <button class="cat-card" id="paginaLink" style="display:none;margin-bottom:14px" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">
-      <div class="cat-ico" style="background:var(--grape)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div>
+      <div class="cat-ico" style="background:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div>
       <div class="cat-body">
         <div class="cat-name">La tua pagina personale</div>
         <div class="cat-count">Bio, foto e i tuoi link in un'unica pagina pubblica</div>
@@ -261,7 +255,7 @@
       return completato;
     }
 
-    const SERVICE_ICON_BG = ["var(--blue)", "var(--flame)", "var(--grape)", "var(--lime)"];
+    const SERVICE_ICON_BG = ["var(--blue)", "var(--lime)", "var(--amber)", "var(--slate)"];
     const CAT_ICON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
 
     async function loadBusinessList() {
@@ -295,23 +289,7 @@
       const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
       window.currentRefLink = data.ref_link || "";
-      const invitati = data.rete?.invitati_count || 0;
-
-      const need = Math.min(invitati, 3);
-      document.getElementById("heroCount").textContent = `${need} / 3`;
-      const bar = document.getElementById("heroProgress");
-      bar.innerHTML = "";
-      for (let i = 0; i < 3; i++) {
-        const s = document.createElement("span");
-        if (i < need) s.className = "on";
-        bar.appendChild(s);
-      }
-      if (invitati >= 3) {
-        document.getElementById("heroTitle").textContent = "Link sbloccato";
-        document.getElementById("heroDesc").textContent = "Ora puoi guadagnare da chi inviti — tocca per vedere la rete";
-      } else {
-        document.getElementById("heroDesc").textContent = `Invita ancora ${3 - invitati} person${3 - invitati === 1 ? "a" : "e"} per iniziare a guadagnare`;
-      }
+      document.getElementById("heroCard").style.display = "flex";
     }
 
     const SHARE_TEXT = "Entra in Business UP con il mio link:";
