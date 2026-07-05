@@ -68,14 +68,32 @@
   .section-date { font-size: 11px; color: var(--text-dim); }
 
   .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-  .filter-row select {
-    width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    padding: 10px 26px 10px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; font-family: inherit;
-    appearance: none; -webkit-appearance: none;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%238b90a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
-    background-repeat: no-repeat; background-position: right 8px center; background-size: 14px;
+  .dd { position: relative; }
+  .dd-btn {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 10px; border-radius: 4px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+    white-space: nowrap; overflow: hidden;
   }
-  .filter-row select:disabled { opacity: 0.5; cursor: not-allowed; }
+  .dd-btn .dd-label { overflow: hidden; text-overflow: ellipsis; }
+  .dd-btn.active { border-color: var(--blue); color: var(--blue); }
+  .dd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .dd-btn svg { flex-shrink: 0; transition: transform 0.15s ease; }
+  .dd.open .dd-btn svg { transform: rotate(180deg); }
+  .dd-menu {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%; z-index: 50;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+    max-height: 240px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .dd.open .dd-menu { display: block; }
+  .dd-opt {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    color: var(--text); padding: 11px 12px; font-size: 12.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .dd-opt:last-child { border-bottom: none; }
+  .dd-opt.selected { color: var(--blue); }
+  .dd-opt:active { background: rgba(255,255,255,0.04); }
 
   .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
   .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
@@ -179,9 +197,27 @@
     </div>
 
     <div class="filter-row">
-      <select id="filtroCategoria"><option value="">Categoria</option></select>
-      <select id="filtroSottocategoria"><option value="">Sottocategoria</option></select>
-      <select id="filtroExtra" disabled><option value="">Filtri</option></select>
+      <div class="dd" id="ddCategoria">
+        <button class="dd-btn" onclick="toggleDd('ddCategoria')">
+          <span class="dd-label">Categoria</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd-menu"></div>
+      </div>
+      <div class="dd" id="ddSottocategoria">
+        <button class="dd-btn" onclick="toggleDd('ddSottocategoria')">
+          <span class="dd-label">Sottocategoria</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd-menu"></div>
+      </div>
+      <div class="dd" id="ddFiltri">
+        <button class="dd-btn" disabled>
+          <span class="dd-label">Filtri</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd-menu"></div>
+      </div>
     </div>
 
     <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
@@ -277,22 +313,59 @@
     let allServizi = [];
     let macroCategorie = [];
     let categorie = [];
+    const filtri = { macroId: "", catId: "" };
+
+    function toggleDd(id) {
+      const dd = document.getElementById(id);
+      const wasOpen = dd.classList.contains("open");
+      document.querySelectorAll(".dd.open").forEach((d) => d.classList.remove("open"));
+      if (!wasOpen) dd.classList.add("open");
+    }
+    window.toggleDd = toggleDd;
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".dd")) document.querySelectorAll(".dd.open").forEach((d) => d.classList.remove("open"));
+    });
+
+    // Costruisce le voci di un dropdown custom; value "" = opzione "tutti" che ripristina il placeholder.
+    function fillDd(id, placeholder, options, onPick) {
+      const dd = document.getElementById(id);
+      const menu = dd.querySelector(".dd-menu");
+      menu.innerHTML = "";
+      const all = [{ value: "", label: `Tutte` }, ...options];
+      all.forEach((opt) => {
+        const b = document.createElement("button");
+        b.className = "dd-opt";
+        b.textContent = opt.label;
+        b.onclick = () => {
+          dd.querySelector(".dd-label").textContent = opt.value ? opt.label : placeholder;
+          dd.querySelector(".dd-btn").classList.toggle("active", !!opt.value);
+          dd.classList.remove("open");
+          onPick(opt.value);
+        };
+        menu.appendChild(b);
+      });
+    }
 
     function populateSottocategoria(macroId) {
-      const sel = document.getElementById("filtroSottocategoria");
       const cats = macroId ? categorie.filter((c) => String(c.macro_categoria_id) === String(macroId)) : categorie;
-      sel.innerHTML = '<option value="">Sottocategoria</option>' + cats.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+      fillDd("ddSottocategoria", "Sottocategoria", cats.map((c) => ({ value: String(c.id), label: c.nome })), (v) => {
+        filtri.catId = v;
+        renderList();
+      });
+      const dd = document.getElementById("ddSottocategoria");
+      dd.querySelector(".dd-label").textContent = "Sottocategoria";
+      dd.querySelector(".dd-btn").classList.remove("active");
+      filtri.catId = "";
     }
 
     function renderList() {
-      const macroId = document.getElementById("filtroCategoria").value;
-      const catId = document.getElementById("filtroSottocategoria").value;
       const el = document.getElementById("businessList");
 
       let filtered = allServizi;
-      if (catId) filtered = filtered.filter((s) => String(s.categoria_id) === String(catId));
-      else if (macroId) {
-        const catIds = categorie.filter((c) => String(c.macro_categoria_id) === String(macroId)).map((c) => c.id);
+      if (filtri.catId) filtered = filtered.filter((s) => String(s.categoria_id) === String(filtri.catId));
+      else if (filtri.macroId) {
+        const catIds = categorie.filter((c) => String(c.macro_categoria_id) === String(filtri.macroId)).map((c) => c.id);
         filtered = filtered.filter((s) => catIds.includes(s.categoria_id));
       }
 
@@ -321,15 +394,15 @@
         (c.servizi || []).forEach((s) => allServizi.push({ ...s, categoria_nome: c.nome }));
       });
 
-      const macroSel = document.getElementById("filtroCategoria");
-      macroSel.innerHTML = '<option value="">Categoria</option>' + macroCategorie.map((m) => `<option value="${m.id}">${m.nome}</option>`).join("");
+      fillDd("ddCategoria", "Categoria", macroCategorie.map((m) => ({ value: String(m.id), label: m.nome })), (v) => {
+        filtri.macroId = v;
+        populateSottocategoria(v);
+        renderList();
+      });
       populateSottocategoria("");
 
       renderList();
     }
-
-    document.getElementById("filtroCategoria").onchange = (e) => { populateSottocategoria(e.target.value); renderList(); };
-    document.getElementById("filtroSottocategoria").onchange = renderList;
 
     window.currentRefLink = "";
 
