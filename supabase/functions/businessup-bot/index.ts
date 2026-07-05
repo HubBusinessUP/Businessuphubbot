@@ -261,8 +261,29 @@ async function apiAffiliateLinkSave(telegramId: number, body: any) {
   return json({ ok: true })
 }
 
+const ALLOWED_SOCIAL = ["instagram", "telegram", "whatsapp", "tiktok", "youtube", "facebook"]
+
+// Tiene solo piattaforme note con un URL http/https valido; scarta il resto.
+function sanitizeSocialLinks(input: any): { tipo: string; url: string }[] {
+  if (!Array.isArray(input)) return []
+  const out: { tipo: string; url: string }[] = []
+  for (const item of input) {
+    const tipo = String(item?.tipo || "")
+    const url = String(item?.url || "").trim()
+    if (!ALLOWED_SOCIAL.includes(tipo) || !url) continue
+    try {
+      const parsed = new URL(url)
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") continue
+      out.push({ tipo, url: parsed.href })
+    } catch {
+      continue
+    }
+  }
+  return out
+}
+
 async function apiPaginaGet(telegramId: number) {
-  const { data: lead } = await supabase.from("leads").select("nome, cognome, is_cliente, bio_titolo, bio_testo, bio_foto_url").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("nome, cognome, is_cliente, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: servizi } = await supabase.from("servizi").select("id, nome")
   const svcMap: Record<number, string> = {}
@@ -274,6 +295,7 @@ async function apiPaginaGet(telegramId: number) {
     bio_titolo: lead?.bio_titolo || "",
     bio_testo: lead?.bio_testo || "",
     bio_foto_url: lead?.bio_foto_url || "",
+    social_links: lead?.social_links ?? [],
     link_pagina: `${WEBAPP_URL}/u.html?c=${refCode}`,
     miei_link: links,
   })
@@ -283,8 +305,11 @@ async function apiPaginaSave(telegramId: number, body: any) {
   const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
   if (!lead?.is_cliente) return json({ error: "non_autorizzato" }, 403)
 
-  const { bio_titolo, bio_testo, bio_foto_url } = body
-  const { error } = await supabase.from("leads").update({ bio_titolo, bio_testo, bio_foto_url }).eq("telegram_id", telegramId)
+  const { bio_titolo, bio_testo, bio_foto_url, social_links } = body
+  const { error } = await supabase.from("leads").update({
+    bio_titolo, bio_testo, bio_foto_url,
+    social_links: sanitizeSocialLinks(social_links),
+  }).eq("telegram_id", telegramId)
   if (error) {
     console.error("pagina save failed:", error)
     return json({ error: "save_failed", detail: error.message }, 500)
@@ -293,7 +318,7 @@ async function apiPaginaSave(telegramId: number, body: any) {
 }
 
 async function apiPaginaPubblica(code: string) {
-  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, is_cliente, bio_titolo, bio_testo, bio_foto_url").eq("ref_code", code).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, is_cliente, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
   if (!lead || !lead.is_cliente) return json({ error: "not_found" }, 404)
 
   const { data: links } = await supabase.from("affiliate_link").select("servizio_id, ref_link").eq("telegram_id", lead.telegram_id).eq("approvato", true)
@@ -308,6 +333,7 @@ async function apiPaginaPubblica(code: string) {
     nome: lead.nome || "Utente",
     bio_titolo: lead.bio_titolo || "",
     bio_testo: lead.bio_testo || "",
+    social_links: lead.social_links ?? [],
     bio_foto_url: lead.bio_foto_url || "",
     link: (links ?? []).map((l: any) => ({
       nome: svcMap[l.servizio_id]?.nome || "Link",

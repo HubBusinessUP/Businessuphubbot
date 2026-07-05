@@ -108,6 +108,17 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="section-title">Social personali</div>
+        <p class="hint" style="margin-bottom:12px">Facoltativi. Compila solo quelli che vuoi mostrare nella tua pagina pubblica.</p>
+        <div class="field"><label>Instagram</label><input id="sInstagram" placeholder="https://instagram.com/tuonome" /></div>
+        <div class="field"><label>Telegram</label><input id="sTelegram" placeholder="https://t.me/tuonome" /></div>
+        <div class="field"><label>WhatsApp</label><input id="sWhatsapp" placeholder="https://wa.me/39..." /></div>
+        <div class="field"><label>TikTok</label><input id="sTiktok" placeholder="https://tiktok.com/@tuonome" /></div>
+        <div class="field"><label>YouTube</label><input id="sYoutube" placeholder="https://youtube.com/@tuocanale" /></div>
+        <div class="field"><label>Facebook</label><input id="sFacebook" placeholder="https://facebook.com/tuonome" /></div>
+      </div>
+
       <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
       <p class="hint" id="saveNote" style="text-align:center;margin-top:10px"></p>
 
@@ -153,6 +164,15 @@
       document.getElementById("fTesto").value = data.bio_testo || "";
       document.getElementById("fFoto").value = data.bio_foto_url || "";
 
+      const socialMap = {};
+      (data.social_links || []).forEach((s) => { socialMap[s.tipo] = s.url; });
+      document.getElementById("sInstagram").value = socialMap.instagram || "";
+      document.getElementById("sTelegram").value = socialMap.telegram || "";
+      document.getElementById("sWhatsapp").value = socialMap.whatsapp || "";
+      document.getElementById("sTiktok").value = socialMap.tiktok || "";
+      document.getElementById("sYoutube").value = socialMap.youtube || "";
+      document.getElementById("sFacebook").value = socialMap.facebook || "";
+
       const miei = data.miei_link || [];
       const el = document.getElementById("mieiLinkRows");
       if (miei.length) {
@@ -175,10 +195,23 @@
       btn.textContent = "Salvataggio...";
       btn.disabled = true;
 
+      const socialFields = [
+        ["instagram", "sInstagram"],
+        ["telegram", "sTelegram"],
+        ["whatsapp", "sWhatsapp"],
+        ["tiktok", "sTiktok"],
+        ["youtube", "sYoutube"],
+        ["facebook", "sFacebook"],
+      ];
+      const social_links = socialFields
+        .map(([tipo, id]) => ({ tipo, url: document.getElementById(id).value.trim() }))
+        .filter((s) => s.url);
+
       const body = {
         bio_titolo: document.getElementById("fTitolo").value.trim(),
         bio_testo: document.getElementById("fTesto").value.trim(),
         bio_foto_url: document.getElementById("fFoto").value.trim(),
+        social_links,
       };
 
       const res = await fetch(`${API_URL}/pagina`, {
