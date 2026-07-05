@@ -9,18 +9,18 @@
 <title>Servizio - Business UP</title>
 <style>
   :root {
-    --ink: #0b0d13;
-    --panel: #171b26;
-    --blue: #4c6ef5;
-    --blue-dim: rgba(76, 110, 245, 0.16);
-    --flame: #ff5c48;
-    --lime: #34d399;
-    --lime-dim: rgba(52, 211, 153, 0.16);
-    --amber: #fbbf24;
-    --coral: #f2554d;
-    --text: #f4f6fb;
-    --text-dim: #8890a6;
-    --border: rgba(244, 246, 251, 0.07);
+    --ink: #0d0e15;
+    --panel: #171a28;
+    --blue: #4a90e2;
+    --blue-dim: rgba(74, 144, 226, 0.16);
+    --lime: #2ecc71;
+    --lime-dim: rgba(46, 204, 113, 0.16);
+    --amber: #e8b34c;
+    --coral: #e2574a;
+    --text: #f2f3f7;
+    --text-dim: #8b90a0;
+    --border: #1e2130;
+    --node-locked: #1c1f2b;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body {
@@ -30,45 +30,47 @@
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
 
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
+  .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
 
-  .hero { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+  .hero { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 20px; margin-bottom: 14px; }
   .hero-top { display: flex; align-items: center; gap: 14px; }
-  .hero-ico { width: 52px; height: 52px; border-radius: 12px; background: var(--flame); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .hero-title { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
-  .stato-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 5px; }
+  .hero-ico { width: 52px; height: 52px; border-radius: 4px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hero-title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .stato-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 5px; }
   .stato-badge.attivo { background: var(--lime-dim); color: var(--lime); }
-  .stato-badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
-  .stato-badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
+  .stato-badge.pausa { background: rgba(232,179,76,0.14); color: var(--amber); }
+  .stato-badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
   .hero-desc { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; margin-top: 14px; }
 
   .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 13px; text-align: center; }
+  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 13px; text-align: center; }
   .stat-box .label { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-  .stat-box .value { font-size: 17px; font-weight: 800; }
+  .stat-box .value { font-size: 17px; font-weight: 700; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
   .card h2 { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
-  .steps { display: flex; flex-direction: column; gap: 12px; }
-  .step { display: flex; gap: 12px; align-items: flex-start; }
-  .step-num { width: 26px; height: 26px; border-radius: 7px; background: var(--blue-dim); color: var(--blue); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .step-text { font-size: 13.5px; line-height: 1.4; padding-top: 3px; }
-  .step-text b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .steps { position: relative; }
+  .steps-line { position: absolute; left: 14px; top: 10px; bottom: 10px; width: 2px; background: var(--lime); }
+  .step { position: relative; padding-left: 42px; margin-bottom: 18px; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num { position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; z-index: 1; }
+  .step-text { font-size: 13px; line-height: 1.45; color: var(--text-dim); }
+  .step-text b { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 
   .req-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
   .req-row:last-child { border-bottom: none; padding-bottom: 0; }
   .req-row .k { color: var(--text-dim); }
   .req-row .v { font-weight: 700; text-align: right; max-width: 60%; }
 
-  .btn { width: 100%; padding: 16px; border: none; border-radius: 9px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
-  .btn-primary { background: var(--blue); color: #fff; }
+  .btn { width: 100%; padding: 16px; border: none; border-radius: 4px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--lime); color: #06110b; }
   .btn-done { background: var(--lime-dim); color: var(--lime); }
-  .link-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 9px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; }
+  .link-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; }
 
-  .aff-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 9px; font-size: 13.5px; margin-bottom: 10px; font-family: inherit; }
-  .aff-status { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 10px 12px; border-radius: 9px; }
-  .aff-status.pending { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .aff-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 4px; font-size: 13.5px; margin-bottom: 10px; font-family: inherit; }
+  .aff-status { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 10px 12px; border-radius: 4px; }
+  .aff-status.pending { background: rgba(232,179,76,0.14); color: var(--amber); }
   .aff-status.approved { background: var(--lime-dim); color: var(--lime); }
 </style>
 </head>
@@ -101,7 +103,7 @@
 
     <div class="card">
       <h2 id="stepsTitle">Come funziona</h2>
-      <div class="steps" id="stepsList"></div>
+      <div class="steps"><div class="steps-line"></div><div id="stepsList"></div></div>
     </div>
 
     <button class="btn btn-primary" id="attivaBtn">Attiva questo servizio</button>

@@ -7,19 +7,18 @@
 <title>Admin - Business UP</title>
 <style>
   :root {
-    --ink: #0b0d13;
-    --panel: #171b26;
-    --panel-2: #1f2433;
-    --blue: #4c6ef5;
-    --blue-dim: rgba(76, 110, 245, 0.16);
-    --flame: #ff5c48;
-    --lime: #34d399;
-    --lime-dim: rgba(52, 211, 153, 0.16);
-    --amber: #fbbf24;
-    --coral: #f2554d;
-    --text: #f4f6fb;
-    --text-dim: #8890a6;
-    --border: rgba(244, 246, 251, 0.08);
+    --ink: #0d0e15;
+    --panel: #171a28;
+    --panel-2: #1c1f2b;
+    --blue: #4a90e2;
+    --blue-dim: rgba(74, 144, 226, 0.16);
+    --lime: #2ecc71;
+    --lime-dim: rgba(46, 204, 113, 0.16);
+    --amber: #e8b34c;
+    --coral: #e2574a;
+    --text: #f2f3f7;
+    --text-dim: #8b90a0;
+    --border: #1e2130;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body { min-height: 100vh; background: var(--ink); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif; }
@@ -29,50 +28,50 @@
   #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
   .gate-box { width: 100%; max-width: 320px; text-align: center; }
   .gate-box h1 { font-size: 18px; margin-bottom: 16px; }
-  .gate-box input { width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 9px; font-size: 14px; margin-bottom: 10px; }
-  .gate-box button { width: 100%; padding: 12px; border: none; border-radius: 9px; background: var(--blue); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .gate-box input { width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 4px; font-size: 14px; margin-bottom: 10px; }
+  .gate-box button { width: 100%; padding: 12px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-weight: 700; font-size: 14px; cursor: pointer; }
   .gate-error { color: var(--coral); font-size: 12.5px; margin-top: 8px; display: none; }
 
-  h1.title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  h1.title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
   .subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
 
   .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 14px; text-align: center; }
   .stat-box .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-  .stat-box .value { font-size: 22px; font-weight: 800; }
+  .stat-box .value { font-size: 22px; font-weight: 700; }
 
   .section { margin-bottom: 28px; }
   .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .section-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; }
-  .btn-add { background: var(--blue-dim); color: var(--blue); border: none; padding: 7px 12px; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .btn-add { background: var(--blue-dim); color: var(--blue); border: none; padding: 7px 12px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 
-  .item { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 8px; }
+  .item { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 14px; margin-bottom: 8px; }
   .item-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .item-title { font-size: 14.5px; font-weight: 700; }
   .item-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .icon-btn { width: 30px; height: 30px; border-radius: 7px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .icon-btn:hover { color: var(--text); }
   .icon-btn.danger:hover { color: var(--coral); }
 
-  .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+  .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
   .badge.attivo { background: var(--lime-dim); color: var(--lime); }
-  .badge.pausa { background: rgba(251,191,36,0.14); color: var(--amber); }
-  .badge.fermo { background: rgba(242,85,77,0.12); color: var(--coral); }
-  .badge.pending { background: rgba(251,191,36,0.14); color: var(--amber); }
+  .badge.pausa { background: rgba(232,179,76,0.14); color: var(--amber); }
+  .badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
+  .badge.pending { background: rgba(232,179,76,0.14); color: var(--amber); }
   .badge.approved { background: var(--lime-dim); color: var(--lime); }
   .link-preview { font-size: 11.5px; color: var(--text-dim); font-family: monospace; word-break: break-all; margin-top: 6px; }
 
   /* Form modal */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
   .overlay.open { display: flex; }
-  .modal { background: var(--ink); border: 1px solid var(--border); border-radius: 16px 16px 0 0; width: 100%; max-width: 760px; max-height: 88vh; overflow-y: auto; padding: 20px; }
-  .modal h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; }
+  .modal { background: var(--ink); border: 1px solid var(--border); border-radius: 4px 4px 0 0; width: 100%; max-width: 760px; max-height: 88vh; overflow-y: auto; padding: 20px; }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
   .field { margin-bottom: 12px; }
   .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; font-weight: 600; }
   .field input, .field select, .field textarea {
     width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    padding: 10px 12px; border-radius: 8px; font-size: 13.5px; font-family: inherit;
+    padding: 10px 12px; border-radius: 4px; font-size: 13.5px; font-family: inherit;
   }
   .field textarea { resize: vertical; min-height: 60px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -82,8 +81,8 @@
   .step-row input, .step-row textarea { font-size: 13px; }
 
   .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
-  .btn { flex: 1; padding: 13px; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; }
-  .btn-primary { background: var(--blue); color: #fff; }
+  .btn { flex: 1; padding: 13px; border: none; border-radius: 4px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--lime); color: #06110b; }
   .btn-secondary { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
   .btn-small { padding: 8px 10px; font-size: 12.5px; flex: none; }
 

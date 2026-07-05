@@ -9,18 +9,17 @@
 <title>La mia pagina - Business UP</title>
 <style>
   :root {
-    --ink: #0b0d13;
-    --panel: #171b26;
-    --blue: #4c6ef5;
-    --blue-dim: rgba(76, 110, 245, 0.16);
-    --grape: #9d5cf0;
-    --lime: #34d399;
-    --lime-dim: rgba(52, 211, 153, 0.16);
-    --amber: #fbbf24;
-    --amber-dim: rgba(251, 191, 36, 0.14);
-    --text: #f4f6fb;
-    --text-dim: #8890a6;
-    --border: rgba(244, 246, 251, 0.07);
+    --ink: #0d0e15;
+    --panel: #171a28;
+    --blue: #4a90e2;
+    --blue-dim: rgba(74, 144, 226, 0.16);
+    --lime: #2ecc71;
+    --lime-dim: rgba(46, 204, 113, 0.16);
+    --amber: #e8b34c;
+    --amber-dim: rgba(232, 179, 76, 0.14);
+    --text: #f2f3f7;
+    --text-dim: #8b90a0;
+    --border: #1e2130;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body {
@@ -30,11 +29,11 @@
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
 
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
-  .top h1 { font-size: 19px; font-weight: 800; }
+  .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
+  .top h1 { font-size: 19px; font-weight: 700; }
   .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
   .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
   .field { margin-bottom: 14px; }
@@ -42,31 +41,31 @@
   .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
   .field input, .field textarea {
     width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
-    padding: 12px; border-radius: 9px; font-size: 14px; font-family: inherit;
+    padding: 12px; border-radius: 4px; font-size: 14px; font-family: inherit;
   }
   .field textarea { resize: vertical; min-height: 70px; }
   .field input:focus, .field textarea:focus { outline: none; border-color: var(--blue); }
   .hint { font-size: 11.5px; color: var(--text-dim); margin-top: 5px; }
 
-  .btn { width: 100%; padding: 14px; border: none; border-radius: 9px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
-  .btn-primary { background: var(--blue); color: #fff; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 4px; font-weight: 700; font-size: 14.5px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--lime); color: #06110b; }
   .btn-done { background: var(--lime-dim); color: var(--lime); }
   .btn-secondary { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
 
-  .link-box { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 9px; padding: 12px; font-size: 12.5px; word-break: break-all; color: var(--blue); margin-bottom: 12px; }
+  .link-box { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; padding: 12px; font-size: 12.5px; word-break: break-all; color: var(--blue); margin-bottom: 12px; }
 
   .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
   .row:last-child { border-bottom: none; }
   .row-body { flex: 1; min-width: 0; }
   .row-name { font-size: 13.5px; font-weight: 700; }
   .row-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
-  .row-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
+  .row-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
   .row-badge.pending { background: var(--amber-dim); color: var(--amber); }
   .empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 12px 0; }
 
-  .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px 20px; text-align: center; }
-  .lock-ico { width: 48px; height: 48px; border-radius: 12px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
-  .lock-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 24px 20px; text-align: center; }
+  .lock-ico { width: 48px; height: 48px; border-radius: 4px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .lock-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
   .lock-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
 </style>
 </head>

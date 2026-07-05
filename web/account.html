@@ -9,15 +9,15 @@
 <title>Il mio account - Business UP</title>
 <style>
   :root {
-    --ink: #0b0d13;
-    --panel: #171b26;
-    --blue: #4c6ef5;
-    --blue-dim: rgba(76, 110, 245, 0.16);
-    --lime: #34d399;
-    --lime-dim: rgba(52, 211, 153, 0.16);
-    --text: #f4f6fb;
-    --text-dim: #8890a6;
-    --border: rgba(244, 246, 251, 0.07);
+    --ink: #0d0e15;
+    --panel: #171a28;
+    --blue: #4a90e2;
+    --blue-dim: rgba(74, 144, 226, 0.16);
+    --lime: #2ecc71;
+    --lime-dim: rgba(46, 204, 113, 0.16);
+    --text: #f2f3f7;
+    --text-dim: #8b90a0;
+    --border: #1e2130;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body {
@@ -27,11 +27,11 @@
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
 
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .back { width: 36px; height: 36px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; }
-  .top h1 { font-size: 19px; font-weight: 800; }
+  .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
+  .top h1 { font-size: 19px; font-weight: 700; }
   .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
   .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
   .field { margin-bottom: 14px; }
@@ -39,14 +39,14 @@
   .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
   .field input, .field select, .field textarea {
     width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
-    padding: 12px; border-radius: 9px; font-size: 14px; font-family: inherit;
+    padding: 12px; border-radius: 4px; font-size: 14px; font-family: inherit;
   }
   .field textarea { resize: vertical; min-height: 60px; }
   .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--blue); }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  .btn { width: 100%; padding: 15px; border: none; border-radius: 9px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
-  .btn-primary { background: var(--blue); color: #fff; }
+  .btn { width: 100%; padding: 15px; border: none; border-radius: 4px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--lime); color: #06110b; }
   .btn-done { background: var(--lime-dim); color: var(--lime); }
   .save-note { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
 </style>
