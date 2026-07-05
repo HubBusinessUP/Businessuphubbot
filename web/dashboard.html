@@ -185,11 +185,13 @@
   .sk { background: linear-gradient(90deg, var(--border) 25%, rgba(255,255,255,0.08) 50%, var(--border) 75%); background-size: 200% 100%; animation: sk-shimmer 1.3s infinite; border-radius: 4px; }
   @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-  .suggest-cta { border-color: rgba(46,204,113,0.4); animation: cta-glow 2.4s ease-in-out infinite; }
+  .icon-circle.plus { background: var(--lime); color: #06110b; animation: cta-glow 2.4s ease-in-out infinite; }
   @keyframes cta-glow {
     0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); }
-    50% { box-shadow: 0 0 14px 0 rgba(46,204,113,0.25); }
+    50% { box-shadow: 0 0 12px 0 rgba(46,204,113,0.35); }
   }
+
+  .section-gap { height: 1px; background: var(--border); margin: 24px 6px; }
 
   /* Tema chiaro: attivato da tg.colorScheme */
   body.light {
@@ -201,6 +203,7 @@
     --border: #e3e5ea;
   }
   body.light .icon-circle { background: #eceef2; }
+  body.light .icon-circle.plus { background: var(--lime); color: #06110b; }
   body.light .vote-btn { background: #f6f7f9; }
   body.light .sk { background: linear-gradient(90deg, #e8eaee 25%, #f5f6f8 50%, #e8eaee 75%); background-size: 200% 100%; }
 
@@ -249,6 +252,9 @@
         <div class="greet">Ciao, <span id="userName">Utente</span> 👋</div>
       </button>
       <div class="top-actions">
+        <button class="icon-circle plus" onclick="openSuggestSheet()" aria-label="Candida un business">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
         <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
         </button>
@@ -257,6 +263,8 @@
         </button>
       </div>
     </div>
+
+    <div class="section-gap"></div>
 
     <div class="lock-card" id="anagraficaPrompt" style="display:none">
       <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
@@ -309,14 +317,6 @@
 
     <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
 
-    <button class="cat-card suggest-cta" style="margin-top:14px" onclick="openSuggestSheet()">
-      <div class="cat-ico" style="background:var(--lime)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06110b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
-      <div class="cat-body">
-        <div class="cat-name">Manca un business che usi?</div>
-        <div class="cat-count">Suggeriscilo e lo valuteremo per la directory</div>
-      </div>
-      <svg class="cat-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
-    </button>
   </div>
 
   <div class="share-overlay" id="suggestOverlay" onclick="if(event.target===this) closeSuggestSheet()">
