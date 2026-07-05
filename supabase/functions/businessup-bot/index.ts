@@ -305,7 +305,7 @@ async function apiPaginaSave(telegramId: number, body: any) {
 }
 
 async function apiPaginaPubblica(code: string) {
-  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, sondaggio_completato, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, username, sondaggio_completato, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
   if (!lead || !lead.sondaggio_completato) return json({ error: "not_found" }, 404)
 
   const { data: links } = await supabase.from("affiliate_link").select("servizio_id, ref_link").eq("telegram_id", lead.telegram_id).eq("approvato", true)
@@ -318,6 +318,7 @@ async function apiPaginaPubblica(code: string) {
 
   return json({
     nome: lead.nome || "Utente",
+    username: lead.username || "",
     bio_titolo: lead.bio_titolo || "",
     bio_testo: lead.bio_testo || "",
     social_links: lead.social_links ?? [],
