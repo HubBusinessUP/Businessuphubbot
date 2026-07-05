@@ -116,10 +116,20 @@
   .list-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px 16px; }
   .list-item {
     display: flex; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--border);
-    cursor: pointer; background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; font-family: inherit; color: inherit;
+    cursor: pointer; width: 100%; text-align: left; font-family: inherit; color: inherit;
   }
   .list-item:last-child { border-bottom: none; }
   .list-item:active { opacity: 0.8; }
+
+  .vote-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    width: 44px; height: 44px; flex-shrink: 0;
+    background: var(--ink); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-dim); cursor: pointer; font-family: inherit;
+  }
+  .vote-btn .vote-num { font-size: 12px; font-weight: 700; color: var(--text); }
+  .vote-btn.voted { border-color: var(--lime); background: var(--lime-dim); color: var(--lime); }
+  .vote-btn.voted .vote-num { color: var(--lime); }
 
   .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 24px 20px; text-align: center; margin-bottom: 14px; }
   .lock-ico { width: 48px; height: 48px; border-radius: 4px; background: var(--amber-dim); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
@@ -381,6 +391,12 @@
       filtri.catId = "";
     }
 
+    let mieiVoti = new Set();
+
+    function sortServizi() {
+      allServizi.sort((a, b) => (b.voti || 0) - (a.voti || 0) || (a.created_at < b.created_at ? 1 : -1));
+    }
+
     function renderList() {
       const el = document.getElementById("businessList");
 
@@ -394,27 +410,53 @@
       if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun servizio in questa vista.</p>'; return; }
 
       el.innerHTML = filtered.map((s, idx) => `
-        <button class="list-item" onclick="window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
+        <div class="list-item" onclick="window.location.href='servizio.html?id=${s.id}&_=${Date.now()}'">
           <div class="cat-ico" style="background:${SERVICE_ICON_BG[idx % SERVICE_ICON_BG.length]}">${CAT_ICON_SVG}</div>
           <div class="cat-body">
             <div class="cat-name">${s.nome}</div>
             <div class="cat-count">${s.categoria_nome || ""}</div>
           </div>
-          <div class="stato-badge ${s.stato}">${s.stato}</div>
-        </button>
+          <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo servizio">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
+            <span class="vote-num">${s.voti || 0}</span>
+          </button>
+        </div>
       `).join("");
     }
 
+    async function vota(servizioId, btn) {
+      if (!initData) return;
+      btn.disabled = true;
+      const res = await fetch(`${API_URL}/vota`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ servizio_id: servizioId }),
+      });
+      btn.disabled = false;
+      if (!res.ok) return;
+      const result = await res.json();
+
+      if (result.votato) mieiVoti.add(servizioId);
+      else mieiVoti.delete(servizioId);
+      const s = allServizi.find((x) => x.id === servizioId);
+      if (s) s.voti = result.voti;
+      sortServizi();
+      renderList();
+    }
+    window.vota = vota;
+
     async function loadBusinessList() {
-      const res = await fetch(`${API_URL}/business-list`, { cache: "no-store" });
+      const res = await fetch(`${API_URL}/business-list`, { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" });
       const data = await res.json();
       macroCategorie = data.macro_categorie || [];
       categorie = data.categorie || [];
+      mieiVoti = new Set(data.miei_voti || []);
 
       allServizi = [];
       categorie.forEach((c) => {
         (c.servizi || []).forEach((s) => allServizi.push({ ...s, categoria_nome: c.nome }));
       });
+      sortServizi();
 
       fillDd("ddCategoria", "Categoria", macroCategorie.map((m) => ({ value: String(m.id), label: m.nome })), (v) => {
         filtri.macroId = v;

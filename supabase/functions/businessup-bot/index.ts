@@ -185,18 +185,48 @@ async function apiSondaggioSave(telegramId: number, body: any) {
   return json({ ok: true })
 }
 
-async function apiBusinessList() {
+async function apiBusinessList(telegramId?: number | null) {
   const { data: macroCategorie } = await supabase.from("macro_categorie").select("*").order("ordine")
   const { data: categorie } = await supabase.from("categorie").select("*").order("ordine")
   const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at").order("created_at", { ascending: false })
 
-  const list = (categorie ?? []).map((c: any) => ({ ...c, servizi: (servizi ?? []).filter((s: any) => s.categoria_id === c.id) }))
+  // Voti per servizio: la posizione in classifica è determinata dal numero di voti.
+  const { data: voti } = await supabase.from("voti").select("servizio_id, telegram_id")
+  const votiCount: Record<number, number> = {}
+  const mieiVoti: number[] = []
+  for (const v of voti ?? []) {
+    votiCount[(v as any).servizio_id] = (votiCount[(v as any).servizio_id] ?? 0) + 1
+    if (telegramId && (v as any).telegram_id === telegramId) mieiVoti.push((v as any).servizio_id)
+  }
+  const serviziConVoti = (servizi ?? [])
+    .map((s: any) => ({ ...s, voti: votiCount[s.id] ?? 0 }))
+    .sort((a: any, b: any) => b.voti - a.voti || (a.created_at < b.created_at ? 1 : -1))
+
+  const list = (categorie ?? []).map((c: any) => ({ ...c, servizi: serviziConVoti.filter((s: any) => s.categoria_id === c.id) }))
   const macroList = (macroCategorie ?? []).map((m: any) => ({
     ...m,
     categorie: list.filter((c: any) => c.macro_categoria_id === m.id),
   }))
 
-  return json({ macro_categorie: macroList, categorie: list })
+  return json({ macro_categorie: macroList, categorie: list, miei_voti: mieiVoti })
+}
+
+// Un voto per utente per servizio (vincolo UNIQUE a DB); rivotare lo stesso servizio toglie il voto.
+async function apiVota(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id)
+  if (!servizioId) return json({ error: "servizio_richiesto" }, 400)
+
+  const { data: existing } = await supabase.from("voti").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  if (existing) {
+    const { error } = await supabase.from("voti").delete().eq("id", existing.id)
+    if (error) return json({ error: error.message }, 500)
+  } else {
+    const { error } = await supabase.from("voti").insert({ telegram_id: telegramId, servizio_id: servizioId })
+    if (error) return json({ error: error.message }, 500)
+  }
+
+  const { count } = await supabase.from("voti").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
+  return json({ ok: true, votato: !existing, voti: count ?? 0 })
 }
 
 async function apiServizio(telegramId: number, servizioId: number) {
@@ -568,7 +598,15 @@ serve(async (req) => {
     }
 
     if (sub === "business-list" && req.method === "GET") {
-      return await apiBusinessList()
+      // Auth facoltativa: se l'initData è presente e valido, la risposta include anche i voti dell'utente.
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      return await apiBusinessList(tid)
+    }
+
+    if (sub === "vota" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiVota(tid, await req.json())
     }
 
     if (sub === "servizio" && req.method === "GET") {
