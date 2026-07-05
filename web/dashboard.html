@@ -170,15 +170,7 @@
 
   .list-item, .cat-card, .vote-btn, .icon-circle, .resume-card { transition: transform 0.1s ease, opacity 0.1s ease; }
   .list-item:active, .resume-card:active { transform: scale(0.985); }
-  .vote-btn:active, .fav-btn:active, .mini-share:active { transform: scale(0.88); }
-
-  .fav-btn {
-    display: flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; flex-shrink: 0;
-    background: none; border: none; color: var(--text-dim); cursor: pointer; font-family: inherit;
-    transition: transform 0.1s ease;
-  }
-  .fav-btn.faved { color: var(--amber); }
+  .vote-btn:active { transform: scale(0.88); }
 
   .skeleton-row { display: flex; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--border); }
   .skeleton-row:last-child { border-bottom: none; }
@@ -506,17 +498,15 @@
     }
 
     let mieiVoti = new Set();
-    let mieiPreferiti = new Set();
     let searchTerm = "";
     const PAGE_SIZE = 10;
     let visibleCount = PAGE_SIZE;
     let macroColorById = {};
     let catToMacro = {};
 
-    // Preferiti in primo piano, poi classifica per voti (spareggio: più recente prima).
+    // Classifica per voti; a parità vince il più recente.
     function sortServizi() {
       allServizi.sort((a, b) =>
-        (mieiPreferiti.has(b.id) - mieiPreferiti.has(a.id)) ||
         (b.voti || 0) - (a.voti || 0) ||
         (a.created_at < b.created_at ? 1 : -1)
       );
@@ -565,9 +555,6 @@
             <div class="cat-name">${rank ? `<span class="rank-chip rank-${rank}">#${rank}</span>` : ""}${s.nome}${isNew(s) ? '<span class="new-badge">Nuovo</span>' : ""}</div>
             <div class="cat-count">${s.categoria_nome || ""}</div>
           </div>
-          <button class="fav-btn ${mieiPreferiti.has(s.id) ? "faved" : ""}" onclick="event.stopPropagation(); preferisci(${s.id}, this)" aria-label="Salva nei preferiti">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="${mieiPreferiti.has(s.id) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z"/></svg>
-          </button>
           <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
             <span class="vote-num">${s.voti || 0}</span>
@@ -607,26 +594,6 @@
     }
     window.vota = vota;
 
-    async function preferisci(servizioId, btn) {
-      if (!initData) return;
-      haptic("light");
-      btn.disabled = true;
-      const res = await fetch(`${API_URL}/preferito`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
-        body: JSON.stringify({ servizio_id: servizioId }),
-      });
-      btn.disabled = false;
-      if (!res.ok) return;
-      const result = await res.json();
-
-      if (result.preferito) mieiPreferiti.add(servizioId);
-      else mieiPreferiti.delete(servizioId);
-      sortServizi();
-      renderList();
-    }
-    window.preferisci = preferisci;
-
     async function loadBusinessList() {
       showSkeleton();
       const res = await fetch(`${API_URL}/business-list`, { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" });
@@ -634,7 +601,6 @@
       macroCategorie = data.macro_categorie || [];
       categorie = data.categorie || [];
       mieiVoti = new Set(data.miei_voti || []);
-      mieiPreferiti = new Set(data.miei_preferiti || []);
 
       // Colore distintivo stabile per macro-categoria, applicato alle icone dei suoi servizi.
       macroColorById = {};
