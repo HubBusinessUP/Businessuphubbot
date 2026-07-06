@@ -286,6 +286,76 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
   return { inviati, falliti }
 }
 
+// ---------- YOUTUBE TRANSCRIPT ----------
+const YT_INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+
+function estraiYouTubeId(text: string): string | null {
+  const m = text.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  return m ? m[1] : null
+}
+
+// Recupera il transcript di un video YouTube via InnerTube (WEB + params captions) e timedtext json3.
+async function fetchTranscript(videoId: string): Promise<{ text: string; lang: string; title: string } | null> {
+  const playerRes = await fetch(`https://www.youtube.com/youtubei/v1/player?key=${YT_INNERTUBE_KEY}&prettyPrint=false`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      context: { client: { clientName: "WEB", clientVersion: "2.20240726.00.00", hl: "it" } },
+      videoId, params: "8AEB",
+    }),
+  })
+  if (!playerRes.ok) return null
+  const player = await playerRes.json()
+  const tracks = player?.captions?.playerCaptionsTracklistRenderer?.captionTracks
+  if (!Array.isArray(tracks) || !tracks.length) return null
+
+  // Preferenza lingua: italiano manuale > italiano auto > inglese manuale > inglese auto > prima disponibile.
+  const byLang = (p: string, manual: boolean) => tracks.find((t: any) => (t.languageCode || "").startsWith(p) && (manual ? t.kind !== "asr" : true))
+  const pick = byLang("it", true) || byLang("it", false) || byLang("en", true) || byLang("en", false) || tracks[0]
+  if (!pick?.baseUrl) return null
+
+  const ttRes = await fetch(`${pick.baseUrl}&fmt=json3`, { headers: { "User-Agent": "Mozilla/5.0" } })
+  if (!ttRes.ok) return null
+  const tt = await ttRes.json()
+  const parts: string[] = []
+  for (const ev of tt.events ?? []) {
+    for (const s of ev.segs ?? []) if (s.utf8) parts.push(s.utf8)
+  }
+  const text = parts.join("").replace(/\s+/g, " ").trim()
+  if (!text) return null
+  return { text, lang: pick.languageCode || "?", title: player?.videoDetails?.title || "" }
+}
+
+async function sendDocument(chatId: number, filename: string, content: string, caption?: string) {
+  const form = new FormData()
+  form.append("chat_id", String(chatId))
+  if (caption) form.append("caption", caption.slice(0, 1000))
+  form.append("document", new Blob([content], { type: "text/plain" }), filename)
+  return fetch(`${TG_API}/sendDocument`, { method: "POST", body: form })
+}
+
+// Invia il transcript: messaggio se corto, file .txt se lungo (limite Telegram 4096).
+async function inviaTranscript(chatId: number, videoId: string) {
+  await sendMessage(chatId, "🎬 Recupero il transcript, un attimo...")
+  let tr: Awaited<ReturnType<typeof fetchTranscript>> = null
+  try {
+    tr = await fetchTranscript(videoId)
+  } catch (e) {
+    console.error("transcript:", e)
+  }
+  if (!tr) {
+    await sendMessage(chatId, "Non sono riuscito a recuperare il transcript. Il video potrebbe non avere sottotitoli, oppure YouTube ha bloccato la richiesta. Riprova con un altro video.")
+    return
+  }
+  const header = `📝 Transcript${tr.title ? " — " + tr.title : ""} (${tr.lang})`
+  if (tr.text.length <= 3800) {
+    await sendMessage(chatId, `${header}\n\n${tr.text}`)
+  } else {
+    const nomeFile = (tr.title || "transcript").replace(/[^\w\-]+/g, "_").slice(0, 40) + ".txt"
+    await sendDocument(chatId, nomeFile, `${header}\n\n${tr.text}`, header)
+  }
+}
+
 // Estrae tipo e file_id del media da un messaggio Telegram (foto, video, gif); null se non è un media supportato.
 function estraiMedia(msg: any): { tipo: string; fileId: string } | null {
   if (msg.photo?.length) return { tipo: "photo", fileId: msg.photo[msg.photo.length - 1].file_id }
@@ -371,6 +441,10 @@ async function handleUpdate(u: any) {
       await sendMessage(chatId, "Contenuto non supportato. Mandami testo, una foto o un video.")
       return
     }
+
+    // Link YouTube: rispondi con il transcript.
+    const ytId = estraiYouTubeId(text)
+    if (ytId) { await inviaTranscript(chatId, ytId); return }
   }
 
   if (text === "/start" || text.startsWith("/start ")) {
@@ -1490,6 +1564,15 @@ serve(async (req) => {
       if (secret !== WEBHOOK_SECRET) return json({ error: "unauthorized" }, 401)
       await handleUpdate(await req.json())
       return json({ ok: true })
+    }
+
+    // TEMP: verifica che il recupero transcript funzioni dall'IP della function. Da rimuovere dopo il test.
+    if (sub === "yt-test" && req.method === "GET") {
+      const vid = url.searchParams.get("id") || ""
+      if (!vid) return json({ error: "id_richiesto" }, 400)
+      const tr = await fetchTranscript(vid).catch((e) => ({ error: String(e) } as any))
+      if (!tr || (tr as any).error) return json({ ok: false, tr })
+      return json({ ok: true, lang: tr.lang, title: tr.title, len: tr.text.length, preview: tr.text.slice(0, 200) })
     }
 
     // Riconfigura il webhook includendo i click dei bottoni (callback_query), oltre ai messaggi.
