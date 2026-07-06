@@ -1566,15 +1566,6 @@ serve(async (req) => {
       return json({ ok: true })
     }
 
-    // TEMP: verifica che il recupero transcript funzioni dall'IP della function. Da rimuovere dopo il test.
-    if (sub === "yt-test" && req.method === "GET") {
-      const vid = url.searchParams.get("id") || ""
-      if (!vid) return json({ error: "id_richiesto" }, 400)
-      const tr = await fetchTranscript(vid).catch((e) => ({ error: String(e) } as any))
-      if (!tr || (tr as any).error) return json({ ok: false, tr })
-      return json({ ok: true, lang: tr.lang, title: tr.title, len: tr.text.length, preview: tr.text.slice(0, 200) })
-    }
-
     // Riconfigura il webhook includendo i click dei bottoni (callback_query), oltre ai messaggi.
     if (sub === "admin/setup-webhook" && req.method === "POST") {
       if (req.headers.get("x-admin-key") !== ADMIN_API_KEY) return json({ error: "unauthorized" }, 401)
