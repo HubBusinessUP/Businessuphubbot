@@ -130,6 +130,26 @@
       </div>
     </div>
 
+    <div class="card">
+      <h2>La mia pagina pubblica</h2>
+      <div id="paginaLocked" style="display:none">
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
+        <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+      </div>
+      <div id="paginaReady" style="display:none">
+        <div class="invite-row" style="margin-bottom:10px">
+          <div class="invite-link" id="paginaLink">-</div>
+          <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
+          <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card" id="suggStatiCard" style="display:none">
       <h2>Le tue candidature</h2>
       <div id="suggStatiRows"></div>
@@ -403,10 +423,43 @@
 
     document.getElementById("reteSearch").addEventListener("input", (e) => renderRete(e.target.value.trim()));
 
+    // Sezione pagina pubblica: link, modifica e condivisione; sbloccata con l'anagrafica completata.
+    let paginaLink = "";
+    async function loadPagina() {
+      const res = await fetch(`${API_URL}/pagina`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+      const data = await res.json();
+      if (!data.sondaggio_completato) {
+        document.getElementById("paginaLocked").style.display = "block";
+        return;
+      }
+      paginaLink = data.link_pagina || "";
+      document.getElementById("paginaLink").textContent = paginaLink || "-";
+      const configurata = data.bio_titolo || data.bio_testo || (data.social_links || []).length;
+      if (!configurata) document.getElementById("btnEditPagina").textContent = "Crea la tua pagina";
+      document.getElementById("paginaReady").style.display = "block";
+    }
+
+    function copiaPagina() {
+      if (!paginaLink) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(paginaLink).catch(() => {});
+      try { tg?.HapticFeedback?.impactOccurred("light"); } catch (e) {}
+      if (tg?.showAlert) tg.showAlert("Link della pagina copiato!");
+    }
+    window.copiaPagina = copiaPagina;
+
+    function condividiPagina() {
+      if (!paginaLink) return;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(paginaLink)}&text=${encodeURIComponent("La mia pagina su Business UP:")}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
+      else window.open(shareUrl, "_blank");
+    }
+    window.condividiPagina = condividiPagina;
+
     load();
     loadPerformance();
     loadSuggerimenti();
     loadAffiliazione();
+    loadPagina();
   </script>
 </body>
 </html>

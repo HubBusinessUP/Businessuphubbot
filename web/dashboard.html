@@ -189,34 +189,36 @@
   .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
   .biz.open .biz-detail { max-height: 1400px; }
   .biz-inner { padding: 4px 2px 16px; }
-  .biz-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .biz-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border); color: var(--text-dim); }
-  .biz-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.55; margin-bottom: 12px; }
-  .biz-rows { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 2px 12px; margin-bottom: 12px; }
-  .biz-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .biz-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .biz-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border); color: var(--text); }
+  .biz-desc { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 14px; }
+  .biz-desc b, .biz-desc strong { color: var(--text); font-weight: 700; }
+  .biz-rows { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 2px 12px; margin-bottom: 14px; }
+  .biz-row { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
   .biz-row:last-child { border-bottom: none; }
   .biz-row .k { color: var(--text-dim); }
-  .biz-row .v { font-weight: 700; text-align: right; }
+  .biz-row .v { font-weight: 700; text-align: right; font-size: 14px; color: var(--text); }
 
   .chk { margin-bottom: 12px; }
-  .chk-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 9px; }
-  .chk-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
-  .chk-box { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--ink); color: var(--text-dim); font-size: 10px; font-weight: 700; margin-top: 1px; }
+  .chk-title { font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .chk-row { display: flex; align-items: flex-start; gap: 11px; padding: 9px 0; }
+  .chk-box { width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--ink); color: var(--text-dim); font-size: 12px; font-weight: 700; margin-top: 1px; }
   .chk-row.done .chk-box { background: var(--lime); border-color: var(--lime); color: #06110b; }
   .chk-row.current .chk-box { border-color: var(--blue); color: var(--blue); }
-  .chk-body { flex: 1; min-width: 0; font-size: 12px; color: var(--text-dim); line-height: 1.45; }
-  .chk-body b { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .chk-body { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text-dim); line-height: 1.5; }
+  .chk-body b { display: block; font-size: 14.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .chk-body strong { color: var(--text); font-weight: 700; }
   .chk-row.locked .chk-body b { color: var(--text-dim); }
-  .chk-done-btn { margin-top: 7px; padding: 7px 12px; border: none; border-radius: 4px; background: var(--blue); color: #fff; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .chk-done-btn { margin-top: 8px; padding: 9px 14px; border: none; border-radius: 4px; background: var(--blue); color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
-  .biz-cta { width: 100%; padding: 13px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .biz-cta { width: 100%; padding: 14px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .biz-cta:disabled { opacity: 0.6; }
-  .biz-linkbox { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: monospace; font-size: 10.5px; word-break: break-all; color: var(--blue); }
+  .biz-linkbox { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: monospace; font-size: 12px; word-break: break-all; color: var(--blue); }
   .biz-foot { display: flex; gap: 8px; margin-top: 10px; }
   .biz-foot a, .biz-foot button {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
     padding: 10px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border);
-    color: var(--text-dim); font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none;
+    color: var(--text-dim); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none;
   }
   .biz-update { background: var(--amber-dim); border: 1px solid rgba(232,179,76,0.3); border-radius: 4px; padding: 8px 11px; font-size: 11px; color: var(--amber); margin-bottom: 12px; }
 
@@ -654,6 +656,11 @@
       { titolo: "Torna qui e segna come fatto", testo: "Così teniamo traccia dei tuoi progressi." },
     ];
 
+    // **parola** nel testo scritto dall'admin diventa evidenziata in bianco pieno.
+    function mdBold(testo) {
+      return String(testo || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    }
+
     function buildDetail(id, data) {
       const s = data.servizio || {};
       const steps = Array.isArray(s.tutorial_steps) && s.tutorial_steps.length ? s.tutorial_steps : FALLBACK_STEPS;
@@ -674,7 +681,7 @@
         const state = i < prog.ultimo_step ? "done" : i === prog.ultimo_step ? "current" : "locked";
         const boxContent = state === "done" ? "✓" : (i + 1);
         const btn = state === "current" ? `<button class="chk-done-btn" onclick="bizStepDone(${id}, ${i}, ${i === steps.length - 1})">Segna come fatto</button>` : "";
-        return `<div class="chk-row ${state}"><div class="chk-box">${boxContent}</div><div class="chk-body"><b>${st.titolo}</b>${st.testo || ""}${btn}</div></div>`;
+        return `<div class="chk-row ${state}"><div class="chk-box">${boxContent}</div><div class="chk-body"><b>${st.titolo}</b>${mdBold(st.testo)}${btn}</div></div>`;
       }).join("");
 
       let cta;
@@ -690,7 +697,7 @@
 
       return `
         <div class="biz-chips">${chips.join("")}</div>
-        ${s.descrizione ? `<div class="biz-desc">${s.descrizione}</div>` : ""}
+        ${s.descrizione ? `<div class="biz-desc">${mdBold(s.descrizione)}</div>` : ""}
         ${rows.length ? `<div class="biz-rows">${rows.join("")}</div>` : ""}
         <div class="chk"><div class="chk-title">Checklist di avvio</div>${chkRows}</div>
         ${cta}
