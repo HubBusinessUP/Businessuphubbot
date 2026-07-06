@@ -30,7 +30,12 @@
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
   }
-  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 30px; }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 92px; }
+
+  .bnav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 50; }
+  .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 600; font-family: inherit; text-decoration: none; cursor: pointer; }
+  .bnav-item.active { color: var(--blue); }
+  .bnav-item svg { width: 22px; height: 22px; }
 
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
@@ -347,6 +352,21 @@
 
     <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
 
+    <nav class="bnav">
+      <button class="bnav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Home</span>
+      </button>
+      <a class="bnav-item" href="account.html#rete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15.5 20c0-2 .6-3.3 2-4"/></svg>
+        <span>Rete</span>
+      </a>
+      <a class="bnav-item" href="account.html#profilo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Profilo</span>
+      </a>
+    </nav>
+
   </div>
 
   <div class="share-overlay" id="suggestOverlay" onclick="if(event.target===this) closeSuggestSheet()">
@@ -418,7 +438,7 @@
     window.sondaggioCompletato = false;
 
     function goProfilo() {
-      window.location.href = `account.html?_=${Date.now()}`;
+      window.location.href = `account.html?_=${Date.now()}#profilo`;
     }
 
     function initials(name) {

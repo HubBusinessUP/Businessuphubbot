@@ -24,7 +24,12 @@
     min-height: 100vh; background: var(--ink); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
   }
-  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; }
+  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 92px; }
+
+  .bnav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 50; }
+  .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 600; font-family: inherit; text-decoration: none; cursor: pointer; }
+  .bnav-item.active { color: var(--blue); }
+  .bnav-item svg { width: 22px; height: 22px; }
 
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
   .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
@@ -128,14 +133,72 @@
       </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="dati" onclick="switchTab('dati')">Dati</button>
-      <button class="tab" data-tab="cliente" onclick="switchTab('cliente')">Personale</button>
-      <button class="tab" data-tab="affiliazione" onclick="switchTab('affiliazione')">Affiliazione</button>
+    <!-- ===== VISTA RETE ===== -->
+    <div class="tabpanel" id="view-rete">
+      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
+          <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
+        </div>
+        <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
+      </div>
+
+      <div class="card">
+        <h2>Il tuo link invito</h2>
+        <div class="invite-row">
+          <div class="invite-link" id="inviteLink">-</div>
+          <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card" id="partnerCard" style="display:none">
+        <h2>Partner</h2>
+        <div id="partnerBody"></div>
+      </div>
+
+      <div class="card" id="sponsorCard" style="display:none">
+        <h2>Il tuo sponsor</h2>
+        <div class="aff-row" style="border:none;padding:0">
+          <div class="aff-foto" id="spFoto"></div>
+          <div class="aff-body">
+            <div class="aff-name" id="spNome">-</div>
+            <div class="aff-sub" id="spSub"></div>
+          </div>
+          <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>La mia pagina pubblica</h2>
+        <div id="paginaLocked" style="display:none">
+          <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
+          <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+        </div>
+        <div id="paginaReady" style="display:none">
+          <div class="invite-row" style="margin-bottom:10px">
+            <div class="invite-link" id="paginaLink">-</div>
+            <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
+            <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>La mia rete</h2>
+        <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
+        <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
+      </div>
     </div>
 
-    <!-- ===== TAB DATI ===== -->
-    <div class="tabpanel active" id="tab-dati">
+    <!-- ===== VISTA PROFILO ===== -->
+    <div class="tabpanel active" id="view-profilo">
       <div class="card">
         <h2>Dati anagrafici</h2>
         <div class="field"><label>Nome</label><input id="fNome" /></div>
@@ -204,33 +267,10 @@
 
       <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
       <p class="save-note" id="saveNote"></p>
-    </div>
 
-    <!-- ===== TAB PERSONALE / CLIENTE ===== -->
-    <div class="tabpanel" id="tab-cliente">
-      <div class="card">
+      <div class="card" style="margin-top:14px">
         <h2>I miei business attivi</h2>
         <div id="prodottiRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>
-      </div>
-
-      <div class="card">
-        <h2>La mia pagina pubblica</h2>
-        <div id="paginaLocked" style="display:none">
-          <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
-          <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
-        </div>
-        <div id="paginaReady" style="display:none">
-          <div class="invite-row" style="margin-bottom:10px">
-            <div class="invite-link" id="paginaLink">-</div>
-            <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
-            <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
-          </div>
-        </div>
       </div>
 
       <div class="card" id="suggStatiCard" style="display:none">
@@ -239,49 +279,20 @@
       </div>
     </div>
 
-    <!-- ===== TAB AFFILIAZIONE ===== -->
-    <div class="tabpanel" id="tab-affiliazione">
-      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div>
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
-          <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
-        </div>
-        <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
-      </div>
-
-      <div class="card">
-        <h2>Il tuo link invito</h2>
-        <div class="invite-row">
-          <div class="invite-link" id="inviteLink">-</div>
-          <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="card" id="partnerCard" style="display:none">
-        <h2>Partner</h2>
-        <div id="partnerBody"></div>
-      </div>
-
-      <div class="card" id="sponsorCard" style="display:none">
-        <h2>Il tuo sponsor</h2>
-        <div class="aff-row" style="border:none;padding:0">
-          <div class="aff-foto" id="spFoto"></div>
-          <div class="aff-body">
-            <div class="aff-name" id="spNome">-</div>
-            <div class="aff-sub" id="spSub"></div>
-          </div>
-          <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>La mia rete</h2>
-        <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
-        <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
-      </div>
-    </div>
+    <nav class="bnav">
+      <a class="bnav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Home</span>
+      </a>
+      <button class="bnav-item" id="navRete" onclick="switchView('rete')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15.5 20c0-2 .6-3.3 2-4"/></svg>
+        <span>Rete</span>
+      </button>
+      <button class="bnav-item active" id="navProfilo" onclick="switchView('profilo')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Profilo</span>
+      </button>
+    </nav>
   </div>
 
   <script>
@@ -407,13 +418,25 @@
       renderProdotti(data.prodotti_attivi || []);
     }
 
-    function switchTab(name) {
-      document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
-      document.querySelectorAll(".tabpanel").forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
+    function switchView(name) {
+      const v = name === "rete" ? "rete" : "profilo";
+      document.getElementById("view-rete").classList.toggle("active", v === "rete");
+      document.getElementById("view-profilo").classList.toggle("active", v === "profilo");
+      document.getElementById("navRete").classList.toggle("active", v === "rete");
+      document.getElementById("navProfilo").classList.toggle("active", v === "profilo");
       try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
       window.scrollTo({ top: 0 });
     }
-    window.switchTab = switchTab;
+    window.switchView = switchView;
+
+    // Apre la vista giusta in base all'hash (#rete / #profilo): arrivo dalla barra di navigazione.
+    (function initView() {
+      const h = (location.hash || "").replace("#", "");
+      switchView(h === "rete" ? "rete" : "profilo");
+    })();
+    window.addEventListener("hashchange", () => {
+      switchView((location.hash || "").replace("#", "") === "rete" ? "rete" : "profilo");
+    });
 
     // Business che l'utente ha attivato: link personale da riaprire + stato tutorial.
     function renderProdotti(prodotti) {
@@ -595,7 +618,7 @@
       paginaLink = data.link_pagina || "";
       document.getElementById("paginaLink").textContent = paginaLink || "-";
       const configurata = data.bio_titolo || data.bio_testo || (data.social_links || []).length;
-      if (!configurata) document.getElementById("btnEditPagina").textContent = "Crea la tua pagina";
+      document.getElementById("btnEditPagina").textContent = configurata ? "Modifica pagina" : "Crea la tua pagina pubblica";
       document.getElementById("paginaReady").style.display = "block";
     }
 
