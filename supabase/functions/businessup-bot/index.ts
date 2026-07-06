@@ -205,7 +205,36 @@ async function apiMe(telegramId: number, tgUser?: any) {
     if (sp) sponsor = { nome: sp.nome || sp.username || "Sistema", username: sp.username || "", foto_url: sp.foto_url || "", is_founder: lead.referred_by === ADMIN_ID }
   }
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA })
+  // Prodotti attivi dell'utente: i business che ha attivato, con il link che deve usare e lo stato del tutorial.
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, stato, created_at").eq("telegram_id", telegramId).order("created_at", { ascending: false })
+  const attSvcIds = [...new Set((attivazioni ?? []).map((a: any) => a.servizio_id))]
+  const { data: attServizi } = attSvcIds.length
+    ? await supabase.from("servizi").select("id, nome, categoria_id").in("id", attSvcIds)
+    : { data: [] }
+  const attSvcMap: Record<number, any> = {}
+  for (const s of attServizi ?? []) attSvcMap[(s as any).id] = s
+  const { data: attProgress } = attSvcIds.length
+    ? await supabase.from("tutorial_progress").select("servizio_id, ultimo_step, completato").eq("telegram_id", telegramId).in("servizio_id", attSvcIds)
+    : { data: [] }
+  const attProgMap: Record<number, any> = {}
+  for (const p of attProgress ?? []) attProgMap[(p as any).servizio_id] = p
+  const prodottiAttivi = []
+  for (const a of attivazioni ?? []) {
+    const sv = attSvcMap[(a as any).servizio_id]
+    if (!sv) continue
+    const refInfo = await resolveRefLinkConFonte(telegramId, sv.id)
+    const prog = attProgMap[sv.id]
+    prodottiAttivi.push({
+      servizio_id: sv.id,
+      nome: sv.nome,
+      ref_link: refInfo.link,
+      ref_fonte: refInfo.fonte,
+      tutorial_completato: !!prog?.completato,
+      attivato_il: (a as any).created_at,
+    })
+  }
+
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {

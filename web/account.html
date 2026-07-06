@@ -93,6 +93,20 @@
   .aff-count { font-size: 11px; font-weight: 700; color: var(--lime); flex-shrink: 0; text-align: right; }
   .aff-count.zero { color: var(--text-dim); font-weight: 500; }
   .aff-chat { width: 32px; height: 32px; border-radius: 4px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; }
+
+  .tabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 10px 6px; border: none; border-radius: 4px; background: none; color: var(--text-dim); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center; transition: background 0.15s, color 0.15s; }
+  .tab.active { background: var(--blue-dim); color: var(--blue); }
+  .tabpanel { display: none; }
+  .tabpanel.active { display: block; }
+
+  .prod-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .prod-row:last-child { border-bottom: none; }
+  .prod-body { flex: 1; min-width: 0; }
+  .prod-name { font-size: 14px; font-weight: 700; }
+  .prod-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+  .prod-open { width: 34px; height: 34px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; border: none; cursor: pointer; }
+  .prod-done { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -101,7 +115,7 @@
       <button class="back" onclick="window.location.href='dashboard.html?_=' + Date.now()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
       <div>
         <h1>Il mio account</h1>
-        <p>Profilo, performance e rete</p>
+        <p>Dati, area personale e affiliazione</p>
       </div>
     </div>
 
@@ -114,139 +128,159 @@
       </div>
     </div>
 
-    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div>
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
-        <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
-      </div>
-      <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="dati" onclick="switchTab('dati')">Dati</button>
+      <button class="tab" data-tab="cliente" onclick="switchTab('cliente')">Personale</button>
+      <button class="tab" data-tab="affiliazione" onclick="switchTab('affiliazione')">Affiliazione</button>
     </div>
 
-    <div class="card" id="sponsorCard" style="display:none">
-      <h2>Il tuo sponsor</h2>
-      <div class="aff-row" style="border:none;padding:0">
-        <div class="aff-foto" id="spFoto"></div>
-        <div class="aff-body">
-          <div class="aff-name" id="spNome">-</div>
-          <div class="aff-sub" id="spSub"></div>
+    <!-- ===== TAB DATI ===== -->
+    <div class="tabpanel active" id="tab-dati">
+      <div class="card">
+        <h2>Dati anagrafici</h2>
+        <div class="field"><label>Nome</label><input id="fNome" /></div>
+        <div class="field"><label>Cognome</label><input id="fCognome" /></div>
+        <div class="field"><label>Email</label><input id="fEmail" type="email" /></div>
+        <div class="field">
+          <label>Telefono</label>
+          <div style="display:flex;gap:8px">
+            <input id="fTelefono" type="tel" placeholder="+39..." style="flex:1" />
+            <button type="button" class="btn" style="width:auto;padding:0 14px;background:var(--panel);border:1px solid var(--border);color:var(--text)" id="btnContatto">Da Telegram</button>
+          </div>
         </div>
-        <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
+        <div class="field"><label>Città</label><input id="fCitta" /></div>
+      </div>
+
+      <div class="card">
+        <h2>Il tuo profilo</h2>
+        <div class="field">
+          <label>Livello di trading</label>
+          <select id="fLivello">
+            <option>Principiante</option>
+            <option>Intermedio</option>
+            <option>Avanzato</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Esperienza con broker reali</label>
+          <select id="fEsperienza">
+            <option>No mai</option>
+            <option>Sì da meno di 6 mesi</option>
+            <option>Sì da più di 6 mesi</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Capitale</label>
+            <select id="fCapitale">
+              <option>Meno di 500 euro</option>
+              <option>500-2.000 euro</option>
+              <option>2.000-10.000 euro</option>
+              <option>10.000+ euro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Interesse</label>
+            <select id="fProdotto">
+              <option>Broker vs Broker</option>
+              <option>Prop vs Broker</option>
+              <option>Bonus ADM</option>
+              <option>Voglio capire prima</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Disposto a pagare</label>
+          <select id="fPay">
+            <option>Solo se gratis</option>
+            <option>Una tantum 50-200</option>
+            <option>Una tantum 200-500</option>
+            <option>Abbonamento</option>
+            <option>Profit share</option>
+          </select>
+        </div>
+        <div class="field"><label>Note libere</label><textarea id="fNote"></textarea></div>
+      </div>
+
+      <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
+      <p class="save-note" id="saveNote"></p>
+    </div>
+
+    <!-- ===== TAB PERSONALE / CLIENTE ===== -->
+    <div class="tabpanel" id="tab-cliente">
+      <div class="card">
+        <h2>I miei business attivi</h2>
+        <div id="prodottiRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>
+      </div>
+
+      <div class="card">
+        <h2>La mia pagina pubblica</h2>
+        <div id="paginaLocked" style="display:none">
+          <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
+          <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+        </div>
+        <div id="paginaReady" style="display:none">
+          <div class="invite-row" style="margin-bottom:10px">
+            <div class="invite-link" id="paginaLink">-</div>
+            <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
+            <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="suggStatiCard" style="display:none">
+        <h2>Le tue candidature</h2>
+        <div id="suggStatiRows"></div>
       </div>
     </div>
 
-    <div class="card" id="partnerCard" style="display:none">
-      <h2>Partner</h2>
-      <div id="partnerBody"></div>
-    </div>
-
-    <div class="card">
-      <h2>Il tuo link invito</h2>
-      <div class="invite-row">
-        <div class="invite-link" id="inviteLink">-</div>
-        <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
+    <!-- ===== TAB AFFILIAZIONE ===== -->
+    <div class="tabpanel" id="tab-affiliazione">
+      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
+          <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
+        </div>
+        <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>La mia pagina pubblica</h2>
-      <div id="paginaLocked" style="display:none">
-        <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
-        <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
-      </div>
-      <div id="paginaReady" style="display:none">
-        <div class="invite-row" style="margin-bottom:10px">
-          <div class="invite-link" id="paginaLink">-</div>
-          <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
+      <div class="card">
+        <h2>Il tuo link invito</h2>
+        <div class="invite-row">
+          <div class="invite-link" id="inviteLink">-</div>
+          <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
-          <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+      </div>
+
+      <div class="card" id="partnerCard" style="display:none">
+        <h2>Partner</h2>
+        <div id="partnerBody"></div>
+      </div>
+
+      <div class="card" id="sponsorCard" style="display:none">
+        <h2>Il tuo sponsor</h2>
+        <div class="aff-row" style="border:none;padding:0">
+          <div class="aff-foto" id="spFoto"></div>
+          <div class="aff-body">
+            <div class="aff-name" id="spNome">-</div>
+            <div class="aff-sub" id="spSub"></div>
+          </div>
+          <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
         </div>
       </div>
-    </div>
 
-    <div class="card" id="suggStatiCard" style="display:none">
-      <h2>Le tue candidature</h2>
-      <div id="suggStatiRows"></div>
-    </div>
-
-    <div class="card">
-      <h2>Dati anagrafici</h2>
-      <div class="field"><label>Nome</label><input id="fNome" /></div>
-      <div class="field"><label>Cognome</label><input id="fCognome" /></div>
-      <div class="field"><label>Email</label><input id="fEmail" type="email" /></div>
-      <div class="field">
-        <label>Telefono</label>
-        <div style="display:flex;gap:8px">
-          <input id="fTelefono" type="tel" placeholder="+39..." style="flex:1" />
-          <button type="button" class="btn" style="width:auto;padding:0 14px;background:var(--panel);border:1px solid var(--border);color:var(--text)" id="btnContatto">Da Telegram</button>
-        </div>
+      <div class="card">
+        <h2>La mia rete</h2>
+        <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
+        <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
       </div>
-      <div class="field"><label>Città</label><input id="fCitta" /></div>
-    </div>
-
-    <div class="card">
-      <h2>Il tuo profilo</h2>
-      <div class="field">
-        <label>Livello di trading</label>
-        <select id="fLivello">
-          <option>Principiante</option>
-          <option>Intermedio</option>
-          <option>Avanzato</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Esperienza con broker reali</label>
-        <select id="fEsperienza">
-          <option>No mai</option>
-          <option>Sì da meno di 6 mesi</option>
-          <option>Sì da più di 6 mesi</option>
-        </select>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label>Capitale</label>
-          <select id="fCapitale">
-            <option>Meno di 500 euro</option>
-            <option>500-2.000 euro</option>
-            <option>2.000-10.000 euro</option>
-            <option>10.000+ euro</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Interesse</label>
-          <select id="fProdotto">
-            <option>Broker vs Broker</option>
-            <option>Prop vs Broker</option>
-            <option>Bonus ADM</option>
-            <option>Voglio capire prima</option>
-          </select>
-        </div>
-      </div>
-      <div class="field">
-        <label>Disposto a pagare</label>
-        <select id="fPay">
-          <option>Solo se gratis</option>
-          <option>Una tantum 50-200</option>
-          <option>Una tantum 200-500</option>
-          <option>Abbonamento</option>
-          <option>Profit share</option>
-        </select>
-      </div>
-      <div class="field"><label>Note libere</label><textarea id="fNote"></textarea></div>
-    </div>
-
-    <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
-    <p class="save-note" id="saveNote"></p>
-
-    <div class="card" style="margin-top:14px">
-      <h2>La mia rete</h2>
-      <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
-      <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
     </div>
   </div>
 
@@ -370,6 +404,31 @@
       }
       renderSponsor(data.sponsor);
       renderPartner(data);
+      renderProdotti(data.prodotti_attivi || []);
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+      document.querySelectorAll(".tabpanel").forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
+      try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
+      window.scrollTo({ top: 0 });
+    }
+    window.switchTab = switchTab;
+
+    // Business che l'utente ha attivato: link personale da riaprire + stato tutorial.
+    function renderProdotti(prodotti) {
+      const el = document.getElementById("prodottiRows");
+      if (!prodotti.length) return;
+      el.innerHTML = prodotti.map((p) => `
+        <div class="prod-row">
+          <div class="prod-body">
+            <div class="prod-name">${escapeHtml(p.nome)}</div>
+            <div class="prod-sub">${p.ref_fonte === "sponsor" ? "Link del tuo sponsor" : "Link ufficiale"} · attivato il ${new Date(p.attivato_il).toLocaleDateString("it-IT")}</div>
+          </div>
+          ${p.tutorial_completato ? '<span class="prod-done">Completato</span>' : ""}
+          ${p.ref_link ? `<a class="prod-open" href="${escapeHtml(p.ref_link)}" target="_blank" rel="noopener" aria-label="Apri il link"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>` : ""}
+        </div>
+      `).join("");
     }
 
     // Sponsor a vita, con contatto diretto in chat.
