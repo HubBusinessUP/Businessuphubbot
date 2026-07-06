@@ -31,6 +31,12 @@
   .bnav-item.active { color: var(--blue); }
   .bnav-item svg { width: 22px; height: 22px; }
 
+  .rtabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-bottom: 14px; }
+  .rtab { flex: 1; padding: 10px 6px; border: none; border-radius: 4px; background: none; color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .rtab.active { background: var(--blue-dim); color: var(--blue); }
+  .rpanel { display: none; }
+  .rpanel.active { display: block; }
+
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
   .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
   .top h1 { font-size: 19px; font-weight: 700; }
@@ -135,65 +141,80 @@
 
     <!-- ===== VISTA RETE ===== -->
     <div class="tabpanel" id="view-rete">
-      <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div>
-          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
-          <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
-        </div>
-        <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
+      <div class="rtabs">
+        <button class="rtab active" id="rtabIscritti" onclick="switchRete('iscritti')">Iscritti</button>
+        <button class="rtab" id="rtabPagina" onclick="switchRete('pagina')">La mia pagina</button>
       </div>
 
-      <div class="card">
-        <h2>Il tuo link invito</h2>
-        <div class="invite-row">
-          <div class="invite-link" id="inviteLink">-</div>
-          <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="card" id="partnerCard" style="display:none">
-        <h2>Partner</h2>
-        <div id="partnerBody"></div>
-      </div>
-
-      <div class="card" id="sponsorCard" style="display:none">
-        <h2>Il tuo sponsor</h2>
-        <div class="aff-row" style="border:none;padding:0">
-          <div class="aff-foto" id="spFoto"></div>
-          <div class="aff-body">
-            <div class="aff-name" id="spNome">-</div>
-            <div class="aff-sub" id="spSub"></div>
+      <!-- Scheda: Iscritti -->
+      <div class="rpanel active" id="rete-iscritti">
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
+            <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
           </div>
-          <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
+          <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
         </div>
-      </div>
 
-      <div class="card">
-        <h2>La mia pagina pubblica</h2>
-        <div id="paginaLocked" style="display:none">
-          <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
-          <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
-        </div>
-        <div id="paginaReady" style="display:none">
-          <div class="invite-row" style="margin-bottom:10px">
-            <div class="invite-link" id="paginaLink">-</div>
-            <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
+        <div class="card">
+          <h2>Il tuo link invito</h2>
+          <div class="invite-row">
+            <div class="invite-link" id="inviteLink">-</div>
+            <button class="invite-copy" onclick="copiaInvito()" aria-label="Copia link">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
-            <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn" style="flex:1;background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="copiaInvito()">Copia</button>
+            <button class="btn" style="flex:1;background:var(--blue);color:#fff" onclick="condividiInvito()">Condividi</button>
           </div>
+        </div>
+
+        <div class="card" id="partnerCard" style="display:none">
+          <h2>Partner</h2>
+          <div id="partnerBody"></div>
+        </div>
+
+        <div class="card" id="sponsorCard" style="display:none">
+          <h2>Il tuo sponsor</h2>
+          <div class="aff-row" style="border:none;padding:0">
+            <div class="aff-foto" id="spFoto"></div>
+            <div class="aff-body">
+              <div class="aff-name" id="spNome">-</div>
+              <div class="aff-sub" id="spSub"></div>
+            </div>
+            <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>La mia rete</h2>
+          <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
+          <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
         </div>
       </div>
 
-      <div class="card">
-        <h2>La mia rete</h2>
-        <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
-        <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
+      <!-- Scheda: La mia pagina -->
+      <div class="rpanel" id="rete-pagina">
+        <div class="card">
+          <h2>La mia pagina pubblica</h2>
+          <div id="paginaLocked" style="display:none">
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
+            <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+          </div>
+          <div id="paginaReady" style="display:none">
+            <div class="invite-row" style="margin-bottom:10px">
+              <div class="invite-link" id="paginaLink">-</div>
+              <button class="invite-copy" onclick="copiaPagina()" aria-label="Copia link pagina">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
+              <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -429,6 +450,17 @@
     }
     window.switchView = switchView;
 
+    // Schede interne alla vista Rete: Iscritti / La mia pagina.
+    function switchRete(sub) {
+      const s = sub === "pagina" ? "pagina" : "iscritti";
+      document.getElementById("rete-iscritti").classList.toggle("active", s === "iscritti");
+      document.getElementById("rete-pagina").classList.toggle("active", s === "pagina");
+      document.getElementById("rtabIscritti").classList.toggle("active", s === "iscritti");
+      document.getElementById("rtabPagina").classList.toggle("active", s === "pagina");
+      try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
+    }
+    window.switchRete = switchRete;
+
     // Apre la vista giusta in base all'hash (#rete / #profilo): arrivo dalla barra di navigazione.
     (function initView() {
       const h = (location.hash || "").replace("#", "");
@@ -542,6 +574,15 @@
     }
     window.copiaInvito = copiaInvito;
 
+    function condividiInvito() {
+      if (!inviteLink) return;
+      try { tg?.HapticFeedback?.impactOccurred("light"); } catch (e) {}
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent("Entra in Business UP con il mio invito:")}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
+      else window.open(shareUrl, "_blank");
+    }
+    window.condividiInvito = condividiInvito;
+
     async function loadSuggerimenti() {
       const res = await fetch(`${API_URL}/miei-suggerimenti`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
@@ -580,7 +621,7 @@
         const foto = m.foto_url
           ? `<img src="${escapeHtml(m.foto_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />`
           : "";
-        const n = m.business_approvati || 0;
+        const n = m.servizi_count || 0;
         return `
         <div class="aff-row">
           <div class="aff-foto">${foto}<span style="${foto ? "display:none" : ""}">${escapeHtml(initialsOf(m.nome))}</span></div>
@@ -588,7 +629,7 @@
             <div class="aff-name">${escapeHtml(m.nome || "Utente")}</div>
             <div class="aff-sub">${m.username ? "@" + escapeHtml(m.username) : escapeHtml(m.stato_label || "Iscritto")}</div>
           </div>
-          <div class="aff-count ${n ? "" : "zero"}">Business: ${n}</div>
+          <div class="aff-count ${n ? "" : "zero"}">${n} business attivi</div>
           ${m.username ? `<a class="aff-chat" href="https://t.me/${escapeHtml(m.username)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Scrivi su Telegram"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>` : ""}
         </div>
       `;
