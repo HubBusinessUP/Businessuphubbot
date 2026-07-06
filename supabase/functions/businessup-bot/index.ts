@@ -212,18 +212,49 @@ async function inviaContenuto(chatId: number, tipo: string, testo: string | null
   return sendMessage(chatId, testo || "", markup)
 }
 
-// Prepara un annuncio (testo o media+didascalia) da inviare a tutti: lo salva come "pending" e chiede conferma con un bottone.
+// Destinatari di un annuncio dalla chat, per segmento scelto dall'admin.
+const NEWS_SEGMENTI: Record<string, string> = {
+  tutti: "Tutti gli iscritti",
+  partner: "Solo Partner",
+  lead: "Chi non ha attivato nessun business",
+  top: "Top 10 sponsor",
+}
+async function destinatariNews(segmento: string): Promise<number[]> {
+  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by").eq("bot_started", true)
+  const tutti = leads ?? []
+  if (segmento === "partner") return tutti.filter((l: any) => l.is_partner).map((l: any) => l.telegram_id)
+  if (segmento === "top") {
+    const conteggio: Record<number, number> = {}
+    for (const l of tutti) if ((l as any).referred_by) conteggio[(l as any).referred_by] = (conteggio[(l as any).referred_by] ?? 0) + 1
+    return Object.entries(conteggio).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([tid]) => parseInt(tid))
+  }
+  if (segmento === "lead") {
+    const { data: att } = await supabase.from("lead_servizi").select("telegram_id")
+    const haAttivato = new Set((att ?? []).map((a: any) => a.telegram_id))
+    return tutti.filter((l: any) => !haAttivato.has(l.telegram_id)).map((l: any) => l.telegram_id)
+  }
+  return tutti.map((l: any) => l.telegram_id)
+}
+
+// Prepara un annuncio (testo o media): lo salva come "pending" e mostra l'anteprima con la scelta del destinatario.
 async function preparaNews(chatId: number, tipo: string, testo: string, mediaFileId?: string) {
   await supabase.from("broadcast_pending").upsert(
     { telegram_id: ADMIN_ID, tipo, testo: testo || null, photo_file_id: mediaFileId || null },
     { onConflict: "telegram_id" },
   )
-  const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
-  const markup = { inline_keyboard: [[
-    { text: `✅ Invia a tutti (${count ?? 0})`, callback_data: "news_send" },
-    { text: "❌ Annulla", callback_data: "news_cancel" },
-  ]] }
-  const caption = testo ? `ANTEPRIMA — ecco come arriverà:\n\n${testo}` : "ANTEPRIMA — ecco come arriverà (nessun testo, solo il media)."
+  const [nTutti, nPartner, nLead, nTop] = await Promise.all([
+    destinatariNews("tutti"), destinatariNews("partner"), destinatariNews("lead"), destinatariNews("top"),
+  ].map((p) => p.then((l) => l.length)))
+  const markup = { inline_keyboard: [
+    [{ text: `👥 Tutti (${nTutti})`, callback_data: "news_send:tutti" }],
+    [{ text: `🤝 Solo Partner (${nPartner})`, callback_data: "news_send:partner" }],
+    [{ text: `🌱 Chi non ha attivato nulla (${nLead})`, callback_data: "news_send:lead" }],
+    [{ text: `⭐ Top 10 sponsor (${nTop})`, callback_data: "news_send:top" }],
+    [{ text: "❌ Annulla", callback_data: "news_cancel" }],
+  ] }
+  const caption = testo
+    ? `ANTEPRIMA — ecco come arriverà.\n\n${testo}\n\nA chi lo invio?`
+    : "ANTEPRIMA — ecco come arriverà (solo il media).\n\nA chi lo invio?"
   await inviaContenuto(chatId, tipo, caption, mediaFileId || null, markup)
 }
 
@@ -236,22 +267,22 @@ async function attendiNews(chatId: number) {
   await sendMessage(chatId, "📣 Ok! Mandami ora l'annuncio da inviare a tutti: può essere testo, una foto o un video (con l'eventuale didascalia).\n\nScrivi /annulla per uscire.")
 }
 
-// Invia l'annuncio pending a tutti gli utenti che hanno avviato il bot.
-async function inviaNewsATutti(): Promise<{ inviati: number; falliti: number }> {
+// Invia l'annuncio pending al segmento scelto.
+async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: number }> {
   const { data: pending } = await supabase.from("broadcast_pending").select("*").eq("telegram_id", ADMIN_ID).maybeSingle()
   if (!pending || pending.tipo === "awaiting") return { inviati: 0, falliti: 0 }
-  const { data: destinatari } = await supabase.from("leads").select("telegram_id").eq("bot_started", true)
+  const destinatari = await destinatariNews(segmento)
 
   let inviati = 0, falliti = 0
-  for (const d of destinatari ?? []) {
-    const res = await inviaContenuto((d as any).telegram_id, pending.tipo, pending.testo, pending.photo_file_id)
+  for (const tid of destinatari) {
+    const res = await inviaContenuto(tid, pending.tipo, pending.testo, pending.photo_file_id)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
     else falliti++
     await new Promise((r) => setTimeout(r, 50))
   }
   await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
-  await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast_chat", dettaglio: `${pending.tipo} inviati:${inviati} falliti:${falliti}` })
+  await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast_chat", dettaglio: `${pending.tipo}/${segmento} inviati:${inviati} falliti:${falliti}` })
   return { inviati, falliti }
 }
 
@@ -272,11 +303,12 @@ async function handleUpdate(u: any) {
     const chatId = cb.message?.chat?.id
     const messageId = cb.message?.message_id
     if (fromId !== ADMIN_ID) { await answerCallback(cb.id); return }
-    if (cb.data === "news_send") {
+    if (cb.data?.startsWith("news_send:")) {
+      const segmento = cb.data.slice("news_send:".length)
       await answerCallback(cb.id, "Invio in corso...")
-      if (chatId && messageId) await editMessageText(chatId, messageId, "Invio in corso...")
-      const { inviati, falliti } = await inviaNewsATutti()
-      if (chatId) await sendMessage(chatId, `✅ Annuncio inviato.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+      if (chatId) await sendMessage(chatId, `Invio in corso a: ${NEWS_SEGMENTI[segmento] || segmento}...`)
+      const { inviati, falliti } = await inviaNews(segmento)
+      if (chatId) await sendMessage(chatId, `✅ Annuncio inviato a "${NEWS_SEGMENTI[segmento] || segmento}".\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
     } else if (cb.data === "news_cancel") {
       await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
       await answerCallback(cb.id, "Annullato")
@@ -315,9 +347,10 @@ async function handleUpdate(u: any) {
       } else if (pending.tipo === "awaiting") {
         await sendMessage(chatId, "Prima mandami il contenuto dell'annuncio (testo, foto o video).")
       } else {
-        await sendMessage(chatId, "Invio in corso...")
-        const { inviati, falliti } = await inviaNewsATutti()
-        await sendMessage(chatId, `✅ Annuncio inviato.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+        // /conferma testuale invia a tutti; per un segmento specifico usa i bottoni dell'anteprima.
+        await sendMessage(chatId, "Invio in corso a tutti...")
+        const { inviati, falliti } = await inviaNews("tutti")
+        await sendMessage(chatId, `✅ Annuncio inviato a tutti.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
       }
       return
     }
