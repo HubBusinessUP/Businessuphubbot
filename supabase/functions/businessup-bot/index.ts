@@ -707,6 +707,353 @@ async function apiAdminAffiliateLinkDelete(body: any) {
   return json({ ok: true })
 }
 
+// ---------- SEGNALAZIONI ----------
+const TIPI_SEGNALAZIONE: Record<string, string> = {
+  link_rotto: "Link rotto",
+  sospetto_scam: "Sospetto scam",
+  altro: "Altro problema",
+}
+
+async function apiSegnala(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id) || null
+  const tipo = TIPI_SEGNALAZIONE[body?.tipo] ? String(body.tipo) : "altro"
+  const messaggio = String(body?.messaggio || "").trim().slice(0, 500)
+  const { error } = await supabase.from("segnalazioni").insert({ telegram_id: telegramId, servizio_id: servizioId, tipo, messaggio: messaggio || null })
+  if (error) return json({ error: error.message }, 500)
+
+  let nomeServizio = ""
+  if (servizioId) {
+    const { data: sv } = await supabase.from("servizi").select("nome").eq("id", servizioId).maybeSingle()
+    nomeServizio = sv?.nome || ""
+  }
+  await sendMessage(ADMIN_ID, `🚨 Segnalazione: ${TIPI_SEGNALAZIONE[tipo]}${nomeServizio ? `\nBusiness: ${nomeServizio}` : ""}${messaggio ? `\nMessaggio: ${messaggio}` : ""}\nDa utente ID ${telegramId}. Gestiscila dall'admin.`)
+  return json({ ok: true })
+}
+
+async function apiAdminSegnalazioniList() {
+  const { data: segnalazioni } = await supabase.from("segnalazioni").select("*").order("created_at", { ascending: false })
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username")
+  const { data: servizi } = await supabase.from("servizi").select("id, nome")
+  const leadMap: Record<number, any> = {}
+  for (const l of leads ?? []) leadMap[(l as any).telegram_id] = l
+  const svcMap: Record<number, string> = {}
+  for (const s of servizi ?? []) svcMap[(s as any).id] = (s as any).nome
+  const list = (segnalazioni ?? []).map((s: any) => ({
+    ...s,
+    tipo_label: TIPI_SEGNALAZIONE[s.tipo] || s.tipo,
+    utente_nome: leadMap[s.telegram_id]?.nome || leadMap[s.telegram_id]?.username || `ID ${s.telegram_id}`,
+    servizio_nome: s.servizio_id ? (svcMap[s.servizio_id] || "?") : null,
+  }))
+  return json({ segnalazioni: list })
+}
+
+async function apiAdminSegnalazioneRisolvi(body: any) {
+  const { id } = body
+  const { error } = await supabase.from("segnalazioni").update({ stato: "risolta" }).eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+// ---------- ADMIN: KPI & SPONSORBOARD ----------
+async function apiAdminKpi() {
+  const inizioOggi = new Date()
+  inizioOggi.setUTCHours(0, 0, 0, 0)
+  const setteGiorniFa = new Date(Date.now() - 7 * 864e5).toISOString()
+
+  const { count: totale } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true })
+  const { count: nuoviOggi } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).gte("created_at", inizioOggi.toISOString())
+  const { count: nuovi7gg } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).gte("created_at", setteGiorniFa)
+  const { count: clienti } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("is_cliente", true)
+  const { count: pendingSuggerimenti } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("stato", "in_revisione")
+  const { count: pendingLinks } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("approvato", false)
+  const { count: segnalazioniAperte } = await supabase.from("segnalazioni").select("id", { count: "exact", head: true }).eq("stato", "aperta")
+
+  // Top business: per voti totali e per attivazioni recenti (ultimi 7 giorni come indicatore di trend).
+  const { data: servizi } = await supabase.from("servizi").select("id, nome")
+  const svcMap: Record<number, string> = {}
+  for (const s of servizi ?? []) svcMap[(s as any).id] = (s as any).nome
+
+  const { data: voti } = await supabase.from("voti").select("servizio_id")
+  const votiCount: Record<number, number> = {}
+  for (const v of voti ?? []) votiCount[(v as any).servizio_id] = (votiCount[(v as any).servizio_id] ?? 0) + 1
+
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, created_at")
+  const attCount: Record<number, number> = {}
+  const attRecenti: Record<number, number> = {}
+  for (const a of attivazioni ?? []) {
+    attCount[(a as any).servizio_id] = (attCount[(a as any).servizio_id] ?? 0) + 1
+    if ((a as any).created_at >= setteGiorniFa) attRecenti[(a as any).servizio_id] = (attRecenti[(a as any).servizio_id] ?? 0) + 1
+  }
+
+  const topBusiness = Object.keys(svcMap).map((id) => ({
+    id: parseInt(id),
+    nome: svcMap[parseInt(id)],
+    voti: votiCount[parseInt(id)] ?? 0,
+    attivazioni: attCount[parseInt(id)] ?? 0,
+    attivazioni_7gg: attRecenti[parseInt(id)] ?? 0,
+  })).sort((a, b) => b.voti - a.voti || b.attivazioni - a.attivazioni).slice(0, 5)
+
+  return json({
+    totale: totale ?? 0,
+    nuovi_oggi: nuoviOggi ?? 0,
+    nuovi_7gg: nuovi7gg ?? 0,
+    clienti: clienti ?? 0,
+    pending_suggerimenti: pendingSuggerimenti ?? 0,
+    pending_links: pendingLinks ?? 0,
+    segnalazioni_aperte: segnalazioniAperte ?? 0,
+    top_business: topBusiness,
+  })
+}
+
+async function apiAdminSponsorboard() {
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, referred_by, is_cliente")
+  const perSponsor: Record<number, { invitati: number; attivati: number }> = {}
+  for (const l of leads ?? []) {
+    const ref = (l as any).referred_by
+    if (!ref) continue
+    perSponsor[ref] = perSponsor[ref] ?? { invitati: 0, attivati: 0 }
+    perSponsor[ref].invitati++
+    if ((l as any).is_cliente) perSponsor[ref].attivati++
+  }
+  const leadMap: Record<number, any> = {}
+  for (const l of leads ?? []) leadMap[(l as any).telegram_id] = l
+  const board = Object.entries(perSponsor)
+    .map(([tid, s]) => ({
+      telegram_id: parseInt(tid),
+      nome: leadMap[parseInt(tid)]?.nome || leadMap[parseInt(tid)]?.username || `ID ${tid}`,
+      username: leadMap[parseInt(tid)]?.username || "",
+      foto_url: leadMap[parseInt(tid)]?.foto_url || "",
+      invitati: s.invitati,
+      attivati: s.attivati,
+    }))
+    .sort((a, b) => b.invitati - a.invitati || b.attivati - a.attivati)
+    .slice(0, 10)
+  return json({ sponsorboard: board })
+}
+
+// ---------- ADMIN: CRM PIPELINE ----------
+const STADI_PIPELINE = ["lead", "attivato", "in_training", "attivo", "criticita"]
+
+// Stadi derivati dai dati reali; l'override manuale (es. "criticita") vince su tutto.
+async function calcolaStadi(leads: any[]): Promise<Record<number, string>> {
+  const ids = leads.map((l) => l.telegram_id)
+  const { data: attivazioni } = ids.length ? await supabase.from("lead_servizi").select("telegram_id").in("telegram_id", ids) : { data: [] }
+  const { data: progress } = ids.length ? await supabase.from("tutorial_progress").select("telegram_id, ultimo_step, completato").in("telegram_id", ids) : { data: [] }
+  const { data: links } = ids.length ? await supabase.from("affiliate_link").select("telegram_id").eq("approvato", true).in("telegram_id", ids) : { data: [] }
+
+  const haAttivato = new Set((attivazioni ?? []).map((a: any) => a.telegram_id))
+  const inTraining = new Set<number>()
+  const haCompletato = new Set<number>()
+  for (const p of progress ?? []) {
+    if ((p as any).completato) haCompletato.add((p as any).telegram_id)
+    else if ((p as any).ultimo_step > 0) inTraining.add((p as any).telegram_id)
+  }
+  const haLinkApprovato = new Set((links ?? []).map((l: any) => l.telegram_id))
+
+  const stadi: Record<number, string> = {}
+  for (const l of leads) {
+    if (l.pipeline_override && STADI_PIPELINE.includes(l.pipeline_override)) { stadi[l.telegram_id] = l.pipeline_override; continue }
+    if (haCompletato.has(l.telegram_id) || haLinkApprovato.has(l.telegram_id)) stadi[l.telegram_id] = "attivo"
+    else if (inTraining.has(l.telegram_id)) stadi[l.telegram_id] = "in_training"
+    else if (haAttivato.has(l.telegram_id)) stadi[l.telegram_id] = "attivato"
+    else stadi[l.telegram_id] = "lead"
+  }
+  return stadi
+}
+
+async function apiAdminCrm() {
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url, referred_by, is_cliente, sondaggio_completato, pipeline_override, created_at").order("created_at", { ascending: false })
+  const stadi = await calcolaStadi(leads ?? [])
+
+  const ids = (leads ?? []).map((l: any) => l.telegram_id)
+  const { data: attivazioni } = ids.length ? await supabase.from("lead_servizi").select("telegram_id").in("telegram_id", ids) : { data: [] }
+  const attCount: Record<number, number> = {}
+  for (const a of attivazioni ?? []) attCount[(a as any).telegram_id] = (attCount[(a as any).telegram_id] ?? 0) + 1
+
+  const leadMap: Record<number, any> = {}
+  for (const l of leads ?? []) leadMap[(l as any).telegram_id] = l
+
+  const contatti = (leads ?? []).map((l: any) => ({
+    telegram_id: l.telegram_id,
+    nome: [l.nome, l.cognome].filter(Boolean).join(" ") || l.username || `ID ${l.telegram_id}`,
+    username: l.username || "",
+    foto_url: l.foto_url || "",
+    stadio: stadi[l.telegram_id],
+    override: l.pipeline_override || null,
+    sponsor_nome: l.referred_by ? (leadMap[l.referred_by]?.nome || leadMap[l.referred_by]?.username || `ID ${l.referred_by}`) : null,
+    servizi_attivati: attCount[l.telegram_id] ?? 0,
+    iscritto_il: l.created_at,
+  }))
+  return json({ contatti })
+}
+
+async function apiAdminCrmDetail(telegramId: number) {
+  const { data: lead } = await supabase.from("leads").select("*").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead) return json({ error: "not_found" }, 404)
+
+  let sponsor = null
+  if (lead.referred_by) {
+    const { data: sp } = await supabase.from("leads").select("telegram_id, nome, username").eq("telegram_id", lead.referred_by).maybeSingle()
+    if (sp) sponsor = { telegram_id: sp.telegram_id, nome: sp.nome || sp.username || `ID ${sp.telegram_id}` }
+  }
+
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, created_at").eq("telegram_id", telegramId)
+  const svcIds = (attivazioni ?? []).map((a: any) => a.servizio_id)
+  const { data: servizi } = svcIds.length ? await supabase.from("servizi").select("id, nome").in("id", svcIds) : { data: [] }
+  const svcMap: Record<number, string> = {}
+  for (const s of servizi ?? []) svcMap[(s as any).id] = (s as any).nome
+
+  const { data: progress } = await supabase.from("tutorial_progress").select("servizio_id, ultimo_step, completato").eq("telegram_id", telegramId)
+  const { data: sugg } = await supabase.from("suggerimenti").select("nome, stato, created_at").eq("telegram_id", telegramId).order("created_at", { ascending: false })
+  const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
+  const { data: followups } = await supabase.from("followup_log").select("giorno, inviato_at").eq("telegram_id", telegramId).order("giorno")
+
+  const stadi = await calcolaStadi([lead])
+  return json({
+    lead,
+    stadio: stadi[telegramId],
+    sponsor,
+    business_attivati: (attivazioni ?? []).map((a: any) => ({ nome: svcMap[a.servizio_id] || "?", data: a.created_at })),
+    tutorial: (progress ?? []).map((p: any) => ({ servizio_nome: svcMap[p.servizio_id] || `#${p.servizio_id}`, ultimo_step: p.ultimo_step, completato: p.completato })),
+    suggerimenti: sugg ?? [],
+    invitati_count: invitati ?? 0,
+    followups: followups ?? [],
+  })
+}
+
+async function apiAdminCrmStage(body: any) {
+  const telegramId = parseInt(body?.telegram_id)
+  const override = body?.override ? String(body.override) : null
+  if (!telegramId) return json({ error: "telegram_id_richiesto" }, 400)
+  if (override && !STADI_PIPELINE.includes(override)) return json({ error: "stadio_non_valido" }, 400)
+  const { error } = await supabase.from("leads").update({ pipeline_override: override }).eq("telegram_id", telegramId)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+async function apiAdminMessaggio(body: any) {
+  const telegramId = parseInt(body?.telegram_id)
+  const testo = String(body?.testo || "").trim()
+  if (!telegramId || !testo) return json({ error: "campi_obbligatori" }, 400)
+  const res = await sendMessage(telegramId, testo)
+  const data = await res.json().catch(() => ({}))
+  if (!data.ok) return json({ error: data.description || "invio_fallito" }, 502)
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "dm_admin", dettaglio: testo.slice(0, 200) })
+  return json({ ok: true })
+}
+
+// ---------- ADMIN: BROADCAST & TEMPLATE ----------
+async function apiAdminTemplatesList() {
+  const { data } = await supabase.from("broadcast_templates").select("*").order("created_at", { ascending: false })
+  return json({ templates: data ?? [] })
+}
+
+async function apiAdminTemplateSave(body: any) {
+  const nome = String(body?.nome || "").trim()
+  const testo = String(body?.testo || "").trim()
+  if (!nome || !testo) return json({ error: "campi_obbligatori" }, 400)
+  const { error } = await supabase.from("broadcast_templates").insert({ nome, testo })
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+async function apiAdminTemplateDelete(body: any) {
+  const { error } = await supabase.from("broadcast_templates").delete().eq("id", body?.id)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+// Risolve i destinatari di un broadcast in base al filtro scelto.
+async function risolviDestinatari(filtro: any): Promise<{ telegram_id: number; nome: string }[]> {
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, referred_by, is_cliente, pipeline_override, bot_started").eq("bot_started", true)
+  const tutti = (leads ?? []).map((l: any) => ({ ...l, display: l.nome || l.username || `ID ${l.telegram_id}` }))
+  const tipo = filtro?.tipo || "tutti"
+
+  let selezionati = tutti
+  if (tipo === "stadio") {
+    const stadi = await calcolaStadi(tutti)
+    selezionati = tutti.filter((l: any) => stadi[l.telegram_id] === filtro.stadio)
+  } else if (tipo === "top_sponsor") {
+    const conteggio: Record<number, number> = {}
+    for (const l of tutti) if (l.referred_by) conteggio[l.referred_by] = (conteggio[l.referred_by] ?? 0) + 1
+    const topIds = Object.entries(conteggio).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([tid]) => parseInt(tid))
+    selezionati = tutti.filter((l: any) => topIds.includes(l.telegram_id))
+  } else if (tipo === "no_servizio") {
+    const servizioId = parseInt(filtro?.servizio_id) || 0
+    const { data: att } = await supabase.from("lead_servizi").select("telegram_id").eq("servizio_id", servizioId)
+    const haAttivato = new Set((att ?? []).map((a: any) => a.telegram_id))
+    selezionati = tutti.filter((l: any) => !haAttivato.has(l.telegram_id))
+  }
+  return selezionati.map((l: any) => ({ telegram_id: l.telegram_id, nome: l.display }))
+}
+
+async function apiAdminBroadcast(body: any) {
+  const testo = String(body?.testo || "").trim()
+  const anteprima = !!body?.anteprima
+  if (!testo && !anteprima) return json({ error: "testo_richiesto" }, 400)
+
+  const destinatari = await risolviDestinatari(body?.filtro || {})
+  if (anteprima) {
+    return json({ destinatari_count: destinatari.length, esempi: destinatari.slice(0, 5).map((d) => d.nome) })
+  }
+
+  let inviati = 0, falliti = 0
+  for (const d of destinatari) {
+    const personalizzato = testo.replaceAll("{nome}", d.nome)
+    const res = await sendMessage(d.telegram_id, personalizzato, {
+      inline_keyboard: [[{ text: "Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]],
+    })
+    const data = await res.json().catch(() => ({}))
+    if (data.ok) inviati++
+    else falliti++
+    // Il limite Telegram è ~30 msg/sec: piccola pausa tra un invio e l'altro.
+    await new Promise((r) => setTimeout(r, 50))
+  }
+
+  await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast", dettaglio: `filtro:${body?.filtro?.tipo || "tutti"} inviati:${inviati} falliti:${falliti}` })
+  return json({ ok: true, inviati, falliti })
+}
+
+// ---------- FOLLOW-UP AUTOMATICI ----------
+// Messaggi Day 1/3/7 per chi non ha ancora attivato nessun business; ogni invio è loggato e mai ripetuto.
+function testoFollowup(giorno: number, nome: string): string {
+  if (giorno === 1) return `Ciao ${nome}! Ho visto che ti sei iscritto a Business UP. Hai già dato un'occhiata alla Business List? Dentro trovi i business testati, ordinati dai voti della community.`
+  if (giorno === 3) return `Ehi ${nome}, c'è qualcosa che non ti è chiaro nei tutorial? Ogni business ha una checklist passo-passo: apri la scheda e segui gli step. Se ti blocchi, scrivimi pure.`
+  return `${nome}, ultima chiamata da parte mia: nella Business List ci sono opportunità che la community sta già usando. Bastano 5 minuti per attivare la prima. Poi non ti disturbo più, promesso.`
+}
+
+async function cronFollowup() {
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, created_at, primo_start_at, bot_started").eq("bot_started", true)
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("telegram_id")
+  const haAttivato = new Set((attivazioni ?? []).map((a: any) => a.telegram_id))
+  const { data: logs } = await supabase.from("followup_log").select("telegram_id, giorno")
+  const giaInviati = new Set((logs ?? []).map((l: any) => `${l.telegram_id}:${l.giorno}`))
+
+  let inviati = 0
+  for (const l of leads ?? []) {
+    if (l.telegram_id === ADMIN_ID) continue
+    const inizio = new Date(l.primo_start_at || l.created_at).getTime()
+    const giorni = Math.floor((Date.now() - inizio) / 864e5)
+    const applicabili = [1, 3, 7].filter((s) => giorni >= s && !giaInviati.has(`${l.telegram_id}:${s}`))
+    if (!applicabili.length) continue
+
+    // Chi ha già attivato un business non riceve nudge: si loggano le soglie come chiuse.
+    if (!haAttivato.has(l.telegram_id)) {
+      const soglia = Math.max(...applicabili)
+      const nome = l.nome || l.username || "ciao"
+      await sendMessage(l.telegram_id, testoFollowup(soglia, nome), {
+        inline_keyboard: [[{ text: "Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]],
+      })
+      inviati++
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    for (const s of applicabili) {
+      await supabase.from("followup_log").insert({ telegram_id: l.telegram_id, giorno: s })
+    }
+  }
+  return json({ ok: true, inviati })
+}
+
 // ---------- MAIN SERVER ----------
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS })
@@ -815,6 +1162,18 @@ serve(async (req) => {
       return await apiPaginaPubblica(code)
     }
 
+    if (sub === "segnala" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiSegnala(tid, await req.json())
+    }
+
+    if (sub === "cron/followup" && req.method === "POST") {
+      const { data: cfg } = await supabase.from("config").select("valore").eq("chiave", "cron_secret").maybeSingle()
+      if (!cfg?.valore || req.headers.get("x-cron-key") !== cfg.valore) return json({ error: "unauthorized" }, 401)
+      return await cronFollowup()
+    }
+
     if (sub.startsWith("admin/")) {
       if (req.headers.get("x-admin-key") !== ADMIN_API_KEY) return json({ error: "unauthorized" }, 401)
 
@@ -840,6 +1199,23 @@ serve(async (req) => {
       if (sub === "admin/suggerimenti/approva" && req.method === "POST") return await apiAdminSuggerimentoApprova(await req.json())
       if (sub === "admin/suggerimenti/rifiuta" && req.method === "POST") return await apiAdminSuggerimentoRifiuta(await req.json())
       if (sub === "admin/suggerimenti/delete" && req.method === "POST") return await apiAdminSuggerimentiDelete(await req.json())
+
+      if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
+      if (sub === "admin/sponsorboard" && req.method === "GET") return await apiAdminSponsorboard()
+
+      if (sub === "admin/crm" && req.method === "GET") return await apiAdminCrm()
+      if (sub === "admin/crm-detail" && req.method === "GET") return await apiAdminCrmDetail(parseInt(url.searchParams.get("id") || "0"))
+      if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
+      if (sub === "admin/messaggio" && req.method === "POST") return await apiAdminMessaggio(await req.json())
+
+      if (sub === "admin/segnalazioni" && req.method === "GET") return await apiAdminSegnalazioniList()
+      if (sub === "admin/segnalazioni/risolvi" && req.method === "POST") return await apiAdminSegnalazioneRisolvi(await req.json())
+
+      if (sub === "admin/templates" && req.method === "GET") return await apiAdminTemplatesList()
+      if (sub === "admin/templates/save" && req.method === "POST") return await apiAdminTemplateSave(await req.json())
+      if (sub === "admin/templates/delete" && req.method === "POST") return await apiAdminTemplateDelete(await req.json())
+
+      if (sub === "admin/broadcast" && req.method === "POST") return await apiAdminBroadcast(await req.json())
 
       if (sub === "admin/affiliate-links" && req.method === "GET") return await apiAdminAffiliateLinksList()
       if (sub === "admin/affiliate-links/approve" && req.method === "POST") return await apiAdminAffiliateLinkApprove(await req.json())

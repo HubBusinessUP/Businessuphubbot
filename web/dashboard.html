@@ -697,8 +697,44 @@
         <div class="biz-foot">
           <button onclick="shareBiz('${(s.nome || "").replace(/'/g, "\\'")}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg> Condividi</button>
           <a href="https://t.me/antonybusinesshub" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg> Hai problemi? Scrivici</a>
+          <button onclick="segnalaBiz(${id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Segnala</button>
         </div>
       `;
+    }
+
+    // Segnalazione rapida di un problema sul business (link rotto / sospetto scam): arriva subito all'admin.
+    function segnalaBiz(id) {
+      haptic("light");
+      try {
+        tg.showPopup({
+          title: "Segnala un problema",
+          message: "Cosa hai riscontrato su questo business?",
+          buttons: [
+            { id: "link_rotto", type: "default", text: "Link rotto" },
+            { id: "sospetto_scam", type: "destructive", text: "Sospetto scam" },
+            { id: "altro", type: "default", text: "Altro problema" },
+          ],
+        }, (btnId) => { if (btnId) inviaSegnalazione(id, btnId); });
+      } catch {
+        // Fuori da Telegram (o su client vecchi) showPopup non è supportato: fallback testuale.
+        const scelta = prompt("Cosa vuoi segnalare?\n1 = Link rotto\n2 = Sospetto scam\n3 = Altro problema");
+        const tipo = { "1": "link_rotto", "2": "sospetto_scam", "3": "altro" }[(scelta || "").trim()];
+        if (tipo) inviaSegnalazione(id, tipo);
+      }
+    }
+    window.segnalaBiz = segnalaBiz;
+
+    async function inviaSegnalazione(id, tipo) {
+      const res = await fetch(`${API_URL}/segnala`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ servizio_id: id, tipo }),
+      });
+      if (res.ok) {
+        haptic("success");
+        if (tg?.showAlert) tg.showAlert("Segnalazione inviata. Grazie, la controlliamo subito.");
+        else alert("Segnalazione inviata. Grazie, la controlliamo subito.");
+      }
     }
 
     async function bizStepDone(id, stepIndex, isLast) {

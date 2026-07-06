@@ -87,6 +87,34 @@
   .btn-small { padding: 8px 10px; font-size: 12.5px; flex: none; }
 
   .empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 20px 0; }
+
+  /* KPI e pannello di controllo */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+  @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+  .pending-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .pending-chip { font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); }
+  .pending-chip.warn { background: rgba(232,179,76,0.14); color: var(--amber); border-color: transparent; }
+  .pending-chip.alert { background: rgba(226,87,74,0.12); color: var(--coral); border-color: transparent; }
+
+  .badge.lead { background: var(--panel-2); color: var(--text-dim); }
+  .badge.attivato { background: var(--blue-dim); color: var(--blue); }
+  .badge.in_training { background: rgba(232,179,76,0.14); color: var(--amber); }
+  .badge.criticita { background: rgba(226,87,74,0.12); color: var(--coral); }
+  .badge.aperta { background: rgba(226,87,74,0.12); color: var(--coral); }
+  .badge.risolta { background: var(--lime-dim); color: var(--lime); }
+
+  .avatar-sm { width: 32px; height: 32px; border-radius: 4px; background: var(--panel-2); color: var(--text-dim); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+  .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+  .rank-num { width: 22px; font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+  .row-flex { display: flex; align-items: center; gap: 10px; }
+
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 7px 11px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
+  .chip.active { background: var(--blue-dim); color: var(--blue); border-color: transparent; }
+  .search-inline { width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 4px; font-size: 13.5px; margin-bottom: 10px; font-family: inherit; }
+
+  .detail-block { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; }
+  .detail-block .db-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -101,12 +129,79 @@
   </div>
 
   <div class="page" id="app" style="display:none">
-    <h1 class="title">Business List — Admin</h1>
-    <p class="subtitle">Gestisci categorie e servizi visibili nella Mini App</p>
+    <h1 class="title">Business UP — Centro di comando</h1>
+    <p class="subtitle">Salute dell'hub, revisioni, CRM e messaging in un'unica vista</p>
 
-    <div class="stat-grid">
-      <div class="stat-box"><div class="label">Leads totali</div><div class="value" id="statLeads">-</div></div>
-      <div class="stat-box"><div class="label">Clienti</div><div class="value" id="statQualificati">-</div></div>
+    <div class="kpi-grid">
+      <div class="stat-box"><div class="label">Utenti totali</div><div class="value" id="kpiTotale">-</div></div>
+      <div class="stat-box"><div class="label">Nuovi oggi</div><div class="value" id="kpiOggi">-</div></div>
+      <div class="stat-box"><div class="label">Nuovi 7gg</div><div class="value" id="kpi7gg">-</div></div>
+      <div class="stat-box"><div class="label">Clienti attivi</div><div class="value" id="kpiClienti">-</div></div>
+    </div>
+    <div class="pending-row" id="pendingRow"></div>
+
+    <div class="section">
+      <div class="section-head"><h2>Da validare</h2></div>
+      <div id="daValidareList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Segnalazioni</h2></div>
+      <div id="segnalazioniList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Top business</h2></div>
+      <div id="topBusinessList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Top Sponsorboard</h2></div>
+      <div id="sponsorboardList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>CRM contatti</h2></div>
+      <div class="chip-row" id="crmChips"></div>
+      <input class="search-inline" id="crmSearch" placeholder="Cerca per nome o username..." oninput="renderCrm()" />
+      <div id="crmList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Broadcast</h2></div>
+      <div class="item">
+        <div class="field"><label>Destinatari</label>
+          <select id="bcFiltro" onchange="onBcFiltroChange()">
+            <option value="tutti">Tutti gli iscritti</option>
+            <option value="stadio">Solo uno stadio pipeline</option>
+            <option value="top_sponsor">Solo Top 10 sponsor</option>
+            <option value="no_servizio">Chi NON ha attivato un business specifico</option>
+          </select>
+        </div>
+        <div class="field" id="bcStadioField" style="display:none"><label>Stadio</label>
+          <select id="bcStadio">
+            <option value="lead">Lead</option>
+            <option value="attivato">Attivato</option>
+            <option value="in_training">In training</option>
+            <option value="attivo">Attivo</option>
+            <option value="criticita">Criticità</option>
+          </select>
+        </div>
+        <div class="field" id="bcServizioField" style="display:none"><label>Business</label><select id="bcServizio"></select></div>
+        <div class="field"><label>Template salvati</label>
+          <div style="display:flex;gap:8px">
+            <select id="bcTemplate" style="flex:1" onchange="applicaTemplate()"><option value="">— Scrivi da zero —</option></select>
+            <button class="btn btn-secondary btn-small" onclick="eliminaTemplate()" title="Elimina template selezionato">✕</button>
+          </div>
+        </div>
+        <div class="field"><label>Messaggio — usa {nome} per personalizzare</label><textarea id="bcTesto" style="min-height:90px"></textarea></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-small" onclick="salvaTemplate()">Salva come template</button>
+          <button class="btn btn-secondary btn-small" onclick="anteprimaBroadcast()">Anteprima destinatari</button>
+          <button class="btn btn-primary btn-small" onclick="inviaBroadcast()">Invia broadcast</button>
+        </div>
+        <div class="item-meta" id="bcEsito" style="margin-top:10px"></div>
+      </div>
     </div>
 
     <div class="section">
@@ -233,6 +328,30 @@
     </div>
   </div>
 
+  <!-- Modal dettaglio contatto CRM -->
+  <div class="overlay" id="crmOverlay">
+    <div class="modal">
+      <h3 id="crmModalTitle">Contatto</h3>
+      <div id="crmDetailBody"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('crmOverlay')">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal invio messaggio singolo -->
+  <div class="overlay" id="msgOverlay">
+    <div class="modal">
+      <h3 id="msgModalTitle">Invia messaggio</h3>
+      <input type="hidden" id="msgTelegramId" />
+      <div class="field"><label>Testo</label><textarea id="msgTesto" style="min-height:90px"></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('msgOverlay')">Annulla</button>
+        <button class="btn btn-primary" onclick="inviaMessaggio()">Invia</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     let ADMIN_KEY = localStorage.getItem("bu_admin_key") || "";
@@ -260,28 +379,336 @@
       loadAll();
     }
 
-    async function loadAll() {
-      const stats = await (await api("admin/stats")).json();
-      document.getElementById("statLeads").textContent = stats.leads ?? 0;
-      document.getElementById("statQualificati").textContent = stats.clienti ?? 0;
+    let contatti = [];
+    let templates = [];
+    let crmFiltro = "tutti";
+    let ultimiSuggerimenti = [];
+    let ultimiLinks = [];
 
-      const macroRes = await (await api("admin/macro-categorie")).json();
+    const STADIO_LABEL = { lead: "Lead", attivato: "Attivato", in_training: "In training", attivo: "Attivo", criticita: "Criticità" };
+
+    async function loadAll() {
+      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes] = await Promise.all([
+        api("admin/kpi").then((r) => r.json()),
+        api("admin/macro-categorie").then((r) => r.json()),
+        api("admin/categorie").then((r) => r.json()),
+        api("admin/servizi").then((r) => r.json()),
+        api("admin/affiliate-links").then((r) => r.json()),
+        api("admin/suggerimenti").then((r) => r.json()),
+        api("admin/segnalazioni").then((r) => r.json()),
+        api("admin/sponsorboard").then((r) => r.json()),
+        api("admin/crm").then((r) => r.json()),
+        api("admin/templates").then((r) => r.json()),
+      ]);
+
+      renderKpi(kpi);
       macroCategorie = macroRes.macro_categorie || [];
       renderMacro();
-
-      const catRes = await (await api("admin/categorie")).json();
       categorie = catRes.categorie || [];
       renderCategorie();
-
-      const svcRes = await (await api("admin/servizi")).json();
       servizi = svcRes.servizi || [];
       renderServizi();
+      ultimiLinks = linksRes.links || [];
+      renderAffLinks(ultimiLinks);
+      ultimiSuggerimenti = sugRes.suggerimenti || [];
+      renderSuggerimenti(ultimiSuggerimenti);
+      renderDaValidare();
+      renderSegnalazioni(segRes.segnalazioni || []);
+      renderTopBusiness(kpi.top_business || []);
+      renderSponsorboard(boardRes.sponsorboard || []);
+      contatti = crmRes.contatti || [];
+      renderCrmChips();
+      renderCrm();
+      templates = tplRes.templates || [];
+      renderTemplates();
+      renderBcServizi();
+    }
 
-      const linksRes = await (await api("admin/affiliate-links")).json();
-      renderAffLinks(linksRes.links || []);
+    function esc(s) {
+      return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
 
-      const sugRes = await (await api("admin/suggerimenti")).json();
-      renderSuggerimenti(sugRes.suggerimenti || []);
+    function renderKpi(k) {
+      document.getElementById("kpiTotale").textContent = k.totale ?? 0;
+      document.getElementById("kpiOggi").textContent = k.nuovi_oggi ?? 0;
+      document.getElementById("kpi7gg").textContent = k.nuovi_7gg ?? 0;
+      document.getElementById("kpiClienti").textContent = k.clienti ?? 0;
+      const chips = [];
+      if (k.pending_suggerimenti) chips.push(`<span class="pending-chip warn">${k.pending_suggerimenti} candidature da validare</span>`);
+      if (k.pending_links) chips.push(`<span class="pending-chip warn">${k.pending_links} link affiliato in attesa</span>`);
+      if (k.segnalazioni_aperte) chips.push(`<span class="pending-chip alert">${k.segnalazioni_aperte} segnalazioni aperte</span>`);
+      if (!chips.length) chips.push('<span class="pending-chip">Nessuna azione in sospeso</span>');
+      document.getElementById("pendingRow").innerHTML = chips.join("");
+    }
+
+    // Box "Da validare": candidature in revisione + link non ancora approvati, con azioni rapide.
+    function renderDaValidare() {
+      const el = document.getElementById("daValidareList");
+      const sugg = ultimiSuggerimenti.filter((s) => s.stato === "in_revisione");
+      const links = ultimiLinks.filter((l) => !l.approvato);
+      if (!sugg.length && !links.length) { el.innerHTML = '<p class="empty">Tutto validato. Nessuna revisione pendente.</p>'; return; }
+      el.innerHTML = sugg.map((s) => `
+        <div class="item">
+          <div class="item-head">
+            <div style="min-width:0">
+              <div class="item-title">${esc(s.nome)} <span class="badge pending">Candidatura</span></div>
+              <div class="item-meta">da ${esc(s.utente_nome)} · ${esc(s.categoria_nome)}</div>
+              ${s.link ? `<div class="link-preview">${esc(s.link)}</div>` : ""}
+            </div>
+            <div class="item-actions">
+              <button class="btn btn-primary btn-small" onclick="approvaSuggerimento(${s.id})">✓</button>
+              <button class="btn btn-secondary btn-small" style="color:var(--coral)" onclick="rifiutaRapido(${s.id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join("") + links.map((l) => `
+        <div class="item">
+          <div class="item-head">
+            <div style="min-width:0">
+              <div class="item-title">${esc(l.utente_nome)} <span class="badge pending">Link affiliato</span></div>
+              <div class="item-meta">${esc(l.servizio_nome)}</div>
+              <div class="link-preview">${esc(l.ref_link)}</div>
+            </div>
+            <div class="item-actions">
+              <button class="btn btn-primary btn-small" onclick="approveAffLink(${l.id})">✓</button>
+              <button class="btn btn-secondary btn-small" style="color:var(--coral)" onclick="deleteAffLink(${l.id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Rifiuto rapido dal box Da Validare: usa la causale di default senza blocco.
+    async function rifiutaRapido(id) {
+      if (!confirm('Rifiutare con causale "Non conforme"? L\'utente riceverà il motivo su Telegram.')) return;
+      const res = await api("admin/suggerimenti/rifiuta", { method: "POST", body: JSON.stringify({ id, causale: "non_conforme", blocca: false }) });
+      if (!res.ok) { alert("Errore rifiuto"); return; }
+      loadAll();
+    }
+
+    function renderSegnalazioni(segnalazioni) {
+      const el = document.getElementById("segnalazioniList");
+      if (!segnalazioni.length) { el.innerHTML = '<p class="empty">Nessuna segnalazione dagli utenti.</p>'; return; }
+      const aperte = segnalazioni.filter((s) => s.stato === "aperta");
+      const risolte = segnalazioni.filter((s) => s.stato !== "aperta").slice(0, 5);
+      el.innerHTML = [...aperte, ...risolte].map((s) => `
+        <div class="item">
+          <div class="item-head">
+            <div style="min-width:0">
+              <div class="item-title">${esc(s.tipo_label)} <span class="badge ${s.stato}">${s.stato === "aperta" ? "Aperta" : "Risolta"}</span></div>
+              <div class="item-meta">da ${esc(s.utente_nome)}${s.servizio_nome ? " · " + esc(s.servizio_nome) : ""} · ${new Date(s.created_at).toLocaleDateString("it-IT")}</div>
+              ${s.messaggio ? `<div class="item-meta">"${esc(s.messaggio)}"</div>` : ""}
+            </div>
+            <div class="item-actions">
+              ${s.stato === "aperta" ? `<button class="btn btn-primary btn-small" onclick="risolviSegnalazione(${s.id})">Risolvi</button>` : ""}
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function risolviSegnalazione(id) {
+      await api("admin/segnalazioni/risolvi", { method: "POST", body: JSON.stringify({ id }) });
+      loadAll();
+    }
+
+    function renderTopBusiness(top) {
+      const el = document.getElementById("topBusinessList");
+      if (!top.length) { el.innerHTML = '<p class="empty">Nessun business in lista.</p>'; return; }
+      el.innerHTML = top.map((b, i) => `
+        <div class="item">
+          <div class="row-flex">
+            <div class="rank-num">#${i + 1}</div>
+            <div style="flex:1;min-width:0">
+              <div class="item-title">${esc(b.nome)}</div>
+              <div class="item-meta">${b.voti} voti · ${b.attivazioni} attivazioni${b.attivazioni_7gg ? ` · <span style="color:var(--lime)">+${b.attivazioni_7gg} negli ultimi 7gg</span>` : ""}</div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderSponsorboard(board) {
+      const el = document.getElementById("sponsorboardList");
+      if (!board.length) { el.innerHTML = '<p class="empty">Nessuno ha ancora invitato utenti.</p>'; return; }
+      el.innerHTML = board.map((s, i) => `
+        <div class="item">
+          <div class="row-flex">
+            <div class="rank-num">#${i + 1}</div>
+            <div class="avatar-sm">${s.foto_url ? `<img src="${esc(s.foto_url)}" alt="" />` : esc((s.nome || "?")[0].toUpperCase())}</div>
+            <div style="flex:1;min-width:0">
+              <div class="item-title">${esc(s.nome)}</div>
+              <div class="item-meta">${s.invitati} invitati · ${s.attivati} attivati</div>
+            </div>
+            <button class="icon-btn" onclick="openMsgModal(${s.telegram_id}, '${esc(s.nome).replace(/'/g, "\\'")}')" title="Invia messaggio">✉</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // ---- CRM ----
+    function renderCrmChips() {
+      const counts = { tutti: contatti.length };
+      for (const c of contatti) counts[c.stadio] = (counts[c.stadio] || 0) + 1;
+      const stadi = ["tutti", "lead", "attivato", "in_training", "attivo", "criticita"];
+      document.getElementById("crmChips").innerHTML = stadi.map((s) => `
+        <button class="chip ${crmFiltro === s ? "active" : ""}" onclick="setCrmFiltro('${s}')">${s === "tutti" ? "Tutti" : STADIO_LABEL[s]} (${counts[s] || 0})</button>
+      `).join("");
+    }
+
+    function setCrmFiltro(f) { crmFiltro = f; renderCrmChips(); renderCrm(); }
+
+    function renderCrm() {
+      const el = document.getElementById("crmList");
+      const term = document.getElementById("crmSearch").value.trim().toLowerCase();
+      let list = contatti;
+      if (crmFiltro !== "tutti") list = list.filter((c) => c.stadio === crmFiltro);
+      if (term) list = list.filter((c) => c.nome.toLowerCase().includes(term) || c.username.toLowerCase().includes(term));
+      if (!list.length) { el.innerHTML = '<p class="empty">Nessun contatto.</p>'; return; }
+      el.innerHTML = list.slice(0, 50).map((c) => `
+        <div class="item">
+          <div class="row-flex">
+            <div class="avatar-sm">${c.foto_url ? `<img src="${esc(c.foto_url)}" alt="" />` : esc((c.nome || "?")[0].toUpperCase())}</div>
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="openCrmDetail(${c.telegram_id})">
+              <div class="item-title">${esc(c.nome)} <span class="badge ${c.stadio}">${STADIO_LABEL[c.stadio] || c.stadio}</span></div>
+              <div class="item-meta">${c.username ? "@" + esc(c.username) + " · " : ""}${c.servizi_attivati} business${c.sponsor_nome ? " · sponsor: " + esc(c.sponsor_nome) : ""}</div>
+            </div>
+            <div class="item-actions">
+              <select onchange="spostaStadio(${c.telegram_id}, this.value)" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);padding:6px;border-radius:4px;font-size:11px;font-family:inherit" title="Sposta in pipeline">
+                <option value="">Auto</option>
+                ${["lead", "attivato", "in_training", "attivo", "criticita"].map((s) => `<option value="${s}" ${c.override === s ? "selected" : ""}>${STADIO_LABEL[s]}</option>`).join("")}
+              </select>
+              <button class="icon-btn" onclick="openMsgModal(${c.telegram_id}, '${esc(c.nome).replace(/'/g, "\\'")}')" title="Invia messaggio">✉</button>
+            </div>
+          </div>
+        </div>
+      `).join("") + (list.length > 50 ? `<p class="empty">Mostrati i primi 50 di ${list.length} — usa la ricerca per restringere.</p>` : "");
+    }
+
+    async function spostaStadio(telegramId, override) {
+      await api("admin/crm-stage", { method: "POST", body: JSON.stringify({ telegram_id: telegramId, override: override || null }) });
+      const crmRes = await (await api("admin/crm")).json();
+      contatti = crmRes.contatti || [];
+      renderCrmChips();
+      renderCrm();
+    }
+
+    async function openCrmDetail(telegramId) {
+      document.getElementById("crmModalTitle").textContent = "Caricamento...";
+      document.getElementById("crmDetailBody").innerHTML = "";
+      openModal("crmOverlay");
+      const d = await (await api(`admin/crm-detail?id=${telegramId}`)).json();
+      if (d.error) { document.getElementById("crmModalTitle").textContent = "Errore"; return; }
+      const nome = [d.lead.nome, d.lead.cognome].filter(Boolean).join(" ") || d.lead.username || `ID ${telegramId}`;
+      document.getElementById("crmModalTitle").textContent = nome;
+      document.getElementById("crmDetailBody").innerHTML = `
+        <div class="detail-block">
+          <div class="db-label">Profilo</div>
+          <span class="badge ${d.stadio}">${STADIO_LABEL[d.stadio] || d.stadio}</span>
+          ${d.lead.username ? ` <a href="https://t.me/${esc(d.lead.username)}" target="_blank" style="color:var(--blue);font-size:12px">@${esc(d.lead.username)}</a>` : ""}
+          <div class="item-meta" style="margin-top:6px">Iscritto il ${new Date(d.lead.created_at).toLocaleDateString("it-IT")}${d.sponsor ? " · Sponsor: " + esc(d.sponsor.nome) : " · Diretto (nessuno sponsor)"} · ${d.invitati_count} invitati</div>
+        </div>
+        <div class="detail-block">
+          <div class="db-label">Business attivati (${d.business_attivati.length})</div>
+          ${d.business_attivati.length ? d.business_attivati.map((b) => `<div>${esc(b.nome)} — ${new Date(b.data).toLocaleDateString("it-IT")}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuno</span>'}
+        </div>
+        <div class="detail-block">
+          <div class="db-label">Tutorial</div>
+          ${d.tutorial.length ? d.tutorial.map((t) => `<div>${esc(t.servizio_nome)} — step ${t.ultimo_step}${t.completato ? ' <span style="color:var(--lime)">✓ completato</span>' : ""}</div>`).join("") : '<span style="color:var(--text-dim)">Nessun tutorial iniziato</span>'}
+        </div>
+        <div class="detail-block">
+          <div class="db-label">Candidature</div>
+          ${d.suggerimenti.length ? d.suggerimenti.map((s) => `<div>${esc(s.nome)} — ${esc(s.stato)}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuna</span>'}
+        </div>
+        <div class="detail-block">
+          <div class="db-label">Follow-up inviati</div>
+          ${d.followups.length ? d.followups.map((f) => `<div>Day ${f.giorno} — ${new Date(f.inviato_at).toLocaleDateString("it-IT")}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuno</span>'}
+        </div>
+        <button class="btn btn-primary btn-small" onclick="closeModal('crmOverlay');openMsgModal(${telegramId}, '${esc(nome).replace(/'/g, "\\'")}')">✉ Invia messaggio</button>
+      `;
+    }
+
+    function openMsgModal(telegramId, nome) {
+      document.getElementById("msgModalTitle").textContent = `Messaggio a ${nome}`;
+      document.getElementById("msgTelegramId").value = telegramId;
+      document.getElementById("msgTesto").value = "";
+      openModal("msgOverlay");
+    }
+
+    async function inviaMessaggio() {
+      const telegramId = parseInt(document.getElementById("msgTelegramId").value);
+      const testo = document.getElementById("msgTesto").value.trim();
+      if (!testo) return;
+      const res = await api("admin/messaggio", { method: "POST", body: JSON.stringify({ telegram_id: telegramId, testo }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { alert("Invio fallito: " + (data.error || res.status)); return; }
+      closeModal("msgOverlay");
+    }
+
+    // ---- Broadcast ----
+    function onBcFiltroChange() {
+      const f = document.getElementById("bcFiltro").value;
+      document.getElementById("bcStadioField").style.display = f === "stadio" ? "" : "none";
+      document.getElementById("bcServizioField").style.display = f === "no_servizio" ? "" : "none";
+    }
+
+    function renderBcServizi() {
+      document.getElementById("bcServizio").innerHTML = servizi.map((s) => `<option value="${s.id}">${esc(s.nome)}</option>`).join("");
+    }
+
+    function renderTemplates() {
+      document.getElementById("bcTemplate").innerHTML = '<option value="">— Scrivi da zero —</option>' +
+        templates.map((t) => `<option value="${t.id}">${esc(t.nome)}</option>`).join("");
+    }
+
+    function applicaTemplate() {
+      const id = parseInt(document.getElementById("bcTemplate").value);
+      const t = templates.find((x) => x.id === id);
+      if (t) document.getElementById("bcTesto").value = t.testo;
+    }
+
+    async function salvaTemplate() {
+      const testo = document.getElementById("bcTesto").value.trim();
+      if (!testo) { alert("Scrivi prima il messaggio."); return; }
+      const nome = prompt("Nome del template (es. Alert Scam, Nuovo Tutorial):");
+      if (!nome) return;
+      await api("admin/templates/save", { method: "POST", body: JSON.stringify({ nome: nome.trim(), testo }) });
+      templates = (await (await api("admin/templates")).json()).templates || [];
+      renderTemplates();
+    }
+
+    async function eliminaTemplate() {
+      const id = parseInt(document.getElementById("bcTemplate").value);
+      if (!id || !confirm("Eliminare il template selezionato?")) return;
+      await api("admin/templates/delete", { method: "POST", body: JSON.stringify({ id }) });
+      templates = (await (await api("admin/templates")).json()).templates || [];
+      renderTemplates();
+    }
+
+    function filtroBroadcast() {
+      const tipo = document.getElementById("bcFiltro").value;
+      return {
+        tipo,
+        stadio: document.getElementById("bcStadio").value,
+        servizio_id: parseInt(document.getElementById("bcServizio").value) || null,
+      };
+    }
+
+    async function anteprimaBroadcast() {
+      const res = await api("admin/broadcast", { method: "POST", body: JSON.stringify({ anteprima: true, filtro: filtroBroadcast() }) });
+      const d = await res.json();
+      document.getElementById("bcEsito").textContent = `Destinatari: ${d.destinatari_count}${d.esempi?.length ? " — es: " + d.esempi.join(", ") : ""}`;
+    }
+
+    async function inviaBroadcast() {
+      const testo = document.getElementById("bcTesto").value.trim();
+      if (!testo) { alert("Scrivi il messaggio."); return; }
+      const pre = await (await api("admin/broadcast", { method: "POST", body: JSON.stringify({ anteprima: true, filtro: filtroBroadcast() }) })).json();
+      if (!confirm(`Inviare a ${pre.destinatari_count} utenti?`)) return;
+      document.getElementById("bcEsito").textContent = "Invio in corso...";
+      const res = await api("admin/broadcast", { method: "POST", body: JSON.stringify({ testo, filtro: filtroBroadcast() }) });
+      const d = await res.json();
+      document.getElementById("bcEsito").textContent = res.ok ? `Fatto: ${d.inviati} inviati, ${d.falliti} falliti.` : "Errore: " + (d.error || res.status);
     }
 
     function renderSuggerimenti(suggerimenti) {
