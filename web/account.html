@@ -229,6 +229,12 @@
 
     <!-- ===== VISTA PROFILO ===== -->
     <div class="tabpanel active" id="view-profilo">
+      <div class="rtabs">
+        <button class="rtab active" id="ptabDati" onclick="switchProfilo('dati')">I miei dati</button>
+        <button class="rtab" id="ptabAttivita" onclick="switchProfilo('attivita')">Attività</button>
+      </div>
+
+      <div class="rpanel active" id="profilo-dati">
       <div class="card">
         <h2>Dati anagrafici</h2>
         <div class="field"><label>Nome</label><input id="fNome" /></div>
@@ -297,8 +303,10 @@
 
       <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
       <p class="save-note" id="saveNote"></p>
+      </div>
 
-      <div class="card" style="margin-top:14px">
+      <div class="rpanel" id="profilo-attivita">
+      <div class="card">
         <h2>I miei business attivi</h2>
         <div id="prodottiRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>
       </div>
@@ -306,6 +314,7 @@
       <div class="card" id="suggStatiCard" style="display:none">
         <h2>Le tue candidature</h2>
         <div id="suggStatiRows"></div>
+      </div>
       </div>
     </div>
 
@@ -474,6 +483,17 @@
       window.scrollTo({ top: 0 });
     }
     window.switchView = switchView;
+
+    // Schede interne alla vista Profilo: I miei dati / Attività.
+    function switchProfilo(sub) {
+      const s = sub === "attivita" ? "attivita" : "dati";
+      document.getElementById("profilo-dati").classList.toggle("active", s === "dati");
+      document.getElementById("profilo-attivita").classList.toggle("active", s === "attivita");
+      document.getElementById("ptabDati").classList.toggle("active", s === "dati");
+      document.getElementById("ptabAttivita").classList.toggle("active", s === "attivita");
+      try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
+    }
+    window.switchProfilo = switchProfilo;
 
     // Schede interne alla vista Rete: Iscritti / La mia pagina.
     function switchRete(sub) {
