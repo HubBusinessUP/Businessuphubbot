@@ -130,25 +130,22 @@
   .prod-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
   .prod-open { width: 34px; height: 34px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; border: none; cursor: pointer; }
   .prod-done { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
+  .ph-home { width: 40px; height: 40px; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+  .ph-home:active { transform: scale(0.94); }
 </style>
 </head>
 <body>
   <div class="container">
-    <div class="top">
-      <button class="back" onclick="window.location.href='dashboard.html?_=' + Date.now()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
-      <div>
-        <h1>Il mio account</h1>
-        <p>Dati, area personale e affiliazione</p>
-      </div>
-    </div>
-
     <div class="card profile-head">
       <div class="ph-avatar" id="phAvatar"><span id="phInitials">--</span></div>
-      <div class="ph-body">
+      <div class="ph-body" style="flex:1">
         <div class="ph-name" id="phName">Utente</div>
         <div class="ph-user" id="phUser"></div>
         <div class="ph-badge" id="phBadge">In attesa di verifica</div>
       </div>
+      <button class="ph-home" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Torna alla home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      </button>
     </div>
 
     <!-- ===== VISTA RETE ===== -->
