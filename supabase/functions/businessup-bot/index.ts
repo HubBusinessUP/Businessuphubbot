@@ -35,6 +35,33 @@ async function sendMessage(chatId: number, text: string, markup?: any) {
   })
 }
 
+async function sendPhoto(chatId: number, photoFileId: string, caption?: string, markup?: any) {
+  const body: any = { chat_id: chatId, photo: photoFileId }
+  if (caption) body.caption = caption
+  if (markup) body.reply_markup = markup
+  return fetch(`${TG_API}/sendPhoto`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+}
+
+async function answerCallback(callbackId: string, text?: string) {
+  return fetch(`${TG_API}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ callback_query_id: callbackId, text: text || "" }),
+  })
+}
+
+async function editMessageText(chatId: number, messageId: number, text: string) {
+  return fetch(`${TG_API}/editMessageText`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId, text }),
+  })
+}
+
 // Verifica la firma initData di una Telegram Mini App; ritorna telegram_id se valida.
 async function validateInitData(initData: string): Promise<number | null> {
   try {
@@ -155,11 +182,110 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   )
 }
 
+// Prepara un annuncio (testo o foto+didascalia) da inviare a tutti: lo salva come "pending" e chiede conferma con un bottone.
+async function preparaNews(chatId: number, tipo: "text" | "photo", testo: string, photoFileId?: string) {
+  await supabase.from("broadcast_pending").upsert(
+    { telegram_id: ADMIN_ID, tipo, testo: testo || null, photo_file_id: photoFileId || null },
+    { onConflict: "telegram_id" },
+  )
+  const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
+  const markup = { inline_keyboard: [[
+    { text: `✅ Invia a tutti (${count ?? 0})`, callback_data: "news_send" },
+    { text: "❌ Annulla", callback_data: "news_cancel" },
+  ]] }
+  if (tipo === "photo" && photoFileId) {
+    await sendPhoto(chatId, photoFileId, `ANTEPRIMA — ecco come arriverà:\n\n${testo || ""}`, markup)
+  } else {
+    await sendMessage(chatId, `ANTEPRIMA — ecco come arriverà:\n\n${testo}`, markup)
+  }
+}
+
+// Invia l'annuncio pending a tutti gli utenti che hanno avviato il bot.
+async function inviaNewsATutti(): Promise<{ inviati: number; falliti: number }> {
+  const { data: pending } = await supabase.from("broadcast_pending").select("*").eq("telegram_id", ADMIN_ID).maybeSingle()
+  if (!pending) return { inviati: 0, falliti: 0 }
+  const { data: destinatari } = await supabase.from("leads").select("telegram_id").eq("bot_started", true)
+
+  let inviati = 0, falliti = 0
+  for (const d of destinatari ?? []) {
+    const res = pending.tipo === "photo" && pending.photo_file_id
+      ? await sendPhoto((d as any).telegram_id, pending.photo_file_id, pending.testo || undefined)
+      : await sendMessage((d as any).telegram_id, pending.testo || "")
+    const data = await res.json().catch(() => ({}))
+    if (data.ok) inviati++
+    else falliti++
+    await new Promise((r) => setTimeout(r, 50))
+  }
+  await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
+  await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast_chat", dettaglio: `inviati:${inviati} falliti:${falliti}` })
+  return { inviati, falliti }
+}
+
+const NEWS_HELP = `📣 Come inviare un annuncio a tutti gli iscritti:\n\n• Solo testo: scrivi /news seguito dal messaggio.\n  Esempio: /news Nuova guida pubblicata! Guardala nell'app.\n\n• Con immagine: invia una foto e come didascalia scrivi /news e poi il testo.\n\nTi mostro sempre un'anteprima con il bottone di conferma prima di inviare.`
+
 async function handleUpdate(u: any) {
-  if (!u.message?.text) return
+  // Conferma o annullo dell'invio annuncio (bottoni sotto l'anteprima), solo per l'admin.
+  if (u.callback_query) {
+    const cb = u.callback_query
+    const fromId = cb.from?.id
+    const chatId = cb.message?.chat?.id
+    const messageId = cb.message?.message_id
+    if (fromId !== ADMIN_ID) { await answerCallback(cb.id); return }
+    if (cb.data === "news_send") {
+      await answerCallback(cb.id, "Invio in corso...")
+      if (chatId && messageId) await editMessageText(chatId, messageId, "Invio in corso...")
+      const { inviati, falliti } = await inviaNewsATutti()
+      if (chatId) await sendMessage(chatId, `✅ Annuncio inviato.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+    } else if (cb.data === "news_cancel") {
+      await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
+      await answerCallback(cb.id, "Annullato")
+      if (chatId && messageId) await editMessageText(chatId, messageId, "Annuncio annullato.")
+    } else {
+      await answerCallback(cb.id)
+    }
+    return
+  }
+
+  if (!u.message) return
   const from = u.message.from
   const chatId = u.message.chat.id
+
+  // Annuncio con immagine: foto la cui didascalia inizia per /news (solo admin).
+  if (u.message.photo && from?.id === ADMIN_ID) {
+    const caption = (u.message.caption || "").trim()
+    if (caption === "/news" || caption.startsWith("/news ")) {
+      const fileId = u.message.photo[u.message.photo.length - 1].file_id
+      const testo = caption.slice(5).trim()
+      await preparaNews(chatId, "photo", testo, fileId)
+      return
+    }
+  }
+
+  if (!u.message.text) return
   const text = u.message.text.trim()
+
+  // Comando annuncio testuale (solo admin).
+  if (from?.id === ADMIN_ID && (text === "/news" || text.startsWith("/news "))) {
+    const testo = text.slice(5).trim()
+    if (!testo) { await sendMessage(chatId, NEWS_HELP); return }
+    await preparaNews(chatId, "text", testo)
+    return
+  }
+
+  // Conferma/annulla testuali: fallback ai bottoni per confermare l'invio dell'annuncio.
+  if (from?.id === ADMIN_ID && (text === "/conferma" || text === "/annulla")) {
+    const { data: pending } = await supabase.from("broadcast_pending").select("telegram_id").eq("telegram_id", ADMIN_ID).maybeSingle()
+    if (!pending) { await sendMessage(chatId, "Non c'è nessun annuncio in attesa. Scrivi /news per prepararne uno."); return }
+    if (text === "/annulla") {
+      await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
+      await sendMessage(chatId, "Annuncio annullato.")
+    } else {
+      await sendMessage(chatId, "Invio in corso...")
+      const { inviati, falliti } = await inviaNewsATutti()
+      await sendMessage(chatId, `✅ Annuncio inviato.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+    }
+    return
+  }
 
   if (text === "/start" || text.startsWith("/start ")) {
     const payload = text.startsWith("/start ") ? text.slice(7).trim() : ""
@@ -1278,6 +1404,18 @@ serve(async (req) => {
       if (secret !== WEBHOOK_SECRET) return json({ error: "unauthorized" }, 401)
       await handleUpdate(await req.json())
       return json({ ok: true })
+    }
+
+    // Riconfigura il webhook includendo i click dei bottoni (callback_query), oltre ai messaggi.
+    if (sub === "admin/setup-webhook" && req.method === "POST") {
+      if (req.headers.get("x-admin-key") !== ADMIN_API_KEY) return json({ error: "unauthorized" }, 401)
+      const webhookUrl = `${url.origin}${url.pathname.replace(/\/admin\/setup-webhook$/, "/telegram")}`
+      const res = await fetch(`${TG_API}/setWebhook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: webhookUrl, secret_token: WEBHOOK_SECRET, allowed_updates: ["message", "callback_query"] }),
+      })
+      return json({ ok: true, telegram: await res.json(), webhook_url: webhookUrl })
     }
 
     if (sub === "me" && req.method === "GET") {
