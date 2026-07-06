@@ -37,6 +37,18 @@
   .rpanel { display: none; }
   .rpanel.active { display: block; }
 
+  .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
+
+  .share-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
+  .share-overlay.open { display: flex; }
+  .share-sheet { background: var(--ink); border: 1px solid var(--border); border-radius: 12px 12px 0 0; width: 100%; max-width: 480px; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
+  .share-handle { width: 36px; height: 4px; border-radius: 3px; background: var(--border); margin: 0 auto 14px; }
+  .share-sheet h3 { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+  .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; margin-bottom: 14px; }
+  .share-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; color: var(--text); font-family: inherit; cursor: pointer; }
+  .share-ico { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .share-opt span { font-size: 10.5px; font-weight: 600; color: var(--text-dim); }
+
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
   .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
   .top h1 { font-size: 19px; font-weight: 700; }
@@ -164,10 +176,7 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn" style="flex:1;background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="copiaInvito()">Copia</button>
-            <button class="btn" style="flex:1;background:var(--blue);color:#fff" onclick="condividiInvito()">Condividi</button>
-          </div>
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff;margin-top:10px" onclick="condividiInvito()">Condividi</button>
         </div>
 
         <div class="card" id="partnerCard" style="display:none">
@@ -210,8 +219,8 @@
               </button>
             </div>
             <div style="display:flex;gap:8px">
-              <button class="btn" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
-              <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiPagina()">Condividi</button>
+              <button class="btn btn-sm" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
+              <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="condividiPagina()">Condividi</button>
             </div>
           </div>
         </div>
@@ -297,6 +306,22 @@
       <div class="card" id="suggStatiCard" style="display:none">
         <h2>Le tue candidature</h2>
         <div id="suggStatiRows"></div>
+      </div>
+    </div>
+
+    <div class="share-overlay" id="shareOverlay" onclick="if(event.target===this) closeShare()">
+      <div class="share-sheet">
+        <div class="share-handle"></div>
+        <h3 id="shareTitle">Condividi</h3>
+        <div class="share-grid">
+          <button class="share-opt" onclick="shareTo('whatsapp')"><span class="share-ico" style="background:#25D366"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3C8.5 21.5 10.2 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.1c-1.6 0-3.1-.4-4.5-1.2l-.3-.2-3.3.9.9-3.2-.2-.3C3.7 14 3.3 12.5 3.3 12c0-4.8 3.9-8.7 8.7-8.7s8.7 3.9 8.7 8.7-3.9 8.7-8.7 8.7z"/></svg></span><span>WhatsApp</span></button>
+          <button class="share-opt" onclick="shareTo('telegram')"><span class="share-ico" style="background:#29a9eb"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></span><span>Telegram</span></button>
+          <button class="share-opt" onclick="shareTo('facebook')"><span class="share-ico" style="background:#1877f2"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></span><span>Facebook</span></button>
+          <button class="share-opt" onclick="shareTo('x')"><span class="share-ico" style="background:#000"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M18.9 2h3.3l-7.2 8.3L23.5 22h-6.6l-5.2-6.8L5.7 22H2.4l7.7-8.8L2 2h6.8l4.7 6.2L18.9 2zm-1.2 18h1.8L7.1 3.9H5.2L17.7 20z"/></svg></span><span>X</span></button>
+          <button class="share-opt" onclick="shareTo('email')"><span class="share-ico" style="background:var(--blue)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7 10-7"/></svg></span><span>Email</span></button>
+          <button class="share-opt" onclick="shareCopy()"><span class="share-ico" style="background:#2b3040"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span><span>Copia</span></button>
+        </div>
+        <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="closeShare()">Chiudi</button>
       </div>
     </div>
 
@@ -574,12 +599,45 @@
     }
     window.copiaInvito = copiaInvito;
 
-    function condividiInvito() {
-      if (!inviteLink) return;
+    // Pannello di condivisione multi-social (WhatsApp, Telegram, Facebook, X, Email, Copia).
+    let shareUrl = "", shareText = "";
+    function openShare(url, text, titolo) {
+      if (!url) return;
+      shareUrl = url; shareText = text || "";
+      document.getElementById("shareTitle").textContent = titolo || "Condividi";
       try { tg?.HapticFeedback?.impactOccurred("light"); } catch (e) {}
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent("Entra in Business UP con il mio invito:")}`;
-      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
-      else window.open(shareUrl, "_blank");
+      document.getElementById("shareOverlay").classList.add("open");
+    }
+    function closeShare() { document.getElementById("shareOverlay").classList.remove("open"); }
+    window.closeShare = closeShare;
+
+    function shareTo(net) {
+      const u = encodeURIComponent(shareUrl), t = encodeURIComponent(shareText);
+      if (net === "telegram") {
+        const tgUrl = `https://t.me/share/url?url=${u}&text=${t}`;
+        if (tg?.openTelegramLink) tg.openTelegramLink(tgUrl); else window.open(tgUrl, "_blank");
+      } else {
+        const map = {
+          whatsapp: `https://wa.me/?text=${t}%20${u}`,
+          facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+          x: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,
+          email: `mailto:?subject=${t}&body=${t}%20${u}`,
+        };
+        if (map[net]) window.open(map[net], "_blank");
+      }
+      closeShare();
+    }
+    window.shareTo = shareTo;
+
+    function shareCopy() {
+      if (navigator.clipboard) navigator.clipboard.writeText(shareUrl).catch(() => {});
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+      closeShare();
+    }
+    window.shareCopy = shareCopy;
+
+    function condividiInvito() {
+      openShare(inviteLink, "Entra in Business UP con il mio invito:", "Condividi il tuo invito");
     }
     window.condividiInvito = condividiInvito;
 
@@ -672,10 +730,7 @@
     window.copiaPagina = copiaPagina;
 
     function condividiPagina() {
-      if (!paginaLink) return;
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(paginaLink)}&text=${encodeURIComponent("La mia pagina su Business UP:")}`;
-      if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
-      else window.open(shareUrl, "_blank");
+      openShare(paginaLink, "La mia pagina su Business UP:", "Condividi la tua pagina");
     }
     window.condividiPagina = condividiPagina;
 
