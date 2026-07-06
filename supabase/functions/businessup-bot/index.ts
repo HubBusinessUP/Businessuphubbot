@@ -46,6 +46,28 @@ async function sendPhoto(chatId: number, photoFileId: string, caption?: string, 
   })
 }
 
+async function sendVideo(chatId: number, videoFileId: string, caption?: string, markup?: any) {
+  const body: any = { chat_id: chatId, video: videoFileId }
+  if (caption) body.caption = caption
+  if (markup) body.reply_markup = markup
+  return fetch(`${TG_API}/sendVideo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+}
+
+async function sendAnimation(chatId: number, animationFileId: string, caption?: string, markup?: any) {
+  const body: any = { chat_id: chatId, animation: animationFileId }
+  if (caption) body.caption = caption
+  if (markup) body.reply_markup = markup
+  return fetch(`${TG_API}/sendAnimation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+}
+
 async function answerCallback(callbackId: string, text?: string) {
   return fetch(`${TG_API}/answerCallbackQuery`, {
     method: "POST",
@@ -182,10 +204,18 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   )
 }
 
-// Prepara un annuncio (testo o foto+didascalia) da inviare a tutti: lo salva come "pending" e chiede conferma con un bottone.
-async function preparaNews(chatId: number, tipo: "text" | "photo", testo: string, photoFileId?: string) {
+// Invia un contenuto (testo/foto/video/gif) a una chat, riusando il file_id salvato.
+async function inviaContenuto(chatId: number, tipo: string, testo: string | null, mediaFileId: string | null, markup?: any) {
+  if (tipo === "photo" && mediaFileId) return sendPhoto(chatId, mediaFileId, testo || undefined, markup)
+  if (tipo === "video" && mediaFileId) return sendVideo(chatId, mediaFileId, testo || undefined, markup)
+  if (tipo === "animation" && mediaFileId) return sendAnimation(chatId, mediaFileId, testo || undefined, markup)
+  return sendMessage(chatId, testo || "", markup)
+}
+
+// Prepara un annuncio (testo o media+didascalia) da inviare a tutti: lo salva come "pending" e chiede conferma con un bottone.
+async function preparaNews(chatId: number, tipo: string, testo: string, mediaFileId?: string) {
   await supabase.from("broadcast_pending").upsert(
-    { telegram_id: ADMIN_ID, tipo, testo: testo || null, photo_file_id: photoFileId || null },
+    { telegram_id: ADMIN_ID, tipo, testo: testo || null, photo_file_id: mediaFileId || null },
     { onConflict: "telegram_id" },
   )
   const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
@@ -193,35 +223,46 @@ async function preparaNews(chatId: number, tipo: "text" | "photo", testo: string
     { text: `✅ Invia a tutti (${count ?? 0})`, callback_data: "news_send" },
     { text: "❌ Annulla", callback_data: "news_cancel" },
   ]] }
-  if (tipo === "photo" && photoFileId) {
-    await sendPhoto(chatId, photoFileId, `ANTEPRIMA — ecco come arriverà:\n\n${testo || ""}`, markup)
-  } else {
-    await sendMessage(chatId, `ANTEPRIMA — ecco come arriverà:\n\n${testo}`, markup)
-  }
+  const caption = testo ? `ANTEPRIMA — ecco come arriverà:\n\n${testo}` : "ANTEPRIMA — ecco come arriverà (nessun testo, solo il media)."
+  await inviaContenuto(chatId, tipo, caption, mediaFileId || null, markup)
+}
+
+// Attiva la modalità "in attesa del contenuto": il prossimo messaggio dell'admin diventa l'annuncio.
+async function attendiNews(chatId: number) {
+  await supabase.from("broadcast_pending").upsert(
+    { telegram_id: ADMIN_ID, tipo: "awaiting", testo: null, photo_file_id: null },
+    { onConflict: "telegram_id" },
+  )
+  await sendMessage(chatId, "📣 Ok! Mandami ora l'annuncio da inviare a tutti: può essere testo, una foto o un video (con l'eventuale didascalia).\n\nScrivi /annulla per uscire.")
 }
 
 // Invia l'annuncio pending a tutti gli utenti che hanno avviato il bot.
 async function inviaNewsATutti(): Promise<{ inviati: number; falliti: number }> {
   const { data: pending } = await supabase.from("broadcast_pending").select("*").eq("telegram_id", ADMIN_ID).maybeSingle()
-  if (!pending) return { inviati: 0, falliti: 0 }
+  if (!pending || pending.tipo === "awaiting") return { inviati: 0, falliti: 0 }
   const { data: destinatari } = await supabase.from("leads").select("telegram_id").eq("bot_started", true)
 
   let inviati = 0, falliti = 0
   for (const d of destinatari ?? []) {
-    const res = pending.tipo === "photo" && pending.photo_file_id
-      ? await sendPhoto((d as any).telegram_id, pending.photo_file_id, pending.testo || undefined)
-      : await sendMessage((d as any).telegram_id, pending.testo || "")
+    const res = await inviaContenuto((d as any).telegram_id, pending.tipo, pending.testo, pending.photo_file_id)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
     else falliti++
     await new Promise((r) => setTimeout(r, 50))
   }
   await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
-  await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast_chat", dettaglio: `inviati:${inviati} falliti:${falliti}` })
+  await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast_chat", dettaglio: `${pending.tipo} inviati:${inviati} falliti:${falliti}` })
   return { inviati, falliti }
 }
 
-const NEWS_HELP = `📣 Come inviare un annuncio a tutti gli iscritti:\n\n• Solo testo: scrivi /news seguito dal messaggio.\n  Esempio: /news Nuova guida pubblicata! Guardala nell'app.\n\n• Con immagine: invia una foto e come didascalia scrivi /news e poi il testo.\n\nTi mostro sempre un'anteprima con il bottone di conferma prima di inviare.`
+// Estrae tipo e file_id del media da un messaggio Telegram (foto, video, gif); null se non è un media supportato.
+function estraiMedia(msg: any): { tipo: string; fileId: string } | null {
+  if (msg.photo?.length) return { tipo: "photo", fileId: msg.photo[msg.photo.length - 1].file_id }
+  if (msg.video?.file_id) return { tipo: "video", fileId: msg.video.file_id }
+  if (msg.animation?.file_id) return { tipo: "animation", fileId: msg.animation.file_id }
+  if (msg.document?.mime_type?.startsWith("video/") && msg.document.file_id) return { tipo: "video", fileId: msg.document.file_id }
+  return null
+}
 
 async function handleUpdate(u: any) {
   // Conferma o annullo dell'invio annuncio (bottoni sotto l'anteprima), solo per l'admin.
@@ -249,42 +290,54 @@ async function handleUpdate(u: any) {
   if (!u.message) return
   const from = u.message.from
   const chatId = u.message.chat.id
+  const text = (u.message.text || "").trim()
+  const caption = (u.message.caption || "").trim()
+  const isAdmin = from?.id === ADMIN_ID
 
-  // Annuncio con immagine: foto la cui didascalia inizia per /news (solo admin).
-  if (u.message.photo && from?.id === ADMIN_ID) {
-    const caption = (u.message.caption || "").trim()
-    if (caption === "/news" || caption.startsWith("/news ")) {
-      const fileId = u.message.photo[u.message.photo.length - 1].file_id
-      const testo = caption.slice(5).trim()
-      await preparaNews(chatId, "photo", testo, fileId)
+  // ----- Flusso annunci (solo admin) -----
+  if (isAdmin) {
+    // /news [testo]: senza testo apre la modalità (mandami il contenuto), con testo prepara subito.
+    if (text === "/news") { await attendiNews(chatId); return }
+    if (text.startsWith("/news ")) {
+      const testo = text.slice(6).trim()
+      if (testo) await preparaNews(chatId, "text", testo)
+      else await attendiNews(chatId)
       return
     }
-  }
 
-  if (!u.message.text) return
-  const text = u.message.text.trim()
-
-  // Comando annuncio testuale (solo admin).
-  if (from?.id === ADMIN_ID && (text === "/news" || text.startsWith("/news "))) {
-    const testo = text.slice(5).trim()
-    if (!testo) { await sendMessage(chatId, NEWS_HELP); return }
-    await preparaNews(chatId, "text", testo)
-    return
-  }
-
-  // Conferma/annulla testuali: fallback ai bottoni per confermare l'invio dell'annuncio.
-  if (from?.id === ADMIN_ID && (text === "/conferma" || text === "/annulla")) {
-    const { data: pending } = await supabase.from("broadcast_pending").select("telegram_id").eq("telegram_id", ADMIN_ID).maybeSingle()
-    if (!pending) { await sendMessage(chatId, "Non c'è nessun annuncio in attesa. Scrivi /news per prepararne uno."); return }
-    if (text === "/annulla") {
-      await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
-      await sendMessage(chatId, "Annuncio annullato.")
-    } else {
-      await sendMessage(chatId, "Invio in corso...")
-      const { inviati, falliti } = await inviaNewsATutti()
-      await sendMessage(chatId, `✅ Annuncio inviato.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+    // Conferma/annulla: fallback testuale ai bottoni dell'anteprima.
+    if (text === "/conferma" || text === "/annulla") {
+      const { data: pending } = await supabase.from("broadcast_pending").select("tipo").eq("telegram_id", ADMIN_ID).maybeSingle()
+      if (!pending) { await sendMessage(chatId, "Non c'è nessun annuncio in attesa. Scrivi /news per prepararne uno."); return }
+      if (text === "/annulla") {
+        await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
+        await sendMessage(chatId, "Annuncio annullato.")
+      } else if (pending.tipo === "awaiting") {
+        await sendMessage(chatId, "Prima mandami il contenuto dell'annuncio (testo, foto o video).")
+      } else {
+        await sendMessage(chatId, "Invio in corso...")
+        const { inviati, falliti } = await inviaNewsATutti()
+        await sendMessage(chatId, `✅ Annuncio inviato.\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+      }
+      return
     }
-    return
+
+    const media = estraiMedia(u.message)
+
+    // Scorciatoia: media con didascalia che inizia per /news.
+    if (media && (caption === "/news" || caption.startsWith("/news "))) {
+      await preparaNews(chatId, media.tipo, caption.slice(5).trim(), media.fileId)
+      return
+    }
+
+    // Modalità attesa: il messaggio successivo (media o testo non-comando) diventa l'annuncio.
+    const { data: pending } = await supabase.from("broadcast_pending").select("tipo").eq("telegram_id", ADMIN_ID).maybeSingle()
+    if (pending?.tipo === "awaiting") {
+      if (media) { await preparaNews(chatId, media.tipo, caption, media.fileId); return }
+      if (text && !text.startsWith("/")) { await preparaNews(chatId, "text", text); return }
+      await sendMessage(chatId, "Contenuto non supportato. Mandami testo, una foto o un video.")
+      return
+    }
   }
 
   if (text === "/start" || text.startsWith("/start ")) {
