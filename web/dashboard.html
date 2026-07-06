@@ -1005,6 +1005,8 @@
       await loadMe();
       loadBusinessList();
       loadAffiliazione();
+      // Arrivo da Rete/Profilo col bottone "+": apre subito il pannello candida business.
+      if (location.hash === "#suggerisci") { history.replaceState(null, "", location.pathname); openSuggestSheet(); }
     }
 
     if (!initData) {
