@@ -122,9 +122,14 @@
       <p class="hint" id="saveNote" style="text-align:center;margin-top:10px"></p>
 
       <div class="card" style="margin-top:14px">
-        <div class="section-title">I tuoi link</div>
-        <p class="hint" style="margin-bottom:10px">Si aggiungono da ogni scheda servizio, sezione "Diventa affiliato". Solo i link approvati compaiono nella pagina pubblica.</p>
-        <div id="mieiLinkRows"><p class="empty">Non hai ancora inserito link affiliato.</p></div>
+        <div class="section-title">I miei link referral</div>
+        <div id="linkNonPartner" style="display:none">
+          <p class="hint">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b>: vai nel profilo per vedere a che punto sei.</p>
+        </div>
+        <div id="linkEditor" style="display:none">
+          <p class="hint" style="margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link nel tutorial. I domini conosciuti si attivano subito, gli altri passano dall'approvazione admin.</p>
+          <div id="mieiLinkRows"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -172,22 +177,66 @@
       document.getElementById("sYoutube").value = socialMap.youtube || "";
       document.getElementById("sFacebook").value = socialMap.facebook || "";
 
-      const miei = data.miei_link || [];
-      const el = document.getElementById("mieiLinkRows");
-      if (miei.length) {
-        el.innerHTML = miei.map((l) => `
-          <div class="row">
-            <div class="row-body">
-              <div class="row-name">${l.servizio_nome}</div>
-              <div class="row-sub" style="word-break:break-all">${l.ref_link}</div>
-            </div>
-            <div class="row-badge ${l.approvato ? "" : "pending"}">${l.approvato ? "Approvato" : "In attesa"}</div>
-          </div>
-        `).join("");
-      }
+      renderLinkEditor(data);
 
       document.getElementById("content").style.display = "block";
     }
+
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // Control room Partner: tutti i business dell'Hub, ognuno con il campo per il proprio link referral.
+    function renderLinkEditor(data) {
+      if (!data.is_partner) {
+        document.getElementById("linkNonPartner").style.display = "block";
+        return;
+      }
+      const mieiMap = {};
+      (data.miei_link || []).forEach((l) => { mieiMap[l.servizio_id] = l; });
+      const el = document.getElementById("mieiLinkRows");
+      el.innerHTML = (data.servizi || []).map((s) => {
+        const mio = mieiMap[s.id];
+        const badge = mio ? `<div class="row-badge ${mio.approvato ? "" : "pending"}">${mio.approvato ? "Attivo" : "In attesa"}</div>` : "";
+        return `
+        <div class="row" style="flex-wrap:wrap">
+          <div class="row-body" style="flex-basis:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div class="row-name" style="flex:1">${escapeHtml(s.nome)}</div>${badge}
+          </div>
+          <div style="flex:1;display:flex;gap:8px;min-width:0">
+            <input id="rl-${s.id}" placeholder="https://... il tuo link referral" value="${escapeHtml(mio?.ref_link || "")}" style="flex:1;min-width:0;background:rgba(0,0,0,0.2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:4px;font-size:12.5px;font-family:inherit" />
+            <button class="btn btn-secondary" style="width:auto;padding:0 14px;font-size:12.5px" onclick="salvaRefLink(${s.id}, this)">Salva</button>
+          </div>
+        </div>`;
+      }).join("") || '<p class="empty">Nessun business in lista al momento.</p>';
+      document.getElementById("linkEditor").style.display = "block";
+    }
+
+    async function salvaRefLink(servizioId, btn) {
+      const link = document.getElementById(`rl-${servizioId}`).value.trim();
+      if (!link) return;
+      btn.disabled = true;
+      btn.textContent = "...";
+      const res = await fetch(`${API_URL}/affiliate-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ servizio_id: servizioId, ref_link: link }),
+      });
+      const d = await res.json().catch(() => ({}));
+      btn.disabled = false;
+      btn.textContent = "Salva";
+      if (res.ok) {
+        const msg = d.approvato
+          ? "Link attivo! I tuoi invitati lo vedono da subito."
+          : "Link salvato: dominio nuovo, in attesa di approvazione admin.";
+        if (tg?.showAlert) tg.showAlert(msg); else alert(msg);
+        load();
+      } else {
+        const msg = d.error === "link_non_valido" ? "Link non valido: usa un indirizzo https completo." : "Errore, riprova.";
+        if (tg?.showAlert) tg.showAlert(msg); else alert(msg);
+      }
+    }
+    window.salvaRefLink = salvaRefLink;
 
     document.getElementById("saveBtn").onclick = async () => {
       const btn = document.getElementById("saveBtn");

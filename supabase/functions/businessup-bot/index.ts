@@ -67,15 +67,20 @@ function parseInitDataUser(initData: string): any {
   }
 }
 
-// Quale ref link mostrare per (utente, servizio): quello del referrer se ha un suo link approvato per quel servizio, altrimenti quello principale.
-async function resolveRefLink(telegramId: number, servizioId: number): Promise<string | null> {
+// Quale ref link mostrare per (utente, servizio): quello dello sponsor se ha un suo link approvato per quel servizio,
+// altrimenti quello ufficiale del sistema. La fonte viene sempre dichiarata all'utente (niente scavalcamenti nascosti).
+async function resolveRefLinkConFonte(telegramId: number, servizioId: number): Promise<{ link: string | null; fonte: "sponsor" | "sistema"; sponsor_id: number | null }> {
   const { data: lead } = await supabase.from("leads").select("referred_by").eq("telegram_id", telegramId).maybeSingle()
   if (lead?.referred_by) {
     const { data: al } = await supabase.from("affiliate_link").select("ref_link").eq("telegram_id", lead.referred_by).eq("servizio_id", servizioId).eq("approvato", true).maybeSingle()
-    if (al?.ref_link) return al.ref_link
+    if (al?.ref_link) return { link: al.ref_link, fonte: "sponsor", sponsor_id: lead.referred_by }
   }
   const { data: sv } = await supabase.from("servizi").select("link_principale").eq("id", servizioId).maybeSingle()
-  return sv?.link_principale || null
+  return { link: sv?.link_principale || null, fonte: "sistema", sponsor_id: lead?.referred_by ?? null }
+}
+
+async function resolveRefLink(telegramId: number, servizioId: number): Promise<string | null> {
+  return (await resolveRefLinkConFonte(telegramId, servizioId)).link
 }
 
 // Genera un codice referral opaco (non rivela il telegram_id) e lo salva sulla lead, se non presente.
@@ -97,6 +102,22 @@ async function getOrCreateRefCode(telegramId: number): Promise<string> {
 }
 
 // ---------- BOT ----------
+const PARTNER_SOGLIA = 3
+
+// Al raggiungimento della soglia di invitati lo sponsor diventa Partner in automatico e viene avvisato.
+async function verificaSbloccoPartner(sponsorId: number) {
+  const { data: sponsor } = await supabase.from("leads").select("is_partner").eq("telegram_id", sponsorId).maybeSingle()
+  if (!sponsor || sponsor.is_partner) return
+  const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", sponsorId).eq("bot_started", true)
+  if ((count ?? 0) < PARTNER_SOGLIA) return
+  await supabase.from("leads").update({ is_partner: true }).eq("telegram_id", sponsorId)
+  await sendMessage(
+    sponsorId,
+    `🎉 Complimenti, ora sei Partner!\n\nHai portato ${count} iscritti nel bot. Da adesso puoi inserire i tuoi link referral sui business: i tuoi invitati vedranno i TUOI link nei tutorial.\n\nVai nel profilo → La mia pagina → I miei link.`,
+    { inline_keyboard: [[{ text: "Inserisci i miei link", web_app: { url: WEBAPP_URL + "/mia-pagina.html?_=" + Date.now() } }]] },
+  )
+}
+
 async function handleStart(chatId: number, from: any, payload?: string) {
   let refBy: number | undefined
   if (payload?.startsWith("ref_")) {
@@ -104,6 +125,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     const { data: referrer } = await supabase.from("leads").select("telegram_id").eq("ref_code", code).maybeSingle()
     if (referrer && referrer.telegram_id !== from.id) refBy = referrer.telegram_id
   }
+  // Chi entra senza link viene assegnato al Sistema (Founder): il legame sponsor è a vita e non cambia mai.
+  if (!refBy && from.id !== ADMIN_ID) refBy = ADMIN_ID
 
   const { data: existing } = await supabase.from("leads").select("referred_by, start_count").eq("telegram_id", from.id).maybeSingle()
 
@@ -119,6 +142,11 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }, { onConflict: "telegram_id" })
 
   await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: refBy ? `ref:${refBy}` : null })
+
+  const sponsorFinale = existing?.referred_by ?? refBy
+  if (!existing && sponsorFinale && sponsorFinale !== ADMIN_ID) {
+    verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
+  }
 
   await sendMessage(
     chatId,
@@ -170,7 +198,14 @@ async function apiMe(telegramId: number, tgUser?: any) {
   const { count: suggeriti } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId)
   const { count: approvati } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId).eq("stato", "approvato")
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0 })
+  // Sponsor a vita: visibile nel profilo con contatto diretto.
+  let sponsor = null
+  if (lead?.referred_by) {
+    const { data: sp } = await supabase.from("leads").select("nome, username, foto_url").eq("telegram_id", lead.referred_by).maybeSingle()
+    if (sp) sponsor = { nome: sp.nome || sp.username || "Sistema", username: sp.username || "", foto_url: sp.foto_url || "", is_founder: lead.referred_by === ADMIN_ID }
+  }
+
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
@@ -277,11 +312,12 @@ async function apiServizio(telegramId: number, servizioId: number) {
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: progress } = await supabase.from("tutorial_progress").select("ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
-  const refLink = await resolveRefLink(telegramId, servizioId)
+  const refInfo = await resolveRefLinkConFonte(telegramId, servizioId)
   return json({
     servizio,
     gia_interessato: !!interesse,
-    ref_link: refLink,
+    ref_link: refInfo.link,
+    ref_fonte: refInfo.fonte,
     sondaggio_completato: !!lead?.sondaggio_completato,
     is_cliente: !!lead?.is_cliente,
     mio_link: mioLink || null,
@@ -342,17 +378,41 @@ async function apiAffiliazione(telegramId: number) {
   })
 }
 
-async function apiAffiliateLinkSave(telegramId: number, body: any) {
-  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
-  if (!lead?.sondaggio_completato) return json({ error: "non_autorizzato" }, 403)
+// Estrae il dominio (senza www) da un URL; null se non è un http/https valido.
+function dominioDi(url: string): string | null {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null
+    return parsed.hostname.replace(/^www\./, "").toLowerCase()
+  } catch {
+    return null
+  }
+}
 
-  const { servizio_id, ref_link } = body
-  await supabase.from("affiliate_link").upsert(
-    { telegram_id: telegramId, servizio_id, ref_link, approvato: false },
+// Solo i Partner inseriscono link. Dominio in whitelist → approvato subito; altrimenti resta in attesa dell'admin.
+async function apiAffiliateLinkSave(telegramId: number, body: any) {
+  const { data: lead } = await supabase.from("leads").select("is_partner").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.is_partner) return json({ error: "non_partner" }, 403)
+
+  const servizioId = parseInt(body?.servizio_id)
+  const refLink = String(body?.ref_link || "").trim()
+  const dominio = dominioDi(refLink)
+  if (!servizioId || !dominio) return json({ error: "link_non_valido" }, 400)
+
+  const { data: wl } = await supabase.from("domini_whitelist").select("id").eq("dominio", dominio).maybeSingle()
+  const autoApprovato = !!wl
+
+  const { error } = await supabase.from("affiliate_link").upsert(
+    { telegram_id: telegramId, servizio_id: servizioId, ref_link: refLink, approvato: autoApprovato },
     { onConflict: "telegram_id,servizio_id" },
   )
-  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "affiliate_link_salvato", dettaglio: `servizio:${servizio_id}` })
-  return json({ ok: true })
+  if (error) return json({ error: error.message }, 500)
+
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "affiliate_link_salvato", dettaglio: `servizio:${servizioId} ${autoApprovato ? "auto" : "pending"}` })
+  if (!autoApprovato) {
+    sendMessage(ADMIN_ID, `🔗 Link affiliato in attesa di approvazione\n\nDominio: ${dominio} (non in whitelist)\n${refLink}\nDa utente ID ${telegramId}. Approvalo dall'admin.`).catch(() => {})
+  }
+  return json({ ok: true, approvato: autoApprovato })
 }
 
 const ALLOWED_SOCIAL = ["instagram", "telegram", "whatsapp", "tiktok", "youtube", "facebook"]
@@ -377,21 +437,23 @@ function sanitizeSocialLinks(input: any): { tipo: string; url: string }[] {
 }
 
 async function apiPaginaGet(telegramId: number) {
-  const { data: lead } = await supabase.from("leads").select("nome, cognome, sondaggio_completato, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("nome, cognome, sondaggio_completato, is_partner, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
-  const { data: servizi } = await supabase.from("servizi").select("id, nome")
+  const { data: servizi } = await supabase.from("servizi").select("id, nome").order("nome")
   const svcMap: Record<number, string> = {}
   for (const s of servizi ?? []) svcMap[(s as any).id] = (s as any).nome
   const links = (mieiLink ?? []).map((l: any) => ({ ...l, servizio_nome: svcMap[l.servizio_id] || "?" }))
   const refCode = await getOrCreateRefCode(telegramId)
   return json({
     sondaggio_completato: lead?.sondaggio_completato ?? false,
+    is_partner: !!lead?.is_partner,
     bio_titolo: lead?.bio_titolo || "",
     bio_testo: lead?.bio_testo || "",
     bio_foto_url: lead?.bio_foto_url || "",
     social_links: lead?.social_links ?? [],
     link_pagina: `${WEBAPP_URL}/u.html?c=${refCode}`,
     miei_link: links,
+    servizi: servizi ?? [],
   })
 }
 
@@ -444,12 +506,18 @@ async function apiAttiva(telegramId: number, body: any) {
 
   const { servizio_id } = body
   await supabase.from("lead_servizi").insert({ telegram_id: telegramId, servizio_id, stato: "interessato" })
-  // Attivare un servizio rende l'utente cliente e gli sblocca la possibilità di proporre un proprio link affiliato
-  // (l'approvazione del singolo link resta comunque un controllo admin separato).
   await supabase.from("leads").update({ is_cliente: true }).eq("telegram_id", telegramId)
-  const refLink = await resolveRefLink(telegramId, servizio_id)
+  const refInfo = await resolveRefLinkConFonte(telegramId, servizio_id)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_attivato", dettaglio: `servizio:${servizio_id}` })
-  return json({ ok: true, ref_link: refLink })
+
+  // Il promoter viene avvisato quando un suo invitato apre un business con il SUO link.
+  if (refInfo.fonte === "sponsor" && refInfo.sponsor_id && refInfo.sponsor_id !== ADMIN_ID) {
+    const { data: chi } = await supabase.from("leads").select("nome, username").eq("telegram_id", telegramId).maybeSingle()
+    const { data: sv } = await supabase.from("servizi").select("nome").eq("id", servizio_id).maybeSingle()
+    sendMessage(refInfo.sponsor_id, `🔔 ${chi?.nome || chi?.username || "Un tuo iscritto"} ha appena aperto "${sv?.nome || "un business"}" con il tuo link.`).catch((e) => console.error("notifica sponsor:", e))
+  }
+
+  return json({ ok: true, ref_link: refInfo.link, ref_fonte: refInfo.fonte })
 }
 
 // Segna completato uno step del tutorial; sblocca il successivo solo se gli step precedenti sono già fatti.
@@ -722,11 +790,112 @@ async function apiSegnala(telegramId: number, body: any) {
   if (error) return json({ error: error.message }, 500)
 
   let nomeServizio = ""
+  let linkSospeso = false
   if (servizioId) {
     const { data: sv } = await supabase.from("servizi").select("nome").eq("id", servizioId).maybeSingle()
     nomeServizio = sv?.nome || ""
+
+    // Se il link segnalato (rotto o scam) era quello dello sponsor del segnalante, viene sospeso subito
+    // in attesa di verifica: torna visibile solo se l'admin lo riapprova. Lo sponsor riceve l'alert.
+    if (tipo === "link_rotto" || tipo === "sospetto_scam") {
+      const refInfo = await resolveRefLinkConFonte(telegramId, servizioId)
+      if (refInfo.fonte === "sponsor" && refInfo.sponsor_id && refInfo.sponsor_id !== ADMIN_ID) {
+        await supabase.from("affiliate_link").update({ approvato: false }).eq("telegram_id", refInfo.sponsor_id).eq("servizio_id", servizioId)
+        linkSospeso = true
+        sendMessage(refInfo.sponsor_id, `⚠️ Link Sospeso\n\nIl tuo link referral su "${nomeServizio}" è stato segnalato (${TIPI_SEGNALAZIONE[tipo]}) ed è stato sospeso in attesa di verifica.\n\nControlla che funzioni e, se serve, aggiornalo da La mia pagina → I miei link. L'admin lo riesaminerà a breve.`).catch(() => {})
+      }
+    }
   }
-  await sendMessage(ADMIN_ID, `🚨 Segnalazione: ${TIPI_SEGNALAZIONE[tipo]}${nomeServizio ? `\nBusiness: ${nomeServizio}` : ""}${messaggio ? `\nMessaggio: ${messaggio}` : ""}\nDa utente ID ${telegramId}. Gestiscila dall'admin.`)
+  await sendMessage(ADMIN_ID, `🚨 Segnalazione: ${TIPI_SEGNALAZIONE[tipo]}${nomeServizio ? `\nBusiness: ${nomeServizio}` : ""}${messaggio ? `\nMessaggio: ${messaggio}` : ""}${linkSospeso ? "\n⚠️ Il link dello sponsor è stato sospeso automaticamente: riesaminalo dall'admin." : ""}\nDa utente ID ${telegramId}. Gestiscila dall'admin.`)
+  return json({ ok: true })
+}
+
+// ---------- PARTNER ----------
+// Richiesta manuale di diventare Partner: arriva all'admin che approva o rifiuta con un click.
+async function apiDiventaPartner(telegramId: number) {
+  const { data: lead } = await supabase.from("leads").select("nome, username, is_partner, partner_richiesto").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead) return json({ error: "not_found" }, 404)
+  if (lead.is_partner) return json({ error: "gia_partner" }, 409)
+  if (lead.partner_richiesto) return json({ error: "richiesta_gia_inviata" }, 409)
+
+  await supabase.from("leads").update({ partner_richiesto: true }).eq("telegram_id", telegramId)
+  await sendMessage(ADMIN_ID, `🤝 Richiesta Partner\n\n${lead.nome || lead.username || "Utente"} (ID ${telegramId}) chiede di diventare Partner per inserire i suoi link referral.\n\nApprova o rifiuta dall'admin.`)
+  return json({ ok: true })
+}
+
+// Broadcast di rete: il Partner con abbastanza iscritti scrive SOLO ai propri invitati, massimo una volta al giorno.
+async function apiReteBroadcast(telegramId: number, body: any) {
+  const testo = String(body?.testo || "").trim().slice(0, 1000)
+  if (!testo) return json({ error: "testo_richiesto" }, 400)
+
+  const { data: lead } = await supabase.from("leads").select("nome, username, is_partner").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.is_partner) return json({ error: "non_partner" }, 403)
+
+  const { data: invitati } = await supabase.from("leads").select("telegram_id").eq("referred_by", telegramId).eq("bot_started", true)
+  if ((invitati ?? []).length < PARTNER_SOGLIA) return json({ error: "rete_troppo_piccola", minimo: PARTNER_SOGLIA }, 403)
+
+  // Anti-spam: massimo un broadcast di rete ogni 24 ore.
+  const ieri = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+  const { count: recenti } = await supabase.from("eventi").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId).eq("tipo", "rete_broadcast").gte("created_at", ieri)
+  if ((recenti ?? 0) > 0) return json({ error: "limite_giornaliero" }, 429)
+
+  const mittente = lead.nome || lead.username || "Il tuo sponsor"
+  let inviati = 0
+  for (const inv of invitati ?? []) {
+    const res = await sendMessage((inv as any).telegram_id, `📣 Messaggio da ${mittente} (il tuo sponsor):\n\n${testo}`)
+    const data = await res.json().catch(() => ({}))
+    if (data.ok) inviati++
+    await new Promise((r) => setTimeout(r, 50))
+  }
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "rete_broadcast", dettaglio: `inviati:${inviati}` })
+  return json({ ok: true, inviati })
+}
+
+// ---------- ADMIN: PARTNER & WHITELIST ----------
+async function apiAdminPartnerList() {
+  const { data } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, partner_richiesto, is_partner").eq("partner_richiesto", true).eq("is_partner", false)
+  const richieste = (data ?? []).map((l: any) => ({
+    telegram_id: l.telegram_id,
+    nome: l.nome || l.username || `ID ${l.telegram_id}`,
+    username: l.username || "",
+  }))
+  return json({ richieste })
+}
+
+async function apiAdminPartnerDecidi(body: any) {
+  const telegramId = parseInt(body?.telegram_id)
+  const approva = !!body?.approva
+  if (!telegramId) return json({ error: "telegram_id_richiesto" }, 400)
+
+  const { error } = await supabase.from("leads").update({ is_partner: approva, partner_richiesto: false }).eq("telegram_id", telegramId)
+  if (error) return json({ error: error.message }, 500)
+
+  if (approva) {
+    await sendMessage(telegramId, `🎉 La tua richiesta è stata approvata: ora sei Partner!\n\nPuoi inserire i tuoi link referral sui business: i tuoi invitati vedranno i TUOI link nei tutorial.`, {
+      inline_keyboard: [[{ text: "Inserisci i miei link", web_app: { url: WEBAPP_URL + "/mia-pagina.html?_=" + Date.now() } }]],
+    })
+  } else {
+    await sendMessage(telegramId, `La tua richiesta Partner non è stata approvata per ora.\n\nPorta ${PARTNER_SOGLIA} iscritti con il tuo link invito e lo status si sblocca in automatico.`)
+  }
+  return json({ ok: true })
+}
+
+async function apiAdminWhitelistList() {
+  const { data } = await supabase.from("domini_whitelist").select("*").order("dominio")
+  return json({ domini: data ?? [] })
+}
+
+async function apiAdminWhitelistSave(body: any) {
+  const dominio = String(body?.dominio || "").trim().toLowerCase().replace(/^www\./, "")
+  if (!dominio || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(dominio)) return json({ error: "dominio_non_valido" }, 400)
+  const { error } = await supabase.from("domini_whitelist").upsert({ dominio }, { onConflict: "dominio" })
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+async function apiAdminWhitelistDelete(body: any) {
+  const { error } = await supabase.from("domini_whitelist").delete().eq("id", body?.id)
+  if (error) return json({ error: error.message }, 500)
   return json({ ok: true })
 }
 
@@ -767,6 +936,7 @@ async function apiAdminKpi() {
   const { count: pendingSuggerimenti } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("stato", "in_revisione")
   const { count: pendingLinks } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("approvato", false)
   const { count: segnalazioniAperte } = await supabase.from("segnalazioni").select("id", { count: "exact", head: true }).eq("stato", "aperta")
+  const { count: pendingPartner } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("partner_richiesto", true).eq("is_partner", false)
 
   // Top business: per voti totali e per attivazioni recenti (ultimi 7 giorni come indicatore di trend).
   const { data: servizi } = await supabase.from("servizi").select("id, nome")
@@ -801,6 +971,7 @@ async function apiAdminKpi() {
     pending_suggerimenti: pendingSuggerimenti ?? 0,
     pending_links: pendingLinks ?? 0,
     segnalazioni_aperte: segnalazioniAperte ?? 0,
+    pending_partner: pendingPartner ?? 0,
     top_business: topBusiness,
   })
 }
@@ -1168,6 +1339,18 @@ serve(async (req) => {
       return await apiSegnala(tid, await req.json())
     }
 
+    if (sub === "diventa-partner" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiDiventaPartner(tid)
+    }
+
+    if (sub === "rete-broadcast" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiReteBroadcast(tid, await req.json())
+    }
+
     if (sub === "cron/followup" && req.method === "POST") {
       const { data: cfg } = await supabase.from("config").select("valore").eq("chiave", "cron_secret").maybeSingle()
       if (!cfg?.valore || req.headers.get("x-cron-key") !== cfg.valore) return json({ error: "unauthorized" }, 401)
@@ -1201,6 +1384,11 @@ serve(async (req) => {
       if (sub === "admin/suggerimenti/delete" && req.method === "POST") return await apiAdminSuggerimentiDelete(await req.json())
 
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
+      if (sub === "admin/partner-richieste" && req.method === "GET") return await apiAdminPartnerList()
+      if (sub === "admin/partner-decidi" && req.method === "POST") return await apiAdminPartnerDecidi(await req.json())
+      if (sub === "admin/whitelist" && req.method === "GET") return await apiAdminWhitelistList()
+      if (sub === "admin/whitelist/save" && req.method === "POST") return await apiAdminWhitelistSave(await req.json())
+      if (sub === "admin/whitelist/delete" && req.method === "POST") return await apiAdminWhitelistDelete(await req.json())
       if (sub === "admin/sponsorboard" && req.method === "GET") return await apiAdminSponsorboard()
 
       if (sub === "admin/crm" && req.method === "GET") return await apiAdminCrm()

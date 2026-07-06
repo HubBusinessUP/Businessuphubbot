@@ -214,6 +214,7 @@
   .biz-cta { width: 100%; padding: 14px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .biz-cta:disabled { opacity: 0.6; }
   .biz-linkbox { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: monospace; font-size: 12px; word-break: break-all; color: var(--blue); }
+  .biz-fonte { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; }
   .biz-foot { display: flex; gap: 8px; margin-top: 10px; }
   .biz-foot a, .biz-foot button {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -684,15 +685,20 @@
         return `<div class="chk-row ${state}"><div class="chk-box">${boxContent}</div><div class="chk-body"><b>${st.titolo}</b>${mdBold(st.testo)}${btn}</div></div>`;
       }).join("");
 
+      // Trasparenza sulla fonte: l'utente sa sempre se sta usando il link del suo sponsor o quello ufficiale del sistema.
+      const fonteNote = data.ref_fonte
+        ? `<div class="biz-fonte">${data.ref_fonte === "sponsor" ? "Link del tuo sponsor" : "Link ufficiale del sistema"}</div>`
+        : "";
+
       let cta;
       if (!window.sondaggioCompletato) {
         cta = `<button class="biz-cta" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica per iscriverti</button>`;
       } else if (data.gia_interessato) {
         cta = `<button class="biz-cta" onclick="apriRefLink(${id})">Apri il tuo link di iscrizione</button>
-               <div class="biz-linkbox">${data.ref_link || ""}</div>`;
+               <div class="biz-linkbox">${data.ref_link || ""}</div>${fonteNote}`;
       } else {
-        cta = `<button class="biz-cta" id="bizcta-${id}" onclick="attivaBiz(${id})">Iscriviti con il link — supporto prioritario</button>
-               <div class="biz-linkbox" id="bizlink-${id}" style="display:none"></div>`;
+        cta = `<button class="biz-cta" id="bizcta-${id}" onclick="attivaBiz(${id})">Iscriviti con il link${data.ref_fonte === "sponsor" ? " del tuo sponsor" : ""} — supporto prioritario</button>
+               <div class="biz-linkbox" id="bizlink-${id}" style="display:none"></div>${fonteNote}`;
       }
 
       return `
@@ -770,7 +776,7 @@
       });
       if (!res.ok) { btn.disabled = false; btn.textContent = "Iscriviti con il link — supporto prioritario"; return; }
       const result = await res.json();
-      if (bizCache[id]) { bizCache[id].gia_interessato = true; bizCache[id].ref_link = result.ref_link; }
+      if (bizCache[id]) { bizCache[id].gia_interessato = true; bizCache[id].ref_link = result.ref_link; bizCache[id].ref_fonte = result.ref_fonte || bizCache[id].ref_fonte; }
       document.getElementById(`bizd-${id}`).innerHTML = buildDetail(id, bizCache[id]);
       if (result.ref_link) window.open(result.ref_link, "_blank");
     }

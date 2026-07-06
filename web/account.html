@@ -114,10 +114,29 @@
       </div>
     </div>
 
-    <div class="perf-row">
-      <div class="perf-box"><div class="n" id="perfSuggeriti">0</div><div class="l">Business suggeriti</div></div>
-      <div class="perf-box"><div class="n lime" id="perfApprovati">0</div><div class="l">Business approvati</div></div>
-      <div class="perf-box"><div class="n lime" id="perfRete">0</div><div class="l">Utenti in rete</div></div>
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
+        <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
+      </div>
+      <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
+    </div>
+
+    <div class="card" id="sponsorCard" style="display:none">
+      <h2>Il tuo sponsor</h2>
+      <div class="aff-row" style="border:none;padding:0">
+        <div class="aff-foto" id="spFoto"></div>
+        <div class="aff-body">
+          <div class="aff-name" id="spNome">-</div>
+          <div class="aff-sub" id="spSub"></div>
+        </div>
+        <a class="aff-chat" id="spChat" href="#" target="_blank" rel="noopener" style="display:none" aria-label="Scrivi al tuo sponsor"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></a>
+      </div>
+    </div>
+
+    <div class="card" id="partnerCard" style="display:none">
+      <h2>Partner</h2>
+      <div id="partnerBody"></div>
     </div>
 
     <div class="card">
@@ -338,17 +357,99 @@
     async function loadPerformance() {
       const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
-      document.getElementById("perfSuggeriti").textContent = data.suggeriti_count || 0;
-      document.getElementById("perfApprovati").textContent = data.approvati_count || 0;
       document.getElementById("perfRete").textContent = data.rete_count || 0;
       const badge = document.getElementById("phBadge");
-      if (data.lead?.sondaggio_completato) {
+      if (data.is_partner) {
+        badge.textContent = "Partner";
+        badge.classList.add("ok");
+      } else if (data.lead?.sondaggio_completato) {
         badge.textContent = "Stato: Verificato";
         badge.classList.add("ok");
       } else {
         badge.textContent = "Stato: In attesa di verifica";
       }
+      renderSponsor(data.sponsor);
+      renderPartner(data);
     }
+
+    // Sponsor a vita, con contatto diretto in chat.
+    function renderSponsor(sp) {
+      if (!sp) return;
+      document.getElementById("sponsorCard").style.display = "block";
+      document.getElementById("spNome").textContent = sp.is_founder ? "Business UP (sistema)" : (sp.nome || "Sponsor");
+      document.getElementById("spSub").textContent = sp.is_founder ? "Sei entrato direttamente dal bot" : (sp.username ? "@" + sp.username : "Il tuo punto di riferimento nell'HUB");
+      const foto = document.getElementById("spFoto");
+      if (sp.foto_url) foto.innerHTML = `<img src="${escapeHtml(sp.foto_url)}" alt="" onerror="this.remove()" />`;
+      else foto.textContent = initialsOf(sp.nome || "BU");
+      if (sp.username) {
+        const chat = document.getElementById("spChat");
+        chat.href = "https://t.me/" + encodeURIComponent(sp.username);
+        chat.style.display = "flex";
+      }
+    }
+
+    // Card Partner: stato, progresso verso la soglia, richiesta manuale e broadcast di rete.
+    function renderPartner(data) {
+      const el = document.getElementById("partnerBody");
+      document.getElementById("partnerCard").style.display = "block";
+      const soglia = data.partner_soglia || 3;
+      const rete = data.rete_count || 0;
+
+      if (data.is_partner) {
+        el.innerHTML = `
+          <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Sei <b style="color:var(--lime)">Partner</b>: i tuoi invitati vedono i TUOI link nei tutorial dei business su cui li hai inseriti.</p>
+          <button class="btn" style="background:var(--blue);color:#fff;margin-bottom:10px" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Gestisci i miei link</button>
+          ${rete >= soglia ? `
+          <div class="field" style="margin-top:4px">
+            <label>Messaggio alla tua rete (${rete} iscritti, max 1 al giorno)</label>
+            <textarea id="rbTesto" maxlength="1000" placeholder="Es: Ho fatto un video tutorial sul Broker X, guardatelo!"></textarea>
+          </div>
+          <button class="btn" style="background:var(--lime-dim);color:var(--lime)" onclick="inviaReteBroadcast()">Invia alla mia rete</button>
+          <p class="save-note" id="rbEsito"></p>` : `<p style="font-size:12px;color:var(--text-dim)">Con ${soglia}+ iscritti sblocchi anche il broadcast verso la tua rete.</p>`}
+        `;
+      } else if (data.partner_richiesto) {
+        el.innerHTML = `<p style="font-size:13px;color:var(--text-dim);line-height:1.5">Richiesta inviata, in attesa di approvazione. Nel frattempo continua a invitare: a ${soglia} iscritti lo sblocco è automatico (${rete}/${soglia}).</p>`;
+      } else {
+        el.innerHTML = `
+          <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Da Partner inserisci i tuoi link referral sui business: i tuoi invitati vedranno i TUOI link. Si sblocca in automatico a <b style="color:var(--text)">${soglia} iscritti</b> — sei a <b style="color:var(--lime)">${rete}/${soglia}</b>.</p>
+          <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="richiediPartner(this)">Richiedi ora di diventare Partner</button>
+        `;
+      }
+    }
+
+    async function richiediPartner(btn) {
+      btn.disabled = true;
+      const res = await fetch(`${API_URL}/diventa-partner`, { method: "POST", headers: { "x-telegram-init-data": initData } });
+      if (res.ok) {
+        btn.textContent = "Richiesta inviata ✓";
+        if (tg?.showAlert) tg.showAlert("Richiesta inviata! Ti avvisiamo appena viene approvata.");
+      } else {
+        const e = await res.json().catch(() => ({}));
+        btn.disabled = false;
+        if (tg?.showAlert) tg.showAlert(e.error === "richiesta_gia_inviata" ? "Hai già una richiesta in corso." : "Errore, riprova.");
+      }
+    }
+    window.richiediPartner = richiediPartner;
+
+    async function inviaReteBroadcast() {
+      const testo = document.getElementById("rbTesto").value.trim();
+      if (!testo) return;
+      const esito = document.getElementById("rbEsito");
+      esito.textContent = "Invio in corso...";
+      const res = await fetch(`${API_URL}/rete-broadcast`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+        body: JSON.stringify({ testo }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        esito.textContent = `Inviato a ${d.inviati} iscritti della tua rete.`;
+        document.getElementById("rbTesto").value = "";
+      } else {
+        esito.textContent = d.error === "limite_giornaliero" ? "Puoi inviare massimo 1 messaggio al giorno alla tua rete." : "Errore, riprova.";
+      }
+    }
+    window.inviaReteBroadcast = inviaReteBroadcast;
 
     let inviteLink = "";
     function copiaInvito() {
