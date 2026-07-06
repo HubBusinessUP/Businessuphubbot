@@ -207,6 +207,11 @@
           </div>
         </div>
         <div class="field"><label>Messaggio — usa {nome} per personalizzare</label><textarea id="bcTesto" style="min-height:90px"></textarea></div>
+        <div class="row2">
+          <div class="field"><label>Testo bottone (opzionale)</label><input id="bcBtnText" placeholder="es: Leggi la news" /></div>
+          <div class="field"><label>Link bottone (https://...)</label><input id="bcBtnUrl" placeholder="https://..." /></div>
+        </div>
+        <p class="item-meta" style="margin:-4px 0 12px">Lascia vuoti per il bottone predefinito "Apri Business UP". Con testo + link metti il tuo bottone (es. una news esterna).</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-small" onclick="salvaTemplate()">Salva come template</button>
           <button class="btn btn-secondary btn-small" onclick="anteprimaBroadcast()">Anteprima destinatari</button>
@@ -767,10 +772,14 @@
     async function inviaBroadcast() {
       const testo = document.getElementById("bcTesto").value.trim();
       if (!testo) { alert("Scrivi il messaggio."); return; }
+      const btnText = document.getElementById("bcBtnText").value.trim();
+      const btnUrl = document.getElementById("bcBtnUrl").value.trim();
+      if (btnText && !/^https?:\/\//.test(btnUrl)) { alert("Hai messo il testo del bottone ma il link non è valido (deve iniziare con https://)."); return; }
+      if (btnUrl && !btnText) { alert("Hai messo il link ma manca il testo del bottone."); return; }
       const pre = await (await api("admin/broadcast", { method: "POST", body: JSON.stringify({ anteprima: true, filtro: filtroBroadcast() }) })).json();
       if (!confirm(`Inviare a ${pre.destinatari_count} utenti?`)) return;
       document.getElementById("bcEsito").textContent = "Invio in corso...";
-      const res = await api("admin/broadcast", { method: "POST", body: JSON.stringify({ testo, filtro: filtroBroadcast() }) });
+      const res = await api("admin/broadcast", { method: "POST", body: JSON.stringify({ testo, filtro: filtroBroadcast(), btn_text: btnText, btn_url: btnUrl }) });
       const d = await res.json();
       document.getElementById("bcEsito").textContent = res.ok ? `Fatto: ${d.inviati} inviati, ${d.falliti} falliti.` : "Errore: " + (d.error || res.status);
     }

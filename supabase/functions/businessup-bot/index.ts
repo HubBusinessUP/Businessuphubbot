@@ -1197,12 +1197,21 @@ async function apiAdminBroadcast(body: any) {
     return json({ destinatari_count: destinatari.length, esempi: destinatari.slice(0, 5).map((d) => d.nome) })
   }
 
+  // Bottone sotto la news: se l'admin indica testo + URL usa quello (link esterno),
+  // altrimenti resta il bottone di default che apre la Mini App.
+  const btnText = String(body?.btn_text || "").trim()
+  const btnUrl = String(body?.btn_url || "").trim()
+  let markup: any = { inline_keyboard: [[{ text: "Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] }
+  if (btnText && btnUrl && /^https?:\/\//.test(btnUrl)) {
+    markup = { inline_keyboard: [[{ text: btnText.slice(0, 40), url: btnUrl }]] }
+  } else if (btnText === "" && btnUrl === "" && body?.senza_bottone) {
+    markup = undefined
+  }
+
   let inviati = 0, falliti = 0
   for (const d of destinatari) {
     const personalizzato = testo.replaceAll("{nome}", d.nome)
-    const res = await sendMessage(d.telegram_id, personalizzato, {
-      inline_keyboard: [[{ text: "Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]],
-    })
+    const res = await sendMessage(d.telegram_id, personalizzato, markup)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
     else falliti++
