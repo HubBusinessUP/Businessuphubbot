@@ -524,10 +524,14 @@ async function apiMe(telegramId: number, tgUser?: any) {
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
-  const { nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato } = body
+  const { nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato, consapevolezza, identikit } = body
   if (!disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
 
-  const row = { telegram_id: telegramId, nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato: true }
+  const row: any = { telegram_id: telegramId, nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato: true }
+  // Le risposte del test e l'identikit si aggiornano solo quando l'assessment li invia,
+  // così il salvataggio della sola anagrafica dal profilo non li azzera.
+  if (consapevolezza !== undefined) row.consapevolezza = consapevolezza
+  if (identikit !== undefined) row.identikit = identikit
 
   const { data: ex } = await supabase.from("sondaggio_risposte").select("id").eq("telegram_id", telegramId).maybeSingle()
   const saveResult = ex
@@ -557,7 +561,7 @@ async function apiSondaggioSave(telegramId: number, body: any) {
 async function apiBusinessList(telegramId?: number | null) {
   const { data: macroCategorie } = await supabase.from("macro_categorie").select("*").order("ordine")
   const { data: categorie } = await supabase.from("categorie").select("*").order("ordine")
-  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at").order("created_at", { ascending: false })
+  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta").order("created_at", { ascending: false })
 
   // Voti per servizio: la posizione in classifica è determinata dal numero di voti.
   const { data: voti } = await supabase.from("voti").select("servizio_id, telegram_id")
@@ -1010,8 +1014,9 @@ async function apiAdminServiziList() {
 }
 
 async function apiAdminServiziSave(body: any) {
-  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta } = body
-  const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta }
+  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta } = body
+  const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
+    budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null }
   if (id) {
     const { error } = await supabase.from("servizi").update(row).eq("id", id)
     if (error) return json({ error: error.message }, 500)

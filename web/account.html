@@ -50,6 +50,23 @@
 
   .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
 
+  .ik-arch { background: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .ik-arch-lbl { font-size: 11.5px; color: var(--text-dim); }
+  .ik-arch-name { font-size: 17px; font-weight: 800; margin: 3px 0 5px; }
+  .ik-arch-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+  .ik-row { margin-bottom: 12px; }
+  .ik-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .ik-name { font-size: 13.5px; font-weight: 600; }
+  .ik-val { font-size: 14.5px; font-weight: 800; }
+  .ik-track { height: 8px; background: var(--ink); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .ik-fill { height: 100%; border-radius: 6px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .ik-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 4px; }
+  .ik-mini { background: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .ik-mini-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
+  .ik-mini-h.ok { color: var(--lime); }
+  .ik-mini-h.warn { color: #e8b34c; }
+  .ik-mini div:not(.ik-mini-h) { font-size: 12.5px; margin-bottom: 3px; }
+
   .share-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
   .share-overlay.open { display: flex; }
   .share-sheet { background: var(--ink); border: 1px solid var(--border); border-radius: 12px 12px 0 0; width: 100%; max-width: 480px; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
@@ -267,59 +284,13 @@
         <div class="field"><label>Città</label><input id="fCitta" /></div>
       </div>
 
-      <div class="card">
-        <h2>Il tuo profilo</h2>
-        <div class="field">
-          <label>Livello di trading</label>
-          <select id="fLivello">
-            <option>Principiante</option>
-            <option>Intermedio</option>
-            <option>Avanzato</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Esperienza con broker reali</label>
-          <select id="fEsperienza">
-            <option>No mai</option>
-            <option>Sì da meno di 6 mesi</option>
-            <option>Sì da più di 6 mesi</option>
-          </select>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label>Capitale</label>
-            <select id="fCapitale">
-              <option>Meno di 500 euro</option>
-              <option>500-2.000 euro</option>
-              <option>2.000-10.000 euro</option>
-              <option>10.000+ euro</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Interesse</label>
-            <select id="fProdotto">
-              <option>Broker vs Broker</option>
-              <option>Prop vs Broker</option>
-              <option>Bonus ADM</option>
-              <option>Voglio capire prima</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Disposto a pagare</label>
-          <select id="fPay">
-            <option>Solo se gratis</option>
-            <option>Una tantum 50-200</option>
-            <option>Una tantum 200-500</option>
-            <option>Abbonamento</option>
-            <option>Profit share</option>
-          </select>
-        </div>
-        <div class="field"><label>Note libere</label><textarea id="fNote"></textarea></div>
-      </div>
-
       <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
       <p class="save-note" id="saveNote"></p>
+
+      <div class="card" style="margin-top:14px">
+        <h2>Il tuo identikit business</h2>
+        <div id="identikitBox"></div>
+      </div>
       </div>
 
       <div class="rpanel" id="profilo-attivita">
@@ -371,6 +342,7 @@
     window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="identikit.js?v=1"></script>
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     const tg = window.Telegram?.WebApp;
@@ -388,12 +360,34 @@
       document.getElementById("fEmail").value = sond.email || "";
       document.getElementById("fTelefono").value = sond.telefono || "";
       document.getElementById("fCitta").value = sond.citta || "";
-      if (sond.livello_trading) document.getElementById("fLivello").value = sond.livello_trading;
-      if (sond.esperienza_broker) document.getElementById("fEsperienza").value = sond.esperienza_broker;
-      if (sond.capitale) document.getElementById("fCapitale").value = sond.capitale;
-      if (sond.prodotto_preferito) document.getElementById("fProdotto").value = sond.prodotto_preferito;
-      if (sond.willingness_to_pay) document.getElementById("fPay").value = sond.willingness_to_pay;
-      document.getElementById("fNote").value = sond.note_libere || "";
+      renderIdentikit(sond.identikit);
+    }
+
+    // Identikit business nel profilo: punteggi per area + archetipo + rifai il test.
+    function renderIdentikit(idk) {
+      const box = document.getElementById("identikitBox");
+      if (!idk || !idk.scores) {
+        box.innerHTML = `<p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Non hai ancora fatto il test di consapevolezza business.</p>
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Fai il test</button>`;
+        return;
+      }
+      const bars = Object.keys(CONS_DIM).map((d) => {
+        const c = CONS_DIM[d], val = idk.scores[d] ?? 0;
+        return `<div class="ik-row"><div class="ik-top"><span class="ik-name">${c.label}</span><span class="ik-val" style="color:${c.color}">${val}</span></div>
+          <div class="ik-track"><div class="ik-fill" style="width:${val}%;background:${c.color}"></div></div></div>`;
+      }).join("");
+      box.innerHTML = `
+        <div class="ik-arch">
+          <div class="ik-arch-lbl">Il tuo archetipo</div>
+          <div class="ik-arch-name">${escapeHtml(idk.archetipo || "")}</div>
+          <div class="ik-arch-desc">${escapeHtml(idk.descrizione || "")}</div>
+        </div>
+        ${bars}
+        <div class="ik-two">
+          <div class="ik-mini"><div class="ik-mini-h ok">Punti di forza</div>${(idk.forze || []).map((f) => `<div>${escapeHtml(f)}</div>`).join("")}</div>
+          <div class="ik-mini"><div class="ik-mini-h warn">Da rafforzare</div>${(idk.lacune || []).map((f) => `<div>${escapeHtml(f)}</div>`).join("")}</div>
+        </div>
+        <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);margin-top:12px" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Rifai il test</button>`;
     }
 
     document.getElementById("saveBtn").onclick = async () => {
@@ -407,12 +401,6 @@
         email: document.getElementById("fEmail").value.trim(),
         telefono: document.getElementById("fTelefono").value.trim(),
         citta: document.getElementById("fCitta").value.trim(),
-        livello_trading: document.getElementById("fLivello").value,
-        esperienza_broker: document.getElementById("fEsperienza").value,
-        capitale: document.getElementById("fCapitale").value,
-        prodotto_preferito: document.getElementById("fProdotto").value,
-        willingness_to_pay: document.getElementById("fPay").value,
-        note_libere: document.getElementById("fNote").value.trim(),
         disclaimer_accettato: true,
       };
 

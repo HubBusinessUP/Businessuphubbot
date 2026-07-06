@@ -129,6 +129,10 @@
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
   .list-card { background: none; border: none; padding: 0; }
+  .sem-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+  .sem-verde { background: #2ecc71; }
+  .sem-giallo { background: #e8b34c; }
+  .sem-rosso { background: #e2574a; }
   .biz { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; padding: 0 14px; }
   .list-item {
     display: flex; align-items: center; gap: 13px; padding: 14px 0;
@@ -429,6 +433,7 @@
     })();
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="identikit.js?v=1"></script>
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     const tg = window.Telegram?.WebApp;
@@ -486,6 +491,7 @@
       const completato = !!lead.sondaggio_completato;
       window.sondaggioCompletato = completato;
       window.isCliente = !!lead.is_cliente;
+      window.userParams = data.sondaggio?.identikit?.params || null;
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
 
       if (data.ripresa) {
@@ -607,12 +613,14 @@
         const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
         const descRaw = (s.descrizione || s.categoria_nome || "").replace(/\*\*/g, "").trim();
         const desc = descRaw.length > 54 ? descRaw.slice(0, 54).trim() + "…" : descRaw;
+        const sem = (typeof computeSemaforo === "function") ? computeSemaforo(window.userParams, s) : null;
+        const dot = sem ? `<span class="sem-dot sem-${sem}" title="Compatibilità col tuo profilo"></span>` : "";
         return `
         <div class="biz" id="biz-${s.id}">
           <div class="list-item" onclick="toggleBiz(${s.id})">
             <div class="cat-ico" style="background:${color}">${CAT_ICON_SVG}</div>
             <div class="cat-body">
-              <div class="cat-name">${s.nome}</div>
+              <div class="cat-name">${dot}${s.nome}</div>
               <div class="cat-count">${desc}</div>
             </div>
             <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">

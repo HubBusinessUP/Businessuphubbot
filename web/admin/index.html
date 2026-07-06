@@ -332,6 +332,41 @@
         </div>
       </div>
 
+      <div style="border-top:1px solid var(--border);margin:6px 0 12px;padding-top:12px">
+        <div class="item-meta" style="margin-bottom:8px">Requisiti (per il pallino di compatibilità col profilo utente). Lascia vuoto = nessun requisito su quel campo.</div>
+        <div class="row2">
+          <div class="field"><label>Budget minimo (€)</label><input id="svcBudget" type="number" min="0" placeholder="es. 5000" /></div>
+          <div class="field"><label>Livello di rischio</label>
+            <select id="svcRischio">
+              <option value="">—</option>
+              <option value="1">Basso</option>
+              <option value="2">Medio</option>
+              <option value="3">Alto</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Tempo richiesto</label>
+            <select id="svcTempoReq">
+              <option value="">—</option>
+              <option value="1">Poche ore</option>
+              <option value="2">5-10 h/sett</option>
+              <option value="3">10-20 h/sett</option>
+              <option value="4">Tempo pieno</option>
+            </select>
+          </div>
+          <div class="field"><label>Esperienza richiesta</label>
+            <select id="svcEsperienza">
+              <option value="">—</option>
+              <option value="1">Nessuna</option>
+              <option value="2">Base</option>
+              <option value="3">Intermedia</option>
+              <option value="4">Avanzata</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label>Tutorial — step "Come funziona"</label>
         <div id="stepsEditor"></div>
@@ -1021,6 +1056,10 @@
       document.getElementById("svcOrdine").value = s?.ordine ?? 0;
       document.getElementById("svcTempo").value = s?.tempo_stimato || "";
       document.getElementById("svcDifficolta").value = s?.difficolta || "";
+      document.getElementById("svcBudget").value = s?.budget_minimo || "";
+      document.getElementById("svcRischio").value = s?.rischio_livello || "";
+      document.getElementById("svcTempoReq").value = s?.tempo_richiesto || "";
+      document.getElementById("svcEsperienza").value = s?.esperienza_richiesta || "";
 
       const catSelect = document.getElementById("svcCategoria");
       catSelect.innerHTML = categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
@@ -1054,6 +1093,10 @@
         ordine: parseInt(document.getElementById("svcOrdine").value) || 0,
         tempo_stimato: document.getElementById("svcTempo").value.trim(),
         difficolta: document.getElementById("svcDifficolta").value,
+        budget_minimo: document.getElementById("svcBudget").value ? parseInt(document.getElementById("svcBudget").value) : null,
+        rischio_livello: document.getElementById("svcRischio").value ? parseInt(document.getElementById("svcRischio").value) : null,
+        tempo_richiesto: document.getElementById("svcTempoReq").value ? parseInt(document.getElementById("svcTempoReq").value) : null,
+        esperienza_richiesta: document.getElementById("svcEsperienza").value ? parseInt(document.getElementById("svcEsperienza").value) : null,
         tutorial_steps: steps,
       };
       await api("admin/servizi/save", { method: "POST", body: JSON.stringify(body) });

@@ -76,6 +76,24 @@
   .check-row input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--blue); flex-shrink: 0; }
   .check-row span { font-size: 13.5px; line-height: 1.4; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .ik-arch { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .ik-arch-lbl { font-size: 12px; color: var(--text-dim); }
+  .ik-arch-name { font-size: 19px; font-weight: 800; margin: 3px 0 5px; }
+  .ik-arch-desc { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+  .ik-sec { font-size: 12px; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 6px 0 14px; }
+  .ik-row { margin-bottom: 14px; }
+  .ik-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .ik-name { font-size: 14px; font-weight: 600; }
+  .ik-val { font-size: 15px; font-weight: 800; }
+  .ik-track { height: 9px; background: var(--ink); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .ik-fill { height: 100%; border-radius: 6px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .ik-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0 8px; }
+  .ik-mini { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 13px; }
+  .ik-mini-h { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .ik-mini-h.ok { color: #2ecc71; }
+  .ik-mini-h.warn { color: var(--amber); }
+  .ik-mini div:not(.ik-mini-h) { font-size: 13px; margin-bottom: 3px; }
 </style>
 </head>
 <body>
@@ -95,25 +113,20 @@
     window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="identikit.js?v=1"></script>
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
     const initData = tg?.initData || "";
 
-    const SURVEY = [
+    const PERSONALI = [
       { key: "nome", type: "text", q: "Come ti chiami?" },
       { key: "cognome", type: "text", q: "Il tuo cognome?" },
       { key: "email", type: "email", q: "La tua email?" },
       { key: "citta", type: "text", q: "In che città vivi?" },
-      { key: "livello_trading", type: "choice", q: "Il tuo livello di trading?", opts: ["Principiante", "Intermedio", "Avanzato"] },
-      { key: "esperienza_broker", type: "choice", q: "Hai già operato con broker reali?", opts: ["No mai", "Sì da meno di 6 mesi", "Sì da più di 6 mesi"] },
-      { key: "capitale", type: "choice", q: "Quanto capitale dedicheresti?", opts: ["Meno di 500 euro", "500-2.000 euro", "2.000-10.000 euro", "10.000+ euro"] },
-      { key: "prodotto_preferito", type: "choice", q: "Quale metodo ti interessa?", opts: ["Broker vs Broker", "Prop vs Broker", "Bonus ADM", "Voglio capire prima"] },
-      { key: "willingness_to_pay", type: "choice", q: "Disposto a pagare per un metodo testato?", opts: ["Solo se gratis", "Una tantum 50-200", "Una tantum 200-500", "Abbonamento", "Profit share"] },
-      { key: "note_libere", type: "text", optional: true, q: "Domande o dubbi? (facoltativo)" },
-      { key: "disclaimer_accettato", type: "disclaimer", q: "Prima di continuare" },
     ];
+    const SURVEY = [...PERSONALI, ...CONS_Q, { key: "disclaimer_accettato", type: "disclaimer", q: "Prima di continuare" }];
 
     let step = 0;
     const data = {};
@@ -148,14 +161,14 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
               Avviso importante
             </div>
-            <p>Business UP non offre consulenza finanziaria e non promette guadagni. I metodi trattati (trading, broker, prop firm) comportano rischio reale di perdita del capitale.</p>
+            <p>Business UP non offre consulenza finanziaria e non promette guadagni. I metodi trattati comportano rischio reale di perdita del capitale.</p>
             <p>Le informazioni condivise sono a scopo educativo. Prima di attivare un servizio, valuta con la tua testa se è adatto alla tua situazione economica.</p>
           </div>
           <label class="check-row">
             <input type="checkbox" id="discCheck" />
             <span>Ho letto, ho capito il rischio e voglio continuare.</span>
           </label>
-          <button type="button" class="btn" id="discBtn" disabled>Conferma e sblocca l'accesso</button>
+          <button type="button" class="btn" id="discBtn" disabled>Vedi il tuo identikit</button>
         `;
         form.appendChild(wrap);
         const check = document.getElementById("discCheck");
@@ -169,13 +182,26 @@
       label.textContent = q.q;
       wrap.appendChild(label);
 
-      if (q.type === "choice") {
-        q.opts.forEach((opt) => {
+      if (q.type === "number") {
+        const inRow = document.createElement("div");
+        inRow.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:14px";
+        const input = document.createElement("input");
+        input.type = "number"; input.inputMode = "numeric"; input.min = "0";
+        input.placeholder = q.placeholder || "0";
+        input.style.marginBottom = "0";
+        inRow.appendChild(input);
+        if (q.suffix) { const suf = document.createElement("span"); suf.textContent = q.suffix; suf.style.cssText = "font-size:18px;font-weight:700;color:var(--text-dim)"; inRow.appendChild(suf); }
+        wrap.appendChild(inRow);
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "btn"; btn.textContent = "Continua";
+        btn.onclick = () => { data[q.key] = input.value.trim() === "" ? 0 : Math.max(0, Number(input.value) || 0); next(); };
+        wrap.appendChild(btn);
+      } else if (q.opts) {
+        q.opts.forEach((opt, i) => {
           const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "opt";
-          btn.textContent = opt;
-          btn.onclick = () => { data[q.key] = opt; next(); };
+          btn.type = "button"; btn.className = "opt";
+          btn.textContent = typeof opt === "string" ? opt : opt.t;
+          btn.onclick = () => { data[q.key] = i; next(); };
           wrap.appendChild(btn);
         });
       } else {
@@ -183,16 +209,11 @@
         input.type = q.type === "email" ? "email" : "text";
         input.placeholder = q.type === "email" ? "nome@esempio.com" : "Scrivi qui...";
         wrap.appendChild(input);
-
         const err = document.createElement("div");
-        err.className = "field-error";
-        err.textContent = "Inserisci un'email valida.";
+        err.className = "field-error"; err.textContent = "Inserisci un'email valida.";
         wrap.appendChild(err);
-
         const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn";
-        btn.textContent = "Continua";
+        btn.type = "button"; btn.className = "btn"; btn.textContent = "Continua";
         btn.onclick = () => {
           const val = input.value.trim();
           if (q.type === "email" && !isValidEmail(val)) { err.style.display = "block"; return; }
@@ -200,14 +221,6 @@
           next();
         };
         wrap.appendChild(btn);
-        if (q.optional) {
-          const skip = document.createElement("button");
-          skip.type = "button";
-          skip.className = "btn btn-skip";
-          skip.textContent = "Salta";
-          skip.onclick = () => { data[q.key] = ""; next(); };
-          wrap.appendChild(skip);
-        }
       }
       form.appendChild(wrap);
     }
@@ -219,18 +232,49 @@
     }
 
     async function submit() {
-      document.getElementById("progText").textContent = "Invio in corso...";
+      document.getElementById("progText").textContent = "Calcolo il tuo identikit...";
+      const cons = {};
+      for (const q of CONS_Q) cons[q.key] = data[q.key];
+      const identikit = computeIdentikit(cons);
       try {
-        const res = await fetch(`${API_URL}/sondaggio`, {
+        await fetch(`${API_URL}/sondaggio`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            nome: data.nome, cognome: data.cognome, email: data.email, citta: data.citta,
+            disclaimer_accettato: true, consapevolezza: cons, identikit,
+          }),
         });
-        await res.json();
-        window.location.replace(`dashboard.html?_=${Date.now()}`);
+        renderResult(identikit);
       } catch (e) {
         document.getElementById("progText").textContent = "Errore, riprova.";
       }
+    }
+
+    function renderResult(idk) {
+      document.querySelector(".top h1").textContent = "Il tuo identikit";
+      document.getElementById("progText").textContent = "Assessment completato";
+      document.getElementById("bar").style.display = "none";
+      const bars = Object.keys(CONS_DIM).map((d) => {
+        const c = CONS_DIM[d], val = idk.scores[d];
+        return `<div class="ik-row"><div class="ik-top"><span class="ik-name">${c.label}</span><span class="ik-val" style="color:${c.color}">${val}</span></div>
+          <div class="ik-track"><div class="ik-fill" style="width:0;background:${c.color}" data-w="${val}"></div></div></div>`;
+      }).join("");
+      form.innerHTML = `
+        <div class="ik-arch">
+          <div class="ik-arch-lbl">Il tuo archetipo</div>
+          <div class="ik-arch-name">${idk.archetipo}</div>
+          <div class="ik-arch-desc">${idk.descrizione}</div>
+        </div>
+        <div class="ik-sec">Il tuo identikit in numeri</div>
+        ${bars}
+        <div class="ik-two">
+          <div class="ik-mini"><div class="ik-mini-h ok">Punti di forza</div>${idk.forze.map((f) => `<div>${f}</div>`).join("")}</div>
+          <div class="ik-mini"><div class="ik-mini-h warn">Da rafforzare</div>${idk.lacune.map((f) => `<div>${f}</div>`).join("")}</div>
+        </div>
+        <button type="button" class="btn" style="margin-top:8px" onclick="window.location.replace('dashboard.html?_=' + Date.now())">Vai alla Business List</button>
+      `;
+      setTimeout(() => document.querySelectorAll(".ik-fill").forEach((el) => { el.style.width = el.getAttribute("data-w") + "%"; }), 120);
     }
 
     render();
