@@ -368,9 +368,15 @@
       </div>
 
       <div class="field">
-        <label>Tutorial — step "Come funziona"</label>
+        <label>Tutorial — step "Come funziona" (ogni step può avere un bottone-link)</label>
         <div id="stepsEditor"></div>
         <button class="btn btn-secondary btn-small" onclick="addStepRow()">+ Aggiungi step</button>
+      </div>
+
+      <div class="field">
+        <label>Risorse (link secondari: canale, video guida...)</label>
+        <div id="risorseEditor"></div>
+        <button class="btn btn-secondary btn-small" onclick="addRisorsaRow()">+ Aggiungi risorsa</button>
       </div>
 
       <div class="modal-actions">
@@ -1031,10 +1037,15 @@
     function addStepRow(step) {
       const wrap = document.createElement("div");
       wrap.className = "step-row";
+      const esc = (x) => String(x ?? "").replace(/"/g, "&quot;");
       wrap.innerHTML = `
         <div class="step-fields">
-          <input class="step-titolo" placeholder="Titolo step" value="${step?.titolo ? step.titolo.replace(/"/g, "&quot;") : ""}" />
+          <input class="step-titolo" placeholder="Titolo step" value="${esc(step?.titolo)}" />
           <textarea class="step-testo" placeholder="Testo">${step?.testo || ""}</textarea>
+          <div style="display:flex;gap:6px">
+            <input class="step-linklabel" placeholder="Testo bottone (es. Apri account)" value="${esc(step?.link_label)}" style="flex:1" />
+            <input class="step-linkurl" placeholder="https://... (opzionale)" value="${esc(step?.link_url)}" style="flex:1.4" />
+          </div>
         </div>
         <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
       `;
@@ -1069,14 +1080,38 @@
       const steps = Array.isArray(s?.tutorial_steps) ? s.tutorial_steps : [];
       steps.forEach((st) => addStepRow(st));
 
+      document.getElementById("risorseEditor").innerHTML = "";
+      const risorse = Array.isArray(s?.risorse) ? s.risorse : [];
+      risorse.forEach((r) => addRisorsaRow(r));
+
       openModal("svcOverlay");
+    }
+
+    function addRisorsaRow(r) {
+      const esc = (x) => String(x ?? "").replace(/"/g, "&quot;");
+      const wrap = document.createElement("div");
+      wrap.className = "risorsa-row";
+      wrap.style.cssText = "display:flex;gap:6px;margin-bottom:8px";
+      wrap.innerHTML = `
+        <input class="ris-label" placeholder="Nome (es. Canale Telegram)" value="${esc(r?.label)}" style="flex:1" />
+        <input class="ris-url" placeholder="https://..." value="${esc(r?.url)}" style="flex:1.4" />
+        <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
+      `;
+      document.getElementById("risorseEditor").appendChild(wrap);
     }
 
     async function saveServizio() {
       const steps = [...document.querySelectorAll("#stepsEditor .step-row")].map((row) => ({
         titolo: row.querySelector(".step-titolo").value.trim(),
         testo: row.querySelector(".step-testo").value.trim(),
+        link_label: row.querySelector(".step-linklabel").value.trim(),
+        link_url: row.querySelector(".step-linkurl").value.trim(),
       })).filter((s) => s.titolo || s.testo);
+
+      const risorse = [...document.querySelectorAll("#risorseEditor .risorsa-row")].map((row) => ({
+        label: row.querySelector(".ris-label").value.trim(),
+        url: row.querySelector(".ris-url").value.trim(),
+      })).filter((r) => r.url);
 
       const body = {
         id: document.getElementById("svcId").value || undefined,
@@ -1098,6 +1133,7 @@
         tempo_richiesto: document.getElementById("svcTempoReq").value ? parseInt(document.getElementById("svcTempoReq").value) : null,
         esperienza_richiesta: document.getElementById("svcEsperienza").value ? parseInt(document.getElementById("svcEsperienza").value) : null,
         tutorial_steps: steps,
+        risorse,
       };
       await api("admin/servizi/save", { method: "POST", body: JSON.stringify(body) });
       closeModal("svcOverlay");

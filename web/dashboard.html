@@ -219,6 +219,10 @@
   .chk-body strong { color: var(--text); font-weight: 700; }
   .chk-row.locked .chk-body b { color: var(--text-dim); }
   .chk-done-btn { margin-top: 8px; padding: 9px 14px; border: none; border-radius: 4px; background: var(--blue); color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .chk-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; margin-right: 8px; padding: 9px 14px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); border: 1px solid rgba(46,204,113,0.35); font-size: 12.5px; font-weight: 700; text-decoration: none; }
+  .biz-risorse { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .biz-risorse-t { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .biz-res { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--blue); font-size: 13px; font-weight: 600; text-decoration: none; }
 
   .biz-cta { width: 100%; padding: 14px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .biz-cta:disabled { opacity: 0.6; }
@@ -690,6 +694,9 @@
     function mdBold(testo) {
       return String(testo || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     }
+    function escAttr(s) { return String(s ?? "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+    function escTxt(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function safeUrl(u) { const v = String(u || "").trim(); return /^https?:\/\//i.test(v) ? v : ""; }
 
     function buildDetail(id, data) {
       const s = data.servizio || {};
@@ -710,9 +717,18 @@
       const chkRows = steps.map((st, i) => {
         const state = i < prog.ultimo_step ? "done" : i === prog.ultimo_step ? "current" : "locked";
         const boxContent = state === "done" ? "✓" : (i + 1);
+        // Bottone d'azione dello step (link_url impostato dall'admin): sequenza di attivazione.
+        const url = safeUrl(st.link_url);
+        const linkBtn = (state === "current" && url) ? `<a class="chk-link" href="${escAttr(url)}" target="_blank" rel="noopener">🔗 ${escTxt(st.link_label || "Apri il link")}</a>` : "";
         const btn = state === "current" ? `<button class="chk-done-btn" onclick="bizStepDone(${id}, ${i}, ${i === steps.length - 1})">Segna come fatto</button>` : "";
-        return `<div class="chk-row ${state}"><div class="chk-box">${boxContent}</div><div class="chk-body"><b>${st.titolo}</b>${mdBold(st.testo)}${btn}</div></div>`;
+        return `<div class="chk-row ${state}"><div class="chk-box">${boxContent}</div><div class="chk-body"><b>${st.titolo}</b>${mdBold(st.testo)}${linkBtn}${btn}</div></div>`;
       }).join("");
+
+      // Sezione Risorse: link secondari (canale Telegram, video guida...) come link testuali leggeri.
+      const risorse = (Array.isArray(s.risorse) ? s.risorse : []).filter((r) => r && safeUrl(r.url));
+      const risorseHtml = risorse.length
+        ? `<div class="biz-risorse"><div class="biz-risorse-t">Risorse</div>${risorse.map((r) => `<a class="biz-res" href="${escAttr(safeUrl(r.url))}" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg> ${escTxt(r.label || r.url)}</a>`).join("")}</div>`
+        : "";
 
       // Trasparenza sulla fonte: l'utente sa sempre se sta usando il link del suo sponsor o quello ufficiale del sistema.
       const fonteNote = data.ref_fonte
@@ -736,6 +752,7 @@
         ${rows.length ? `<div class="biz-rows">${rows.join("")}</div>` : ""}
         <div class="chk"><div class="chk-title">Checklist di avvio</div>${chkRows}</div>
         ${cta}
+        ${risorseHtml}
         <div class="biz-foot">
           <button onclick="shareBiz('${(s.nome || "").replace(/'/g, "\\'")}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg> Condividi</button>
           <a href="https://t.me/antonybusinesshub" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg> Hai problemi? Scrivici</a>
