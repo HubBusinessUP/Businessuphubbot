@@ -132,13 +132,13 @@
   .list-item:active { opacity: 0.8; }
 
   .vote-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-    width: 44px; height: 44px; flex-shrink: 0;
-    background: var(--ink); border: 1px solid var(--border); border-radius: 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    width: 38px; flex-shrink: 0; padding: 4px 2px;
+    background: none; border: none;
     color: var(--text-dim); cursor: pointer; font-family: inherit;
   }
-  .vote-btn .vote-num { font-size: 12px; font-weight: 700; color: var(--text); }
-  .vote-btn.voted { border-color: var(--lime); background: var(--lime-dim); color: var(--lime); }
+  .vote-btn .vote-num { font-size: 12.5px; font-weight: 700; color: var(--text); }
+  .vote-btn.voted { color: var(--lime); }
   .vote-btn.voted .vote-num { color: var(--lime); }
 
   .search-row { margin-bottom: 10px; }
@@ -234,7 +234,7 @@
   }
   body.light .icon-circle { background: #eceef2; }
   body.light .icon-circle.plus { background: var(--lime); color: #06110b; }
-  body.light .vote-btn { background: #f6f7f9; }
+  body.light .vote-btn { background: none; }
   body.light .sk { background: linear-gradient(90deg, #e8eaee 25%, #f5f6f8 50%, #e8eaee 75%); background-size: 200% 100%; }
 
   .lock-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 24px 20px; text-align: center; margin-bottom: 14px; }
@@ -584,18 +584,19 @@
 
       const visible = filtered.slice(0, visibleCount);
       el.innerHTML = visible.map((s) => {
-        const rank = rankMap[s.id];
         const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
+        const descRaw = (s.descrizione || s.categoria_nome || "").replace(/\*\*/g, "").trim();
+        const desc = descRaw.length > 54 ? descRaw.slice(0, 54).trim() + "…" : descRaw;
         return `
         <div class="biz" id="biz-${s.id}">
           <div class="list-item" onclick="toggleBiz(${s.id})">
             <div class="cat-ico" style="background:${color}">${CAT_ICON_SVG}</div>
             <div class="cat-body">
-              <div class="cat-name">${rank ? `<span class="rank-chip rank-${rank}">#${rank}</span>` : ""}${s.nome}${isNew(s) ? '<span class="new-badge">Nuovo</span>' : ""}</div>
-              <div class="cat-count">${s.categoria_nome || ""}</div>
+              <div class="cat-name">${s.nome}</div>
+              <div class="cat-count">${desc}</div>
             </div>
             <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
               <span class="vote-num">${s.voti || 0}</span>
             </button>
           </div>
