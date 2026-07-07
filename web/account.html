@@ -9,16 +9,20 @@
 <title>Il mio account - Business UP</title>
 <style>
   :root {
-    --ink: #0d0e15;
-    --panel: #171a28;
-    --blue: #4a90e2;
-    --blue-dim: rgba(74, 144, 226, 0.16);
+    --ink: #181b22;
+    --panel: #232834;
+    --card2: #2b313f;
+    --blue: #5aa9f0;
+    --blue-dim: rgba(90, 169, 240, 0.16);
     --lime: #2ecc71;
-    --lime-dim: rgba(46, 204, 113, 0.16);
+    --lime-dim: rgba(46, 204, 113, 0.15);
+    --amber: #e8b34c;
+    --amber-dim: rgba(232, 179, 76, 0.15);
+    --teal: #38c6c6;
     --slate: #3a4358;
-    --text: #f2f3f7;
-    --text-dim: #8b90a0;
-    --border: #1e2130;
+    --text: #f5f6f9;
+    --text-dim: #98a0b2;
+    --border: #30374a;
   }
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
@@ -34,6 +38,7 @@
   body {
     min-height: 100vh; background: var(--ink); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 92px; }
 
@@ -93,7 +98,7 @@
   .top h1 { font-size: 19px; font-weight: 700; }
   .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
   .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
   .field { margin-bottom: 14px; }
@@ -333,6 +338,21 @@
       </div>
 
       <div class="rpanel active" id="profilo-dati">
+      <div class="aff-carousel">
+        <div class="aff-track">
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+            <h4>Il tuo profilo di base</h4>
+            <p>Nome, contatti e citt&agrave;: servono per la tua <b style="color:var(--text)">pagina pubblica</b> e per essere ricontattato quando serve.</p>
+          </div>
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+            <h4>Sempre aggiornabili</h4>
+            <p>Puoi modificare i tuoi dati quando vuoi. <b style="color:var(--text)">Nulla &egrave; definitivo</b>: salvi e sono subito attivi.</p>
+          </div>
+        </div>
+        <div class="aff-dots"></div>
+      </div>
       <div class="card">
         <h2>Dati anagrafici</h2>
         <div class="field"><label>Nome</label><input id="fNome" /></div>
@@ -353,6 +373,26 @@
       </div>
 
       <div class="rpanel" id="profilo-identikit">
+      <div class="aff-carousel">
+        <div class="aff-track">
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <h4>Un test, un identikit</h4>
+            <p>22 domande per fotografare <b style="color:var(--text)">dove sei oggi</b> in ambito business, con lucidità e senza illusioni.</p>
+          </div>
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20h-20"/></svg></div>
+            <h4>I tuoi numeri</h4>
+            <p>Sei aree misurate: <b style="color:var(--text)">motivazione, risorse, rischio, competenze, disciplina e consapevolezza</b>.</p>
+          </div>
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg></div>
+            <h4>Ti guida ai business giusti</h4>
+            <p>In base al tuo profilo, ogni business mostra un <b style="color:var(--text)">pallino di compatibilità</b> nella lista.</p>
+          </div>
+        </div>
+        <div class="aff-dots"></div>
+      </div>
       <div class="card">
         <h2>Il tuo identikit business</h2>
         <div id="identikitBox"></div>
@@ -360,6 +400,21 @@
       </div>
 
       <div class="rpanel" id="profilo-attivita">
+      <div class="aff-carousel">
+        <div class="aff-track">
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <h4>I tuoi business attivi</h4>
+            <p>Ritrova qui i business che hai avviato, con il <b style="color:var(--text)">link per riaprirli</b> e lo stato del tutorial.</p>
+          </div>
+          <div class="aff-slide">
+            <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+            <h4>Le tue candidature</h4>
+            <p>Proponi nuovi business all'hub: qui <b style="color:var(--text)">segui lo stato</b> di ogni proposta inviata.</p>
+          </div>
+        </div>
+        <div class="aff-dots"></div>
+      </div>
       <div class="card">
         <h2>I miei business attivi</h2>
         <div id="prodottiRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>

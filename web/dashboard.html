@@ -131,6 +131,16 @@
   .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
+  .aff-carousel { margin-bottom: 14px; }
+  .aff-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .aff-track::-webkit-scrollbar { display: none; }
+  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
+  .aff-ic { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .aff-slide h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .aff-slide p { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .aff-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+  .aff-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; }
+  .aff-dot.on { background: var(--lime); width: 18px; border-radius: 3px; }
   .list-card { background: none; border: none; padding: 0; }
   .sem-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; animation: sem-pulse 1.5s ease-out infinite; }
   @keyframes sem-pulse { 0% { box-shadow: 0 0 0 0 currentColor; } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
@@ -357,6 +367,32 @@
       </div>
       <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
     </button>
+
+    <div class="aff-carousel">
+      <div class="aff-track">
+        <div class="aff-slide">
+          <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <h4>Business selezionati dal team</h4>
+          <p>Ogni opportunità qui dentro è <b style="color:var(--text)">testata e verificata</b>. Niente promesse, solo business reali.</p>
+        </div>
+        <div class="aff-slide">
+          <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 4 15h16z"/></svg></div>
+          <h4>Vota quelli che funzionano</h4>
+          <p>Il tuo voto sposta la classifica: i migliori salgono in cima grazie alla <b style="color:var(--text)">community</b>.</p>
+        </div>
+        <div class="aff-slide">
+          <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></div>
+          <h4>Apri, segui gli step, attiva</h4>
+          <p>Tocca un business per la scheda: caratteristiche, <b style="color:var(--text)">tutorial passo-passo</b> e link ufficiale.</p>
+        </div>
+        <div class="aff-slide">
+          <div class="aff-ic" style="background:var(--teal); color:#06110b"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg></div>
+          <h4>Il pallino ti orienta</h4>
+          <p>Verde, giallo o rosso: a colpo d'occhio vedi quali business sono <b style="color:var(--text)">in linea con il tuo profilo</b>.</p>
+        </div>
+      </div>
+      <div class="aff-dots"></div>
+    </div>
 
     <div class="section-row">
       <div class="section-title"><span class="live-dot"></span>Business list</div>
@@ -1066,6 +1102,25 @@
       else if (confirm(conferma)) doSubmitSuggest();
     }
     window.submitSuggest = submitSuggest;
+
+    // Caroselli "come funziona" (puntini + swipe).
+    (function initCaroselli() {
+      document.querySelectorAll(".aff-carousel").forEach((car) => {
+        const track = car.querySelector(".aff-track");
+        const dotsWrap = car.querySelector(".aff-dots");
+        if (!track || !dotsWrap) return;
+        track.querySelectorAll(".aff-slide").forEach((_, i) => {
+          const d = document.createElement("div");
+          d.className = "aff-dot" + (i === 0 ? " on" : "");
+          dotsWrap.appendChild(d);
+        });
+        const dots = dotsWrap.querySelectorAll(".aff-dot");
+        track.addEventListener("scroll", () => {
+          const idx = track.clientWidth ? Math.round(track.scrollLeft / track.clientWidth) : 0;
+          dots.forEach((d, i) => d.classList.toggle("on", i === idx));
+        }, { passive: true });
+      });
+    })();
 
     async function init() {
       await loadMe();
