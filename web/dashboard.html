@@ -129,7 +129,9 @@
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
   .list-card { background: none; border: none; padding: 0; }
-  .sem-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+  .sem-dot { position: relative; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+  .sem-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: inherit; animation: sem-pulse 1.7s ease-out infinite; }
+  @keyframes sem-pulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.6); opacity: 0; } }
   .sem-verde { background: #2ecc71; }
   .sem-giallo { background: #e8b34c; }
   .sem-rosso { background: #e2574a; }
@@ -758,7 +760,7 @@
       if (!window.sondaggioCompletato) {
         cta = `<button class="biz-cta" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica per iscriverti</button>`;
       } else if (data.gia_interessato) {
-        cta = `<button class="biz-cta" onclick="apriRefLink(${id})">Apri il tuo link di iscrizione</button>
+        cta = `<button class="biz-cta" onclick="apriRefLink(${id})">Apri il link e registrati</button>
                <div class="biz-linkbox">${data.ref_link || ""}</div>${fonteNote}`;
       } else {
         cta = `<button class="biz-cta" id="bizcta-${id}" onclick="attivaBiz(${id})">Iscriviti con il link${data.ref_fonte === "sponsor" ? " del tuo sponsor" : ""} — supporto prioritario</button>
