@@ -199,9 +199,7 @@
   .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
   .biz.open .biz-detail { max-height: 1400px; }
   .biz-inner { padding: 4px 2px 16px; }
-  .biz-head { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px; }
-  .biz-head-title { font-size: 17px; font-weight: 800; }
-  .biz-head .biz-chips { margin-bottom: 0; margin-top: 10px; }
+  .biz-sec { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 11px; margin-bottom: 14px; }
   .biz-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .biz-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border); color: var(--text); }
   .biz-desc { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 14px; }
@@ -768,7 +766,8 @@
       }
 
       return `
-        <div class="biz-head"><div class="biz-head-title">${escTxt(s.nome)}</div>${chips.length ? `<div class="biz-chips">${chips.join("")}</div>` : ""}</div>
+        <div class="biz-sec">Come funziona</div>
+        ${chips.length ? `<div class="biz-chips">${chips.join("")}</div>` : ""}
         ${s.descrizione ? `<div class="biz-desc">${mdBold(s.descrizione)}</div>` : ""}
         ${rows.length ? `<div class="chk-title" style="margin-bottom:8px">Caratteristiche</div><div class="biz-rows">${rows.join("")}</div>` : ""}
         <div class="chk">
