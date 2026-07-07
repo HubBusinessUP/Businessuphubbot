@@ -134,7 +134,12 @@
   .sem-verde { background: #2ecc71; color: rgba(46,204,113,0.55); }
   .sem-giallo { background: #e8b34c; color: rgba(232,179,76,0.55); }
   .sem-rosso { background: #e2574a; color: rgba(226,87,74,0.55); }
-  .biz { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; padding: 0 14px; }
+  .ic { width: 15px; height: 15px; vertical-align: -3px; margin-right: 5px; flex-shrink: 0; }
+  .chk-link .ic, .biz-res .ic { margin-right: 0; }
+  .biz { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 11px; padding: 0 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); transition: border-color 0.2s ease, box-shadow 0.25s ease; }
+  .biz.open { border-color: #2b3048; box-shadow: 0 6px 20px rgba(0,0,0,0.34); }
+  .biz.open .biz-inner { animation: bizfade 0.4s ease; }
+  @keyframes bizfade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
   .list-item {
     display: flex; align-items: center; gap: 13px; padding: 14px 0;
     cursor: pointer; width: 100%; text-align: left; font-family: inherit; color: inherit;
@@ -196,7 +201,7 @@
   .section-gap { height: 1px; background: var(--border); margin: 24px 6px; }
 
   /* Scheda prodotto inline ad accordion */
-  .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+  .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.34s cubic-bezier(0.4, 0, 0.2, 1); }
   .biz.open .biz-detail { max-height: 1400px; }
   .biz-inner { padding: 4px 2px 16px; }
   .biz-sec { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 11px; margin-bottom: 14px; }
@@ -702,7 +707,6 @@
     }
     window.toggleBiz = toggleBiz;
 
-    const DIFF_DOT = { facile: "🟢", medio: "🟡", avanzato: "🔴" };
     const FALLBACK_STEPS = [
       { titolo: "Apri il link ufficiale", testo: "Usa il bottone qui sotto per iscriverti." },
       { titolo: "Verifica il tuo account", testo: "Completa la registrazione sul sito." },
@@ -713,6 +717,10 @@
     function mdBold(testo) {
       return String(testo || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     }
+    const IC = {
+      clock: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
+      link: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>',
+    };
     function escAttr(s) { return String(s ?? "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
     function escTxt(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
     function safeUrl(u) { const v = String(u || "").trim(); return /^https?:\/\//i.test(v) ? v : ""; }
@@ -722,8 +730,6 @@
       const steps = Array.isArray(s.tutorial_steps) && s.tutorial_steps.length ? s.tutorial_steps : FALLBACK_STEPS;
       const prog = data.step_progress || { ultimo_step: 0, completato: false };
 
-      const chips = [];
-      if (s.tempo_stimato) chips.push(`<span class="biz-chip">🕒 ${s.tempo_stimato}</span>`);
 
       const rows = [];
       if (s.prezzo) rows.push(`<div class="biz-row"><span class="k">Prezzo</span><span class="v">${s.prezzo}</span></div>`);
@@ -739,7 +745,7 @@
         const num = state === "done" ? "✓" : (i + 1);
         // Bottone d'azione dello step (link_url impostato dall'admin): sequenza di attivazione.
         const url = safeUrl(st.link_url);
-        const linkBtn = (state === "current" && url) ? `<a class="chk-link" href="${escAttr(url)}" target="_blank" rel="noopener">🔗 ${escTxt(st.link_label || "Apri il link")}</a>` : "";
+        const linkBtn = (state === "current" && url) ? `<a class="chk-link" href="${escAttr(url)}" target="_blank" rel="noopener">${IC.link}${escTxt(st.link_label || "Apri il link")}</a>` : "";
         const btn = state === "current" ? `<button class="chk-done-btn" onclick="bizStepDone(${id}, ${i}, ${i === steps.length - 1})">Segna come fatto</button>` : "";
         return `<div class="stepc ${state}"><div class="stepc-num">${num}</div><div class="stepc-body"><b>${escTxt(st.titolo)}</b>${st.testo ? `<span class="st-txt">${mdBold(st.testo)}</span>` : ""}${linkBtn}${btn}</div></div>`;
       }).join("");
@@ -747,7 +753,7 @@
       // Sezione Risorse: link secondari (canale Telegram, video guida...) come link testuali leggeri.
       const risorse = (Array.isArray(s.risorse) ? s.risorse : []).filter((r) => r && safeUrl(r.url));
       const risorseHtml = risorse.length
-        ? `<div class="biz-risorse"><div class="biz-risorse-t">Risorse</div>${risorse.map((r) => `<a class="biz-res" href="${escAttr(safeUrl(r.url))}" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg> ${escTxt(r.label || r.url)}</a>`).join("")}</div>`
+        ? `<div class="biz-risorse"><div class="biz-risorse-t">Risorse</div>${risorse.map((r) => `<a class="biz-res" href="${escAttr(safeUrl(r.url))}" target="_blank" rel="noopener">${IC.link}${escTxt(r.label || r.url)}</a>`).join("")}</div>`
         : "";
 
       // Trasparenza sulla fonte: l'utente sa sempre se sta usando il link del suo sponsor o quello ufficiale del sistema.
@@ -771,7 +777,7 @@
         ${s.descrizione ? `<div class="biz-desc">${mdBold(s.descrizione)}</div>` : ""}
         ${rows.length ? `<div class="chk-title" style="margin-bottom:8px">Caratteristiche</div><div class="biz-rows">${rows.join("")}</div>` : ""}
         <div class="chk">
-          ${s.tempo_stimato ? `<div class="chk-tempo">🕒 Tempo per attivarlo: circa ${escTxt(s.tempo_stimato)}</div>` : ""}
+          ${s.tempo_stimato ? `<div class="chk-tempo">${IC.clock}Tempo per attivarlo: circa ${escTxt(s.tempo_stimato)}</div>` : ""}
           <div class="chk-head"><span class="chk-title">Percorso di attivazione</span><span class="chk-prog">${fatti} di ${totStep}</span></div>
           <div class="chk-bar"><div class="chk-bar-fill" style="width:${pct}%"></div></div>
           ${chkRows}
