@@ -199,8 +199,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
 
   await sendMessage(
     chatId,
-    `Ciao ${from.first_name || ""}! 👋\n\nBenvenuto in Business UP.\n\nUsa il bottone Menu qui sotto (accanto a dove scrivi) per aprire l'app.`,
-    { inline_keyboard: [[{ text: "🚀 Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
+    `Ciao ${from.first_name || ""}! 👋\n\nBenvenuto in Cashly.\n\nUsa il bottone Menu qui sotto (accanto a dove scrivi) per aprire l'app.`,
+    { inline_keyboard: [[{ text: "🚀 Apri Cashly", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
   )
 }
 
@@ -1518,7 +1518,7 @@ async function apiAdminBroadcast(body: any) {
   // altrimenti resta il bottone di default che apre la Mini App.
   const btnText = String(body?.btn_text || "").trim()
   const btnUrl = String(body?.btn_url || "").trim()
-  let markup: any = { inline_keyboard: [[{ text: "Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] }
+  let markup: any = { inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] }
   if (btnText && btnUrl && /^https?:\/\//.test(btnUrl)) {
     markup = { inline_keyboard: [[{ text: btnText.slice(0, 40), url: btnUrl }]] }
   } else if (btnText === "" && btnUrl === "" && body?.senza_bottone) {
@@ -1543,7 +1543,7 @@ async function apiAdminBroadcast(body: any) {
 // ---------- FOLLOW-UP AUTOMATICI ----------
 // Messaggi Day 1/3/7 per chi non ha ancora attivato nessun business; ogni invio è loggato e mai ripetuto.
 function testoFollowup(giorno: number, nome: string): string {
-  if (giorno === 1) return `Ciao ${nome}! Ho visto che ti sei iscritto a Business UP. Hai già dato un'occhiata alla Business List? Dentro trovi i business testati, ordinati dai voti della community.`
+  if (giorno === 1) return `Ciao ${nome}! Ho visto che ti sei iscritto a Cashly. Hai già dato un'occhiata alla Business List? Dentro trovi i business testati, ordinati dai voti della community.`
   if (giorno === 3) return `Ehi ${nome}, c'è qualcosa che non ti è chiaro nei tutorial? Ogni business ha una checklist passo-passo: apri la scheda e segui gli step. Se ti blocchi, scrivimi pure.`
   return `${nome}, ultima chiamata da parte mia: nella Business List ci sono opportunità che la community sta già usando. Bastano 5 minuti per attivare la prima. Poi non ti disturbo più, promesso.`
 }
@@ -1568,7 +1568,7 @@ async function cronFollowup() {
       const soglia = Math.max(...applicabili)
       const nome = l.nome || l.username || "ciao"
       await sendMessage(l.telegram_id, testoFollowup(soglia, nome), {
-        inline_keyboard: [[{ text: "Apri Business UP", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]],
+        inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]],
       })
       inviati++
       await new Promise((r) => setTimeout(r, 50))

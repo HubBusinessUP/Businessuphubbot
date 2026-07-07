@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Il mio account - Business UP</title>
+<title>Il mio account - Cashly</title>
 <style>
   :root {
     --ink: #181b22;
@@ -681,7 +681,7 @@
     function renderSponsor(sp) {
       if (!sp) return;
       document.getElementById("sponsorCard").style.display = "block";
-      document.getElementById("spNome").textContent = sp.is_founder ? "Business UP (sistema)" : (sp.nome || "Sponsor");
+      document.getElementById("spNome").textContent = sp.is_founder ? "Cashly (sistema)" : (sp.nome || "Sponsor");
       document.getElementById("spSub").textContent = sp.is_founder ? "Sei entrato direttamente dal bot" : (sp.username ? "@" + sp.username : "Il tuo punto di riferimento nell'HUB");
       const foto = document.getElementById("spFoto");
       if (sp.foto_url) foto.innerHTML = `<img src="${escapeHtml(sp.foto_url)}" alt="" onerror="this.remove()" />`;
@@ -803,7 +803,7 @@
     window.shareCopy = shareCopy;
 
     function condividiInvito() {
-      openShare(inviteLink, "Entra in Business UP con il mio invito:", "Condividi il tuo invito");
+      openShare(inviteLink, "Entra in Cashly con il mio invito:", "Condividi il tuo invito");
     }
     window.condividiInvito = condividiInvito;
 
@@ -910,7 +910,7 @@
     window.copiaPagina = copiaPagina;
 
     function condividiPagina() {
-      openShare(paginaLink, "La mia pagina su Business UP:", "Condividi la tua pagina");
+      openShare(paginaLink, "La mia pagina su Cashly:", "Condividi la tua pagina");
     }
     window.condividiPagina = condividiPagina;
 

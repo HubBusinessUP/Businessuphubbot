@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Business UP</title>
+<title>Cashly</title>
 <style>
   :root {
     --ink: #181b22;
@@ -919,7 +919,7 @@
       haptic("light");
       if (!window.currentRefLink) await loadAffiliazione();
       if (!window.currentRefLink) return;
-      const text = `Guarda "${nome}" su Business UP:`;
+      const text = `Guarda "${nome}" su Cashly:`;
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.currentRefLink)}&text=${encodeURIComponent(text)}`;
       if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
       else window.open(shareUrl, "_blank");
@@ -1021,7 +1021,7 @@
       window.currentRefLink = data.ref_link || "";
     }
 
-    const SHARE_TEXT = "Entra in Business UP con il mio link:";
+    const SHARE_TEXT = "Entra in Cashly con il mio link:";
 
     function openTelegramShare(e) {
       if (tg?.openTelegramLink) {
@@ -1050,7 +1050,7 @@
 
     function shareViaEmail() {
       const link = window.currentRefLink;
-      window.location.href = `mailto:?subject=${encodeURIComponent("Business UP")}&body=${encodeURIComponent(SHARE_TEXT + " " + link)}`;
+      window.location.href = `mailto:?subject=${encodeURIComponent("Cashly")}&body=${encodeURIComponent(SHARE_TEXT + " " + link)}`;
     }
 
     function copyRefLinkFromSheet() {
