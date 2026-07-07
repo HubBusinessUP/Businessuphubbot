@@ -40,9 +40,12 @@
   .bnav-item.active { color: var(--blue); }
   .bnav-item svg { width: 22px; height: 22px; }
 
-  .brandbar { display: flex; align-items: center; justify-content: center; padding: 2px 2px 14px; }
-  .brand-wm { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
-  .brand-wm span { color: var(--lime); }
+  .apphdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+  .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
+  @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
+  .greet-hero { display: flex; justify-content: center; margin-bottom: 14px; }
+  .greet-hero .greet-identity { flex-direction: column; gap: 10px; text-align: center; align-items: center; }
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
   .top-actions { display: flex; gap: 8px; flex-shrink: 0; }
@@ -333,17 +336,8 @@
 </head>
 <body>
   <div class="container">
-    <div class="brandbar">
-      <div class="brand-wm">Cash<span>ly</span></div>
-    </div>
-    <div class="greet-card">
-      <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
-        <div class="avatar-wrap">
-          <img class="avatar-img" id="avatarImg" alt="" />
-          <div class="avatar-fallback" id="avatarFallback">--</div>
-        </div>
-        <div class="greet">Ciao, <span id="userName">Utente</span></div>
-      </button>
+    <div class="apphdr">
+      <div class="applogo">Cash<span class="ly">ly</span></div>
       <div class="top-actions">
         <button class="icon-circle plus" onclick="openSuggestSheet()" aria-label="Candida un business">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -355,6 +349,16 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
         </button>
       </div>
+    </div>
+
+    <div class="greet-hero">
+      <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
+        <div class="avatar-wrap">
+          <img class="avatar-img" id="avatarImg" alt="" />
+          <div class="avatar-fallback" id="avatarFallback">--</div>
+        </div>
+        <div class="greet">Ciao, <span id="userName">Utente</span></div>
+      </button>
     </div>
 
     <div class="section-gap"></div>
