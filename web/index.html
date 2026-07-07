@@ -6,33 +6,72 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Business UP</title>
+<title>Cashly — La directory del Business Online</title>
+<meta name="description" content="Cashly: la directory del Business Online. Cerca il business che ti farà cambiare vita, attiva gli strumenti e crea la tua rete. Tutto dentro Telegram." />
 <style>
-  :root { --ink: #0b0d13; --blue: #4c6ef5; --text-dim: #8890a6; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    min-height: 100vh; background: var(--ink); color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
-    display: flex; align-items: center; justify-content: center;
+  :root{
+    --ink:#16181d; --panel:#1f242d; --line:#2c333e;
+    --green:#22c55e; --green-deep:#16a34a; --green-dim:rgba(34,197,94,.13);
+    --text:#f4f6f8; --dim:#98a0b2;
   }
-  .mark {
-    width: 52px; height: 52px; border-radius: 10px;
-    background: var(--blue);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 18px; animation: pulse 1.4s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-  .loader { text-align: center; }
-  p { color: var(--text-dim); font-size: 14px; font-weight: 600; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:var(--ink);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",ui-sans-serif,sans-serif;
+    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:40px 22px;text-align:center;line-height:1.5}
+  .wrap{max-width:440px;width:100%}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:20px}
+  .wordmark{font-size:52px;font-weight:800;letter-spacing:-.035em;line-height:1}
+  .wordmark .ly{color:var(--green);display:inline-block;animation:lyp 1.8s ease-in-out infinite}
+  @keyframes lyp{0%,100%{opacity:1;text-shadow:0 0 0 rgba(34,197,94,0)}50%{opacity:.85;text-shadow:0 0 16px rgba(34,197,94,.7)}}
+  h1{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:24px 0 10px}
+  .lead{font-size:15px;color:var(--dim);margin:0 auto 28px;max-width:380px}
+  .cta{display:inline-flex;align-items:center;gap:10px;background:var(--green);color:#06210f;
+    font-size:16px;font-weight:800;padding:15px 26px;border-radius:12px;text-decoration:none;
+    box-shadow:0 8px 26px rgba(34,197,94,.28);transition:transform .12s ease}
+  .cta:active{transform:scale(.97)}
+  .cta svg{width:20px;height:20px}
+  .handle{margin-top:16px;font-size:13px;color:var(--dim)}
+  .handle a{color:var(--green);text-decoration:none;font-weight:700}
+  .feats{display:flex;flex-direction:column;gap:10px;margin-top:38px;text-align:left}
+  .feat{display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:14px 16px}
+  .feat .ic{width:38px;height:38px;border-radius:10px;background:var(--green-dim);color:var(--green);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .feat h3{font-size:14.5px;font-weight:700}
+  .feat p{font-size:12.5px;color:var(--dim);margin-top:2px}
+  .foot{margin-top:36px;font-size:12px;color:var(--dim)}
 </style>
 </head>
 <body>
-  <div class="loader">
-    <div class="mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
-    <p>Caricamento...</p>
+  <div class="wrap">
+    <div class="eyebrow">HUB</div>
+    <div class="wordmark">Cash<span class="ly">ly</span></div>
+    <h1>La directory del Business Online.</h1>
+    <p class="lead">Cerca il business che ti farà cambiare vita, attiva gli strumenti passo dopo passo e crea la tua rete. Tutto dentro Telegram.</p>
+
+    <a class="cta" href="https://t.me/cashlyhub_bot">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/></svg>
+      Entra nell'hub
+    </a>
+    <div class="handle">su Telegram · <a href="https://t.me/cashlyhub_bot">@cashlyhub_bot</a></div>
+
+    <div class="feats">
+      <div class="feat">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        <div><h3>Directory selezionata</h3><p>Strumenti e business online, in chiaro e in un posto solo.</p></div>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
+        <div><h3>Attivazione guidata</h3><p>Tutorial passo dopo passo per partire davvero, non a caso.</p></div>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.3 6.8-4.6M8.6 13.7l6.8 4.6"/></svg></div>
+        <div><h3>La tua rete</h3><p>Invita, costruisci la tua rete e falla crescere con te.</p></div>
+      </div>
+    </div>
+
+    <div class="foot">Cashly · La directory del Business Online</div>
   </div>
-  <script>
-    window.location.replace(`dashboard.html?_=${Date.now()}`);
-  </script>
 </body>
 </html>
