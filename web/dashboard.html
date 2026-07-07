@@ -9,19 +9,21 @@
 <title>Business UP</title>
 <style>
   :root {
-    --ink: #0d0e15;
-    --panel: #171a28;
-    --blue: #4a90e2;
-    --blue-dim: rgba(74, 144, 226, 0.16);
+    --ink: #181b22;
+    --panel: #232834;
+    --card2: #2b313f;
+    --blue: #5aa9f0;
+    --blue-dim: rgba(90, 169, 240, 0.16);
     --slate: #3a4358;
     --lime: #2ecc71;
-    --lime-dim: rgba(46, 204, 113, 0.16);
+    --lime-dim: rgba(46, 204, 113, 0.15);
     --amber: #e8b34c;
-    --amber-dim: rgba(232, 179, 76, 0.14);
+    --amber-dim: rgba(232, 179, 76, 0.15);
+    --teal: #38c6c6;
     --coral: #e2574a;
-    --text: #f2f3f7;
-    --text-dim: #8b90a0;
-    --border: #1e2130;
+    --text: #f5f6f9;
+    --text-dim: #98a0b2;
+    --border: #30374a;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body {
@@ -29,6 +31,7 @@
     background: var(--ink);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
   .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 92px; }
 
@@ -56,7 +59,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 800; color: #fff;
   }
-  .greet { font-size: 15px; font-weight: 700; }
+  .greet { font-size: 15px; font-weight: 600; }
 
 
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 14px; }
@@ -65,7 +68,7 @@
   .btn-primary { background: var(--lime); color: #06110b; }
 
   .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .section-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); font-weight: 800; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); font-weight: 700; }
   .section-date { font-size: 11px; color: var(--text-dim); }
 
   .live-dot { position: relative; width: 8px; height: 8px; flex-shrink: 0; }
@@ -124,7 +127,7 @@
   .cat-card:active { transform: scale(0.98); }
   .cat-ico { width: 42px; height: 42px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
   .cat-body { flex: 1; min-width: 0; }
-  .cat-name { font-size: 14.5px; font-weight: 700; }
+  .cat-name { font-size: 15px; font-weight: 600; }
   .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
@@ -204,7 +207,11 @@
   .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.34s cubic-bezier(0.4, 0, 0.2, 1); }
   .biz.open .biz-detail { max-height: 1400px; }
   .biz-inner { padding: 4px 2px 16px; }
-  .biz-sec { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 11px; margin-bottom: 14px; }
+  .biz-sec { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 11px; margin-bottom: 14px; }
+  .sect { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 11px; }
+  .sect-h { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .sect-h .ic { width: 14px; height: 14px; margin-right: 0; }
+  .s-blue { color: var(--blue); } .s-amber { color: var(--amber); } .s-green { color: var(--lime); } .s-teal { color: var(--teal); }
   .biz-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .biz-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border); color: var(--text); }
   .biz-desc { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 14px; }
@@ -233,7 +240,7 @@
 
   .chk-tempo { font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px; }
   .chk-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-  .chk-prog { font-size: 12px; font-weight: 800; color: var(--lime); }
+  .chk-prog { font-size: 12px; font-weight: 700; color: var(--lime); }
   .chk-bar { height: 7px; background: var(--ink); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
   .chk-bar-fill { height: 100%; background: var(--lime); border-radius: 6px; transition: width 0.5s ease; }
   .stepc { display: flex; gap: 11px; background: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 9px; }
@@ -244,11 +251,11 @@
   .stepc.current .stepc-num { border-color: var(--blue); color: var(--blue); }
   .stepc.locked { opacity: 0.55; }
   .stepc-body { flex: 1; min-width: 0; }
-  .stepc-body b { display: block; font-size: 14.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .stepc-body b { display: block; font-size: 14.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
   .stepc-body .st-txt { display: block; font-size: 13px; color: var(--text-dim); line-height: 1.45; }
   .stepc-body .st-txt strong { color: var(--text); }
 
-  .biz-cta { width: 100%; padding: 14px; border: none; border-radius: 4px; background: var(--lime); color: #06110b; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .biz-cta { width: 100%; padding: 15px; border: none; border-radius: 10px; background: var(--lime); color: #06110b; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
   .biz-cta:disabled { opacity: 0.6; }
   .biz-linkbox { background: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-family: monospace; font-size: 12px; word-break: break-all; color: var(--blue); }
   .biz-fonte { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; }
@@ -262,12 +269,14 @@
 
   /* Tema chiaro: attivato da tg.colorScheme */
   body.light {
-    --ink: #f2f3f6;
+    --ink: #eef2f8;
     --panel: #ffffff;
+    --card2: #f4f7fc;
     --slate: #c4cad6;
-    --text: #171a22;
-    --text-dim: #6b7180;
-    --border: #e3e5ea;
+    --blue: #2b7fd4;
+    --text: #141922;
+    --text-dim: #6b7280;
+    --border: #e4e9f2;
   }
   body.light .icon-circle { background: #eceef2; }
   body.light .icon-circle.plus { background: var(--lime); color: #06110b; }
@@ -720,6 +729,9 @@
     const IC = {
       clock: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
       link: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>',
+      info: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+      tag: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>',
+      check: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
     };
     function escAttr(s) { return String(s ?? "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
     function escTxt(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
@@ -753,7 +765,7 @@
       // Sezione Risorse: link secondari (canale Telegram, video guida...) come link testuali leggeri.
       const risorse = (Array.isArray(s.risorse) ? s.risorse : []).filter((r) => r && safeUrl(r.url));
       const risorseHtml = risorse.length
-        ? `<div class="biz-risorse"><div class="biz-risorse-t">Risorse</div>${risorse.map((r) => `<a class="biz-res" href="${escAttr(safeUrl(r.url))}" target="_blank" rel="noopener">${IC.link}${escTxt(r.label || r.url)}</a>`).join("")}</div>`
+        ? `<div class="sect"><div class="sect-h s-teal">${IC.link}Risorse</div>${risorse.map((r) => `<a class="biz-res" href="${escAttr(safeUrl(r.url))}" target="_blank" rel="noopener">${IC.link}${escTxt(r.label || r.url)}</a>`).join("")}</div>`
         : "";
 
       // Trasparenza sulla fonte: l'utente sa sempre se sta usando il link del suo sponsor o quello ufficiale del sistema.
@@ -773,17 +785,17 @@
       }
 
       return `
-        <div class="biz-sec">Come funziona</div>
-        ${s.descrizione ? `<div class="biz-desc">${mdBold(s.descrizione)}</div>` : ""}
-        ${rows.length ? `<div class="chk-title" style="margin-bottom:8px">Caratteristiche</div><div class="biz-rows">${rows.join("")}</div>` : ""}
-        <div class="chk">
+        ${s.descrizione ? `<div class="sect"><div class="sect-h s-blue">${IC.info}Come funziona</div><div class="biz-desc" style="margin-bottom:0">${mdBold(s.descrizione)}</div></div>` : ""}
+        ${rows.length ? `<div class="sect"><div class="sect-h s-amber">${IC.tag}Caratteristiche</div>${rows.join("")}</div>` : ""}
+        <div class="sect">
+          <div class="sect-h s-green">${IC.check}Tutorial di attivazione</div>
           ${s.tempo_stimato ? `<div class="chk-tempo">${IC.clock}Tempo per attivarlo: circa ${escTxt(s.tempo_stimato)}</div>` : ""}
-          <div class="chk-head"><span class="chk-title">Percorso di attivazione</span><span class="chk-prog">${fatti} di ${totStep}</span></div>
+          <div class="chk-head"><span class="chk-title">Percorso</span><span class="chk-prog">${fatti} di ${totStep}</span></div>
           <div class="chk-bar"><div class="chk-bar-fill" style="width:${pct}%"></div></div>
           ${chkRows}
         </div>
-        ${cta}
         ${risorseHtml}
+        ${cta}
         <div class="biz-foot">
           <a href="https://t.me/${window.supportUser || "antonybusinesshub"}" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg> Supporto</a>
         </div>
