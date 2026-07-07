@@ -121,7 +121,7 @@
         <div class="field">
           <label>Foto (link a un'immagine pubblica)</label>
           <input id="fFoto" placeholder="https://..." />
-          <div class="hint">Facoltativo. Se lo lasci vuoto, la pagina mostra le tue iniziali.</div>
+          <div class="hint">Di default usiamo la tua foto di Telegram. Incolla un link solo se vuoi cambiarla.</div>
         </div>
       </div>
 
@@ -182,6 +182,7 @@
     let pubblicata = false;
     let mieiLinkData = [];
     let leadNome = "";
+    const tgPhoto = tg?.initDataUnsafe?.user?.photo_url || "";
 
     const SOCIAL_FIELDS = [
       ["instagram", "sInstagram"],
@@ -206,7 +207,7 @@
     function renderPreview() {
       const titolo = document.getElementById("fTitolo").value.trim();
       const testo = document.getElementById("fTesto").value.trim();
-      const foto = document.getElementById("fFoto").value.trim();
+      const foto = document.getElementById("fFoto").value.trim() || tgPhoto;
       const nome = leadNome || tg?.initDataUnsafe?.user?.first_name || "Il tuo nome";
 
       document.getElementById("pvNome").textContent = nome;
@@ -262,7 +263,7 @@
       return {
         bio_titolo: document.getElementById("fTitolo").value.trim(),
         bio_testo: document.getElementById("fTesto").value.trim(),
-        bio_foto_url: document.getElementById("fFoto").value.trim(),
+        bio_foto_url: document.getElementById("fFoto").value.trim() || tgPhoto,
         social_links,
         pagina_pubblicata: pubblicata,
       };
@@ -328,6 +329,16 @@
       renderLinkEditor(data);
       renderStato();
       renderPreview();
+
+      // Foto Telegram come default: se l'utente non ha una foto salvata, usiamo la sua
+      // foto profilo Telegram e la salviamo, così è già visibile sulla pagina pubblica.
+      if (!data.bio_foto_url && tgPhoto) {
+        fetch(`${API_URL}/pagina`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
+          body: JSON.stringify(buildBody()),
+        }).catch(() => {});
+      }
 
       // Anteprima live: aggiorna a ogni modifica dei campi.
       ["fTitolo", "fTesto", "fFoto", "sInstagram", "sTelegram", "sWhatsapp", "sTiktok", "sYoutube", "sFacebook"]
