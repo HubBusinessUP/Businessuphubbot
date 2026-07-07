@@ -113,6 +113,7 @@
 
       <div class="card">
         <div class="section-title">Bio e foto</div>
+        <div class="field"><label>Nome visualizzato</label><input id="fNome" maxlength="60" placeholder="Il nome che appare sulla pagina" /></div>
         <div class="field"><label>Titolo (es. "Trader indipendente")</label><input id="fTitolo" maxlength="60" /></div>
         <div class="field">
           <label>Descrizione</label>
@@ -208,7 +209,7 @@
       const titolo = document.getElementById("fTitolo").value.trim();
       const testo = document.getElementById("fTesto").value.trim();
       const foto = document.getElementById("fFoto").value.trim() || tgPhoto;
-      const nome = leadNome || tg?.initDataUnsafe?.user?.first_name || "Il tuo nome";
+      const nome = document.getElementById("fNome").value.trim() || leadNome || tg?.initDataUnsafe?.user?.first_name || "Il tuo nome";
 
       document.getElementById("pvNome").textContent = nome;
       const tEl = document.getElementById("pvTitolo");
@@ -261,6 +262,7 @@
         .map(([tipo, id]) => ({ tipo, url: document.getElementById(id).value.trim() }))
         .filter((s) => s.url);
       return {
+        bio_nome: document.getElementById("fNome").value.trim(),
         bio_titolo: document.getElementById("fTitolo").value.trim(),
         bio_testo: document.getElementById("fTesto").value.trim(),
         bio_foto_url: document.getElementById("fFoto").value.trim() || tgPhoto,
@@ -309,6 +311,7 @@
 
       currentLinkPagina = data.link_pagina || "";
       document.getElementById("linkPagina").textContent = currentLinkPagina || "-";
+      document.getElementById("fNome").value = data.bio_nome || data.nome || "";
       document.getElementById("fTitolo").value = data.bio_titolo || "";
       document.getElementById("fTesto").value = data.bio_testo || "";
       document.getElementById("fFoto").value = data.bio_foto_url || "";
@@ -341,7 +344,7 @@
       }
 
       // Anteprima live: aggiorna a ogni modifica dei campi.
-      ["fTitolo", "fTesto", "fFoto", "sInstagram", "sTelegram", "sWhatsapp", "sTiktok", "sYoutube", "sFacebook"]
+      ["fNome", "fTitolo", "fTesto", "fFoto", "sInstagram", "sTelegram", "sWhatsapp", "sTiktok", "sYoutube", "sFacebook"]
         .forEach((id) => document.getElementById(id).addEventListener("input", renderPreview));
 
       document.getElementById("content").style.display = "block";

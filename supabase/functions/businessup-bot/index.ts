@@ -756,7 +756,7 @@ function sanitizeSocialLinks(input: any): { tipo: string; url: string }[] {
 }
 
 async function apiPaginaGet(telegramId: number) {
-  const { data: lead } = await supabase.from("leads").select("nome, cognome, username, sondaggio_completato, is_partner, pagina_pubblicata, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("nome, cognome, username, sondaggio_completato, is_partner, pagina_pubblicata, bio_nome, bio_titolo, bio_testo, bio_foto_url, social_links").eq("telegram_id", telegramId).maybeSingle()
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: servizi } = await supabase.from("servizi").select("id, nome, descrizione").order("nome")
   const svcMap: Record<number, any> = {}
@@ -768,6 +768,7 @@ async function apiPaginaGet(telegramId: number) {
     is_partner: !!lead?.is_partner,
     pagina_pubblicata: !!lead?.pagina_pubblicata,
     nome: lead?.nome || "",
+    bio_nome: lead?.bio_nome || "",
     username: lead?.username || "",
     bio_titolo: lead?.bio_titolo || "",
     bio_testo: lead?.bio_testo || "",
@@ -783,11 +784,12 @@ async function apiPaginaSave(telegramId: number, body: any) {
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
   if (!lead?.sondaggio_completato) return json({ error: "non_autorizzato" }, 403)
 
-  const { bio_titolo, bio_testo, bio_foto_url, social_links, pagina_pubblicata } = body
+  const { bio_nome, bio_titolo, bio_testo, bio_foto_url, social_links, pagina_pubblicata } = body
   const upd: any = {
     bio_titolo, bio_testo, bio_foto_url,
     social_links: sanitizeSocialLinks(social_links),
   }
+  if (bio_nome !== undefined) upd.bio_nome = String(bio_nome).slice(0, 60).trim() || null
   // Pubblica/bozza: aggiornato solo se il campo è presente nel salvataggio.
   if (pagina_pubblicata !== undefined) upd.pagina_pubblicata = !!pagina_pubblicata
   const { error } = await supabase.from("leads").update(upd).eq("telegram_id", telegramId)
@@ -799,7 +801,7 @@ async function apiPaginaSave(telegramId: number, body: any) {
 }
 
 async function apiPaginaPubblica(code: string) {
-  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, username, sondaggio_completato, pagina_pubblicata, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("telegram_id, nome, username, sondaggio_completato, pagina_pubblicata, bio_nome, bio_titolo, bio_testo, bio_foto_url, social_links").eq("ref_code", code).maybeSingle()
   // Pagina visibile solo se anagrafica completata e pagina pubblicata (non in bozza).
   if (!lead || !lead.sondaggio_completato || !lead.pagina_pubblicata) return json({ error: "not_found" }, 404)
 
@@ -812,7 +814,7 @@ async function apiPaginaPubblica(code: string) {
   for (const s of servizi ?? []) svcMap[(s as any).id] = s
 
   return json({
-    nome: lead.nome || "Utente",
+    nome: lead.bio_nome || lead.nome || "Utente",
     username: lead.username || "",
     bio_titolo: lead.bio_titolo || "",
     bio_testo: lead.bio_testo || "",
