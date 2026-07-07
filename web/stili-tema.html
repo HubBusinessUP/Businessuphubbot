@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Temi — scegli la luminosità</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",ui-sans-serif,sans-serif; }
+  body{ background:#05060a; color:#fff; padding:18px 12px 60px; }
+  .wrap{ max-width:400px; margin:0 auto; }
+  .intro{ font-size:13px; color:#8b90a0; text-align:center; margin-bottom:20px; line-height:1.5; }
+  .tlabel{ font-size:12px; font-weight:800; color:#4a90e2; text-transform:uppercase; letter-spacing:.06em; margin:26px 0 3px; }
+  .tname{ font-size:15px; font-weight:700; margin-bottom:12px; color:#fff; }
+
+  .frame{ background:var(--bg); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:14px; color:var(--tx); }
+  .lime{ --lime:#2ecc71; } .blue{ --blue:#4a90e2; }
+  .t-dark  { --bg:#0d0e15; --card:#171a28; --card2:#1c2030; --bd:#1e2130; --tx:#f2f3f7; --dim:#8b90a0; --sh:0 1px 3px rgba(0,0,0,.3); }
+  .t-graph { --bg:#14161d; --card:#1f2431; --card2:#272d3d; --bd:#2c3242; --tx:#f4f5f8; --dim:#9aa0b0; --sh:0 2px 8px rgba(0,0,0,.35); }
+  .t-soft  { --bg:#1b1f2a; --card:#262b39; --card2:#2f3547; --bd:#363c50; --tx:#f7f8fb; --dim:#a6acbc; --sh:0 3px 12px rgba(0,0,0,.4); }
+  .t-light { --bg:#eef1f6; --card:#ffffff; --card2:#f5f7fb; --bd:#e3e7ef; --tx:#1a1d26; --dim:#6b7280; --sh:0 2px 8px rgba(20,30,60,.08); }
+
+  .hdr{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--card); border-radius:10px; padding:12px 14px; margin-bottom:14px; box-shadow:var(--sh); }
+  .hid{ display:flex; align-items:center; gap:11px; }
+  .av{ width:40px; height:40px; border-radius:50%; background:#3a4358; }
+  .hi{ font-size:15px; font-weight:800; color:var(--tx); }
+  .acts{ display:flex; gap:7px; }
+  .ib{ width:32px; height:32px; border-radius:8px; background:var(--card2); display:flex; align-items:center; justify-content:center; color:var(--dim); }
+  .ib.plus{ background:#2ecc71; color:#06110b; }
+
+  .biz{ background:var(--card); border:1px solid var(--bd); border-radius:12px; padding:0 14px; margin-bottom:11px; box-shadow:var(--sh); }
+  .row{ display:flex; align-items:center; gap:12px; padding:14px 0; }
+  .ti{ width:40px; height:40px; border-radius:9px; background:rgba(74,144,226,.16); color:#4a90e2; display:flex; align-items:center; justify-content:center; }
+  .nm{ flex:1; font-size:15px; font-weight:700; color:var(--tx); }
+  .dot{ width:9px; height:9px; border-radius:50%; background:#2ecc71; display:inline-block; margin-right:8px; vertical-align:1px; }
+  .vt{ display:flex; flex-direction:column; align-items:center; color:var(--dim); font-size:13px; font-weight:700; }
+
+  .open{ padding-bottom:14px; }
+  .sec{ font-size:12px; font-weight:800; color:var(--tx); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--bd); padding-bottom:11px; margin:4px 0 12px; }
+  .desc{ font-size:14px; color:var(--dim); line-height:1.55; margin-bottom:12px; }
+  .tempo{ font-size:12.5px; color:var(--dim); margin-bottom:10px; }
+  .stp{ display:flex; gap:11px; background:var(--card2); border:1px solid var(--bd); border-radius:8px; padding:12px; margin-bottom:9px; }
+  .sn{ width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:800; background:var(--card); border:1px solid var(--bd); color:var(--dim); }
+  .stp.cur{ border-color:#4a90e2; } .stp.cur .sn{ border-color:#4a90e2; color:#4a90e2; }
+  .stp.dn .sn{ background:#2ecc71; border-color:#2ecc71; color:#06110b; }
+  .sb{ font-size:14.5px; font-weight:700; color:var(--tx); }
+  .cta{ display:block; text-align:center; width:100%; padding:14px; border-radius:8px; background:#2ecc71; color:#06110b; font-size:14.5px; font-weight:800; margin-top:6px; }
+  .ico{ width:16px; height:16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">4 livelli di luminosità, stesso schermo.<br/>Dimmi quale ti piace (1-4).</div>
+  <div id="host"></div>
+</div>
+<script>
+  var CLOCK = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>';
+  var GRID = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+  function screen(){
+    return '<div class="hdr"><div class="hid"><div class="av"></div><div class="hi">Ciao, Antony</div></div>'
+      +'<div class="acts"><div class="ib plus">+</div><div class="ib">‹›</div><div class="ib">↻</div></div></div>'
+      +'<div class="biz"><div class="row"><div class="ti">'+GRID+'</div><div class="nm"><span class="dot"></span>Broker VS Broker Swap</div><div class="vt">▲<span>24</span></div></div></div>'
+      +'<div class="biz"><div class="row"><div class="ti">'+GRID+'</div><div class="nm">Prop VS Broker</div><div class="vt">▲<span>18</span></div></div>'
+      +'<div class="open"><div class="sec">Come funziona</div><div class="desc">Apri posizioni opposte su due broker per incassare la differenza di swap.</div>'
+      +'<div class="tempo">'+CLOCK+' Tempo per attivarlo: circa 15 min</div>'
+      +'<div class="stp dn"><div class="sn">✓</div><div class="sb">Registra il primo broker</div></div>'
+      +'<div class="stp cur"><div class="sn">2</div><div class="sb">Registra il secondo broker</div></div>'
+      +'<a class="cta">Iscriviti con il link</a></div></div>'
+      +'<div class="biz"><div class="row"><div class="ti">'+GRID+'</div><div class="nm">Bonus ADM</div><div class="vt">▲<span>11</span></div></div></div>';
+  }
+  var THEMES = [['t-dark','1 · Attuale (scuro)'],['t-graph','2 · Grafite (cards staccate)'],['t-soft','3 · Soft (più chiaro)'],['t-light','4 · Chiaro']];
+  var html = THEMES.map(function(t){
+    return '<div class="tlabel">Opzione '+t[1].split(' ')[0]+'</div><div class="tname">'+t[1].substr(4)+'</div>'
+      +'<div class="frame '+t[0]+' lime blue">'+screen()+'</div>';
+  }).join('');
+  document.getElementById('host').innerHTML = html;
+</script>
+</body>
+</html>
