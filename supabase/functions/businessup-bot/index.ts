@@ -851,7 +851,24 @@ async function apiStepProgressSave(telegramId: number, body: any) {
     ? await supabase.from("tutorial_progress").update(row).eq("id", existing.id)
     : await supabase.from("tutorial_progress").insert(row)
   if (error) return json({ error: error.message }, 500)
+
+  // Tutorial completato: avvisa lo sponsor (se non è il Founder) e l'admin che l'utente ha attivato il servizio.
+  if (is_last && !existing?.completato) {
+    notificaAttivazioneCompletata(telegramId, servizio_id).catch((e) => console.error("notifica attivazione:", e))
+  }
   return json({ ok: true, ultimo_step: row.ultimo_step, completato: row.completato })
+}
+
+async function notificaAttivazioneCompletata(telegramId: number, servizioId: number) {
+  const { data: lead } = await supabase.from("leads").select("nome, username, referred_by").eq("telegram_id", telegramId).maybeSingle()
+  const { data: sv } = await supabase.from("servizi").select("nome").eq("id", servizioId).maybeSingle()
+  const chi = lead?.nome || lead?.username || `ID ${telegramId}`
+  const nomeSv = sv?.nome || "un business"
+  const testo = `✅ ${chi} ha completato l'attivazione di "${nomeSv}".`
+  const destinatari = new Set<number>()
+  if (lead?.referred_by && lead.referred_by !== ADMIN_ID) destinatari.add(lead.referred_by)
+  destinatari.add(ADMIN_ID)
+  for (const tid of destinatari) await sendMessage(tid, testo)
 }
 
 // Candidatura moderata: tutti i campi obbligatori, utenti bloccati esclusi, ref link accettato solo da profili verificati.

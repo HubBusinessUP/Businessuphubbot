@@ -129,12 +129,11 @@
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
   .list-card { background: none; border: none; padding: 0; }
-  .sem-dot { position: relative; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
-  .sem-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: inherit; animation: sem-pulse 1.7s ease-out infinite; }
-  @keyframes sem-pulse { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.6); opacity: 0; } }
-  .sem-verde { background: #2ecc71; }
-  .sem-giallo { background: #e8b34c; }
-  .sem-rosso { background: #e2574a; }
+  .sem-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; animation: sem-pulse 1.5s ease-out infinite; }
+  @keyframes sem-pulse { 0% { box-shadow: 0 0 0 0 currentColor; } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .sem-verde { background: #2ecc71; color: rgba(46,204,113,0.55); }
+  .sem-giallo { background: #e8b34c; color: rgba(232,179,76,0.55); }
+  .sem-rosso { background: #e2574a; color: rgba(226,87,74,0.55); }
   .biz { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; padding: 0 14px; }
   .list-item {
     display: flex; align-items: center; gap: 13px; padding: 14px 0;
@@ -200,6 +199,9 @@
   .biz-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
   .biz.open .biz-detail { max-height: 1400px; }
   .biz-inner { padding: 4px 2px 16px; }
+  .biz-head { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px; }
+  .biz-head-title { font-size: 17px; font-weight: 800; }
+  .biz-head .biz-chips { margin-bottom: 0; margin-top: 10px; }
   .biz-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .biz-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 4px; background: var(--ink); border: 1px solid var(--border); color: var(--text); }
   .biz-desc { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 14px; }
@@ -514,6 +516,9 @@
       window.sondaggioCompletato = completato;
       window.isCliente = !!lead.is_cliente;
       window.userParams = data.sondaggio?.identikit?.params || null;
+      // Supporto: chat dello sponsor (se non è il Founder), altrimenti l'admin.
+      const sp = data.sponsor;
+      window.supportUser = (sp && !sp.is_founder && sp.username) ? sp.username : "antonybusinesshub";
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
 
       if (data.ripresa) {
@@ -633,8 +638,6 @@
       const visible = filtered.slice(0, visibleCount);
       el.innerHTML = visible.map((s) => {
         const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
-        const descRaw = (s.descrizione || s.categoria_nome || "").replace(/\*\*/g, "").trim();
-        const desc = descRaw.length > 54 ? descRaw.slice(0, 54).trim() + "…" : descRaw;
         const sem = (typeof computeSemaforo === "function") ? computeSemaforo(window.userParams, s) : null;
         const dot = sem ? `<span class="sem-dot sem-${sem}" title="Compatibilità col tuo profilo"></span>` : "";
         return `
@@ -643,7 +646,6 @@
             <div class="cat-ico" style="background:${color}">${CAT_ICON_SVG}</div>
             <div class="cat-body">
               <div class="cat-name">${dot}${s.nome}</div>
-              <div class="cat-count">${desc}</div>
             </div>
             <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
@@ -723,8 +725,6 @@
 
       const chips = [];
       if (s.tempo_stimato) chips.push(`<span class="biz-chip">🕒 ${s.tempo_stimato}</span>`);
-      if (s.difficolta) chips.push(`<span class="biz-chip">${DIFF_DOT[(s.difficolta || "").toLowerCase()] || "🟢"} ${s.difficolta}</span>`);
-      chips.push(`<span class="biz-chip">${(s.stato || "").toUpperCase()}</span>`);
 
       const rows = [];
       if (s.prezzo) rows.push(`<div class="biz-row"><span class="k">Prezzo</span><span class="v">${s.prezzo}</span></div>`);
@@ -768,9 +768,9 @@
       }
 
       return `
-        <div class="biz-chips">${chips.join("")}</div>
+        <div class="biz-head"><div class="biz-head-title">${escTxt(s.nome)}</div>${chips.length ? `<div class="biz-chips">${chips.join("")}</div>` : ""}</div>
         ${s.descrizione ? `<div class="biz-desc">${mdBold(s.descrizione)}</div>` : ""}
-        ${rows.length ? `<div class="biz-rows">${rows.join("")}</div>` : ""}
+        ${rows.length ? `<div class="chk-title" style="margin-bottom:8px">Caratteristiche</div><div class="biz-rows">${rows.join("")}</div>` : ""}
         <div class="chk">
           <div class="chk-head"><span class="chk-title">Percorso di attivazione</span><span class="chk-prog">${fatti} di ${totStep}</span></div>
           <div class="chk-bar"><div class="chk-bar-fill" style="width:${pct}%"></div></div>
@@ -779,9 +779,7 @@
         ${cta}
         ${risorseHtml}
         <div class="biz-foot">
-          <button onclick="shareBiz('${(s.nome || "").replace(/'/g, "\\'")}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg> Condividi</button>
-          <a href="https://t.me/antonybusinesshub" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg> Hai problemi? Scrivici</a>
-          <button onclick="segnalaBiz(${id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> Segnala</button>
+          <a href="https://t.me/${window.supportUser || "antonybusinesshub"}" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg> Supporto</a>
         </div>
       `;
     }
