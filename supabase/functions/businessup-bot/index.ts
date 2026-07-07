@@ -5,7 +5,7 @@ const BOT_TOKEN = Deno.env.get("BOT_TOKEN") || ""
 const ADMIN_ID = parseInt(Deno.env.get("ADMIN_ID") || "334179105")
 const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET") || ""
 const ADMIN_API_KEY = Deno.env.get("ADMIN_API_KEY") || ""
-const WEBAPP_URL = "https://hubbusinessup.github.io/Businessuphubbot"
+const WEBAPP_URL = "https://hub.cashlypro.com"
 const BOT_USERNAME = "cashlyhub_bot"
 
 const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`
