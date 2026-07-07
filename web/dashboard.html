@@ -226,6 +226,7 @@
   .biz-risorse-t { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
   .biz-res { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--blue); font-size: 13px; font-weight: 600; text-decoration: none; }
 
+  .chk-tempo { font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px; }
   .chk-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
   .chk-prog { font-size: 12px; font-weight: 800; color: var(--lime); }
   .chk-bar { height: 7px; background: var(--ink); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
@@ -767,10 +768,10 @@
 
       return `
         <div class="biz-sec">Come funziona</div>
-        ${chips.length ? `<div class="biz-chips">${chips.join("")}</div>` : ""}
         ${s.descrizione ? `<div class="biz-desc">${mdBold(s.descrizione)}</div>` : ""}
         ${rows.length ? `<div class="chk-title" style="margin-bottom:8px">Caratteristiche</div><div class="biz-rows">${rows.join("")}</div>` : ""}
         <div class="chk">
+          ${s.tempo_stimato ? `<div class="chk-tempo">🕒 Tempo per attivarlo: circa ${escTxt(s.tempo_stimato)}</div>` : ""}
           <div class="chk-head"><span class="chk-title">Percorso di attivazione</span><span class="chk-prog">${fatti} di ${totStep}</span></div>
           <div class="chk-bar"><div class="chk-bar-fill" style="width:${pct}%"></div></div>
           ${chkRows}
