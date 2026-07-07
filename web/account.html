@@ -48,6 +48,17 @@
   .rpanel { display: none; }
   .rpanel.active { display: block; }
 
+  .aff-carousel { margin-bottom: 14px; }
+  .aff-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .aff-track::-webkit-scrollbar { display: none; }
+  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .aff-ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 13px; }
+  .aff-slide h4 { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
+  .aff-slide p { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .aff-dots { display: flex; justify-content: center; gap: 6px; margin-top: 11px; }
+  .aff-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; }
+  .aff-dot.on { background: var(--lime); width: 18px; border-radius: 3px; }
+
   .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
 
   .ik-arch { background: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
@@ -194,6 +205,32 @@
 
       <!-- Scheda: Iscritti -->
       <div class="rpanel active" id="rete-iscritti">
+        <div class="aff-carousel">
+          <div class="aff-track" id="affTrack">
+            <div class="aff-slide">
+              <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15.5 20c0-2 .6-3.3 2-4"/></svg></div>
+              <h4>La tua rete, per sempre</h4>
+              <p>Chi entra con il tuo link resta legato a te <b style="color:var(--text)">a vita</b>. È un patrimonio che nessuno ti può togliere.</p>
+            </div>
+            <div class="aff-slide">
+              <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
+              <h4>Nessun limite di contatti</h4>
+              <p>Sono tutti contatti <b style="color:var(--text)">Telegram diretti</b>: puoi scrivergli sempre, senza liste che si perdono o email nello spam.</p>
+            </div>
+            <div class="aff-slide">
+              <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg></div>
+              <h4>Cresce da sola</h4>
+              <p>Ogni persona che inviti può a sua volta portarne altre: la tua rete è <b style="color:var(--text)">dinamica</b> e si espande nel tempo.</p>
+            </div>
+            <div class="aff-slide">
+              <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg></div>
+              <h4>I tuoi link, i tuoi guadagni</h4>
+              <p>Da <b style="color:var(--text)">Partner</b>, i tuoi invitati vedono i TUOI link nei business: costruisci un asset che lavora per te.</p>
+            </div>
+          </div>
+          <div class="aff-dots" id="affDots"></div>
+        </div>
+
         <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div>
             <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
@@ -510,6 +547,24 @@
       try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
     }
     window.switchRete = switchRete;
+
+    // Carosello vantaggi affiliazione: puntini + scorrimento a swipe.
+    (function initCarousel() {
+      const track = document.getElementById("affTrack");
+      const dotsWrap = document.getElementById("affDots");
+      if (!track || !dotsWrap) return;
+      const slides = track.querySelectorAll(".aff-slide");
+      slides.forEach((_, i) => {
+        const d = document.createElement("div");
+        d.className = "aff-dot" + (i === 0 ? " on" : "");
+        dotsWrap.appendChild(d);
+      });
+      const dots = dotsWrap.querySelectorAll(".aff-dot");
+      track.addEventListener("scroll", () => {
+        const idx = Math.round(track.scrollLeft / track.clientWidth);
+        dots.forEach((d, i) => d.classList.toggle("on", i === idx));
+      }, { passive: true });
+    })();
 
     // Apre la vista giusta in base all'hash (#rete / #profilo): arrivo dalla barra di navigazione.
     (function initView() {
