@@ -84,7 +84,7 @@
     100% { transform: scale(3); opacity: 0; }
   }
 
-  .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
   .dd { position: relative; }
   .dd-btn {
     width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px;
@@ -103,6 +103,7 @@
     max-height: 240px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   }
   .dd.open .dd-menu { display: block; }
+  #ddFiltri .dd-menu { left: auto; right: 0; }
   .dd-opt {
     display: block; width: 100%; text-align: left; background: none; border: none;
     color: var(--text); padding: 11px 12px; font-size: 12.5px; font-weight: 600;
@@ -991,6 +992,7 @@
       if (!window.userParams) { btn.disabled = true; return; }
       btn.disabled = false;
       btn.setAttribute("onclick", "toggleDd('ddFiltri')");
+      const SEM_SHORT = { verde: "🟢 Adatti", giallo: "🟡 Al limite", rosso: "🔴 Non adatti", "": "Filtri" };
       fillDd("ddFiltri", "Filtri", [
         { value: "verde", label: "🟢 Adatti a te" },
         { value: "giallo", label: "🟡 Al limite" },
@@ -1000,6 +1002,8 @@
         filtri.sem = v;
         visibleCount = PAGE_SIZE;
         renderList();
+        // etichetta compatta nel bottone, così non sfora la colonna.
+        dd.querySelector(".dd-label").textContent = SEM_SHORT[v] || "Filtri";
       }, "Tutti");
     }
 
