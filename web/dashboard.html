@@ -587,7 +587,7 @@
     let allServizi = [];
     let macroCategorie = [];
     let categorie = [];
-    const filtri = { macroId: "", catId: "" };
+    const filtri = { macroId: "", catId: "", sem: "" };
 
     function toggleDd(id) {
       const dd = document.getElementById(id);
@@ -602,11 +602,11 @@
     });
 
     // Costruisce le voci di un dropdown custom; value "" = opzione "tutti" che ripristina il placeholder.
-    function fillDd(id, placeholder, options, onPick) {
+    function fillDd(id, placeholder, options, onPick, allLabel = "Tutte") {
       const dd = document.getElementById(id);
       const menu = dd.querySelector(".dd-menu");
       menu.innerHTML = "";
-      const all = [{ value: "", label: `Tutte` }, ...options];
+      const all = [{ value: "", label: allLabel }, ...options];
       all.forEach((opt) => {
         const b = document.createElement("button");
         b.className = "dd-opt";
@@ -681,6 +681,8 @@
         const catIds = categorie.filter((c) => String(c.macro_categoria_id) === String(filtri.macroId)).map((c) => c.id);
         filtered = filtered.filter((s) => catIds.includes(s.categoria_id));
       }
+      // Filtro per pallino di compatibilità (semaforo) col profilo utente.
+      if (filtri.sem) filtered = filtered.filter((s) => computeSemaforo(window.userParams, s) === filtri.sem);
 
       if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun business in questa vista.</p>'; return; }
 
@@ -977,8 +979,28 @@
         renderList();
       });
       populateSottocategoria("");
+      populateFiltri();
 
       renderList();
+    }
+
+    // Terzo dropdown: filtra per pallino di compatibilità. Attivo solo se hai fatto il test.
+    function populateFiltri() {
+      const dd = document.getElementById("ddFiltri");
+      const btn = dd.querySelector(".dd-btn");
+      if (!window.userParams) { btn.disabled = true; return; }
+      btn.disabled = false;
+      btn.setAttribute("onclick", "toggleDd('ddFiltri')");
+      fillDd("ddFiltri", "Filtri", [
+        { value: "verde", label: "🟢 Adatti a te" },
+        { value: "giallo", label: "🟡 Al limite" },
+        { value: "rosso", label: "🔴 Non adatti" },
+      ], (v) => {
+        haptic("select");
+        filtri.sem = v;
+        visibleCount = PAGE_SIZE;
+        renderList();
+      }, "Tutti");
     }
 
     document.getElementById("searchInput").addEventListener("input", (e) => {
