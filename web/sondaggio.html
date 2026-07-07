@@ -30,7 +30,10 @@
   }
   .container { max-width: 480px; margin: 0 auto; padding: 22px 18px 40px; }
 
-  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .top { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+  .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+  .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
+  @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
   .top-ico {
     width: 40px; height: 40px; border-radius: 4px;
     background: var(--blue);
@@ -101,10 +104,10 @@
 <body>
   <div class="container">
     <div class="top">
-      <div class="top-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 11h6M9 15h4"/></svg></div>
-      <div>
-        <h1>La tua anagrafica</h1>
-        <p id="progText">Domanda 1 di 12</p>
+      <div class="applogo">Cash<span class="ly">ly</span></div>
+      <div style="margin-left:auto;text-align:right">
+        <h1 style="font-size:15px">La tua anagrafica</h1>
+        <p id="progText" style="font-size:12px;color:var(--text-dim);margin-top:1px">Domanda 1 di 12</p>
       </div>
     </div>
     <div class="progress" id="bar"></div>
