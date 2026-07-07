@@ -308,7 +308,10 @@
         </div>
 
         <div class="card">
-          <h2>La mia pagina pubblica</h2>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h2 style="margin:0">La mia pagina pubblica</h2>
+            <span id="paginaStato" style="display:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px"></span>
+          </div>
           <div id="paginaLocked" style="display:none">
             <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
             <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
@@ -881,6 +884,20 @@
       document.getElementById("paginaLink").textContent = paginaLink || "-";
       const configurata = data.bio_titolo || data.bio_testo || (data.social_links || []).length;
       document.getElementById("btnEditPagina").textContent = configurata ? "Modifica pagina" : "Crea la tua pagina pubblica";
+
+      const stato = document.getElementById("paginaStato");
+      if (configurata) {
+        stato.style.display = "inline-block";
+        if (data.pagina_pubblicata) {
+          stato.textContent = "Online";
+          stato.style.background = "var(--lime-dim)";
+          stato.style.color = "var(--lime)";
+        } else {
+          stato.textContent = "Bozza";
+          stato.style.background = "rgba(152,160,178,0.15)";
+          stato.style.color = "var(--text-dim)";
+        }
+      }
       document.getElementById("paginaReady").style.display = "block";
     }
 
