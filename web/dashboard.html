@@ -144,15 +144,25 @@
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
   .aff-carousel { margin-bottom: 14px; position: relative; }
-  .aff-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .aff-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; }
+  .aff-track.dragging { cursor: grabbing; scroll-snap-type: none; }
+  .aff-track.dragging .aff-slide { pointer-events: none; }
   .aff-track::-webkit-scrollbar { display: none; }
-  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
-  .aff-ic { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-  .aff-slide h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .aff-slide p { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
-  .aff-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
-  .aff-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; }
-  .aff-dot.on { background: var(--lime); width: 18px; border-radius: 3px; }
+  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; border-radius: 16px; padding: 26px 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.28); color: #fff; }
+  .aff-slide h4 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 10px; }
+  .aff-slide p { font-size: 14.5px; color: rgba(255,255,255,0.9); line-height: 1.65; }
+  .aff-slide p b { color: #fff; font-weight: 800; }
+  .c-green  { background: linear-gradient(135deg, #16a34a, #22c55e); }
+  .c-blue   { background: linear-gradient(135deg, #2563eb, #4a90e2); }
+  .c-amber  { background: linear-gradient(135deg, #d98a1f, #f0b64c); }
+  .c-purple { background: linear-gradient(135deg, #7c3aed, #a06bf5); }
+  .aff-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 14px; }
+  .aff-arrow { width: 34px; height: 34px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s; }
+  .aff-arrow:active { transform: scale(0.9); }
+  .aff-arrow:disabled { opacity: 0.35; cursor: default; }
+  .aff-dots { display: flex; justify-content: center; gap: 7px; }
+  .aff-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; cursor: pointer; }
+  .aff-dot.on { background: var(--lime); width: 20px; border-radius: 4px; }
   .list-card { background: none; border: none; padding: 0; }
   .sem-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; animation: sem-pulse 1.5s ease-out infinite; }
   @keyframes sem-pulse { 0% { box-shadow: 0 0 0 0 currentColor; } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
@@ -398,25 +408,21 @@
 
     <div class="aff-carousel">
       <div class="aff-track">
-        <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <div class="aff-slide c-green">
           <h4>Benvenuto in Cashly</h4>
-          <p>La <b style="color:var(--text)">directory viva</b> del Business Online: i business e gli strumenti che funzionano davvero, in una lista che cresce ogni giorno.</p>
+          <p>La <b>directory viva</b> del Business Online: i business e gli strumenti che funzionano davvero, in una lista che cresce ogni giorno.</p>
         </div>
-        <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div class="aff-slide c-blue">
           <h4>Falla crescere anche tu</h4>
-          <p>Suggerisci un business che conosci. Se sei il <b style="color:var(--text)">primo</b> e viene approvato, il tuo <b style="color:var(--text)">link di affiliazione</b> diventa quello ufficiale della scheda.</p>
+          <p>Suggerisci un business che conosci. Se sei il <b>primo</b> e viene approvato, il tuo <b>link di affiliazione</b> diventa quello ufficiale della scheda.</p>
         </div>
-        <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg></div>
+        <div class="aff-slide c-amber">
           <h4>La tua rete lavora per te</h4>
-          <p>Chi inviti resta tuo e vede l'intera business list. Sui prodotti dove hai il tuo ref link, <b style="color:var(--text)">le attivazioni della tua rete passano da te</b>.</p>
+          <p>Chi inviti resta tuo e vede l'intera business list. Sui prodotti dove hai il tuo ref link, <b>le attivazioni della tua rete passano da te</b>.</p>
         </div>
-        <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--teal); color:#06110b"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.2 7.9 8 9 4.8-1.1 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <div class="aff-slide c-purple">
           <h4>Trasparente e democratico</h4>
-          <p>Voti della community, link tracciati e regole uguali per tutti: un hub dove crescere in modo <b style="color:var(--text)">etico</b>.</p>
+          <p>Voti della community, link tracciati e regole uguali per tutti: un hub dove crescere in modo <b>etico</b>.</p>
         </div>
       </div>
       <div class="aff-dots"></div>
@@ -1189,37 +1195,75 @@
     }
     window.submitSuggest = submitSuggest;
 
-    // Caroselli "come funziona" (puntini + swipe).
+    // Caroselli "come funziona": slide colorate, pallini cliccabili, frecce sotto (non coprono il testo), drag col mouse da PC.
     (function initCaroselli() {
-      const page = location.pathname.split("/").pop() || "p";
-      document.querySelectorAll(".aff-carousel").forEach((car, ci) => {
+      document.querySelectorAll(".aff-carousel").forEach((car) => {
         // Carosello fisso: sempre visibile, non eliminabile (nessun pulsante di chiusura).
         car.style.display = "";
         const track = car.querySelector(".aff-track");
         const dotsWrap = car.querySelector(".aff-dots");
         if (!track || !dotsWrap) return;
-        track.querySelectorAll(".aff-slide").forEach((_, i) => {
+        const nSlides = track.querySelectorAll(".aff-slide").length;
+
+        // Pallini cliccabili.
+        for (let i = 0; i < nSlides; i++) {
           const d = document.createElement("div");
           d.className = "aff-dot" + (i === 0 ? " on" : "");
+          d.onclick = () => track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
           dotsWrap.appendChild(d);
-        });
+        }
         const dots = dotsWrap.querySelectorAll(".aff-dot");
-        track.addEventListener("scroll", () => {
+
+        // Barra controlli SOTTO le slide: freccia · pallini · freccia (così non coprono il testo).
+        let prevBtn = null, nextBtn = null;
+        if (nSlides > 1) {
+          const controls = document.createElement("div");
+          controls.className = "aff-controls";
+          const mkArrow = (path, label) => {
+            const b = document.createElement("button");
+            b.className = "aff-arrow";
+            b.setAttribute("aria-label", label);
+            b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
+            return b;
+          };
+          prevBtn = mkArrow("m15 18-6-6 6-6", "Indietro");
+          nextBtn = mkArrow("m9 18 6-6-6-6", "Avanti");
+          prevBtn.onclick = () => track.scrollBy({ left: -track.clientWidth, behavior: "smooth" });
+          nextBtn.onclick = () => track.scrollBy({ left: track.clientWidth, behavior: "smooth" });
+          controls.appendChild(prevBtn);
+          controls.appendChild(dotsWrap);
+          controls.appendChild(nextBtn);
+          car.appendChild(controls);
+        }
+
+        const syncUi = () => {
           const idx = track.clientWidth ? Math.round(track.scrollLeft / track.clientWidth) : 0;
           dots.forEach((d, i) => d.classList.toggle("on", i === idx));
-        }, { passive: true });
-        if (dots.length > 1) {
-          const mkNav = (cls, path) => {
-            const b = document.createElement("button");
-            b.className = "car-nav " + cls;
-            b.setAttribute("aria-label", cls === "next" ? "Avanti" : "Indietro");
-            b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
-            b.onclick = (e) => { e.stopPropagation(); track.scrollBy({ left: cls === "next" ? track.clientWidth : -track.clientWidth, behavior: "smooth" }); };
-            car.appendChild(b);
-          };
-          mkNav("prev", "m15 18-6-6 6-6");
-          mkNav("next", "m9 18 6-6-6-6");
-        }
+          if (prevBtn) prevBtn.disabled = track.scrollLeft < 4;
+          if (nextBtn) nextBtn.disabled = track.scrollLeft > track.scrollWidth - track.clientWidth - 4;
+        };
+        track.addEventListener("scroll", syncUi, { passive: true });
+        syncUi();
+
+        // Drag-to-scroll col mouse (desktop): tieni premuto e trascina.
+        let down = false, startX = 0, startScroll = 0, moved = false;
+        track.addEventListener("mousedown", (e) => { down = true; moved = false; startX = e.pageX; startScroll = track.scrollLeft; });
+        window.addEventListener("mousemove", (e) => {
+          if (!down) return;
+          const dx = e.pageX - startX;
+          if (Math.abs(dx) > 4) { moved = true; track.classList.add("dragging"); }
+          track.scrollLeft = startScroll - dx;
+        });
+        window.addEventListener("mouseup", () => {
+          if (!down) return;
+          down = false;
+          if (moved) {
+            track.classList.remove("dragging");
+            // Snap alla slide più vicina dopo il drag.
+            const idx = Math.round(track.scrollLeft / track.clientWidth);
+            track.scrollTo({ left: idx * track.clientWidth, behavior: "smooth" });
+          }
+        });
       });
     })();
 
