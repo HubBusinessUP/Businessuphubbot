@@ -208,7 +208,7 @@
 <body>
   <div class="container">
     <div class="apphdr">
-      <div class="applogo">Cash<span class="ly">ly</span></div>
+      <div class="applogo" onclick="window.location.href='dashboard.html'" style="cursor:pointer">Cash<span class="ly">ly</span></div>
       <div class="top-actions">
         <button class="icon-circle plus" onclick="window.location.href='dashboard.html?_=' + Date.now() + '#suggerisci'" aria-label="Candida un business">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -946,7 +946,7 @@
     (function initCaroselli() {
       const page = location.pathname.split("/").pop() || "p";
       document.querySelectorAll(".aff-carousel").forEach((car, ci) => {
-        const key = "carDismiss:" + page + ":" + ci;
+        const key = "carDismiss3:" + page + ":" + ci;
         if (localStorage.getItem(key)) { car.style.display = "none"; return; }
         const close = document.createElement("button");
         close.className = "car-close";
