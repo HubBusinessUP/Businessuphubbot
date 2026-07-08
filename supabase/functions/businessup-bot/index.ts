@@ -482,19 +482,25 @@ async function apiMe(telegramId: number, tgUser?: any) {
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
 
-  // Tutorial iniziato ma non completato più recente, per la card "Riprendi da dove eri".
-  let ripresa = null
+  // Tutti i tutorial iniziati ma non completati, per le notifiche "Riprendi" impilabili.
+  const riprese: any[] = []
   const { data: progress } = await supabase.from("tutorial_progress")
     .select("servizio_id, ultimo_step")
     .eq("telegram_id", telegramId).eq("completato", false).gt("ultimo_step", 0)
-    .order("updated_at", { ascending: false }).limit(1).maybeSingle()
-  if (progress) {
-    const { data: sv } = await supabase.from("servizi").select("nome, tutorial_steps").eq("id", progress.servizio_id).maybeSingle()
-    if (sv) {
+    .order("updated_at", { ascending: false })
+  const progSvcIds = [...new Set((progress ?? []).map((p: any) => p.servizio_id))]
+  if (progSvcIds.length) {
+    const { data: svs } = await supabase.from("servizi").select("id, nome, tutorial_steps").in("id", progSvcIds)
+    const svMap: Record<number, any> = {}
+    for (const s of svs ?? []) svMap[(s as any).id] = s
+    for (const p of progress ?? []) {
+      const sv = svMap[(p as any).servizio_id]
+      if (!sv) continue
       const totale = Array.isArray(sv.tutorial_steps) && sv.tutorial_steps.length ? sv.tutorial_steps.length : 4
-      ripresa = { servizio_id: progress.servizio_id, servizio_nome: sv.nome, ultimo_step: progress.ultimo_step, totale_step: totale }
+      riprese.push({ servizio_id: (p as any).servizio_id, servizio_nome: sv.nome, ultimo_step: (p as any).ultimo_step, totale_step: totale })
     }
   }
+  const ripresa = riprese[0] ?? null
 
   // Performance profilo: proposte inviate e approvate.
   const { count: suggeriti } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("telegram_id", telegramId)
@@ -536,7 +542,7 @@ async function apiMe(telegramId: number, tgUser?: any) {
     })
   }
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {

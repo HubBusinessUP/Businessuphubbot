@@ -205,6 +205,10 @@
   .resume-body { flex: 1; min-width: 0; }
   .resume-title { font-size: 12.5px; font-weight: 700; }
   .resume-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .resume-head { display: flex; align-items: center; gap: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 8px; }
+  .resume-count { background: var(--blue); color: #fff; font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 999px; letter-spacing: 0; }
+  .resume-bar { height: 4px; border-radius: 999px; background: var(--border); margin-top: 6px; overflow: hidden; }
+  .resume-bar > i { display: block; height: 100%; background: var(--blue); border-radius: 999px; }
 
   .load-more { display: block; width: 100%; padding: 12px; margin-top: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: var(--text-dim); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center; }
 
@@ -390,36 +394,29 @@
       <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
     </div>
 
-    <button class="resume-card" id="resumeCard" style="display:none">
-      <div class="resume-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
-      <div class="resume-body">
-        <div class="resume-title" id="resumeTitle">Riprendi da dove eri</div>
-        <div class="resume-sub" id="resumeSub"></div>
-      </div>
-      <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
-    </button>
+    <div id="resumeStack"></div>
 
     <div class="aff-carousel">
       <div class="aff-track">
         <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-          <h4>Business selezionati dal team</h4>
-          <p>Ogni opportunità qui dentro è <b style="color:var(--text)">testata e verificata</b>. Niente promesse, solo business reali.</p>
+          <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+          <h4>Benvenuto in Cashly</h4>
+          <p>La <b style="color:var(--text)">directory viva</b> del Business Online: i business e gli strumenti che funzionano davvero, in una lista che cresce ogni giorno.</p>
         </div>
         <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 4 15h16z"/></svg></div>
-          <h4>Vota quelli che funzionano</h4>
-          <p>Il tuo voto sposta la classifica: i migliori salgono in cima grazie alla <b style="color:var(--text)">community</b>.</p>
+          <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+          <h4>Falla crescere anche tu</h4>
+          <p>Suggerisci un business che conosci. Se sei il <b style="color:var(--text)">primo</b> e viene approvato, il tuo <b style="color:var(--text)">link di affiliazione</b> diventa quello ufficiale della scheda.</p>
         </div>
         <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></div>
-          <h4>Apri, segui gli step, attiva</h4>
-          <p>Tocca un business per la scheda: caratteristiche, <b style="color:var(--text)">tutorial passo-passo</b> e link ufficiale.</p>
+          <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg></div>
+          <h4>La tua rete lavora per te</h4>
+          <p>Chi inviti resta tuo e vede l'intera business list. Sui prodotti dove hai il tuo ref link, <b style="color:var(--text)">le attivazioni della tua rete passano da te</b>.</p>
         </div>
         <div class="aff-slide">
-          <div class="aff-ic" style="background:var(--teal); color:#06110b"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg></div>
-          <h4>Il pallino ti orienta</h4>
-          <p>Verde, giallo o rosso: a colpo d'occhio vedi quali business sono <b style="color:var(--text)">in linea con il tuo profilo</b>.</p>
+          <div class="aff-ic" style="background:var(--teal); color:#06110b"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.2 7.9 8 9 4.8-1.1 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h4>Trasparente e democratico</h4>
+          <p>Voti della community, link tracciati e regole uguali per tutti: un hub dove crescere in modo <b style="color:var(--text)">etico</b>.</p>
         </div>
       </div>
       <div class="aff-dots"></div>
@@ -618,15 +615,32 @@
       window.supportUser = (sp && !sp.is_founder && sp.username) ? sp.username : "antonybusinesshub";
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
 
-      if (data.ripresa) {
-        const r = data.ripresa;
-        document.getElementById("resumeTitle").textContent = `Riprendi: ${r.servizio_nome}`;
-        document.getElementById("resumeSub").textContent = `Sei allo step ${r.ultimo_step} di ${r.totale_step} — continua da dove eri`;
-        const card = document.getElementById("resumeCard");
-        card.style.display = "flex";
-        card.onclick = () => toggleBiz(r.servizio_id);
-      }
+      renderRiprese(data.riprese || (data.ripresa ? [data.ripresa] : []));
       return completato;
+    }
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+    // Notifiche "Riprendi" impilabili: una per ogni tutorial iniziato e non completato.
+    function renderRiprese(list) {
+      const stack = document.getElementById("resumeStack");
+      if (!stack) return;
+      if (!list || !list.length) { stack.innerHTML = ""; return; }
+      const head = list.length > 1
+        ? `<div class="resume-head">Da riprendere <span class="resume-count">${list.length}</span></div>`
+        : "";
+      stack.innerHTML = head + list.map((r) => {
+        const pct = Math.min(100, Math.round((r.ultimo_step / (r.totale_step || 1)) * 100));
+        return `<button class="resume-card" onclick="toggleBiz(${r.servizio_id})">
+          <div class="resume-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
+          <div class="resume-body">
+            <div class="resume-title">Riprendi: ${esc(r.servizio_nome)}</div>
+            <div class="resume-sub">Step ${r.ultimo_step} di ${r.totale_step} — continua da dove eri</div>
+            <div class="resume-bar"><i style="width:${pct}%"></i></div>
+          </div>
+          <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        </button>`;
+      }).join("");
     }
 
     const MACRO_COLORS = ["var(--blue)", "var(--lime)", "var(--amber)", "var(--slate)", "#9b6ef0", "#e2574a"];
