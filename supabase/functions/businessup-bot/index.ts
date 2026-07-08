@@ -652,7 +652,7 @@ function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolea
 }
 
 async function apiAffiliazione(telegramId: number) {
-  const { data: lead } = await supabase.from("leads").select("is_cliente").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("is_cliente, is_partner, partner_richiesto, ref_clicks").eq("telegram_id", telegramId).maybeSingle()
   const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: pagamenti } = await supabase.from("pagamenti").select("importo").eq("telegram_id", telegramId)
@@ -684,16 +684,32 @@ async function apiAffiliazione(telegramId: number) {
     business_approvati: approvatiCount[i.telegram_id] ?? 0,
   }))
 
+  const { data: servizi } = await supabase.from("servizi").select("id, nome").order("nome")
+  const attivazioniTot = Object.values(serviziCount).reduce((s: number, n: number) => s + n, 0)
+  const clientiCount = membri.filter((m: any) => m.is_cliente).length
+
   return json({
     ref_link: `https://t.me/${BOT_USERNAME}?start=ref_${refCode}`,
+    ref_code: refCode,
+    track_link: `${WEBAPP_URL}/r.html?c=${refCode}`,
     is_cliente: lead?.is_cliente ?? false,
+    is_partner: !!lead?.is_partner,
+    partner_richiesto: !!lead?.partner_richiesto,
+    soglia: PARTNER_SOGLIA,
+    stats: {
+      click: lead?.ref_clicks ?? 0,
+      iscritti: membri.length,
+      attivazioni: attivazioniTot,
+      clienti: clientiCount,
+    },
     rete: {
       invitati_count: membri.length,
-      attivati_count: membri.filter((m: any) => m.is_cliente).length,
+      attivati_count: clientiCount,
       membri,
     },
     guadagni_totali: guadagni,
     miei_reflink: mieiLink ?? [],
+    servizi: servizi ?? [],
   })
 }
 
@@ -1651,6 +1667,16 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiAffiliazione(tid)
+    }
+
+    // Conteggio click sul link d'invito (pubblico): la pagina r.html lo chiama prima di aprire il bot.
+    if (sub === "click" && req.method === "GET") {
+      const code = url.searchParams.get("c") || ""
+      if (code) {
+        const { data: l } = await supabase.from("leads").select("telegram_id, ref_clicks").eq("ref_code", code).maybeSingle()
+        if (l) await supabase.from("leads").update({ ref_clicks: ((l as any).ref_clicks ?? 0) + 1 }).eq("telegram_id", (l as any).telegram_id)
+      }
+      return json({ ok: true })
     }
 
     if (sub === "affiliate-link" && req.method === "POST") {

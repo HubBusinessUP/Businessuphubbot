@@ -52,6 +52,24 @@
   .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 600; font-family: inherit; text-decoration: none; cursor: pointer; }
   .bnav-item.active { color: var(--blue); }
   .bnav-item svg { width: 22px; height: 22px; }
+  .af-hero { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin: 2px 2px 12px; }
+  .af-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .af-metric { background: var(--card2); border-radius: 12px; padding: 14px; }
+  .af-n { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
+  .af-n.lime { color: var(--lime); } .af-n.blue { color: var(--blue); }
+  .af-k { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .af-ta { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px; font-size: 13px; font-family: inherit; min-height: 64px; resize: vertical; }
+  .af-info { display: flex; gap: 10px; background: var(--blue-dim); border-radius: 10px; padding: 12px 13px; }
+  .af-info svg { width: 18px; height: 18px; color: var(--blue); flex-shrink: 0; margin-top: 1px; }
+  .af-info p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .af-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .af-row:last-child { border-bottom: none; }
+  .af-row .rl-name { font-size: 13.5px; font-weight: 700; flex: 1; min-width: 0; }
+  .af-row .rl-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; }
+  .af-row .rl-badge.on { background: var(--lime-dim); color: var(--lime); }
+  .af-row .rl-badge.wait { background: var(--amber-dim); color: var(--amber); }
+  .af-row .rl-input { flex: 1 1 100%; min-width: 0; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 6px; font-size: 12.5px; font-family: inherit; }
+  .af-partner-ico { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
   .rtabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-bottom: 14px; }
   .rtab { flex: 1; padding: 10px 6px; border: none; border-radius: 4px; background: none; color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
@@ -342,6 +360,65 @@
       </div>
     </div>
 
+    <!-- ===== VISTA AFFILIAZIONE ===== -->
+    <div class="tabpanel" id="view-affiliazione">
+      <div class="af-hero">Affiliazione</div>
+
+      <div class="card" id="affPartner" style="margin-bottom:12px"></div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Il tuo link d'invito</div>
+        <div class="invite-row" style="margin-bottom:10px">
+          <div class="invite-link" id="affInvite">-</div>
+          <button class="invite-copy" onclick="copiaAff()" aria-label="Copia link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="condividiAff()">Condividi</button>
+          <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
+        </div>
+        <div id="affQr" style="display:none;text-align:center;margin-top:14px">
+          <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Le tue statistiche</div>
+        <div class="af-stats">
+          <div class="af-metric"><div class="af-n blue" id="stClick">0</div><div class="af-k">Click sul link</div></div>
+          <div class="af-metric"><div class="af-n lime" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
+          <div class="af-metric"><div class="af-n" id="stAttivazioni">0</div><div class="af-k">Attivazioni</div></div>
+          <div class="af-metric"><div class="af-n" id="stClienti">0</div><div class="af-k">Clienti</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">I miei link per business</div>
+        <div id="affLinkLocked" style="display:none">
+          <p style="font-size:13px;color:var(--text-dim);line-height:1.5">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b> (sopra vedi a che punto sei). Da Partner potrai mettere il TUO link su ogni business.</p>
+        </div>
+        <div id="affLinkEditor" style="display:none">
+          <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link. I domini conosciuti si attivano subito, gli altri passano dall'approvazione.</p>
+          <div id="affLinkRows"></div>
+        </div>
+      </div>
+
+      <div class="card" id="affBroadcastCard" style="display:none;margin-bottom:12px">
+        <div class="section-title">Broadcast alla tua rete</div>
+        <textarea class="af-ta" id="affBcText" maxlength="1000" placeholder="Scrivi un messaggio ai tuoi iscritti..."></textarea>
+        <button class="btn" style="background:var(--lime);color:#06110b;width:100%;margin-top:10px" onclick="inviaBroadcast()">Invia alla mia rete</button>
+        <p style="font-size:11.5px;color:var(--text-dim);margin-top:8px" id="affBcNote">Puoi inviare un messaggio al giorno alla tua rete.</p>
+      </div>
+
+      <div class="card">
+        <div class="af-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <p><b style="color:var(--text)">Nessuno ti scavalca.</b> I tuoi iscritti vedono sempre il TUO link nei business. I domini conosciuti si attivano subito, gli altri passano dall'approvazione dell'admin.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== VISTA PROFILO ===== -->
     <div class="tabpanel active" id="view-profilo">
       <div class="rtabs">
@@ -464,6 +541,10 @@
       <button class="bnav-item" id="navRete" onclick="switchView('rete')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15.5 20c0-2 .6-3.3 2-4"/></svg>
         <span>Rete</span>
+      </button>
+      <button class="bnav-item" id="navAffiliazione" onclick="switchView('affiliazione')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
+        <span>Affiliazione</span>
       </button>
       <button class="bnav-item active" id="navProfilo" onclick="switchView('profilo')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -607,15 +688,141 @@
     }
 
     function switchView(name) {
-      const v = name === "rete" ? "rete" : "profilo";
+      const views = ["rete", "affiliazione", "profilo"];
+      const v = views.includes(name) ? name : "profilo";
       document.getElementById("view-rete").classList.toggle("active", v === "rete");
+      document.getElementById("view-affiliazione").classList.toggle("active", v === "affiliazione");
       document.getElementById("view-profilo").classList.toggle("active", v === "profilo");
       document.getElementById("navRete").classList.toggle("active", v === "rete");
+      document.getElementById("navAffiliazione").classList.toggle("active", v === "affiliazione");
       document.getElementById("navProfilo").classList.toggle("active", v === "profilo");
+      if (v === "affiliazione" && !affLoaded) loadAffiliazione();
       try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
       window.scrollTo({ top: 0 });
     }
     window.switchView = switchView;
+
+    // ===== SEZIONE AFFILIAZIONE =====
+    let affLoaded = false;
+    let affTrackLink = "";
+
+    async function loadAffiliazione() {
+      affLoaded = true;
+      let data = {};
+      try {
+        const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+        data = await res.json();
+      } catch (e) { data = {}; }
+
+      affTrackLink = data.track_link || data.ref_link || "";
+      document.getElementById("affInvite").textContent = affTrackLink || "-";
+
+      const s = data.stats || {};
+      document.getElementById("stClick").textContent = s.click ?? 0;
+      document.getElementById("stIscritti").textContent = s.iscritti ?? 0;
+      document.getElementById("stAttivazioni").textContent = s.attivazioni ?? 0;
+      document.getElementById("stClienti").textContent = s.clienti ?? 0;
+
+      renderAffPartner(data);
+      renderAffEditor(data);
+      document.getElementById("affBroadcastCard").style.display = data.is_partner ? "block" : "none";
+    }
+
+    function renderAffPartner(data) {
+      const el = document.getElementById("affPartner");
+      if (data.is_partner) {
+        el.innerHTML = `<div style="display:flex;align-items:center;gap:12px">
+          <div class="af-partner-ico" style="background:var(--lime-dim);color:var(--lime)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div style="flex:1"><div style="font-size:15px;font-weight:800">Sei Partner</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:1px">Puoi inserire i tuoi link su tutti i business.</div></div>
+          <div style="font-size:11px;font-weight:800;color:var(--lime);background:var(--lime-dim);padding:4px 10px;border-radius:6px">ATTIVO</div>
+        </div>`;
+        return;
+      }
+      const iscritti = (data.stats && data.stats.iscritti) || 0;
+      const soglia = data.soglia || 3;
+      const pct = Math.min(100, Math.round((iscritti / soglia) * 100));
+      el.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div class="af-partner-ico" style="background:var(--amber-dim);color:var(--amber)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:800">Diventa Partner</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:1px">Sblocchi i tuoi link con ${soglia} iscritti (${iscritti}/${soglia}).</div></div>
+      </div>
+      <div style="height:7px;background:rgba(0,0,0,.25);border-radius:4px;overflow:hidden;margin-bottom:${data.partner_richiesto ? "0" : "12px"}"><div style="height:100%;width:${pct}%;background:var(--lime)"></div></div>
+      ${data.partner_richiesto
+        ? `<div style="text-align:center;font-size:13px;color:var(--amber);font-weight:700;margin-top:12px">Richiesta inviata, in attesa dell'admin</div>`
+        : `<button class="btn" style="background:var(--lime);color:#06110b;width:100%" onclick="richiediPartner(this)">Richiedi ora</button>`}`;
+    }
+
+    async function richiediPartner(btn) {
+      btn.disabled = true; btn.textContent = "Invio...";
+      const res = await fetch(`${API_URL}/diventa-partner`, { method: "POST", headers: { "x-telegram-init-data": initData } });
+      if (res.ok) { if (tg?.showAlert) tg.showAlert("Richiesta inviata! Ti avvisiamo appena l'admin decide."); affLoaded = false; loadAffiliazione(); }
+      else { btn.disabled = false; btn.textContent = "Richiedi ora"; if (tg?.showAlert) tg.showAlert("Errore, riprova."); }
+    }
+    window.richiediPartner = richiediPartner;
+
+    function renderAffEditor(data) {
+      const locked = document.getElementById("affLinkLocked");
+      const editor = document.getElementById("affLinkEditor");
+      if (!data.is_partner) { locked.style.display = "block"; editor.style.display = "none"; return; }
+      locked.style.display = "none"; editor.style.display = "block";
+      const mieiMap = {};
+      (data.miei_reflink || []).forEach((l) => { mieiMap[l.servizio_id] = l; });
+      document.getElementById("affLinkRows").innerHTML = (data.servizi || []).map((sv) => {
+        const mio = mieiMap[sv.id];
+        const badge = mio ? `<span class="rl-badge ${mio.approvato ? "on" : "wait"}">${mio.approvato ? "Attivo" : "In attesa"}</span>` : "";
+        return `<div class="af-row">
+          <div class="rl-name">${escapeHtml(sv.nome)}</div>${badge}
+          <input class="rl-input" id="arl-${sv.id}" placeholder="https://... il tuo link" value="${escapeHtml(mio?.ref_link || "")}" />
+          <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:0 0 auto;padding:0 14px" onclick="salvaAffLink(${sv.id}, this)">Salva</button>
+        </div>`;
+      }).join("") || '<p style="font-size:13px;color:var(--text-dim)">Nessun business in lista al momento.</p>';
+    }
+
+    async function salvaAffLink(servizioId, btn) {
+      const link = document.getElementById(`arl-${servizioId}`).value.trim();
+      if (!link) return;
+      btn.disabled = true; btn.textContent = "...";
+      const res = await fetch(`${API_URL}/affiliate-link`, { method: "POST", headers: { "Content-Type": "application/json", "x-telegram-init-data": initData }, body: JSON.stringify({ servizio_id: servizioId, ref_link: link }) });
+      const d = await res.json().catch(() => ({}));
+      btn.disabled = false; btn.textContent = "Salva";
+      if (res.ok) { if (tg?.showAlert) tg.showAlert(d.approvato ? "Link attivo! I tuoi invitati lo vedono da subito." : "Link salvato: in attesa di approvazione admin."); affLoaded = false; loadAffiliazione(); }
+      else { if (tg?.showAlert) tg.showAlert(d.error === "link_non_valido" ? "Link non valido: usa un https completo." : "Errore, riprova."); }
+    }
+    window.salvaAffLink = salvaAffLink;
+
+    function copiaAff() {
+      if (!affTrackLink) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(affTrackLink).catch(() => {});
+      try { tg?.HapticFeedback?.impactOccurred("light"); } catch (e) {}
+      if (tg?.showAlert) tg.showAlert("Link copiato!");
+    }
+    window.copiaAff = copiaAff;
+
+    function condividiAff() { openShare(affTrackLink, "Entra in Cashly con il mio invito:", "Condividi il tuo invito"); }
+    window.condividiAff = condividiAff;
+
+    function toggleQr() {
+      const box = document.getElementById("affQr");
+      const img = document.getElementById("affQrImg");
+      if (box.style.display === "none") {
+        img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=" + encodeURIComponent(affTrackLink);
+        box.style.display = "block";
+      } else { box.style.display = "none"; }
+    }
+    window.toggleQr = toggleQr;
+
+    async function inviaBroadcast() {
+      const txt = document.getElementById("affBcText").value.trim();
+      const note = document.getElementById("affBcNote");
+      if (!txt) { note.textContent = "Scrivi prima un messaggio."; return; }
+      note.textContent = "Invio in corso...";
+      const res = await fetch(`${API_URL}/rete-broadcast`, { method: "POST", headers: { "Content-Type": "application/json", "x-telegram-init-data": initData }, body: JSON.stringify({ testo: txt }) });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) { note.textContent = `Inviato a ${d.inviati ?? 0} iscritti.`; document.getElementById("affBcText").value = ""; }
+      else if (d.error === "limite_giornaliero") note.textContent = "Hai già inviato un broadcast nelle ultime 24 ore.";
+      else if (d.error === "rete_troppo_piccola") note.textContent = `Ti servono almeno ${d.minimo || 3} iscritti per il broadcast.`;
+      else note.textContent = "Errore, riprova.";
+    }
+    window.inviaBroadcast = inviaBroadcast;
 
     // Schede interne alla vista Profilo: Dati / Identikit / Attività.
     function switchProfilo(sub) {
@@ -662,14 +869,11 @@
       });
     })();
 
-    // Apre la vista giusta in base all'hash (#rete / #profilo): arrivo dalla barra di navigazione.
-    (function initView() {
-      const h = (location.hash || "").replace("#", "");
-      switchView(h === "rete" ? "rete" : "profilo");
-    })();
-    window.addEventListener("hashchange", () => {
-      switchView((location.hash || "").replace("#", "") === "rete" ? "rete" : "profilo");
-    });
+    // Apre la vista giusta in base all'hash (#rete / #affiliazione / #profilo): arrivo dalla barra.
+    const VIEWS = ["rete", "affiliazione", "profilo"];
+    const hashView = () => { const h = (location.hash || "").replace("#", ""); return VIEWS.includes(h) ? h : "profilo"; };
+    (function initView() { switchView(hashView()); })();
+    window.addEventListener("hashchange", () => switchView(hashView()));
 
     // Business che l'utente ha attivato: link personale da riaprire + stato tutorial.
     function renderProdotti(prodotti) {

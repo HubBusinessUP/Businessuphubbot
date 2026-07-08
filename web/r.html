@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Apertura di Cashly…</title>
+<style>
+  :root{--ink:#16181d;--green:#22c55e;--dim:#98a0b2}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:var(--ink);color:#f4f6f8;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",ui-sans-serif,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+  .wm{font-size:34px;font-weight:800;letter-spacing:-.03em}
+  .wm span{color:var(--green);display:inline-block;animation:p 1.2s ease-in-out infinite}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.5}}
+  .t{font-size:13px;color:var(--dim)}
+</style>
+</head>
+<body>
+  <div class="wm">Cash<span>ly</span></div>
+  <div class="t">Apertura in corso…</div>
+  <script>
+    (function () {
+      var BOT = "cashlyhub_bot";
+      var API = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+      var c = (new URLSearchParams(location.search).get("c") || "").replace(/[^a-z0-9]/gi, "");
+      var dest = c ? "https://t.me/" + BOT + "?start=ref_" + c : "https://t.me/" + BOT;
+      function go() { location.replace(dest); }
+      if (c) {
+        try { fetch(API + "/click?c=" + encodeURIComponent(c)).finally(go); } catch (e) { go(); }
+        setTimeout(go, 1400);
+      } else { go(); }
+    })();
+  </script>
+</body>
+</html>
