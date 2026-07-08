@@ -32,8 +32,22 @@
   .greet-hero .greet-identity { flex-direction: column; gap: 10px; text-align: center; align-items: center; }
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
-  .top-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .top-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
   .icon-circle { width: 34px; height: 34px; border-radius: 4px; flex-shrink: 0; background: #232636; color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+  .icon-circle.plus { background: var(--lime); color: #06110b; }
+  .hdr-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1px; }
+  .notif-wrap { position: relative; }
+  .notif-badge { position: absolute; top: -4px; right: -4px; background: #e2574a; color: #fff; font-size: 10px; font-weight: 800; min-width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 999px; padding: 0 4px; border: 2px solid var(--panel); box-sizing: content-box; }
+  .notif-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 290px; max-width: 80vw; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); z-index: 60; padding: 8px; display: none; }
+  .notif-panel.open { display: block; }
+  .notif-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; padding: 6px 8px 8px; }
+  .notif-item { display: flex; gap: 11px; align-items: center; padding: 10px 8px; border-radius: 8px; cursor: pointer; width: 100%; text-align: left; background: none; border: none; color: inherit; font-family: inherit; text-decoration: none; }
+  .notif-item:active { background: var(--ink); }
+  .notif-item .n-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .notif-item .n-body { flex: 1; min-width: 0; }
+  .notif-item .n-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notif-item .n-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+  .notif-empty { padding: 16px 8px; color: var(--text-dim); font-size: 13px; text-align: center; }
   .icon-circle.plus { background: var(--lime); color: #06110b; animation: cta-glow 2.4s ease-in-out infinite; }
   @keyframes cta-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); } 50% { box-shadow: 0 0 0 5px rgba(46,204,113,0); } }
   .avatar-wrap { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; position: relative; border: none; padding: 0; cursor: pointer; overflow: hidden; }
@@ -218,15 +232,26 @@
     <div class="apphdr">
       <div class="applogo" onclick="window.location.href='dashboard.html'" style="cursor:pointer">Cash<span class="ly">ly</span></div>
       <div class="top-actions">
+        <button class="icon-circle plus" onclick="window.location.href='dashboard.html?_=' + Date.now() + '#suggerisci'" aria-label="Candida un business">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
         <button class="icon-circle" onclick="condividiInvito()" aria-label="Condividi il tuo link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
         </button>
         <button class="icon-circle" onclick="window.location.reload()" aria-label="Aggiorna la pagina">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
         </button>
-        <button class="icon-circle plus" onclick="window.location.href='dashboard.html?_=' + Date.now() + '#suggerisci'" aria-label="Candida un business">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
+        <span class="hdr-sep"></span>
+        <div class="notif-wrap">
+          <button class="icon-circle" id="notifBtn" onclick="toggleNotif()" aria-label="Notifiche">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+          </button>
+          <div class="notif-panel" id="notifPanel">
+            <div class="notif-head">Notifiche</div>
+            <div id="notifList"><div class="notif-empty">Nessuna notifica</div></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -737,7 +762,34 @@
       renderPartner(data);
       renderProdotti(data.prodotti_attivi || []);
       renderAttivitaRiprese(data.riprese || []);
+      renderNotifiche(data.riprese || []);
     }
+
+    // Campanella notifiche in header (identica alla Home): tutorial da riprendere; apre il business in Home.
+    function renderNotifiche(list) {
+      const box = document.getElementById("notifList");
+      const badge = document.getElementById("notifBadge");
+      if (!box) return;
+      list = list || [];
+      if (badge) {
+        if (list.length) { badge.textContent = list.length > 9 ? "9+" : list.length; badge.style.display = ""; }
+        else { badge.style.display = "none"; }
+      }
+      if (!list.length) { box.innerHTML = '<div class="notif-empty">Nessuna notifica</div>'; return; }
+      box.innerHTML = list.map((r) => `
+        <a class="notif-item" href="dashboard.html#biz-${r.servizio_id}">
+          <div class="n-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
+          <div class="n-body">
+            <div class="n-title">Riprendi: ${escapeHtml(r.servizio_nome)}</div>
+            <div class="n-sub">Step ${r.ultimo_step} di ${r.totale_step} — continua</div>
+          </div>
+        </a>`).join("");
+    }
+    function toggleNotif() { document.getElementById("notifPanel").classList.toggle("open"); }
+    window.toggleNotif = toggleNotif;
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".notif-wrap")) document.getElementById("notifPanel")?.classList.remove("open");
+    });
 
     // Tutorial iniziati e non completati: elenco nel Profilo > Attività, apre il business in Home.
     function renderAttivitaRiprese(list) {
