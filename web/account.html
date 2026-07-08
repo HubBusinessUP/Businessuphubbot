@@ -946,14 +946,8 @@
     (function initCaroselli() {
       const page = location.pathname.split("/").pop() || "p";
       document.querySelectorAll(".aff-carousel").forEach((car, ci) => {
-        const key = "carDismiss3:" + page + ":" + ci;
-        if (localStorage.getItem(key)) { car.style.display = "none"; return; }
-        const close = document.createElement("button");
-        close.className = "car-close";
-        close.setAttribute("aria-label", "Nascondi guida");
-        close.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-        close.onclick = (e) => { e.stopPropagation(); car.style.display = "none"; try { localStorage.setItem(key, "1"); } catch (err) {} };
-        car.appendChild(close);
+        // Carosello fisso: sempre visibile, non eliminabile (nessun pulsante di chiusura).
+        car.style.display = "";
         const track = car.querySelector(".aff-track");
         const dotsWrap = car.querySelector(".aff-dots");
         if (!track || !dotsWrap) return;
