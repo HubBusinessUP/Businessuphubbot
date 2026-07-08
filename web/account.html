@@ -975,20 +975,6 @@
       }
     }
 
-    async function richiediPartner(btn) {
-      btn.disabled = true;
-      const res = await fetch(`${API_URL}/diventa-partner`, { method: "POST", headers: { "x-telegram-init-data": initData } });
-      if (res.ok) {
-        btn.textContent = "Richiesta inviata ✓";
-        if (tg?.showAlert) tg.showAlert("Richiesta inviata! Ti avvisiamo appena viene approvata.");
-      } else {
-        const e = await res.json().catch(() => ({}));
-        btn.disabled = false;
-        if (tg?.showAlert) tg.showAlert(e.error === "richiesta_gia_inviata" ? "Hai già una richiesta in corso." : "Errore, riprova.");
-      }
-    }
-    window.richiediPartner = richiediPartner;
-
     async function inviaReteBroadcast() {
       const testo = document.getElementById("rbTesto").value.trim();
       if (!testo) return;
@@ -1111,15 +1097,6 @@
         </div>
       `;
       }).join("");
-    }
-
-    async function loadAffiliazione() {
-      const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
-      const data = await res.json();
-      inviteLink = data.ref_link || "";
-      document.getElementById("inviteLink").textContent = inviteLink || "-";
-      membriRete = data.rete?.membri || [];
-      renderRete("");
     }
 
     document.getElementById("reteSearch").addEventListener("input", (e) => renderRete(e.target.value.trim()));
