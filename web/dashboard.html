@@ -44,7 +44,7 @@
   .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
   .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
   @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
-  .greet-hero { display: flex; justify-content: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .greet-hero { display: none; }
   .greet-hero .greet-identity { flex-direction: column; gap: 10px; text-align: center; align-items: center; }
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
@@ -89,6 +89,9 @@
     0% { transform: scale(1); opacity: 0.7; }
     100% { transform: scale(3); opacity: 0; }
   }
+  .live-badge { font-size: 9.5px; font-weight: 800; letter-spacing: 0.09em; color: var(--lime); background: var(--lime-dim); padding: 2px 7px; border-radius: 4px; margin-left: 8px; animation: live-blink 1.6s ease-in-out infinite; vertical-align: 2px; }
+  @keyframes live-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .car-close { position: absolute; top: 8px; right: 8px; z-index: 4; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: var(--text-dim); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
 
   .filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
   .dd { position: relative; }
@@ -138,7 +141,7 @@
   .cat-count { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
   .cat-arrow { color: var(--text-dim); flex-shrink: 0; }
 
-  .aff-carousel { margin-bottom: 14px; }
+  .aff-carousel { margin-bottom: 14px; position: relative; }
   .aff-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .aff-track::-webkit-scrollbar { display: none; }
   .aff-slide { flex: 0 0 100%; scroll-snap-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
@@ -406,7 +409,7 @@
     </div>
 
     <div class="section-row">
-      <div class="section-title"><span class="live-dot"></span>Business list</div>
+      <div class="section-title"><span class="live-dot"></span>Business list<span class="live-badge">LIVE</span></div>
       <div class="section-date" id="sectionDate"></div>
     </div>
 
@@ -431,7 +434,7 @@
       </div>
       <div class="dd" id="ddFiltri">
         <button class="dd-btn" disabled>
-          <span class="dd-label">Filtri</span>
+          <span class="dd-label">Filtra</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="dd-menu"></div>
@@ -1002,8 +1005,8 @@
       if (!window.userParams) { btn.disabled = true; return; }
       btn.disabled = false;
       btn.setAttribute("onclick", "toggleDd('ddFiltri')");
-      const SEM_SHORT = { verde: "🟢 Adatti", giallo: "🟡 Al limite", rosso: "🔴 Non adatti", "": "Filtri" };
-      fillDd("ddFiltri", "Filtri", [
+      const SEM_SHORT = { verde: "🟢 Adatti", giallo: "🟡 Al limite", rosso: "🔴 Non adatti", "": "Filtra" };
+      fillDd("ddFiltri", "Filtra", [
         { value: "verde", label: "🟢 Adatti a te" },
         { value: "giallo", label: "🟡 Al limite" },
         { value: "rosso", label: "🔴 Non adatti" },
@@ -1013,7 +1016,7 @@
         visibleCount = PAGE_SIZE;
         renderList();
         // etichetta compatta nel bottone, così non sfora la colonna.
-        dd.querySelector(".dd-label").textContent = SEM_SHORT[v] || "Filtri";
+        dd.querySelector(".dd-label").textContent = SEM_SHORT[v] || "Filtra";
       }, "Tutti");
     }
 
@@ -1141,7 +1144,16 @@
 
     // Caroselli "come funziona" (puntini + swipe).
     (function initCaroselli() {
-      document.querySelectorAll(".aff-carousel").forEach((car) => {
+      const page = location.pathname.split("/").pop() || "p";
+      document.querySelectorAll(".aff-carousel").forEach((car, ci) => {
+        const key = "carDismiss:" + page + ":" + ci;
+        if (localStorage.getItem(key)) { car.style.display = "none"; return; }
+        const close = document.createElement("button");
+        close.className = "car-close";
+        close.setAttribute("aria-label", "Nascondi guida");
+        close.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+        close.onclick = (e) => { e.stopPropagation(); car.style.display = "none"; try { localStorage.setItem(key, "1"); } catch (err) {} };
+        car.appendChild(close);
         const track = car.querySelector(".aff-track");
         const dotsWrap = car.querySelector(".aff-dots");
         if (!track || !dotsWrap) return;

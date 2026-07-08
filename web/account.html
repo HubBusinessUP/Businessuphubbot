@@ -28,7 +28,7 @@
   .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
   .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
   @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
-  .greet-hero { display: flex; justify-content: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .greet-hero { display: none; }
   .greet-hero .greet-identity { flex-direction: column; gap: 10px; text-align: center; align-items: center; }
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
@@ -77,7 +77,8 @@
   .rpanel { display: none; }
   .rpanel.active { display: block; }
 
-  .aff-carousel { margin-bottom: 14px; }
+  .aff-carousel { margin-bottom: 14px; position: relative; }
+  .car-close { position: absolute; top: 8px; right: 8px; z-index: 4; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: var(--text-dim); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .aff-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .aff-track::-webkit-scrollbar { display: none; }
   .aff-slide { flex: 0 0 100%; scroll-snap-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
@@ -888,9 +889,18 @@
     }
     window.switchRete = switchRete;
 
-    // Caroselli a slide con puntini (uno per ogni .aff-carousel).
+    // Caroselli a slide con puntini (uno per ogni .aff-carousel) + tasto elimina con memoria.
     (function initCaroselli() {
-      document.querySelectorAll(".aff-carousel").forEach((car) => {
+      const page = location.pathname.split("/").pop() || "p";
+      document.querySelectorAll(".aff-carousel").forEach((car, ci) => {
+        const key = "carDismiss:" + page + ":" + ci;
+        if (localStorage.getItem(key)) { car.style.display = "none"; return; }
+        const close = document.createElement("button");
+        close.className = "car-close";
+        close.setAttribute("aria-label", "Nascondi guida");
+        close.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+        close.onclick = (e) => { e.stopPropagation(); car.style.display = "none"; try { localStorage.setItem(key, "1"); } catch (err) {} };
+        car.appendChild(close);
         const track = car.querySelector(".aff-track");
         const dotsWrap = car.querySelector(".aff-dots");
         if (!track || !dotsWrap) return;
