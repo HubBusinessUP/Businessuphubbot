@@ -410,7 +410,17 @@
     </div>
   </div>
 
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
+    const tgA = window.Telegram && window.Telegram.WebApp;
+    try { tgA && tgA.ready(); tgA && tgA.expand(); } catch (e) {}
+    // Dentro Telegram i confirm() nativi sono disabilitati: usa il popup di Telegram, altrimenti quello del browser.
+    function askConfirm(msg) {
+      return new Promise((resolve) => {
+        if (tgA && typeof tgA.showConfirm === "function") { try { tgA.showConfirm(msg, (ok) => resolve(!!ok)); return; } catch (e) {} }
+        resolve(window.confirm(msg));
+      });
+    }
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     let ADMIN_KEY = localStorage.getItem("bu_admin_key") || "";
     let macroCategorie = [];
@@ -556,7 +566,7 @@
     }
 
     async function decidiPartner(telegramId, approva) {
-      if (!confirm(approva ? "Approvare la richiesta Partner? L'utente potrà inserire i suoi link referral." : "Rifiutare la richiesta Partner?")) return;
+      if (!(await askConfirm(approva ? "Approvare la richiesta Partner? L'utente potrà inserire i suoi link referral." : "Rifiutare la richiesta Partner?"))) return;
       const res = await api("admin/partner-decidi", { method: "POST", body: JSON.stringify({ telegram_id: telegramId, approva }) });
       if (!res.ok) { alert("Errore"); return; }
       loadAll();
@@ -583,14 +593,14 @@
     }
 
     async function rimuoviDominio(id) {
-      if (!confirm("Rimuovere il dominio? I nuovi link su questo dominio torneranno a richiedere la tua approvazione.")) return;
+      if (!(await askConfirm("Rimuovere il dominio? I nuovi link su questo dominio torneranno a richiedere la tua approvazione."))) return;
       await api("admin/whitelist/delete", { method: "POST", body: JSON.stringify({ id }) });
       renderWhitelist((await (await api("admin/whitelist")).json()).domini || []);
     }
 
     // Rifiuto rapido dal box Da Validare: usa la causale di default senza blocco.
     async function rifiutaRapido(id) {
-      if (!confirm('Rifiutare con causale "Non conforme"? L\'utente riceverà il motivo su Telegram.')) return;
+      if (!(await askConfirm('Rifiutare con causale "Non conforme"? L\'utente riceverà il motivo su Telegram.'))) return;
       const res = await api("admin/suggerimenti/rifiuta", { method: "POST", body: JSON.stringify({ id, causale: "non_conforme", blocca: false }) });
       if (!res.ok) { alert("Errore rifiuto"); return; }
       loadAll();
@@ -789,7 +799,7 @@
 
     async function eliminaTemplate() {
       const id = parseInt(document.getElementById("bcTemplate").value);
-      if (!id || !confirm("Eliminare il template selezionato?")) return;
+      if (!id || !(await askConfirm("Eliminare il template selezionato?"))) return;
       await api("admin/templates/delete", { method: "POST", body: JSON.stringify({ id }) });
       templates = (await (await api("admin/templates")).json()).templates || [];
       renderTemplates();
@@ -818,7 +828,7 @@
       if (btnText && !/^https?:\/\//.test(btnUrl)) { alert("Hai messo il testo del bottone ma il link non è valido (deve iniziare con https://)."); return; }
       if (btnUrl && !btnText) { alert("Hai messo il link ma manca il testo del bottone."); return; }
       const pre = await (await api("admin/broadcast", { method: "POST", body: JSON.stringify({ anteprima: true, filtro: filtroBroadcast() }) })).json();
-      if (!confirm(`Inviare a ${pre.destinatari_count} utenti?`)) return;
+      if (!(await askConfirm(`Inviare a ${pre.destinatari_count} utenti?`))) return;
       document.getElementById("bcEsito").textContent = "Invio in corso...";
       const res = await api("admin/broadcast", { method: "POST", body: JSON.stringify({ testo, filtro: filtroBroadcast(), btn_text: btnText, btn_url: btnUrl }) });
       const d = await res.json();
@@ -862,7 +872,7 @@
     }
 
     async function approvaSuggerimento(id) {
-      if (!confirm("Approvare? Il business apparirà subito nella lista pubblica.")) return;
+      if (!(await askConfirm("Approvare? Il business apparirà subito nella lista pubblica."))) return;
       const reward = document.getElementById(`reward-${id}`)?.checked || false;
       const res = await api("admin/suggerimenti/approva", { method: "POST", body: JSON.stringify({ id, inserisci_link_utente: reward }) });
       if (!res.ok) { const e = await res.json().catch(() => ({})); alert("Errore: " + (e.error || res.status)); return; }
@@ -872,14 +882,14 @@
     async function rifiutaSuggerimento(id) {
       const causale = document.getElementById(`causale-${id}`).value;
       const blocca = document.getElementById(`blocca-${id}`).checked;
-      if (!confirm(`Rifiutare con causale "${causale}"${blocca ? " e BLOCCARE l'utente" : ""}? L'utente riceverà il motivo su Telegram.`)) return;
+      if (!(await askConfirm(`Rifiutare con causale "${causale}"${blocca ? " e BLOCCARE l'utente" : ""}? L'utente riceverà il motivo su Telegram.`))) return;
       const res = await api("admin/suggerimenti/rifiuta", { method: "POST", body: JSON.stringify({ id, causale, blocca }) });
       if (!res.ok) { const e = await res.json().catch(() => ({})); alert("Errore: " + (e.error || res.status)); return; }
       loadAll();
     }
 
     async function deleteSuggerimento(id) {
-      if (!confirm("Eliminare questa candidatura?")) return;
+      if (!(await askConfirm("Eliminare questa candidatura?"))) return;
       await api("admin/suggerimenti/delete", { method: "POST", body: JSON.stringify({ id }) });
       loadAll();
     }
@@ -910,7 +920,7 @@
     }
 
     async function deleteAffLink(id) {
-      if (!confirm("Rimuovere questo link?")) return;
+      if (!(await askConfirm("Rimuovere questo link?"))) return;
       await api("admin/affiliate-links/delete", { method: "POST", body: JSON.stringify({ id }) });
       loadAll();
     }
@@ -951,7 +961,7 @@
     }
 
     async function deleteMacro(id) {
-      if (!confirm("Eliminare questa macro categoria? Le categorie collegate resteranno senza macro.")) return;
+      if (!(await askConfirm("Eliminare questa macro categoria? Le categorie collegate resteranno senza macro."))) return;
       await api("admin/macro-categorie/delete", { method: "POST", body: JSON.stringify({ id }) });
       loadAll();
     }
@@ -1029,7 +1039,7 @@
     }
 
     async function deleteCategoria(id) {
-      if (!confirm("Eliminare questa categoria? I servizi collegati resteranno orfani.")) return;
+      if (!(await askConfirm("Eliminare questa categoria? I servizi collegati resteranno orfani."))) return;
       await api("admin/categorie/delete", { method: "POST", body: JSON.stringify({ id }) });
       loadAll();
     }
@@ -1141,7 +1151,7 @@
     }
 
     async function deleteServizio(id) {
-      if (!confirm("Eliminare questo servizio?")) return;
+      if (!(await askConfirm("Eliminare questo servizio?"))) return;
       await api("admin/servizi/delete", { method: "POST", body: JSON.stringify({ id }) });
       loadAll();
     }
