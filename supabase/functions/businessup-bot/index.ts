@@ -1021,6 +1021,8 @@ async function apiAdminMacroCategorieSave(body: any) {
 
 async function apiAdminMacroCategorieDelete(body: any) {
   const { id } = body
+  // Le categorie collegate restano, ma senza macro.
+  await supabase.from("categorie").update({ macro_categoria_id: null }).eq("macro_categoria_id", id)
   const { error } = await supabase.from("macro_categorie").delete().eq("id", id)
   if (error) return json({ error: error.message }, 500)
   return json({ ok: true })
@@ -1045,6 +1047,10 @@ async function apiAdminCategorieSave(body: any) {
 
 async function apiAdminCategorieDelete(body: any) {
   const { id } = body
+  // I servizi/segnalazioni/news collegati restano, ma senza categoria.
+  await supabase.from("news").update({ categoria_id: null }).eq("categoria_id", id)
+  await supabase.from("suggerimenti").update({ categoria_id: null }).eq("categoria_id", id)
+  await supabase.from("servizi").update({ categoria_id: null }).eq("categoria_id", id)
   const { error } = await supabase.from("categorie").delete().eq("id", id)
   if (error) return json({ error: error.message }, 500)
   return json({ ok: true })
