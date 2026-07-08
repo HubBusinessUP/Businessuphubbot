@@ -1751,7 +1751,13 @@ serve(async (req) => {
     }
 
     if (sub.startsWith("admin/")) {
-      if (req.headers.get("x-admin-key") !== ADMIN_API_KEY) return json({ error: "unauthorized" }, 401)
+      const provided = req.headers.get("x-admin-key") || ""
+      let adminOk = !!ADMIN_API_KEY && provided === ADMIN_API_KEY
+      if (!adminOk) {
+        const { data: cfgKey } = await supabase.from("config").select("valore").eq("chiave", "admin_key").maybeSingle()
+        adminOk = !!cfgKey?.valore && provided === cfgKey.valore
+      }
+      if (!adminOk) return json({ error: "unauthorized" }, 401)
 
       if (sub === "admin/stats" && req.method === "GET") {
         const { count: leads } = await supabase.from("leads").select("*", { count: "exact", head: true })
