@@ -49,6 +49,7 @@
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
   .top-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+  .hdr-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1px; }
   .notif-wrap { position: relative; }
   .notif-badge { position: absolute; top: -4px; right: -4px; background: #e2574a; color: #fff; font-size: 10px; font-weight: 800; min-width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 999px; padding: 0 4px; border: 2px solid var(--panel); box-sizing: content-box; }
   .notif-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 290px; max-width: 80vw; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); z-index: 60; padding: 8px; display: none; }
@@ -396,14 +397,15 @@
             <div id="notifList"><div class="notif-empty">Nessuna notifica</div></div>
           </div>
         </div>
-        <button class="icon-circle plus" onclick="openSuggestSheet()" aria-label="Candida un business">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
+        <span class="hdr-sep"></span>
         <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
         </button>
         <button class="icon-circle" onclick="window.location.href='dashboard.html?_=' + Date.now()" aria-label="Aggiorna la pagina">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <button class="icon-circle plus" onclick="openSuggestSheet()" aria-label="Candida un business">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
     </div>
