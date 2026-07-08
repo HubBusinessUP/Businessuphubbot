@@ -91,7 +91,9 @@
   }
   .live-badge { font-size: 9.5px; font-weight: 800; letter-spacing: 0.09em; color: var(--lime); background: var(--lime-dim); padding: 2px 7px; border-radius: 4px; margin-left: 8px; animation: live-blink 1.6s ease-in-out infinite; vertical-align: 2px; }
   @keyframes live-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .car-close { position: absolute; top: 8px; right: 8px; z-index: 4; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: var(--text-dim); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .car-close { position: absolute; top: 8px; right: 8px; z-index: 5; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: var(--text-dim); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .car-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .car-nav.prev { left: 6px; } .car-nav.next { right: 6px; }
 
   .filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
   .dd { position: relative; }
@@ -1167,6 +1169,18 @@
           const idx = track.clientWidth ? Math.round(track.scrollLeft / track.clientWidth) : 0;
           dots.forEach((d, i) => d.classList.toggle("on", i === idx));
         }, { passive: true });
+        if (dots.length > 1) {
+          const mkNav = (cls, path) => {
+            const b = document.createElement("button");
+            b.className = "car-nav " + cls;
+            b.setAttribute("aria-label", cls === "next" ? "Avanti" : "Indietro");
+            b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
+            b.onclick = (e) => { e.stopPropagation(); track.scrollBy({ left: cls === "next" ? track.clientWidth : -track.clientWidth, behavior: "smooth" }); };
+            car.appendChild(b);
+          };
+          mkNav("prev", "m15 18-6-6 6-6");
+          mkNav("next", "m9 18 6-6-6-6");
+        }
       });
     })();
 
