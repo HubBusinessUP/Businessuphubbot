@@ -371,7 +371,23 @@
 
       <!-- Scheda: Panoramica -->
       <div class="rpanel active" id="aff-panoramica">
-        <div class="card" id="affPartner" style="margin-bottom:12px"></div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">Il tuo link d'invito</div>
+          <div class="invite-row" style="margin-bottom:10px">
+            <div class="invite-link" id="affInvite">-</div>
+            <button class="invite-copy" onclick="copiaAff()" aria-label="Copia link">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="condividiAff()">Condividi</button>
+            <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
+          </div>
+          <div id="affQr" style="display:none;text-align:center;margin-top:14px">
+            <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
+          </div>
+        </div>
+        <div class="card" id="affPartner" style="margin-bottom:12px"><p style="font-size:13px;color:var(--text-dim);text-align:center;padding:4px 0">Caricamento…</p></div>
         <div class="card" style="margin-bottom:12px">
           <div class="section-title">Le tue statistiche</div>
           <div class="af-stats">
@@ -391,23 +407,6 @@
 
       <!-- Scheda: La mia rete -->
       <div class="rpanel" id="aff-rete">
-        <div class="card" style="margin-bottom:12px">
-          <div class="section-title">Il tuo link d'invito</div>
-          <div class="invite-row" style="margin-bottom:10px">
-            <div class="invite-link" id="affInvite">-</div>
-            <button class="invite-copy" onclick="copiaAff()" aria-label="Copia link">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="condividiAff()">Condividi</button>
-            <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
-          </div>
-          <div id="affQr" style="display:none;text-align:center;margin-top:14px">
-            <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
-          </div>
-        </div>
-
         <div class="card" id="affBroadcastCard" style="display:none;margin-bottom:12px">
           <div class="section-title">Broadcast alla tua rete</div>
           <textarea class="af-ta" id="affBcText" maxlength="1000" placeholder="Scrivi un messaggio ai tuoi iscritti..."></textarea>
