@@ -78,18 +78,26 @@
   .rpanel.active { display: block; }
 
   .aff-carousel { margin-bottom: 14px; position: relative; }
-  .car-close { position: absolute; top: 8px; right: 8px; z-index: 5; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: var(--text-dim); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-  .car-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-  .car-nav.prev { left: 6px; } .car-nav.next { right: 6px; }
-  .aff-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .aff-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; }
+  .aff-track.dragging { cursor: grabbing; scroll-snap-type: none; }
+  .aff-track.dragging .aff-slide { pointer-events: none; }
   .aff-track::-webkit-scrollbar { display: none; }
-  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
-  .aff-ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 13px; }
-  .aff-slide h4 { font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
-  .aff-slide p { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
-  .aff-dots { display: flex; justify-content: center; gap: 6px; margin-top: 11px; }
-  .aff-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; }
-  .aff-dot.on { background: var(--lime); width: 18px; border-radius: 3px; }
+  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; border-radius: 16px; padding: 26px 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.28); color: #fff; }
+  .aff-ic { display: none; }
+  .aff-slide h4 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 10px; }
+  .aff-slide p { font-size: 14.5px; color: rgba(255,255,255,0.9); line-height: 1.65; }
+  .aff-slide p b { color: #fff; font-weight: 800; }
+  .c-green  { background: linear-gradient(135deg, #16a34a, #22c55e); }
+  .c-blue   { background: linear-gradient(135deg, #2563eb, #4a90e2); }
+  .c-amber  { background: linear-gradient(135deg, #d98a1f, #f0b64c); }
+  .c-purple { background: linear-gradient(135deg, #7c3aed, #a06bf5); }
+  .aff-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 14px; }
+  .aff-arrow { width: 34px; height: 34px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s; }
+  .aff-arrow:active { transform: scale(0.9); }
+  .aff-arrow:disabled { opacity: 0.35; cursor: default; }
+  .aff-dots { display: flex; justify-content: center; gap: 7px; }
+  .aff-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; cursor: pointer; }
+  .aff-dot.on { background: var(--lime); width: 20px; border-radius: 4px; }
 
   .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
 
@@ -542,6 +550,11 @@
         </div>
         <div class="aff-dots"></div>
       </div>
+      <div class="card" id="attivitaRipreseCard" style="display:none">
+        <h2>Tutorial da recuperare</h2>
+        <div id="attivitaRiprese"></div>
+      </div>
+
       <div class="card">
         <h2>I miei business attivi</h2>
         <div id="prodottiRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>
@@ -723,6 +736,27 @@
       renderSponsor(data.sponsor);
       renderPartner(data);
       renderProdotti(data.prodotti_attivi || []);
+      renderAttivitaRiprese(data.riprese || []);
+    }
+
+    // Tutorial iniziati e non completati: elenco nel Profilo > Attività, apre il business in Home.
+    function renderAttivitaRiprese(list) {
+      const card = document.getElementById("attivitaRipreseCard");
+      const box = document.getElementById("attivitaRiprese");
+      if (!card || !box) return;
+      if (!list.length) { card.style.display = "none"; return; }
+      card.style.display = "";
+      box.innerHTML = list.map((r) => {
+        const pct = Math.min(100, Math.round((r.ultimo_step / (r.totale_step || 1)) * 100));
+        return `<a class="prod-row" href="dashboard.html#biz-${r.servizio_id}" style="text-decoration:none;color:inherit">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px;font-weight:700">${escapeHtml(r.servizio_nome)}</div>
+            <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px">Step ${r.ultimo_step} di ${r.totale_step}</div>
+            <div style="height:4px;border-radius:999px;background:var(--border);margin-top:6px;overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:var(--blue);border-radius:999px"></i></div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-dim)"><path d="m9 6 6 6-6 6"/></svg>
+        </a>`;
+      }).join("");
     }
 
     function switchView(name) {
@@ -942,38 +976,77 @@
     }
     window.switchRete = switchRete;
 
-    // Caroselli a slide con puntini (uno per ogni .aff-carousel) + tasto elimina con memoria.
+    // Caroselli: slide colorate (colori a rotazione), niente icone, frecce sotto (non coprono il testo), pallini cliccabili, drag col mouse da PC.
     (function initCaroselli() {
-      const page = location.pathname.split("/").pop() || "p";
-      document.querySelectorAll(".aff-carousel").forEach((car, ci) => {
+      const COLORS = ["c-green", "c-blue", "c-amber", "c-purple"];
+      document.querySelectorAll(".aff-carousel").forEach((car) => {
         // Carosello fisso: sempre visibile, non eliminabile (nessun pulsante di chiusura).
         car.style.display = "";
         const track = car.querySelector(".aff-track");
         const dotsWrap = car.querySelector(".aff-dots");
         if (!track || !dotsWrap) return;
         const slides = track.querySelectorAll(".aff-slide");
-        slides.forEach((_, i) => {
+        slides.forEach((s, i) => {
+          s.querySelectorAll(".aff-ic").forEach((ic) => ic.remove());
+          s.classList.add(COLORS[i % COLORS.length]);
+        });
+        const nSlides = slides.length;
+
+        for (let i = 0; i < nSlides; i++) {
           const d = document.createElement("div");
           d.className = "aff-dot" + (i === 0 ? " on" : "");
+          d.onclick = () => track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
           dotsWrap.appendChild(d);
-        });
+        }
         const dots = dotsWrap.querySelectorAll(".aff-dot");
-        track.addEventListener("scroll", () => {
+
+        let prevBtn = null, nextBtn = null;
+        if (nSlides > 1) {
+          const controls = document.createElement("div");
+          controls.className = "aff-controls";
+          const mkArrow = (path, label) => {
+            const b = document.createElement("button");
+            b.className = "aff-arrow";
+            b.setAttribute("aria-label", label);
+            b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
+            return b;
+          };
+          prevBtn = mkArrow("m15 18-6-6 6-6", "Indietro");
+          nextBtn = mkArrow("m9 18 6-6-6-6", "Avanti");
+          prevBtn.onclick = () => track.scrollBy({ left: -track.clientWidth, behavior: "smooth" });
+          nextBtn.onclick = () => track.scrollBy({ left: track.clientWidth, behavior: "smooth" });
+          controls.appendChild(prevBtn);
+          controls.appendChild(dotsWrap);
+          controls.appendChild(nextBtn);
+          car.appendChild(controls);
+        }
+
+        const syncUi = () => {
           const idx = track.clientWidth ? Math.round(track.scrollLeft / track.clientWidth) : 0;
           dots.forEach((d, i) => d.classList.toggle("on", i === idx));
-        }, { passive: true });
-        if (dots.length > 1) {
-          const mkNav = (cls, path) => {
-            const b = document.createElement("button");
-            b.className = "car-nav " + cls;
-            b.setAttribute("aria-label", cls === "next" ? "Avanti" : "Indietro");
-            b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
-            b.onclick = (e) => { e.stopPropagation(); track.scrollBy({ left: cls === "next" ? track.clientWidth : -track.clientWidth, behavior: "smooth" }); };
-            car.appendChild(b);
-          };
-          mkNav("prev", "m15 18-6-6 6-6");
-          mkNav("next", "m9 18 6-6-6-6");
-        }
+          if (prevBtn) prevBtn.disabled = track.scrollLeft < 4;
+          if (nextBtn) nextBtn.disabled = track.scrollLeft > track.scrollWidth - track.clientWidth - 4;
+        };
+        track.addEventListener("scroll", syncUi, { passive: true });
+        syncUi();
+
+        let down = false, startX = 0, startScroll = 0, moved = false;
+        track.addEventListener("mousedown", (e) => { down = true; moved = false; startX = e.pageX; startScroll = track.scrollLeft; });
+        window.addEventListener("mousemove", (e) => {
+          if (!down) return;
+          const dx = e.pageX - startX;
+          if (Math.abs(dx) > 4) { moved = true; track.classList.add("dragging"); }
+          track.scrollLeft = startScroll - dx;
+        });
+        window.addEventListener("mouseup", () => {
+          if (!down) return;
+          down = false;
+          if (moved) {
+            track.classList.remove("dragging");
+            const idx = Math.round(track.scrollLeft / track.clientWidth);
+            track.scrollTo({ left: idx * track.clientWidth, behavior: "smooth" });
+          }
+        });
       });
     })();
 
