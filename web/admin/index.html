@@ -41,6 +41,9 @@
   .stat-box .value { font-size: 22px; font-weight: 700; }
 
   .section { margin-bottom: 28px; }
+  .adtabs { display: flex; gap: 8px; overflow-x: auto; margin: 6px 0 22px; padding: 6px 0; position: sticky; top: 0; background: var(--ink); z-index: 20; }
+  .adtab { flex: 0 0 auto; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; padding: 9px 15px; border-radius: 8px; cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .adtab.active { background: var(--blue); color: #fff; border-color: transparent; }
   .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .section-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; }
   .btn-add { background: var(--blue-dim); color: var(--blue); border: none; padding: 7px 12px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
@@ -139,6 +142,8 @@
       <div class="stat-box"><div class="label">Clienti attivi</div><div class="value" id="kpiClienti">-</div></div>
     </div>
     <div class="pending-row" id="pendingRow"></div>
+
+    <div class="adtabs" id="adtabs"></div>
 
     <div class="section">
       <div class="section-head"><h2>Da validare</h2></div>
@@ -444,6 +449,7 @@
       localStorage.setItem("bu_admin_key", ADMIN_KEY);
       document.getElementById("gate").style.display = "none";
       document.getElementById("app").style.display = "block";
+      initAdminTabs();
       loadAll();
     }
 
@@ -1156,9 +1162,37 @@
       loadAll();
     }
 
+    const ADTABS = [
+      { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi"] },
+      { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
+      { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
+      { key: "stats", label: "Statistiche", titles: ["Top business", "Top Sponsorboard"] },
+      { key: "affil", label: "Affiliazione", titles: ["Whitelist domini link referral"] },
+    ];
+    function initAdminTabs() {
+      const bar = document.getElementById("adtabs");
+      if (!bar || bar.dataset.done) return;
+      const map = {};
+      ADTABS.forEach((t) => t.titles.forEach((ti) => { map[ti] = t.key; }));
+      document.querySelectorAll("#app > .section").forEach((sec) => {
+        const h2 = sec.querySelector("h2");
+        sec.dataset.adtab = (h2 && map[h2.textContent.trim()]) || "catalogo";
+      });
+      bar.innerHTML = ADTABS.map((t, i) => `<button class="adtab${i === 0 ? " active" : ""}" data-k="${t.key}" onclick="switchAdminTab('${t.key}')">${t.label}</button>`).join("");
+      bar.dataset.done = "1";
+      switchAdminTab(ADTABS[0].key);
+    }
+    function switchAdminTab(k) {
+      document.querySelectorAll("#adtabs .adtab").forEach((b) => b.classList.toggle("active", b.dataset.k === k));
+      document.querySelectorAll("#app > .section").forEach((sec) => { sec.style.display = sec.dataset.adtab === k ? "" : "none"; });
+      window.scrollTo({ top: 0 });
+    }
+    window.switchAdminTab = switchAdminTab;
+
     if (ADMIN_KEY) {
       document.getElementById("gate").style.display = "none";
       document.getElementById("app").style.display = "block";
+      initAdminTabs();
       loadAll();
     }
   </script>
