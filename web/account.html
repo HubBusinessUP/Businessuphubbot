@@ -363,58 +363,78 @@
     <!-- ===== VISTA AFFILIAZIONE ===== -->
     <div class="tabpanel" id="view-affiliazione">
       <div class="af-hero">Affiliazione</div>
+      <div class="rtabs">
+        <button class="rtab active" id="atabPanoramica" onclick="switchAff('panoramica')">Panoramica</button>
+        <button class="rtab" id="atabRete" onclick="switchAff('rete')">La mia rete</button>
+        <button class="rtab" id="atabLink" onclick="switchAff('link')">I miei link</button>
+      </div>
 
-      <div class="card" id="affPartner" style="margin-bottom:12px"></div>
-
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">Il tuo link d'invito</div>
-        <div class="invite-row" style="margin-bottom:10px">
-          <div class="invite-link" id="affInvite">-</div>
-          <button class="invite-copy" onclick="copiaAff()" aria-label="Copia link">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
+      <!-- Scheda: Panoramica -->
+      <div class="rpanel active" id="aff-panoramica">
+        <div class="card" id="affPartner" style="margin-bottom:12px"></div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">Le tue statistiche</div>
+          <div class="af-stats">
+            <div class="af-metric"><div class="af-n blue" id="stClick">0</div><div class="af-k">Click sul link</div></div>
+            <div class="af-metric"><div class="af-n lime" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
+            <div class="af-metric"><div class="af-n" id="stAttivazioni">0</div><div class="af-k">Attivazioni</div></div>
+            <div class="af-metric"><div class="af-n" id="stClienti">0</div><div class="af-k">Clienti</div></div>
+          </div>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="condividiAff()">Condividi</button>
-          <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
-        </div>
-        <div id="affQr" style="display:none;text-align:center;margin-top:14px">
-          <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
+        <div class="card">
+          <div class="af-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <p><b style="color:var(--text)">Nessuno ti scavalca.</b> I tuoi iscritti vedono sempre il TUO link nei business. I domini conosciuti si attivano subito, gli altri passano dall'approvazione dell'admin.</p>
+          </div>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">Le tue statistiche</div>
-        <div class="af-stats">
-          <div class="af-metric"><div class="af-n blue" id="stClick">0</div><div class="af-k">Click sul link</div></div>
-          <div class="af-metric"><div class="af-n lime" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
-          <div class="af-metric"><div class="af-n" id="stAttivazioni">0</div><div class="af-k">Attivazioni</div></div>
-          <div class="af-metric"><div class="af-n" id="stClienti">0</div><div class="af-k">Clienti</div></div>
+      <!-- Scheda: La mia rete -->
+      <div class="rpanel" id="aff-rete">
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">Il tuo link d'invito</div>
+          <div class="invite-row" style="margin-bottom:10px">
+            <div class="invite-link" id="affInvite">-</div>
+            <button class="invite-copy" onclick="copiaAff()" aria-label="Copia link">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="condividiAff()">Condividi</button>
+            <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
+          </div>
+          <div id="affQr" style="display:none;text-align:center;margin-top:14px">
+            <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
+          </div>
+        </div>
+
+        <div class="card" id="affBroadcastCard" style="display:none;margin-bottom:12px">
+          <div class="section-title">Broadcast alla tua rete</div>
+          <textarea class="af-ta" id="affBcText" maxlength="1000" placeholder="Scrivi un messaggio ai tuoi iscritti..."></textarea>
+          <button class="btn" style="background:var(--lime);color:#06110b;width:100%;margin-top:10px" onclick="inviaBroadcast()">Invia alla mia rete</button>
+          <p style="font-size:11.5px;color:var(--text-dim);margin-top:8px" id="affBcNote">Puoi inviare un messaggio al giorno alla tua rete.</p>
+        </div>
+
+        <div class="card">
+          <div class="section-title">I tuoi iscritti</div>
+          <div id="affIscritti"></div>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+            <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);width:100%" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Gestisci la mia pagina pubblica</button>
+          </div>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">I miei link per business</div>
-        <div id="affLinkLocked" style="display:none">
-          <p style="font-size:13px;color:var(--text-dim);line-height:1.5">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b> (sopra vedi a che punto sei). Da Partner potrai mettere il TUO link su ogni business.</p>
-        </div>
-        <div id="affLinkEditor" style="display:none">
-          <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link. I domini conosciuti si attivano subito, gli altri passano dall'approvazione.</p>
-          <div id="affLinkRows"></div>
-        </div>
-      </div>
-
-      <div class="card" id="affBroadcastCard" style="display:none;margin-bottom:12px">
-        <div class="section-title">Broadcast alla tua rete</div>
-        <textarea class="af-ta" id="affBcText" maxlength="1000" placeholder="Scrivi un messaggio ai tuoi iscritti..."></textarea>
-        <button class="btn" style="background:var(--lime);color:#06110b;width:100%;margin-top:10px" onclick="inviaBroadcast()">Invia alla mia rete</button>
-        <p style="font-size:11.5px;color:var(--text-dim);margin-top:8px" id="affBcNote">Puoi inviare un messaggio al giorno alla tua rete.</p>
-      </div>
-
-      <div class="card">
-        <div class="af-info">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          <p><b style="color:var(--text)">Nessuno ti scavalca.</b> I tuoi iscritti vedono sempre il TUO link nei business. I domini conosciuti si attivano subito, gli altri passano dall'approvazione dell'admin.</p>
+      <!-- Scheda: I miei link -->
+      <div class="rpanel" id="aff-link">
+        <div class="card">
+          <div class="section-title">I miei link per business</div>
+          <div id="affLinkLocked" style="display:none">
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.5">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b> (in Panoramica vedi a che punto sei). Da Partner potrai mettere il TUO link su ogni business.</p>
+          </div>
+          <div id="affLinkEditor" style="display:none">
+            <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link. I domini conosciuti si attivano subito, gli altri passano dall'approvazione.</p>
+            <div id="affLinkRows"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -538,10 +558,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         <span>Home</span>
       </a>
-      <button class="bnav-item" id="navRete" onclick="switchView('rete')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15.5 20c0-2 .6-3.3 2-4"/></svg>
-        <span>Rete</span>
-      </button>
       <button class="bnav-item" id="navAffiliazione" onclick="switchView('affiliazione')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
         <span>Affiliazione</span>
@@ -688,12 +704,11 @@
     }
 
     function switchView(name) {
-      const views = ["rete", "affiliazione", "profilo"];
+      const views = ["affiliazione", "profilo"];
       const v = views.includes(name) ? name : "profilo";
-      document.getElementById("view-rete").classList.toggle("active", v === "rete");
+      const rete = document.getElementById("view-rete"); if (rete) rete.classList.remove("active");
       document.getElementById("view-affiliazione").classList.toggle("active", v === "affiliazione");
       document.getElementById("view-profilo").classList.toggle("active", v === "profilo");
-      document.getElementById("navRete").classList.toggle("active", v === "rete");
       document.getElementById("navAffiliazione").classList.toggle("active", v === "affiliazione");
       document.getElementById("navProfilo").classList.toggle("active", v === "profilo");
       if (v === "affiliazione" && !affLoaded) loadAffiliazione();
@@ -725,7 +740,32 @@
 
       renderAffPartner(data);
       renderAffEditor(data);
+      renderAffIscritti(data);
       document.getElementById("affBroadcastCard").style.display = data.is_partner ? "block" : "none";
+    }
+
+    function switchAff(sub) {
+      const subs = ["panoramica", "rete", "link"];
+      const s = subs.includes(sub) ? sub : "panoramica";
+      document.getElementById("aff-panoramica").classList.toggle("active", s === "panoramica");
+      document.getElementById("aff-rete").classList.toggle("active", s === "rete");
+      document.getElementById("aff-link").classList.toggle("active", s === "link");
+      document.getElementById("atabPanoramica").classList.toggle("active", s === "panoramica");
+      document.getElementById("atabRete").classList.toggle("active", s === "rete");
+      document.getElementById("atabLink").classList.toggle("active", s === "link");
+      try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
+    }
+    window.switchAff = switchAff;
+
+    function renderAffIscritti(data) {
+      const membri = (data.rete && data.rete.membri) || [];
+      const el = document.getElementById("affIscritti");
+      if (!membri.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:6px 0">Ancora nessun iscritto. Condividi il tuo link d\'invito!</p>'; return; }
+      el.innerHTML = membri.map((m) => `<div class="af-row" style="align-items:center">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--slate);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff">${m.foto_url ? `<img src="${escapeHtml(m.foto_url)}" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">` : escapeHtml((m.nome || "?").slice(0, 2).toUpperCase())}</div>
+        <div style="flex:1;min-width:0"><div class="rl-name">${escapeHtml(m.nome)}</div><div style="font-size:11.5px;color:var(--text-dim)">${escapeHtml(m.stato_label || "")}</div></div>
+        ${m.is_cliente ? '<span class="rl-badge on">Cliente</span>' : ""}
+      </div>`).join("");
     }
 
     function renderAffPartner(data) {
@@ -870,7 +910,7 @@
     })();
 
     // Apre la vista giusta in base all'hash (#rete / #affiliazione / #profilo): arrivo dalla barra.
-    const VIEWS = ["rete", "affiliazione", "profilo"];
+    const VIEWS = ["affiliazione", "profilo"];
     const hashView = () => { const h = (location.hash || "").replace("#", ""); return VIEWS.includes(h) ? h : "profilo"; };
     (function initView() { switchView(hashView()); })();
     window.addEventListener("hashchange", () => switchView(hashView()));

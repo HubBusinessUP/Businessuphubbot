@@ -157,16 +157,6 @@
       <button class="btn btn-primary" id="saveBtn">Salva modifiche</button>
       <p class="hint" id="saveNote" style="text-align:center;margin-top:10px"></p>
 
-      <div class="card" style="margin-top:14px">
-        <div class="section-title">I miei link referral</div>
-        <div id="linkNonPartner" style="display:none">
-          <p class="hint">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b>: vai nel profilo per vedere a che punto sei.</p>
-        </div>
-        <div id="linkEditor" style="display:none">
-          <p class="hint" style="margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link nel tutorial. I domini conosciuti si attivano subito, gli altri passano dall'approvazione admin.</p>
-          <div id="mieiLinkRows"></div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -330,7 +320,6 @@
       mieiLinkData = data.miei_link || [];
       pubblicata = !!data.pagina_pubblicata;
 
-      renderLinkEditor(data);
       renderStato();
       renderPreview();
 
