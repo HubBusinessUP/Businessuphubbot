@@ -25,9 +25,10 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } })
 }
 
-async function sendMessage(chatId: number, text: string, markup?: any) {
+async function sendMessage(chatId: number, text: string, markup?: any, parseMode?: string) {
   const body: any = { chat_id: chatId, text }
   if (markup) body.reply_markup = markup
+  if (parseMode) body.parse_mode = parseMode
   return fetch(`${TG_API}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -197,10 +198,25 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
   }
 
+  const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
   await sendMessage(
     chatId,
-    `Ciao ${from.first_name || ""}! 👋\n\nBenvenuto in Cashly.\n\nUsa il bottone Menu qui sotto (accanto a dove scrivi) per aprire l'app.`,
-    { inline_keyboard: [[{ text: "🚀 Apri Cashly", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
+    `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
+    `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n` +
+    `Qui trovi in un unico posto i <b>business e gli strumenti online selezionati</b>, spiegati in chiaro e pronti da attivare.\n\n` +
+    `<b>Cosa puoi fare</b>\n` +
+    `🔎 <b>Scopri</b> i business della lista, con scheda e requisiti chiari\n` +
+    `📚 <b>Attiva</b> ogni business con un tutorial passo-passo, senza arrangiarti\n` +
+    `🟢 <b>Compatibilità</b>: un pallino ti dice al volo se un business fa per te\n` +
+    `🤝 <b>Crea la tua rete</b>: inviti persone, restano collegate a te per sempre e guadagni con l'affiliazione\n` +
+    `🔗 <b>I tuoi link</b>: metti i tuoi referral sui business che usi\n\n` +
+    `<b>Come iniziare</b>\n` +
+    `1️⃣ Apri l'app col pulsante qui sotto\n` +
+    `2️⃣ Completa il tuo profilo in 2 minuti e crea il tuo hub\n` +
+    `3️⃣ Cerca il business che ti farà cambiare vita 💸\n\n` +
+    `Tocca <b>Apri Cashly</b> 👇 (o il pulsante <b>Menu</b> accanto a dove scrivi).`,
+    { inline_keyboard: [[{ text: "🚀 Apri Cashly e crea il mio hub", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
+    "HTML",
   )
 }
 
