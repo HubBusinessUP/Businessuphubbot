@@ -1091,6 +1091,13 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number) 
 
 async function apiAdminServiziDelete(body: any) {
   const { id } = body
+  // Rimuove prima le righe collegate (voti e preferiti si cancellano in cascata da soli).
+  await supabase.from("news").delete().eq("servizio_id", id)
+  await supabase.from("suggerimenti").delete().eq("servizio_id", id)
+  await supabase.from("lead_servizi").delete().eq("servizio_id", id)
+  await supabase.from("affiliate_link").delete().eq("servizio_id", id)
+  await supabase.from("pagamenti").delete().eq("servizio_id", id)
+  await supabase.from("tutorial_progress").delete().eq("servizio_id", id)
   const { error } = await supabase.from("servizi").delete().eq("id", id)
   if (error) return json({ error: error.message }, 500)
   return json({ ok: true })
