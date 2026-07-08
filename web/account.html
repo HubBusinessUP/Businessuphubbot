@@ -368,12 +368,23 @@
       <div class="af-hero">Affiliazione</div>
       <div class="rtabs">
         <button class="rtab active" id="atabPanoramica" onclick="switchAff('panoramica')">Panoramica</button>
-        <button class="rtab" id="atabRete" onclick="switchAff('rete')">La mia rete</button>
-        <button class="rtab" id="atabLink" onclick="switchAff('link')">I miei link</button>
+        <button class="rtab" id="atabRete" onclick="switchAff('rete')">Rete</button>
+        <button class="rtab" id="atabLink" onclick="switchAff('link')">Link</button>
+        <button class="rtab" id="atabPagina" onclick="switchAff('pagina')">Pagina</button>
       </div>
 
       <!-- Scheda: Panoramica -->
       <div class="rpanel active" id="aff-panoramica">
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">Le tue statistiche</div>
+          <div class="af-stats">
+            <div class="af-metric"><div class="af-n blue" id="stClick">0</div><div class="af-k">Click sul link</div></div>
+            <div class="af-metric"><div class="af-n lime" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
+            <div class="af-metric"><div class="af-n" id="stAttivazioni">0</div><div class="af-k">Attivazioni</div></div>
+            <div class="af-metric"><div class="af-n" id="stClienti">0</div><div class="af-k">Clienti</div></div>
+          </div>
+        </div>
+        <div class="card" id="affPartner" style="margin-bottom:12px"><p style="font-size:13px;color:var(--text-dim);text-align:center;padding:4px 0">Caricamento…</p></div>
         <div class="card" style="margin-bottom:12px">
           <div class="section-title">Il tuo link d'invito</div>
           <div class="invite-row" style="margin-bottom:10px">
@@ -390,38 +401,42 @@
             <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
           </div>
         </div>
-        <div class="card" id="affPartner" style="margin-bottom:12px"><p style="font-size:13px;color:var(--text-dim);text-align:center;padding:4px 0">Caricamento…</p></div>
-        <div class="card" style="margin-bottom:12px">
-          <div class="section-title">Le tue statistiche</div>
-          <div class="af-stats">
-            <div class="af-metric"><div class="af-n blue" id="stClick">0</div><div class="af-k">Click sul link</div></div>
-            <div class="af-metric"><div class="af-n lime" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
-            <div class="af-metric"><div class="af-n" id="stAttivazioni">0</div><div class="af-k">Attivazioni</div></div>
-            <div class="af-metric"><div class="af-n" id="stClienti">0</div><div class="af-k">Clienti</div></div>
-          </div>
-        </div>
         <div class="card">
           <div class="af-info">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            <p><b style="color:var(--text)">Nessuno ti scavalca.</b> I tuoi iscritti vedono sempre il TUO link nei business. I domini conosciuti si attivano subito, gli altri passano dall'approvazione dell'admin.</p>
+            <p><b style="color:var(--text)">Nessuno ti scavalca.</b> I tuoi iscritti vedono sempre il TUO link nei business. Ogni link inserito viene attivato solo dopo l'approvazione dell'admin.</p>
           </div>
         </div>
       </div>
 
       <!-- Scheda: La mia rete -->
       <div class="rpanel" id="aff-rete">
-        <div class="card" id="affBroadcastCard" style="display:none;margin-bottom:12px">
-          <div class="section-title">Broadcast alla tua rete</div>
-          <textarea class="af-ta" id="affBcText" maxlength="1000" placeholder="Scrivi un messaggio ai tuoi iscritti..."></textarea>
-          <button class="btn" style="background:var(--lime);color:#06110b;width:100%;margin-top:10px" onclick="inviaBroadcast()">Invia alla mia rete</button>
-          <p style="font-size:11.5px;color:var(--text-dim);margin-top:8px" id="affBcNote">Puoi inviare un messaggio al giorno alla tua rete.</p>
-        </div>
-
         <div class="card">
           <div class="section-title">I tuoi iscritti</div>
           <div id="affIscritti"></div>
-          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
-            <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);width:100%" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Gestisci la mia pagina pubblica</button>
+        </div>
+      </div>
+
+      <!-- Scheda: La mia pagina -->
+      <div class="rpanel" id="aff-pagina">
+        <div class="card">
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">La tua pagina pubblica <span id="affPaginaStato" style="display:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px"></span></div>
+          <div id="affPaginaLocked" style="display:none">
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, foto, social e i tuoi link.</p>
+            <button class="btn btn-sm" style="background:var(--blue-dim);color:var(--blue);width:100%" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+          </div>
+          <div id="affPaginaReady" style="display:none">
+            <p style="font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">La tua vetrina pubblica: bio, foto, social e i tuoi link in un unico posto. Gestiscila completa qui.</p>
+            <div class="invite-row" style="margin-bottom:10px">
+              <div class="invite-link" id="affPaginaLink">-</div>
+              <button class="invite-copy" onclick="copiaAffPagina()" aria-label="Copia link pagina">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
+              <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiAffPagina()">Condividi</button>
+            </div>
           </div>
         </div>
       </div>
@@ -568,6 +583,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <span>Profilo</span>
       </button>
+      <a class="bnav-item" id="navAdmin" href="admin/index.html" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        <span>Admin</span>
+      </a>
     </nav>
   </div>
 
@@ -585,6 +604,7 @@
     async function load() {
       const res = await fetch(`${API_URL}/me`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
+      if (data.is_admin) { const na = document.getElementById("navAdmin"); if (na) na.style.display = ""; }
       const sond = data.sondaggio || {};
       const lead = data.lead || {};
 
@@ -743,21 +763,52 @@
       renderAffPartner(data);
       renderAffEditor(data);
       renderAffIscritti(data);
-      document.getElementById("affBroadcastCard").style.display = data.is_partner ? "block" : "none";
     }
 
     function switchAff(sub) {
-      const subs = ["panoramica", "rete", "link"];
+      const subs = ["panoramica", "rete", "link", "pagina"];
       const s = subs.includes(sub) ? sub : "panoramica";
-      document.getElementById("aff-panoramica").classList.toggle("active", s === "panoramica");
-      document.getElementById("aff-rete").classList.toggle("active", s === "rete");
-      document.getElementById("aff-link").classList.toggle("active", s === "link");
-      document.getElementById("atabPanoramica").classList.toggle("active", s === "panoramica");
-      document.getElementById("atabRete").classList.toggle("active", s === "rete");
-      document.getElementById("atabLink").classList.toggle("active", s === "link");
+      ["panoramica", "rete", "link", "pagina"].forEach((k) => {
+        document.getElementById("aff-" + k).classList.toggle("active", s === k);
+        document.getElementById("atab" + k.charAt(0).toUpperCase() + k.slice(1)).classList.toggle("active", s === k);
+      });
+      if (s === "pagina" && !affPaginaLoaded) loadAffPagina();
       try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
     }
     window.switchAff = switchAff;
+
+    let affPaginaLoaded = false;
+    async function loadAffPagina() {
+      affPaginaLoaded = true;
+      let data = {};
+      try {
+        const res = await fetch(`${API_URL}/pagina`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
+        data = await res.json();
+      } catch (e) { data = {}; }
+      const locked = document.getElementById("affPaginaLocked");
+      const ready = document.getElementById("affPaginaReady");
+      if (!data.sondaggio_completato) { locked.style.display = "block"; ready.style.display = "none"; return; }
+      locked.style.display = "none"; ready.style.display = "block";
+      affPaginaUrl = data.link_pagina || "";
+      document.getElementById("affPaginaLink").textContent = affPaginaUrl || "-";
+      const stato = document.getElementById("affPaginaStato");
+      const configurata = data.bio_titolo || data.bio_testo || (data.social_links || []).length;
+      if (configurata) {
+        stato.style.display = "inline-block";
+        stato.textContent = data.pagina_pubblicata ? "Online" : "Bozza";
+        stato.style.background = data.pagina_pubblicata ? "var(--lime-dim)" : "rgba(152,160,178,0.15)";
+        stato.style.color = data.pagina_pubblicata ? "var(--lime)" : "var(--text-dim)";
+      }
+    }
+    let affPaginaUrl = "";
+    function copiaAffPagina() {
+      if (!affPaginaUrl) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(affPaginaUrl).catch(() => {});
+      if (tg?.showAlert) tg.showAlert("Link della pagina copiato!");
+    }
+    window.copiaAffPagina = copiaAffPagina;
+    function condividiAffPagina() { openShare(affPaginaUrl, "La mia pagina su Cashly:", "Condividi la tua pagina"); }
+    window.condividiAffPagina = condividiAffPagina;
 
     function renderAffIscritti(data) {
       const membri = (data.rete && data.rete.membri) || [];

@@ -520,7 +520,7 @@ async function apiMe(telegramId: number, tgUser?: any) {
     })
   }
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA })
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
@@ -734,8 +734,8 @@ async function apiAffiliateLinkSave(telegramId: number, body: any) {
   const dominio = dominioDi(refLink)
   if (!servizioId || !dominio) return json({ error: "link_non_valido" }, 400)
 
-  const { data: wl } = await supabase.from("domini_whitelist").select("id").eq("dominio", dominio).maybeSingle()
-  const autoApprovato = !!wl
+  // Ogni link inserito resta in attesa: viene attivato solo dopo l'approvazione dell'admin.
+  const autoApprovato = false
 
   const { error } = await supabase.from("affiliate_link").upsert(
     { telegram_id: telegramId, servizio_id: servizioId, ref_link: refLink, approvato: autoApprovato },
