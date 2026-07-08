@@ -7,69 +7,97 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <title>Cashly — La directory del Business Online</title>
-<meta name="description" content="Cashly: la directory del Business Online. Cerca il business che ti farà cambiare vita, attiva gli strumenti e crea la tua rete. Tutto dentro Telegram." />
+<meta name="description" content="Cashly: la directory del Business Online. Scopri i business che funzionano, attivali con una guida passo-passo e crea la tua rete. Tutto dentro Telegram." />
 <style>
   :root{
     --ink:#16181d; --panel:#1f242d; --line:#2c333e;
-    --green:#22c55e; --green-deep:#16a34a; --green-dim:rgba(34,197,94,.13);
-    --text:#f4f6f8; --dim:#98a0b2;
+    --green:#22c55e; --green-deep:#16a34a; --green-dim:rgba(34,197,94,.12);
+    --blue:#5aa9f0; --amber:#e8b34c;
+    --text:#f4f6f8; --dim:#9aa3b2;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",ui-sans-serif,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{min-height:100vh;background:var(--ink);color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",ui-sans-serif,sans-serif;
-    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;padding:40px 22px;text-align:center;line-height:1.5}
-  .wrap{max-width:440px;width:100%}
-  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:20px}
-  .wordmark{font-size:52px;font-weight:800;letter-spacing:-.035em;line-height:1}
+  body{background:var(--ink);color:var(--text);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5;padding:44px 22px 56px;
+    display:flex;flex-direction:column;align-items:center}
+  .wrap{max-width:460px;width:100%;text-align:center}
+  .eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);font-weight:800;margin-bottom:18px}
+  .wordmark{font-size:50px;font-weight:800;letter-spacing:-.035em;line-height:1}
   .wordmark .ly{color:var(--green);display:inline-block;animation:lyp 1.8s ease-in-out infinite}
   @keyframes lyp{0%,100%{opacity:1;text-shadow:0 0 0 rgba(34,197,94,0)}50%{opacity:.85;text-shadow:0 0 16px rgba(34,197,94,.7)}}
-  h1{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:24px 0 10px}
-  .lead{font-size:15px;color:var(--dim);margin:0 auto 28px;max-width:380px}
+  .hero{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:26px 0 12px;line-height:1.15}
+  .hero .g{color:var(--green)}
+  .lead{font-size:15.5px;color:var(--dim);max-width:400px;margin:0 auto 30px}
   .cta{display:inline-flex;align-items:center;gap:10px;background:var(--green);color:#06210f;
-    font-size:16px;font-weight:800;padding:15px 26px;border-radius:12px;text-decoration:none;
-    box-shadow:0 8px 26px rgba(34,197,94,.28);transition:transform .12s ease}
-  .cta:active{transform:scale(.97)}
+    font-size:16px;font-weight:800;padding:15px 28px;border-radius:12px;text-decoration:none;
+    box-shadow:0 8px 26px rgba(34,197,94,.28)}
   .cta svg{width:20px;height:20px}
-  .handle{margin-top:16px;font-size:13px;color:var(--dim)}
+  .handle{margin-top:14px;font-size:13px;color:var(--dim)}
   .handle a{color:var(--green);text-decoration:none;font-weight:700}
-  .feats{display:flex;flex-direction:column;gap:10px;margin-top:38px;text-align:left}
-  .feat{display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:14px 16px}
-  .feat .ic{width:38px;height:38px;border-radius:10px;background:var(--green-dim);color:var(--green);
-    display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .feat h3{font-size:14.5px;font-weight:700}
-  .feat p{font-size:12.5px;color:var(--dim);margin-top:2px}
-  .foot{margin-top:36px;font-size:12px;color:var(--dim)}
+  .how-title{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:42px;text-align:left}
+  .pillars{display:flex;flex-direction:column;gap:12px;margin-top:14px;text-align:left}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .pill .top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .pill .ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pill h3{font-size:16px;font-weight:800}
+  .pill .step{margin-left:auto;font-size:13px;font-weight:800;color:var(--dim)}
+  .pill p{font-size:13px;color:var(--dim);line-height:1.55}
+  .ic-blue{background:var(--green-dim);color:var(--blue)}
+  .ic-green{background:var(--green-dim);color:var(--green)}
+  .ic-amber{background:rgba(232,179,76,.14);color:var(--amber)}
+  .foot{margin-top:34px;font-size:12px;color:var(--dim)}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="eyebrow">HUB</div>
+    <div class="eyebrow">L'hub del Business Online</div>
     <div class="wordmark">Cash<span class="ly">ly</span></div>
-    <h1>La directory del Business Online.</h1>
-    <p class="lead">Cerca il business che ti farà cambiare vita, attiva gli strumenti passo dopo passo e crea la tua rete. Tutto dentro Telegram.</p>
+
+    <div class="hero">La directory del <span class="g">Business Online</span>.</div>
+    <p class="lead">Tutti i business e gli strumenti online che funzionano, in un posto solo — spiegati in chiaro e pronti da attivare.</p>
 
     <a class="cta" href="https://t.me/cashlyhub_bot">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/></svg>
       Entra nell'hub
     </a>
-    <div class="handle">su Telegram · <a href="https://t.me/cashlyhub_bot">@cashlyhub_bot</a></div>
+    <div class="handle">gratis su Telegram · <a href="https://t.me/cashlyhub_bot">@cashlyhub_bot</a></div>
 
-    <div class="feats">
-      <div class="feat">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
-        <div><h3>Directory selezionata</h3><p>Strumenti e business online, in chiaro e in un posto solo.</p></div>
+    <div class="how-title">Come funziona, in pochi passi</div>
+    <div class="pillars">
+      <div class="pill">
+        <div class="top">
+          <div class="ic ic-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
+          <h3>Entra</h3><span class="step">1</span>
+        </div>
+        <p>Avvii il bot Cashly e apri l'app con un tap. Nessuna installazione.</p>
       </div>
-      <div class="feat">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
-        <div><h3>Attivazione guidata</h3><p>Tutorial passo dopo passo per partire davvero, non a caso.</p></div>
+      <div class="pill">
+        <div class="top">
+          <div class="ic ic-green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+          <h3>Crea il tuo profilo</h3><span class="step">2</span>
+        </div>
+        <p>In 2 minuti hai il tuo hub personale, su misura per te.</p>
       </div>
-      <div class="feat">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.3 6.8-4.6M8.6 13.7l6.8 4.6"/></svg></div>
-        <div><h3>La tua rete</h3><p>Invita, costruisci la tua rete e falla crescere con te.</p></div>
+      <div class="pill">
+        <div class="top">
+          <div class="ic ic-amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
+          <h3>Scopri e attiva</h3><span class="step">3</span>
+        </div>
+        <p>Sfogli i business <b style="color:var(--text)">selezionati</b> e li attivi con un <b style="color:var(--text)">tutorial passo-passo</b>. Parti davvero.</p>
+      </div>
+      <div class="pill">
+        <div class="top">
+          <div class="ic ic-green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.3 6.8-4.6M8.6 13.7l6.8 4.6"/></svg></div>
+          <h3>Crea la tua rete</h3><span class="step">4</span>
+        </div>
+        <p>Inviti persone: <b style="color:var(--text)">restano tue</b> e ti fanno guadagnare con l'affiliazione.</p>
       </div>
     </div>
+
+    <a class="cta" style="margin-top:30px" href="https://t.me/cashlyhub_bot">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/></svg>
+      Inizia ora, è gratis
+    </a>
 
     <div class="foot">Cashly · La directory del Business Online</div>
   </div>
