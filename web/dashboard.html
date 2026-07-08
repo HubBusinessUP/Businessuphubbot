@@ -1247,11 +1247,14 @@
       document.getElementById("onbBtn").textContent = last ? "Crea il mio profilo" : "Avanti";
       document.getElementById("onbBtn2").style.display = last ? "block" : "none";
     }
+    function onbTrack(choice) {
+      try { fetch(`${API_URL}/onboarding`, { method: "POST", headers: { "Content-Type": "application/json", "x-telegram-init-data": initData }, body: JSON.stringify({ choice }), keepalive: true }); } catch (e) {}
+    }
     function onbNext() {
       if (onbI < ONB.length - 1) { onbI++; onbRender(); try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {} }
-      else { try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} window.location.href = "sondaggio.html?_=" + Date.now(); }
+      else { onbTrack("profilo"); try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} window.location.href = "sondaggio.html?_=" + Date.now(); }
     }
-    function onbClose() { try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} document.getElementById("onbOverlay").classList.remove("show"); }
+    function onbClose() { onbTrack("esplora"); try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} document.getElementById("onbOverlay").classList.remove("show"); }
     window.onbNext = onbNext; window.onbClose = onbClose;
     (function onbMaybeShow() {
       let seen = false; try { seen = !!localStorage.getItem("cashly_onboarded"); } catch (e) {}

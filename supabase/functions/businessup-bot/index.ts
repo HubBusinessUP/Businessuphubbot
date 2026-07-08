@@ -1315,6 +1315,17 @@ async function apiAdminSegnalazioneRisolvi(body: any) {
 }
 
 // ---------- ADMIN: KPI & SPONSORBOARD ----------
+// Registra la scelta fatta nell'ultima slide dell'onboarding: "profilo" (crea subito) o "esplora".
+// Registra solo la PRIMA scelta, per non falsare le percentuali se l'utente rivede l'onboarding.
+async function apiOnboarding(telegramId: number, body: any) {
+  const choice = body?.choice === "profilo" ? "profilo" : "esplora"
+  const { data: lead } = await supabase.from("leads").select("onboarding_choice").eq("telegram_id", telegramId).maybeSingle()
+  if (lead && !(lead as any).onboarding_choice) {
+    await supabase.from("leads").update({ onboarding_choice: choice }).eq("telegram_id", telegramId)
+  }
+  return json({ ok: true })
+}
+
 async function apiAdminKpi() {
   const inizioOggi = new Date()
   inizioOggi.setUTCHours(0, 0, 0, 0)
@@ -1328,6 +1339,13 @@ async function apiAdminKpi() {
   const { count: pendingLinks } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("approvato", false)
   const { count: segnalazioniAperte } = await supabase.from("segnalazioni").select("id", { count: "exact", head: true }).eq("stato", "aperta")
   const { count: pendingPartner } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("partner_richiesto", true).eq("is_partner", false)
+
+  // Onboarding: quanti scelgono di creare il profilo subito vs esplorare prima.
+  const { count: onbProfilo } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("onboarding_choice", "profilo")
+  const { count: onbEsplora } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("onboarding_choice", "esplora")
+  const onbTot = (onbProfilo ?? 0) + (onbEsplora ?? 0)
+  const onbProfiloPct = onbTot ? Math.round((onbProfilo ?? 0) * 100 / onbTot) : 0
+  const onbEsploraPct = onbTot ? 100 - onbProfiloPct : 0
 
   // Top business: per voti totali e per attivazioni recenti (ultimi 7 giorni come indicatore di trend).
   const { data: servizi } = await supabase.from("servizi").select("id, nome")
@@ -1363,6 +1381,7 @@ async function apiAdminKpi() {
     pending_links: pendingLinks ?? 0,
     segnalazioni_aperte: segnalazioniAperte ?? 0,
     pending_partner: pendingPartner ?? 0,
+    onboarding: { profilo: onbProfilo ?? 0, esplora: onbEsplora ?? 0, tot: onbTot, profilo_pct: onbProfiloPct, esplora_pct: onbEsploraPct },
     top_business: topBusiness,
   })
 }
@@ -1665,6 +1684,12 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiSondaggioSave(tid, await req.json())
+    }
+
+    if (sub === "onboarding" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiOnboarding(tid, await req.json())
     }
 
     if (sub === "business-list" && req.method === "GET") {

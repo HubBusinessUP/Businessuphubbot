@@ -160,6 +160,11 @@
     </div>
 
     <div class="section">
+      <div class="section-head"><h2>Onboarding</h2></div>
+      <div id="onboardingBox"></div>
+    </div>
+
+    <div class="section">
       <div class="section-head"><h2>Top business</h2></div>
       <div id="topBusinessList"></div>
     </div>
@@ -523,6 +528,25 @@
       if (k.segnalazioni_aperte) chips.push(`<span class="pending-chip alert">${k.segnalazioni_aperte} segnalazioni aperte</span>`);
       if (!chips.length) chips.push('<span class="pending-chip">Nessuna azione in sospeso</span>');
       document.getElementById("pendingRow").innerHTML = chips.join("");
+      renderOnboarding(k.onboarding);
+    }
+
+    // Onboarding: % di chi crea subito il profilo vs chi esplora prima.
+    function renderOnboarding(o) {
+      const el = document.getElementById("onboardingBox");
+      if (!el) return;
+      o = o || { profilo: 0, esplora: 0, tot: 0, profilo_pct: 0, esplora_pct: 0 };
+      if (!o.tot) { el.innerHTML = '<p class="empty">Ancora nessun dato: nessun utente ha completato l\'onboarding.</p>'; return; }
+      el.innerHTML =
+        '<div style="display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--panel-2);margin-bottom:12px;">' +
+          `<div style="width:${o.profilo_pct}%;background:var(--lime);"></div>` +
+          `<div style="width:${o.esplora_pct}%;background:var(--blue);"></div>` +
+        '</div>' +
+        '<div style="display:flex;gap:10px;">' +
+          `<div class="stat-box" style="flex:1;text-align:left;border-left:3px solid var(--lime);"><div class="label">Crea profilo subito</div><div class="value">${o.profilo_pct}%</div><div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${o.profilo} utenti</div></div>` +
+          `<div class="stat-box" style="flex:1;text-align:left;border-left:3px solid var(--blue);"><div class="label">Esplora prima</div><div class="value">${o.esplora_pct}%</div><div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${o.esplora} utenti</div></div>` +
+        '</div>' +
+        `<p style="font-size:12px;color:var(--text-dim);margin-top:10px;">Su ${o.tot} utenti che hanno completato l'onboarding.</p>`;
     }
 
     // Box "Da validare": candidature in revisione + link non ancora approvati, con azioni rapide.
@@ -1170,7 +1194,7 @@
       { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi"] },
       { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
-      { key: "stats", label: "Statistiche", titles: ["Top business", "Top Sponsorboard"] },
+      { key: "stats", label: "Statistiche", titles: ["Onboarding", "Top business", "Top Sponsorboard"] },
       { key: "affil", label: "Affiliazione", titles: ["Whitelist domini link referral"] },
     ];
     function initAdminTabs() {
