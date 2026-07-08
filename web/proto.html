@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>Cashly — Home (prototipo)</title>
+<style>
+  :root{
+    --bg:#eef1f6; --card:#ffffff; --ink:#141821; --dim:#6b7280; --line:#e6e9f0;
+    --green:#22c55e; --green-d:#16a34a; --green-soft:#e7f9ee; --amber:#e8b34c;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",ui-sans-serif,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  .stage{background:#d9dee7;font-family:var(--sans);-webkit-font-smoothing:antialiased;padding:26px 0;display:flex;justify-content:center}
+  .phone{width:390px;max-width:94vw;background:var(--bg);border-radius:34px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);color:var(--ink)}
+  .bar{display:flex;justify-content:space-between;align-items:center;padding:12px 22px 4px;font-size:13px;font-weight:700}
+  .bar .r{display:flex;gap:6px;align-items:center;font-size:12px}
+  .body{padding:8px 16px 16px}
+
+  .hd{display:flex;align-items:flex-start;gap:12px;margin:8px 2px 16px}
+  .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px}
+  .hd .hi{font-size:13px;color:var(--dim)}
+  .hd h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:1px 0 2px}
+  .hd .sub{font-size:12.5px;color:var(--dim)}
+  .bell{margin-left:auto;width:40px;height:40px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative;flex-shrink:0}
+  .bell .dot{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--green);border:2px solid var(--card)}
+
+  .searchrow{display:flex;gap:10px;margin-bottom:14px}
+  .search{flex:1;background:var(--card);border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 14px;height:50px;box-shadow:0 2px 10px rgba(0,0,0,.05);color:var(--dim);font-size:14px}
+  .filt{width:50px;height:50px;border-radius:14px;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 6px 16px rgba(34,197,94,.35)}
+
+  .cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+  .cat{flex:0 0 auto;background:var(--card);border-radius:14px;padding:12px 12px 9px;text-align:center;min-width:74px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .cat .ci{width:30px;height:30px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+  .cat .cl{font-size:11px;font-weight:600;color:var(--dim)}
+  .cat.on{background:var(--green)}
+  .cat.on .ci,.cat.on .cl{color:#fff}
+
+  .promo{background:linear-gradient(135deg,#1fbf68,#12934f);border-radius:18px;padding:18px;color:#fff;position:relative;overflow:hidden;margin-bottom:18px}
+  .promo h2{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .promo p{font-size:12.5px;opacity:.92;margin:4px 0 12px;max-width:210px}
+  .promo .pbtn{display:inline-block;background:#fff;color:var(--green-d);font-size:12.5px;font-weight:800;padding:9px 15px;border-radius:9px}
+  .promo .emoji{position:absolute;right:14px;bottom:6px;font-size:64px;opacity:.9}
+
+  .segrow{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .seg{background:var(--card);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--dim);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .seg.on{background:var(--green);color:#fff}
+  .sort{margin-left:auto;background:var(--card);border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;color:var(--dim);display:flex;gap:6px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+
+  .sechd{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 12px}
+  .sechd h3{font-size:17px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .livedot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.18)}
+  .sechd a{font-size:13px;color:var(--green-d);font-weight:700}
+
+  .biz{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.06);margin-bottom:12px}
+  .biz .row1{display:flex;align-items:center;gap:10px}
+  .biz .tag{font-size:11px;font-weight:700;color:var(--green-d);background:var(--green-soft);padding:3px 9px;border-radius:6px}
+  .biz .sem{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.16);flex-shrink:0}
+  .biz h4{font-size:16px;font-weight:800;margin:9px 0 4px;display:flex;align-items:center;gap:8px}
+  .biz p{font-size:12.5px;color:var(--dim);line-height:1.5}
+  .biz .foot{display:flex;align-items:center;gap:10px;margin-top:13px}
+  .biz .vote{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:800;color:var(--dim)}
+  .biz .open{margin-left:auto;background:var(--green);color:#fff;font-size:13px;font-weight:800;padding:9px 16px;border-radius:10px}
+
+  .nav{display:flex;align-items:center;justify-content:space-between;background:var(--card);padding:10px 26px 16px;border-top:1px solid var(--line)}
+  .nav .it{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:var(--dim)}
+  .nav .it.on{color:var(--green-d)}
+  .nav .fab{width:52px;height:52px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 22px rgba(34,197,94,.4);margin-top:-26px}
+  svg{display:block}
+</style>
+<div class="stage">
+  <div class="phone">
+    <div class="bar"><span>9:41</span><span class="r">📶 🔋</span></div>
+    <div class="body">
+
+      <div class="hd">
+        <div class="av">AN</div>
+        <div>
+          <div class="hi">Ciao, Antony 👋</div>
+          <h1>Scopri. Attiva. Guadagna.</h1>
+          <div class="sub">Il business che fa per te è qui.</div>
+        </div>
+        <div class="bell"><span class="dot"></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141821" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+      </div>
+
+      <div class="searchrow">
+        <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> Cerca un business…</div>
+        <div class="filt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+      </div>
+
+      <div class="cats">
+        <div class="cat on"><div class="ci"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/></svg></div><div class="cl">Trading</div></div>
+        <div class="cat"><div class="ci"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="cl">Bonus</div></div>
+        <div class="cat"><div class="ci"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M4 20V8l6-4 6 4v12M9 20v-5h2v5"/></svg></div><div class="cl">Prop firm</div></div>
+        <div class="cat"><div class="ci"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 20h8"/></svg></div><div class="cl">Online</div></div>
+        <div class="cat"><div class="ci"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7l-2-2H4v14h16V7z"/></svg></div><div class="cl">Tool</div></div>
+      </div>
+
+      <div class="promo">
+        <h2>Crea la tua rete</h2>
+        <p>Invita persone: restano tue per sempre e guadagni con l'affiliazione.</p>
+        <span class="pbtn">Scopri come →</span>
+        <div class="emoji">🤝</div>
+      </div>
+
+      <div class="segrow">
+        <div class="seg on">Consigliati</div>
+        <div class="seg">Novità</div>
+        <div class="sort"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Ordina</div>
+      </div>
+
+      <div class="sechd">
+        <h3><span class="livedot"></span>In evidenza</h3>
+        <a>Vedi tutti</a>
+      </div>
+
+      <div class="biz">
+        <div class="row1"><span class="tag">Trading</span><span style="margin-left:auto" class="sem" title="Adatto a te"></span></div>
+        <h4>Broker VS Broker</h4>
+        <p>Muovi volume tra broker con costi calcolati. Guida passo-passo all'attivazione.</p>
+        <div class="foot">
+          <span class="vote"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>128</span>
+          <span class="open">Apri →</span>
+        </div>
+      </div>
+
+      <div class="biz">
+        <div class="row1"><span class="tag">Prop firm</span><span style="margin-left:auto" class="sem" title="Adatto a te"></span></div>
+        <h4>Prop Firm Alpha</h4>
+        <p>Opera col capitale della prop. Requisiti chiari e tutorial per superare la challenge.</p>
+        <div class="foot">
+          <span class="vote"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>84</span>
+          <span class="open">Apri →</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="nav">
+      <div class="it on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Home</div>
+      <div class="it"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.3 6.8-4.6M8.6 13.7l6.8 4.6"/></svg>Affiliazione</div>
+      <div class="fab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+      <div class="it"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profilo</div>
+    </div>
+  </div>
+</div>
+</body></html>
