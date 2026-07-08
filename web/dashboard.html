@@ -337,6 +337,21 @@
     padding: 12px; border-radius: 4px; font-size: 13.5px; font-family: inherit; margin-bottom: 10px; resize: vertical;
   }
   .sheet-input:focus { outline: none; border-color: var(--blue); }
+
+  /* Onboarding primo accesso */
+  .onb { position: fixed; inset: 0; z-index: 200; background: var(--ink); display: none; flex-direction: column; padding: 28px 22px calc(28px + env(safe-area-inset-bottom)); }
+  .onb.show { display: flex; }
+  .onb-skip { align-self: flex-end; background: none; border: none; color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 6px; }
+  .onb-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .onb-emoji { font-size: 66px; line-height: 1; margin-bottom: 22px; animation: onbpop .35s ease; }
+  @keyframes onbpop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .onb-title { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 10px; }
+  .onb-text { font-size: 15px; color: var(--text-dim); line-height: 1.55; max-width: 300px; }
+  .onb-dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 18px; }
+  .onb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: all .2s ease; }
+  .onb-dot.on { background: var(--lime); width: 20px; border-radius: 4px; }
+  .onb-btn { width: 100%; padding: 15px; border: none; border-radius: 5px; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; background: var(--lime); color: #06110b; }
+  .onb-btn2 { width: 100%; padding: 12px; border: none; background: none; color: var(--text-dim); font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: inherit; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -464,6 +479,18 @@
       </a>
     </nav>
 
+  </div>
+
+  <div class="onb" id="onbOverlay">
+    <button class="onb-skip" onclick="onbClose()">Salta</button>
+    <div class="onb-mid">
+      <div class="onb-emoji" id="onbEmoji">👋</div>
+      <div class="onb-title" id="onbTitle"></div>
+      <div class="onb-text" id="onbText"></div>
+    </div>
+    <div class="onb-dots" id="onbDots"></div>
+    <button class="onb-btn" id="onbBtn" onclick="onbNext()">Avanti</button>
+    <button class="onb-btn2" id="onbBtn2" onclick="onbClose()" style="display:none">Esplora prima</button>
   </div>
 
   <div class="share-overlay" id="suggestOverlay" onclick="if(event.target===this) closeSuggestSheet()">
@@ -1201,6 +1228,36 @@
     } else {
       init();
     }
+
+    // ===== ONBOARDING primo accesso =====
+    const ONB = [
+      { e: "👋", t: "Benvenuto in Cashly", p: "La directory del Business Online. Tutto quello che ti serve per partire, in un posto solo." },
+      { e: "🔎", t: "Scopri e attiva", p: "Business selezionati, spiegati in chiaro e con tutorial passo-passo. Il pallino verde ti dice cosa fa per te." },
+      { e: "🤝", t: "Crea la tua rete", p: "Invita persone: restano tue per sempre e ti fanno guadagnare con l'affiliazione." },
+      { e: "🚀", t: "Pronto a partire?", p: "Completa il profilo in 2 minuti e crea il tuo hub su misura." },
+    ];
+    let onbI = 0;
+    function onbRender() {
+      const s = ONB[onbI], last = onbI === ONB.length - 1;
+      const em = document.getElementById("onbEmoji");
+      em.textContent = s.e; em.style.animation = "none"; void em.offsetWidth; em.style.animation = "";
+      document.getElementById("onbTitle").textContent = s.t;
+      document.getElementById("onbText").textContent = s.p;
+      document.getElementById("onbDots").innerHTML = ONB.map((_, i) => `<div class="onb-dot${i === onbI ? " on" : ""}"></div>`).join("");
+      document.getElementById("onbBtn").textContent = last ? "Crea il mio profilo" : "Avanti";
+      document.getElementById("onbBtn2").style.display = last ? "block" : "none";
+    }
+    function onbNext() {
+      if (onbI < ONB.length - 1) { onbI++; onbRender(); try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {} }
+      else { try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} window.location.href = "sondaggio.html?_=" + Date.now(); }
+    }
+    function onbClose() { try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} document.getElementById("onbOverlay").classList.remove("show"); }
+    window.onbNext = onbNext; window.onbClose = onbClose;
+    (function onbMaybeShow() {
+      let seen = false; try { seen = !!localStorage.getItem("cashly_onboarded"); } catch (e) {}
+      if (seen) return;
+      onbI = 0; onbRender(); document.getElementById("onbOverlay").classList.add("show");
+    })();
   </script>
 </body>
 </html>
