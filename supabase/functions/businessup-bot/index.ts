@@ -73,10 +73,11 @@ async function sendPhoto(chatId: number, photoFileId: string, caption?: string, 
   })
 }
 
-async function sendVideo(chatId: number, videoFileId: string, caption?: string, markup?: any) {
+async function sendVideo(chatId: number, videoFileId: string, caption?: string, markup?: any, parseMode?: string) {
   const body: any = { chat_id: chatId, video: videoFileId }
   if (caption) body.caption = caption
   if (markup) body.reply_markup = markup
+  if (parseMode) body.parse_mode = parseMode
   return fetch(`${TG_API}/sendVideo`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -234,6 +235,30 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
+  const btn = { inline_keyboard: [[{ text: "🚀 Apri Cashly e crea il mio hub", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] }
+
+  // Video di presentazione (se impostato dall'admin con /presentazione): appare sopra al benvenuto.
+  const { data: vid } = await supabase.from("config").select("valore").eq("chiave", "welcome_video").maybeSingle()
+  const welcomeVideo = vid?.valore
+
+  if (welcomeVideo) {
+    // Con video: didascalia breve (limite Telegram 1024 caratteri).
+    await sendVideo(
+      chatId,
+      welcomeVideo,
+      `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
+      `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n` +
+      `Guarda la presentazione qui sopra 👆, poi:\n\n` +
+      `1️⃣ Apri l'app col pulsante qui sotto\n` +
+      `2️⃣ Completa il profilo in 2 minuti e crea il tuo hub\n` +
+      `3️⃣ Esplora i business e crea la tua rete 💸\n\n` +
+      `Tocca <b>Apri Cashly</b> 👇`,
+      btn,
+      "HTML",
+    )
+    return
+  }
+
   await sendMessage(
     chatId,
     `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
@@ -250,7 +275,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     `2️⃣ Completa il tuo profilo in 2 minuti e crea il tuo hub\n` +
     `3️⃣ Cerca il business che ti farà cambiare vita 💸\n\n` +
     `Tocca <b>Apri Cashly</b> 👇 (o il pulsante <b>Menu</b> accanto a dove scrivi).`,
-    { inline_keyboard: [[{ text: "🚀 Apri Cashly e crea il mio hub", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
+    btn,
     "HTML",
   )
 }
@@ -477,6 +502,19 @@ async function handleUpdate(u: any) {
     }
 
     const media = estraiMedia(u.message)
+
+    // Imposta il video di presentazione mostrato ai nuovi utenti al /start.
+    if (media?.tipo === "video" && (caption === "/presentazione" || caption === "/welcome")) {
+      await supabase.from("config").delete().eq("chiave", "welcome_video")
+      await supabase.from("config").insert({ chiave: "welcome_video", valore: media.fileId })
+      await sendMessage(chatId, "✅ Video di presentazione impostato! Da ora appare a ogni nuovo utente che avvia il bot. Per cambiarlo, rimandami un altro video con /presentazione. Per rimuoverlo, scrivi /rimuovipresentazione.")
+      return
+    }
+    if (text === "/rimuovipresentazione") {
+      await supabase.from("config").delete().eq("chiave", "welcome_video")
+      await sendMessage(chatId, "Video di presentazione rimosso. I nuovi utenti riceveranno il benvenuto solo testuale.")
+      return
+    }
 
     // Scorciatoia: media con didascalia che inizia per /news.
     if (media && (caption === "/news" || caption.startsWith("/news "))) {
