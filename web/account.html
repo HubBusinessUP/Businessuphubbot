@@ -1109,7 +1109,13 @@
     // Apre la vista giusta in base all'hash (#rete / #affiliazione / #profilo): arrivo dalla barra.
     const VIEWS = ["affiliazione", "profilo"];
     const hashView = () => { const h = (location.hash || "").replace("#", ""); return VIEWS.includes(h) ? h : "profilo"; };
-    (function initView() { switchView(hashView()); })();
+    // In Telegram l'hash è usato per i dati della Web App, quindi i link dal bot usano ?view=... (query param).
+    const initialView = () => {
+      const q = new URLSearchParams(location.search).get("view");
+      if (VIEWS.includes(q)) return q;
+      return hashView();
+    };
+    (function initView() { switchView(initialView()); })();
     window.addEventListener("hashchange", () => switchView(hashView()));
 
     // Business che l'utente ha attivato: link personale da riaprire + stato tutorial.
