@@ -24,7 +24,7 @@
     --text-dim: #98a0b2;
     --border: #30374a;
   }
-  .apphdr { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+  .apphdr { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
   .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
   .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
   @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
@@ -37,13 +37,13 @@
   .icon-circle.plus { background: var(--lime); color: #06110b; }
   .hdr-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1px; }
   .notif-wrap { position: relative; }
-  .notif-badge { position: absolute; top: -4px; right: -4px; background: #e2574a; color: #fff; font-size: 10px; font-weight: 800; min-width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 999px; padding: 0 4px; border: 2px solid var(--panel); box-sizing: content-box; }
-  .notif-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 290px; max-width: 80vw; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); z-index: 60; padding: 8px; display: none; }
+  .notif-badge { position: absolute; top: -4px; right: -4px; background: #e2574a; color: #fff; font-size: 10px; font-weight: 800; min-width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 4px; padding: 0 4px; border: 2px solid var(--panel); box-sizing: content-box; }
+  .notif-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 290px; max-width: 80vw; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); z-index: 60; padding: 8px; display: none; }
   .notif-panel.open { display: block; }
   .notif-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; padding: 6px 8px 8px; }
-  .notif-item { display: flex; gap: 11px; align-items: center; padding: 10px 8px; border-radius: 8px; cursor: pointer; width: 100%; text-align: left; background: none; border: none; color: inherit; font-family: inherit; text-decoration: none; }
+  .notif-item { display: flex; gap: 11px; align-items: center; padding: 10px 8px; border-radius: 3px; cursor: pointer; width: 100%; text-align: left; background: none; border: none; color: inherit; font-family: inherit; text-decoration: none; }
   .notif-item:active { background: var(--ink); }
-  .notif-item .n-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .notif-item .n-ico { width: 30px; height: 30px; border-radius: 3px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .notif-item .n-body { flex: 1; min-width: 0; }
   .notif-item .n-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .notif-item .n-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
@@ -68,12 +68,12 @@
   .bnav-item svg { width: 22px; height: 22px; }
   .af-hero { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin: 2px 2px 12px; }
   .af-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .af-metric { background: var(--card2); border-radius: 12px; padding: 14px; }
+  .af-metric { background: var(--card2); border-radius: 4px; padding: 14px; }
   .af-n { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
   .af-n.lime { color: var(--lime); } .af-n.blue { color: var(--blue); }
   .af-k { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-  .af-ta { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px; font-size: 13px; font-family: inherit; min-height: 64px; resize: vertical; }
-  .af-info { display: flex; gap: 10px; background: var(--blue-dim); border-radius: 10px; padding: 12px 13px; }
+  .af-ta { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); padding: 11px; font-size: 13px; font-family: inherit; min-height: 64px; resize: vertical; }
+  .af-info { display: flex; gap: 10px; background: var(--blue-dim); border-radius: 4px; padding: 12px 13px; }
   .af-info svg { width: 18px; height: 18px; color: var(--blue); flex-shrink: 0; margin-top: 1px; }
   .af-info p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
   .af-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
@@ -82,8 +82,8 @@
   .af-row .rl-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; }
   .af-row .rl-badge.on { background: var(--lime-dim); color: var(--lime); }
   .af-row .rl-badge.wait { background: var(--amber-dim); color: var(--amber); }
-  .af-row .rl-input { flex: 1 1 100%; min-width: 0; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 6px; font-size: 12.5px; font-family: inherit; }
-  .af-partner-ico { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .af-row .rl-input { flex: 1 1 100%; min-width: 0; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 3px; font-size: 12.5px; font-family: inherit; }
+  .af-partner-ico { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
   .rtabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-bottom: 14px; }
   .rtab { flex: 1; padding: 10px 6px; border: none; border-radius: 4px; background: none; color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
@@ -96,7 +96,7 @@
   .aff-track.dragging { cursor: grabbing; scroll-snap-type: none; }
   .aff-track.dragging .aff-slide { pointer-events: none; }
   .aff-track::-webkit-scrollbar { display: none; }
-  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; border-radius: 16px; padding: 26px 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.28); color: #fff; }
+  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; border-radius: 4px; padding: 26px 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.28); color: #fff; }
   .aff-ic { display: none; }
   .aff-slide h4 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 10px; }
   .aff-slide p { font-size: 14.5px; color: rgba(255,255,255,0.9); line-height: 1.65; }
@@ -115,7 +115,7 @@
 
   .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
 
-  .ik-arch { background: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .ik-arch { background: var(--ink); border: 1px solid var(--border); border-radius: 3px; padding: 14px; margin-bottom: 14px; }
   .ik-arch-lbl { font-size: 11.5px; color: var(--text-dim); }
   .ik-arch-name { font-size: 17px; font-weight: 800; margin: 3px 0 5px; }
   .ik-arch-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
@@ -123,10 +123,10 @@
   .ik-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
   .ik-name { font-size: 13.5px; font-weight: 600; }
   .ik-val { font-size: 14.5px; font-weight: 800; }
-  .ik-track { height: 8px; background: var(--ink); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .ik-fill { height: 100%; border-radius: 6px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .ik-track { height: 8px; background: var(--ink); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+  .ik-fill { height: 100%; border-radius: 3px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
   .ik-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 4px; }
-  .ik-mini { background: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .ik-mini { background: var(--ink); border: 1px solid var(--border); border-radius: 3px; padding: 12px; }
   .ik-mini-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
   .ik-mini-h.ok { color: var(--lime); }
   .ik-mini-h.warn { color: #e8b34c; }
@@ -134,7 +134,7 @@
 
   .share-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
   .share-overlay.open { display: flex; }
-  .share-sheet { background: var(--ink); border: 1px solid var(--border); border-radius: 12px 12px 0 0; width: 100%; max-width: 480px; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
+  .share-sheet { background: var(--ink); border: 1px solid var(--border); border-radius: 4px 12px 0 0; width: 100%; max-width: 480px; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
   .share-handle { width: 36px; height: 4px; border-radius: 3px; background: var(--border); margin: 0 auto 14px; }
   .share-sheet h3 { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 16px; }
   .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; margin-bottom: 14px; }
@@ -147,7 +147,7 @@
   .top h1 { font-size: 19px; font-weight: 700; }
   .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
   .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
 
   .field { margin-bottom: 14px; }
@@ -431,7 +431,7 @@
             <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
           </div>
           <div id="affQr" style="display:none;text-align:center;margin-top:14px">
-            <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:12px;background:#fff;padding:8px" />
+            <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:4px;background:#fff;padding:8px" />
           </div>
         </div>
         <div class="card">
@@ -808,7 +808,7 @@
           <div style="flex:1;min-width:0">
             <div style="font-size:13.5px;font-weight:700">${escapeHtml(r.servizio_nome)}</div>
             <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px">Step ${r.ultimo_step} di ${r.totale_step}</div>
-            <div style="height:4px;border-radius:999px;background:var(--border);margin-top:6px;overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:var(--blue);border-radius:999px"></i></div>
+            <div style="height:4px;border-radius:4px;background:var(--border);margin-top:6px;overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:var(--blue);border-radius:4px"></i></div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-dim)"><path d="m9 6 6 6-6 6"/></svg>
         </a>`;
@@ -917,7 +917,7 @@
         el.innerHTML = `<div style="display:flex;align-items:center;gap:12px">
           <div class="af-partner-ico" style="background:var(--lime-dim);color:var(--lime)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
           <div style="flex:1"><div style="font-size:15px;font-weight:800">Sei Partner</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:1px">Puoi inserire i tuoi link su tutti i business.</div></div>
-          <div style="font-size:11px;font-weight:800;color:var(--lime);background:var(--lime-dim);padding:4px 10px;border-radius:6px">ATTIVO</div>
+          <div style="font-size:11px;font-weight:800;color:var(--lime);background:var(--lime-dim);padding:4px 10px;border-radius:3px">ATTIVO</div>
         </div>`;
         return;
       }
