@@ -36,6 +36,32 @@ async function sendMessage(chatId: number, text: string, markup?: any, parseMode
   })
 }
 
+// Escape per testo inserito in messaggi Telegram con parse_mode HTML.
+function htmlEsc(s: unknown): string {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+// Costruisce un URL dell'app con cache-buster inserito PRIMA dell'eventuale #ancora (così l'hash resta valido).
+function appUrl(path: string): string {
+  const [base, hash] = path.split("#")
+  const sep = base.includes("?") ? "&" : "?"
+  return WEBAPP_URL + base + sep + "_=" + Date.now() + (hash ? "#" + hash : "")
+}
+
+// Notifica l'utente via bot con un pulsante che apre la Mini App direttamente sulla sezione giusta.
+async function notifyUser(chatId: number, text: string, btnText: string, path: string, parseMode = "HTML") {
+  try {
+    await sendMessage(
+      chatId,
+      text,
+      { inline_keyboard: [[{ text: btnText, web_app: { url: appUrl(path) } }]] },
+      parseMode,
+    )
+  } catch (e) {
+    console.error("notifyUser failed:", e)
+  }
+}
+
 async function sendPhoto(chatId: number, photoFileId: string, caption?: string, markup?: any) {
   const body: any = { chat_id: chatId, photo: photoFileId }
   if (caption) body.caption = caption
@@ -161,10 +187,11 @@ async function verificaSbloccoPartner(sponsorId: number) {
   const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", sponsorId).eq("bot_started", true)
   if ((count ?? 0) < PARTNER_SOGLIA) return
   await supabase.from("leads").update({ is_partner: true }).eq("telegram_id", sponsorId)
-  await sendMessage(
+  await notifyUser(
     sponsorId,
-    `🎉 Complimenti, ora sei Partner!\n\nHai portato ${count} iscritti nel bot. Da adesso puoi inserire i tuoi link referral sui business: i tuoi invitati vedranno i TUOI link nei tutorial.\n\nVai nel profilo → La mia pagina → I miei link.`,
-    { inline_keyboard: [[{ text: "Inserisci i miei link", web_app: { url: WEBAPP_URL + "/mia-pagina.html?_=" + Date.now() } }]] },
+    `🚀 <b>Complimenti, ora sei Partner!</b>\n\nHai portato ${count} iscritti. Da adesso puoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`,
+    "🔗 Inserisci i miei link",
+    "/account.html#affiliazione",
   )
 }
 
@@ -194,8 +221,16 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: refBy ? `ref:${refBy}` : null })
 
   const sponsorFinale = existing?.referred_by ?? refBy
-  if (!existing && sponsorFinale && sponsorFinale !== ADMIN_ID) {
-    verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
+  if (!existing && sponsorFinale) {
+    // Avvisa lo sponsor del nuovo iscritto nella sua rete (deep-link alla sezione Affiliazione).
+    const nuovoNome = String(from.first_name || "Qualcuno").replace(/[<>&]/g, "").trim() || "Qualcuno"
+    notifyUser(
+      sponsorFinale,
+      `🎉 <b>Nuovo iscritto nella tua rete!</b>\n\n<b>${nuovoNome}</b> è appena entrato in Cashly col tuo invito. Ora è collegato a te per sempre.`,
+      "👀 Vedi la tua rete",
+      "/account.html#affiliazione",
+    ).catch((e) => console.error("notifica nuovo iscritto:", e))
+    if (sponsorFinale !== ADMIN_ID) verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
@@ -989,7 +1024,7 @@ async function apiAdminSuggerimentoApprova(body: any) {
     reward = true
   }
 
-  await sendMessage(sug.telegram_id, `✅ La tua candidatura "${sug.nome}" è stata approvata!\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`)
+  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata approvata!</b>\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "🔎 Vedi nella lista", "/lista.html")
   notificaNuovoServizio(sug.nome, sug.categoria_id).catch((e) => console.error("notifica:", e))
   return json({ ok: true, servizio_id: nuovo.id })
 }
@@ -1012,7 +1047,7 @@ async function apiAdminSuggerimentoRifiuta(body: any) {
 
   if (blocca) await supabase.from("leads").update({ sugg_bloccato: true }).eq("telegram_id", sug.telegram_id)
 
-  await sendMessage(sug.telegram_id, `❌ La tua candidatura "${sug.nome}" non è stata approvata.\n\nMotivo: ${testoCausale}${blocca ? "\n\n⚠️ La funzione suggerimenti è stata disattivata per il tuo profilo." : ""}`)
+  await notifyUser(sug.telegram_id, `❌ <b>La tua candidatura "${htmlEsc(sug.nome)}" non è stata approvata.</b>\n\nMotivo: ${htmlEsc(testoCausale)}${blocca ? "\n\n⚠️ La funzione suggerimenti è stata disattivata per il tuo profilo." : ""}`, "➕ Proponine un altro", "/lista.html")
   return json({ ok: true })
 }
 
@@ -1150,16 +1185,20 @@ async function apiAdminAffiliateLinksList() {
 
 async function apiAdminAffiliateLinkApprove(body: any) {
   const { id } = body
-  const { data: link } = await supabase.from("affiliate_link").select("servizio_id, ref_link").eq("id", id).maybeSingle()
+  const { data: link } = await supabase.from("affiliate_link").select("servizio_id, ref_link, telegram_id").eq("id", id).maybeSingle()
   if (!link) return json({ error: "not_found" }, 404)
 
   const { error } = await supabase.from("affiliate_link").update({ approvato: true }).eq("id", id)
   if (error) return json({ error: error.message }, 500)
 
   // Se il servizio non ha ancora un link di default, questo diventa il link base per tutti finché l'admin non ne imposta uno.
-  const { data: sv } = await supabase.from("servizi").select("link_principale").eq("id", link.servizio_id).maybeSingle()
+  const { data: sv } = await supabase.from("servizi").select("nome, link_principale").eq("id", link.servizio_id).maybeSingle()
   if (sv && !sv.link_principale) {
     await supabase.from("servizi").update({ link_principale: link.ref_link }).eq("id", link.servizio_id)
+  }
+
+  if (link.telegram_id) {
+    await notifyUser(link.telegram_id, `🔗 <b>Il tuo link affiliato è stato approvato!</b>\n\nSu <b>${htmlEsc(sv?.nome || "un business")}</b> ora la tua rete vedrà il tuo referral.`, "📊 I miei link", "/account.html#affiliazione")
   }
 
   return json({ ok: true })
@@ -1167,8 +1206,14 @@ async function apiAdminAffiliateLinkApprove(body: any) {
 
 async function apiAdminAffiliateLinkDelete(body: any) {
   const { id } = body
+  // Se il link era ancora in attesa, avvisa l'utente che è stato rifiutato.
+  const { data: link } = await supabase.from("affiliate_link").select("servizio_id, approvato, telegram_id").eq("id", id).maybeSingle()
   const { error } = await supabase.from("affiliate_link").delete().eq("id", id)
   if (error) return json({ error: error.message }, 500)
+  if (link && !link.approvato && link.telegram_id) {
+    const { data: sv } = await supabase.from("servizi").select("nome").eq("id", link.servizio_id).maybeSingle()
+    await notifyUser(link.telegram_id, `❌ <b>Il tuo link affiliato non è stato approvato.</b>\n\nSu <b>${htmlEsc(sv?.nome || "il business")}</b>. Puoi proporne uno nuovo dalla sezione Affiliazione.`, "🔗 Riprova", "/account.html#affiliazione")
+  }
   return json({ ok: true })
 }
 
@@ -1268,11 +1313,9 @@ async function apiAdminPartnerDecidi(body: any) {
   if (error) return json({ error: error.message }, 500)
 
   if (approva) {
-    await sendMessage(telegramId, `🎉 La tua richiesta è stata approvata: ora sei Partner!\n\nPuoi inserire i tuoi link referral sui business: i tuoi invitati vedranno i TUOI link nei tutorial.`, {
-      inline_keyboard: [[{ text: "Inserisci i miei link", web_app: { url: WEBAPP_URL + "/mia-pagina.html?_=" + Date.now() } }]],
-    })
+    await notifyUser(telegramId, `🚀 <b>La tua richiesta è stata approvata: ora sei Partner!</b>\n\nPuoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`, "🔗 Inserisci i miei link", "/account.html#affiliazione")
   } else {
-    await sendMessage(telegramId, `La tua richiesta Partner non è stata approvata per ora.\n\nPorta ${PARTNER_SOGLIA} iscritti con il tuo link invito e lo status si sblocca in automatico.`)
+    await notifyUser(telegramId, `La tua richiesta Partner non è stata approvata per ora.\n\nPorta ${PARTNER_SOGLIA} iscritti con il tuo link invito e lo status si sblocca in automatico.`, "🔗 Il tuo link invito", "/account.html#affiliazione")
   }
   return json({ ok: true })
 }
