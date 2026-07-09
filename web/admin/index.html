@@ -483,6 +483,19 @@
     </div>
   </div>
 
+  <!-- Modal compositore messaggio a un contatto (invio dal tuo account via UniChat) -->
+  <div class="overlay" id="msgContattoOverlay">
+    <div class="modal">
+      <h3 id="msgContattoTitle">Messaggio</h3>
+      <p class="item-meta" style="margin-bottom:8px">Inviato dal <b>tuo account</b> Telegram (via UniChat), senza aprire la chat.</p>
+      <textarea id="msgContattoTesto" placeholder="Scrivi il messaggio..." maxlength="1000" style="width:100%;min-height:100px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:4px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('msgContattoOverlay')">Annulla</button>
+        <button class="btn btn-primary" onclick="inviaContatto()">Invia</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal invio messaggio singolo -->
   <div class="overlay" id="msgOverlay">
     <div class="modal">
@@ -1000,7 +1013,7 @@
             <div class="rub-name">${esc(c.nome)}</div>
             <div class="rub-sub">${sub || "&nbsp;"}</div>
           </div>
-          ${c.username ? `<a class="icon-btn" href="https://t.me/${esc(c.username)}" target="_blank" onclick="event.stopPropagation()" title="Apri chat">✉</a>` : ""}
+          <button class="icon-btn" onclick="event.stopPropagation();composeContatto(${c.id})" title="Scrivi messaggio">✉</button>
         </div>`;
       }
       if (list.length > 400) html += `<p class="empty">Mostrati i primi 400 di ${list.length} — usa la ricerca.</p>`;
@@ -1019,8 +1032,9 @@
       document.getElementById("rubDetailBody").innerHTML = `
         <div class="detail-block">
           <div class="db-label">Contatto</div>
-          ${c.username ? `<a href="https://t.me/${esc(c.username)}" target="_blank" style="color:var(--blue);font-size:12px">@${esc(c.username)}</a>` : ""}
+          ${c.username ? `<span style="color:var(--blue);font-size:12px">@${esc(c.username)}</span>` : ""}
           ${c.phone ? `<div class="item-meta" style="margin-top:4px">${esc(c.phone)}</div>` : ""}
+          <button class="btn btn-primary btn-small" style="margin-top:10px" onclick="closeModal('rubOverlay');composeContatto(${c.id})">✉ Scrivi messaggio</button>
         </div>
         <div class="detail-block" id="rubTagBlock"></div>`;
       openModal("rubOverlay");
@@ -1064,6 +1078,29 @@
     }
     window.addRubTag = addRubTag;
     window.removeRubTag = removeRubTag;
+
+    // ---- Messaggio singolo a un contatto (dal tuo account via UniChat) ----
+    let msgContattoDest = null;
+    function composeContatto(id) {
+      const c = rubContatti.find((x) => x.id === id);
+      if (!c) return;
+      msgContattoDest = { tg_user_id: c.tg_user_id, username: c.username || null, nome: c.nome };
+      document.getElementById("msgContattoTitle").textContent = "Messaggio a " + c.nome;
+      document.getElementById("msgContattoTesto").value = "";
+      openModal("msgContattoOverlay");
+    }
+    window.composeContatto = composeContatto;
+    async function inviaContatto() {
+      const msg = (document.getElementById("msgContattoTesto").value || "").trim();
+      if (!msg) { if (tg?.showAlert) tg.showAlert("Scrivi il messaggio."); return; }
+      const res = await api("admin/contatto-invia", { method: "POST", body: JSON.stringify({ ...msgContattoDest, message: msg }) });
+      const d = await res.json().catch(() => ({}));
+      closeModal("msgContattoOverlay");
+      const okMsg = "Messaggio in invio ✅ (arriva tra pochi secondi)";
+      if (res.ok && d.ok) { if (tg?.showAlert) tg.showAlert(okMsg); else alert(okMsg); }
+      else { const m = "Errore: " + (d.error || res.status); if (tg?.showAlert) tg.showAlert(m); else alert(m); }
+    }
+    window.inviaContatto = inviaContatto;
 
     // ---- BROADCAST ai contatti (invio dal tuo account via UniChat) ----
     function bcInitDelay() {

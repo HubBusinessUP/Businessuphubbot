@@ -1588,6 +1588,32 @@ async function apiAdminContattiImport(body: any) {
   return json({ ok: true, importati })
 }
 
+// ---------- ADMIN: messaggio singolo a un contatto (inviato dal client MTProto di UniChat) ----------
+async function apiAdminContattoInvia(body: any) {
+  const message = String(body?.message || "").trim()
+  if (!message) return json({ error: "message_richiesto" }, 400)
+  const tg_user_id = body?.tg_user_id ? parseInt(body.tg_user_id) : null
+  const username = body?.username ? String(body.username) : null
+  const nome = body?.nome ? String(body.nome) : null
+  if (!tg_user_id && !username) return json({ error: "destinatario_richiesto" }, 400)
+  const { error } = await supabase.from("messaggi_singoli").insert({ owner_id: ADMIN_ID, tg_user_id, username, nome, message, stato: "pending" })
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true })
+}
+
+// Worker UniChat: prossimo messaggio singolo in coda (priorità sui broadcast, invio immediato).
+async function apiAdminMsgPoll() {
+  const { data } = await supabase.from("messaggi_singoli").select("id, tg_user_id, username, nome, message").eq("owner_id", ADMIN_ID).eq("stato", "pending").order("id", { ascending: true }).limit(1).maybeSingle()
+  return json({ msg: data || null })
+}
+async function apiAdminMsgMark(body: any) {
+  const id = parseInt(body?.id)
+  const ok = !!body?.ok
+  if (!id) return json({ error: "id" }, 400)
+  await supabase.from("messaggi_singoli").update({ stato: ok ? "sent" : "failed", sent_at: new Date().toISOString() }).eq("id", id)
+  return json({ ok: true })
+}
+
 // ---------- ADMIN: BROADCAST ai contatti (inviato dal client MTProto di UniChat) ----------
 async function apiAdminBroadcastCreate(body: any) {
   const message = String(body?.message || "").trim()
@@ -2061,6 +2087,9 @@ serve(async (req) => {
       if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
       if (sub === "admin/crm-tags" && req.method === "POST") return await apiAdminCrmTags(await req.json())
       if (sub === "admin/contatti-import" && req.method === "POST") return await apiAdminContattiImport(await req.json())
+      if (sub === "admin/contatto-invia" && req.method === "POST") return await apiAdminContattoInvia(await req.json())
+      if (sub === "admin/msg-poll" && req.method === "GET") return await apiAdminMsgPoll()
+      if (sub === "admin/msg-mark" && req.method === "POST") return await apiAdminMsgMark(await req.json())
       if (sub === "admin/broadcast-create" && req.method === "POST") return await apiAdminBroadcastCreate(await req.json())
       if (sub === "admin/broadcast-status" && req.method === "GET") return await apiAdminBroadcastStatus()
       if (sub === "admin/broadcast-stop" && req.method === "POST") return await apiAdminBroadcastStop(await req.json())
