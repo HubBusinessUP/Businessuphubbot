@@ -1566,6 +1566,28 @@ async function apiAdminMieiContatti() {
   return json({ contatti, tags })
 }
 
+// Import massivo dei contatti Telegram dal tool di sync (protetto dalla admin key).
+async function apiAdminContattiImport(body: any) {
+  const list = Array.isArray(body?.contatti) ? body.contatti : []
+  const rows = list.map((c: any) => ({
+    owner_id: ADMIN_ID,
+    tg_user_id: parseInt(c.tg_user_id),
+    first_name: c.first_name ?? null,
+    last_name: c.last_name ?? null,
+    username: c.username ?? null,
+    phone: c.phone ?? null,
+    updated_at: new Date().toISOString(),
+  })).filter((r: any) => r.tg_user_id)
+  let importati = 0
+  for (let i = 0; i < rows.length; i += 300) {
+    const chunk = rows.slice(i, i + 300)
+    const { error } = await supabase.from("contatti_telegram").upsert(chunk, { onConflict: "owner_id,tg_user_id" })
+    if (error) console.error("import contatti:", error.message)
+    else importati += chunk.length
+  }
+  return json({ ok: true, importati })
+}
+
 async function apiAdminMieiContattiTags(body: any) {
   const id = parseInt(body?.id)
   if (!id) return json({ error: "id_richiesto" }, 400)
@@ -1968,6 +1990,7 @@ serve(async (req) => {
       if (sub === "admin/crm-detail" && req.method === "GET") return await apiAdminCrmDetail(parseInt(url.searchParams.get("id") || "0"))
       if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
       if (sub === "admin/crm-tags" && req.method === "POST") return await apiAdminCrmTags(await req.json())
+      if (sub === "admin/contatti-import" && req.method === "POST") return await apiAdminContattiImport(await req.json())
       if (sub === "admin/miei-contatti" && req.method === "GET") return await apiAdminMieiContatti()
       if (sub === "admin/miei-contatti-tags" && req.method === "POST") return await apiAdminMieiContattiTags(await req.json())
       if (sub === "admin/messaggio" && req.method === "POST") return await apiAdminMessaggio(await req.json())

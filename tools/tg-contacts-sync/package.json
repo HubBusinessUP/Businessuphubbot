@@ -2,14 +2,13 @@
   "name": "tg-contacts-sync",
   "version": "1.0.0",
   "private": true,
-  "description": "Sincronizza i contatti Telegram personali su Supabase (riusa le credenziali MTKruto di UniChat)",
+  "description": "Sincronizza i contatti Telegram personali su Cashly (MTKruto, riusa le credenziali di UniChat)",
   "type": "commonjs",
   "scripts": {
     "start": "node sync.js"
   },
   "dependencies": {
     "@mtkruto/node": "^0.196.0",
-    "@supabase/supabase-js": "^2.45.4",
     "dotenv": "^16.4.5"
   }
 }
