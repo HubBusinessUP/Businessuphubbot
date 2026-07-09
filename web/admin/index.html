@@ -118,6 +118,30 @@
 
   .detail-block { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; }
   .detail-block .db-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; margin-bottom: 4px; }
+
+  /* Tag contatti */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .tag-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; white-space: nowrap; }
+  .tag-chip .tx { cursor: pointer; opacity: 0.7; font-weight: 800; }
+  .tag-chip .tx:hover { opacity: 1; }
+  .tag-filter { font-size: 11.5px; font-weight: 700; padding: 6px 10px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; white-space: nowrap; }
+  .tag-filter.active { border-color: transparent; }
+  .tag-add-row { display: flex; gap: 6px; margin-top: 8px; }
+  .tag-add-row input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 4px; font-size: 12.5px; font-family: inherit; }
+  .tag-add-row button { flex-shrink: 0; background: var(--blue); border: none; color: #fff; font-weight: 700; padding: 0 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 12.5px; }
+
+  /* ===== Mobile ===== */
+  @media (max-width: 560px) {
+    .page { padding: 16px 12px 60px; }
+    .row-flex { flex-wrap: wrap; }
+    .item-actions { width: 100%; margin-top: 8px; justify-content: flex-end; }
+    .item-actions select { flex: 1; }
+    .modal { max-height: 92vh; padding: 16px; border-radius: 4px; }
+    .adtabs { gap: 6px; }
+    .adtab { padding: 8px 12px; font-size: 12px; }
+    h2 { font-size: 16px; }
+    .chip { padding: 6px 9px; font-size: 11.5px; }
+  }
 </style>
 </head>
 <body>
@@ -177,6 +201,7 @@
     <div class="section">
       <div class="section-head"><h2>CRM contatti</h2></div>
       <div class="chip-row" id="crmChips"></div>
+      <div class="chip-row" id="crmTagChips" style="margin-top:-2px"></div>
       <input class="search-inline" id="crmSearch" placeholder="Cerca per nome o username..." oninput="renderCrm()" />
       <div id="crmList"></div>
     </div>
@@ -465,6 +490,8 @@
     let contatti = [];
     let templates = [];
     let crmFiltro = "tutti";
+    let crmTagFiltro = "";
+    let allTags = [];
     let ultimiSuggerimenti = [];
     let ultimiLinks = [];
     let richiestePartner = [];
@@ -505,7 +532,9 @@
       renderTopBusiness(kpi.top_business || []);
       renderSponsorboard(boardRes.sponsorboard || []);
       contatti = crmRes.contatti || [];
+      allTags = crmRes.tags || [];
       renderCrmChips();
+      renderCrmTagChips();
       renderCrm();
       templates = tplRes.templates || [];
       renderTemplates();
@@ -712,11 +741,42 @@
 
     function setCrmFiltro(f) { crmFiltro = f; renderCrmChips(); renderCrm(); }
 
+    // Colore stabile per tag (deterministico dal nome).
+    const TAG_PALETTE = [
+      ["#4a90e2", "rgba(74,144,226,0.16)"], ["#2ecc71", "rgba(46,204,113,0.16)"],
+      ["#e8b34c", "rgba(232,179,76,0.16)"], ["#e2574a", "rgba(226,87,74,0.16)"],
+      ["#9b6ef0", "rgba(155,110,240,0.16)"], ["#38c6c6", "rgba(56,198,198,0.16)"],
+      ["#ec6ea6", "rgba(236,110,166,0.16)"],
+    ];
+    function tagColor(name) {
+      let h = 0;
+      for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+      return TAG_PALETTE[h % TAG_PALETTE.length];
+    }
+    function tagChip(name, removeFn) {
+      const [fg, bg] = tagColor(name);
+      const x = removeFn ? `<span class="tx" onclick="event.stopPropagation();${removeFn}">✕</span>` : "";
+      return `<span class="tag-chip" style="background:${bg};color:${fg};border-color:${fg}">${esc(name)}${x}</span>`;
+    }
+    function renderCrmTagChips() {
+      const el = document.getElementById("crmTagChips");
+      if (!el) return;
+      if (!allTags.length) { el.innerHTML = ""; return; }
+      el.innerHTML = allTags.map((t) => {
+        const [fg, bg] = tagColor(t);
+        const active = crmTagFiltro === t;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setCrmTag('${esc(t).replace(/'/g, "\\'")}')">🏷 ${esc(t)}</button>`;
+      }).join("") + (crmTagFiltro ? `<button class="tag-filter" onclick="setCrmTag('')">✕ tag</button>` : "");
+    }
+    function setCrmTag(t) { crmTagFiltro = (crmTagFiltro === t) ? "" : t; renderCrmTagChips(); renderCrm(); }
+    window.setCrmTag = setCrmTag;
+
     function renderCrm() {
       const el = document.getElementById("crmList");
       const term = document.getElementById("crmSearch").value.trim().toLowerCase();
       let list = contatti;
       if (crmFiltro !== "tutti") list = list.filter((c) => c.stadio === crmFiltro);
+      if (crmTagFiltro) list = list.filter((c) => (c.tags || []).includes(crmTagFiltro));
       if (term) list = list.filter((c) => c.nome.toLowerCase().includes(term) || c.username.toLowerCase().includes(term));
       if (!list.length) { el.innerHTML = '<p class="empty">Nessun contatto.</p>'; return; }
       el.innerHTML = list.slice(0, 50).map((c) => `
@@ -726,6 +786,7 @@
             <div style="flex:1;min-width:0;cursor:pointer" onclick="openCrmDetail(${c.telegram_id})">
               <div class="item-title">${esc(c.nome)} <span class="badge ${c.stadio}">${STADIO_LABEL[c.stadio] || c.stadio}</span></div>
               <div class="item-meta">${c.username ? "@" + esc(c.username) + " · " : ""}${c.servizi_attivati} business${c.sponsor_nome ? " · sponsor: " + esc(c.sponsor_nome) : ""}</div>
+              ${(c.tags || []).length ? `<div class="tag-row">${c.tags.map((t) => tagChip(t)).join("")}</div>` : ""}
             </div>
             <div class="item-actions">
               <select onchange="spostaStadio(${c.telegram_id}, this.value)" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);padding:6px;border-radius:4px;font-size:11px;font-family:inherit" title="Sposta in pipeline">
@@ -755,6 +816,8 @@
       if (d.error) { document.getElementById("crmModalTitle").textContent = "Errore"; return; }
       const nome = [d.lead.nome, d.lead.cognome].filter(Boolean).join(" ") || d.lead.username || `ID ${telegramId}`;
       document.getElementById("crmModalTitle").textContent = nome;
+      crmDetailId = telegramId;
+      crmDetailTags = Array.isArray(d.lead.tags) ? d.lead.tags.slice() : [];
       document.getElementById("crmDetailBody").innerHTML = `
         <div class="detail-block">
           <div class="db-label">Profilo</div>
@@ -762,6 +825,8 @@
           ${d.lead.username ? ` <a href="https://t.me/${esc(d.lead.username)}" target="_blank" style="color:var(--blue);font-size:12px">@${esc(d.lead.username)}</a>` : ""}
           <div class="item-meta" style="margin-top:6px">Iscritto il ${new Date(d.lead.created_at).toLocaleDateString("it-IT")}${d.sponsor ? " · Sponsor: " + esc(d.sponsor.nome) : " · Diretto (nessuno sponsor)"} · ${d.invitati_count} invitati</div>
         </div>
+        <div class="detail-block" id="crmTagBlock"></div>
+        <datalist id="tagSuggest">${allTags.map((t) => `<option value="${esc(t)}"></option>`).join("")}</datalist>
         <div class="detail-block">
           <div class="db-label">Business attivati (${d.business_attivati.length})</div>
           ${d.business_attivati.length ? d.business_attivati.map((b) => `<div>${esc(b.nome)} — ${new Date(b.data).toLocaleDateString("it-IT")}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuno</span>'}
@@ -780,7 +845,53 @@
         </div>
         <button class="btn btn-primary btn-small" onclick="closeModal('crmOverlay');openMsgModal(${telegramId}, '${esc(nome).replace(/'/g, "\\'")}')">✉ Invia messaggio</button>
       `;
+      renderDetailTags();
     }
+
+    // ---- Tag: editor nella scheda contatto ----
+    let crmDetailId = null;
+    let crmDetailTags = [];
+    function renderDetailTags() {
+      const el = document.getElementById("crmTagBlock");
+      if (!el) return;
+      el.innerHTML =
+        `<div class="db-label">Tag</div>` +
+        (crmDetailTags.length
+          ? `<div class="tag-row">${crmDetailTags.map((t) => tagChip(t, `removeDetailTag('${esc(t).replace(/'/g, "\\'")}')`)).join("")}</div>`
+          : `<span style="color:var(--text-dim)">Nessun tag</span>`) +
+        `<div class="tag-add-row">
+          <input id="crmTagInput" list="tagSuggest" placeholder="Aggiungi tag (es. Cliente, Caldo, VIP)" maxlength="24"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addDetailTag();}" />
+          <button onclick="addDetailTag()">Aggiungi</button>
+        </div>`;
+    }
+    function addDetailTag() {
+      const inp = document.getElementById("crmTagInput");
+      const val = (inp.value || "").trim().slice(0, 24);
+      if (!val) return;
+      if (!crmDetailTags.some((t) => t.toLowerCase() === val.toLowerCase())) crmDetailTags.push(val);
+      inp.value = "";
+      saveDetailTags();
+    }
+    function removeDetailTag(tag) {
+      crmDetailTags = crmDetailTags.filter((t) => t !== tag);
+      saveDetailTags();
+    }
+    async function saveDetailTags() {
+      renderDetailTags();
+      const res = await api("admin/crm-tags", { method: "POST", body: JSON.stringify({ telegram_id: crmDetailId, tags: crmDetailTags }) });
+      const d = await res.json().catch(() => ({}));
+      if (d.tags) crmDetailTags = d.tags;
+      // Aggiorna lo stato locale e le viste.
+      const c = contatti.find((x) => x.telegram_id === crmDetailId);
+      if (c) c.tags = crmDetailTags.slice();
+      allTags = [...new Set(contatti.flatMap((x) => x.tags || []))].sort();
+      renderDetailTags();
+      renderCrmTagChips();
+      renderCrm();
+    }
+    window.addDetailTag = addDetailTag;
+    window.removeDetailTag = removeDetailTag;
 
     function openMsgModal(telegramId, nome) {
       document.getElementById("msgModalTitle").textContent = `Messaggio a ${nome}`;

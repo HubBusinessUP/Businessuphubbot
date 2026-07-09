@@ -1524,7 +1524,7 @@ async function calcolaStadi(leads: any[]): Promise<Record<number, string>> {
 }
 
 async function apiAdminCrm() {
-  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url, referred_by, is_cliente, sondaggio_completato, pipeline_override, created_at").order("created_at", { ascending: false })
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url, referred_by, is_cliente, sondaggio_completato, pipeline_override, tags, created_at").order("created_at", { ascending: false })
   const stadi = await calcolaStadi(leads ?? [])
 
   const ids = (leads ?? []).map((l: any) => l.telegram_id)
@@ -1544,9 +1544,24 @@ async function apiAdminCrm() {
     override: l.pipeline_override || null,
     sponsor_nome: l.referred_by ? (leadMap[l.referred_by]?.nome || leadMap[l.referred_by]?.username || `ID ${l.referred_by}`) : null,
     servizi_attivati: attCount[l.telegram_id] ?? 0,
+    tags: Array.isArray(l.tags) ? l.tags : [],
     iscritto_il: l.created_at,
   }))
-  return json({ contatti })
+  // Elenco di tutti i tag già usati, per suggerimenti/filtri nell'admin.
+  const tuttiTag = [...new Set((leads ?? []).flatMap((l: any) => Array.isArray(l.tags) ? l.tags : []))].sort()
+  return json({ contatti, tags: tuttiTag })
+}
+
+// Salva i tag di un contatto (lista completa, sostituisce quelli esistenti).
+async function apiAdminCrmTags(body: any) {
+  const telegramId = parseInt(body?.telegram_id)
+  if (!telegramId) return json({ error: "telegram_id_richiesto" }, 400)
+  const raw = Array.isArray(body?.tags) ? body.tags : []
+  // Normalizza: stringhe non vuote, max 24 caratteri, senza duplicati, max 12 tag.
+  const tags = [...new Set(raw.map((t: any) => String(t || "").trim().slice(0, 24)).filter(Boolean))].slice(0, 12)
+  const { error } = await supabase.from("leads").update({ tags }).eq("telegram_id", telegramId)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true, tags })
 }
 
 async function apiAdminCrmDetail(telegramId: number) {
@@ -1928,6 +1943,7 @@ serve(async (req) => {
       if (sub === "admin/crm" && req.method === "GET") return await apiAdminCrm()
       if (sub === "admin/crm-detail" && req.method === "GET") return await apiAdminCrmDetail(parseInt(url.searchParams.get("id") || "0"))
       if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
+      if (sub === "admin/crm-tags" && req.method === "POST") return await apiAdminCrmTags(await req.json())
       if (sub === "admin/messaggio" && req.method === "POST") return await apiAdminMessaggio(await req.json())
 
       if (sub === "admin/segnalazioni" && req.method === "GET") return await apiAdminSegnalazioniList()
