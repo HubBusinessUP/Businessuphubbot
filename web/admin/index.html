@@ -130,6 +130,16 @@
   .tag-add-row input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 4px; font-size: 12.5px; font-family: inherit; }
   .tag-add-row button { flex-shrink: 0; background: var(--blue); border: none; color: #fff; font-weight: 700; padding: 0 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 12.5px; }
 
+  /* Rubrica stile Telegram */
+  .rub-letter { font-size: 12px; font-weight: 800; color: var(--blue); padding: 10px 2px 4px; }
+  .rub-row { display: flex; align-items: center; gap: 12px; padding: 8px 2px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .rub-row:active { background: var(--panel); }
+  .rub-av { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+  .rub-body { flex: 1; min-width: 0; }
+  .rub-name { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rub-sub { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .rub-row .icon-btn { text-decoration: none; }
+
   /* ===== Mobile ===== */
   @media (max-width: 560px) {
     .page { padding: 16px 12px 60px; }
@@ -930,39 +940,51 @@
     function renderRubTagChips() {
       const el = document.getElementById("rubTagChips");
       if (!el) return;
-      if (!rubTags.length) { el.innerHTML = ""; return; }
-      el.innerHTML = rubTags.map((t) => {
+      const total = rubContatti.length;
+      const tuttiActive = rubTagFiltro === "";
+      let html = `<button class="tag-filter${tuttiActive ? " active" : ""}" style="${tuttiActive ? "background:var(--blue);color:#fff" : ""}" onclick="setRubTag('')">Tutti (${total})</button>`;
+      html += rubTags.map((t) => {
         const [fg, bg] = tagColor(t);
         const active = rubTagFiltro === t;
-        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setRubTag('${esc(t).replace(/'/g, "\\'")}')">🏷 ${esc(t)}</button>`;
-      }).join("") + (rubTagFiltro ? `<button class="tag-filter" onclick="setRubTag('')">✕ tag</button>` : "");
+        const n = rubContatti.filter((c) => (c.tags || []).includes(t)).length;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setRubTag('${esc(t).replace(/'/g, "\\'")}')">🏷 ${esc(t)} <b>${n}</b></button>`;
+      }).join("");
+      el.innerHTML = html;
     }
     function setRubTag(t) { rubTagFiltro = (rubTagFiltro === t) ? "" : t; renderRubTagChips(); renderRubrica(); }
     window.setRubTag = setRubTag;
-    function renderRubrica() {
-      const el = document.getElementById("rubList");
-      if (!el) return;
+    function rubFiltered() {
       const term = (document.getElementById("rubSearch").value || "").trim().toLowerCase();
       let list = rubContatti;
       if (rubTagFiltro) list = list.filter((c) => (c.tags || []).includes(rubTagFiltro));
       if (term) list = list.filter((c) => (c.nome || "").toLowerCase().includes(term) || (c.username || "").toLowerCase().includes(term) || (c.phone || "").includes(term));
+      return list;
+    }
+    function renderRubrica() {
+      const el = document.getElementById("rubList");
+      if (!el) return;
+      const list = rubFiltered();
       if (!list.length) { el.innerHTML = '<p class="empty">' + (rubContatti.length ? "Nessun contatto con questi filtri." : "Nessun contatto sincronizzato. Lancia <code>tg-contacts-sync</code>.") + '</p>'; return; }
-      el.innerHTML = `<p class="item-meta" style="margin-bottom:8px">${list.length} contatti</p>` + list.slice(0, 100).map((c) => `
-        <div class="item">
-          <div class="row-flex">
-            <div class="avatar-sm">${esc((c.nome || "?")[0].toUpperCase())}</div>
-            <div style="flex:1;min-width:0;cursor:pointer" onclick="openRubDetail(${c.id})">
-              <div class="item-title">${esc(c.nome)}</div>
-              <div class="item-meta">${c.username ? "@" + esc(c.username) : (c.phone ? esc(c.phone) : "")}</div>
-              ${(c.tags || []).length ? `<div class="tag-row">${c.tags.map((t) => tagChip(t)).join("")}</div>` : ""}
-            </div>
-            <div class="item-actions">
-              ${c.username ? `<a class="icon-btn" href="https://t.me/${esc(c.username)}" target="_blank" title="Apri chat">✉</a>` : ""}
-              <button class="icon-btn" onclick="openRubDetail(${c.id})" title="Tag">🏷</button>
-            </div>
+      let html = `<p class="item-meta" style="margin:2px 0 6px">${list.length} contatti</p>`;
+      let lastLetter = null;
+      for (const c of list.slice(0, 400)) {
+        const ch = (c.nome || "#").trim().charAt(0).toUpperCase();
+        const L = /[A-Z]/.test(ch) ? ch : "#";
+        if (L !== lastLetter) { html += `<div class="rub-letter">${L}</div>`; lastLetter = L; }
+        const [fg, bg] = tagColor(c.nome || "?");
+        const tagsInline = (c.tags || []).length ? " · " + c.tags.map((t) => `<span style="color:${tagColor(t)[0]}">#${esc(t)}</span>`).join(" ") : "";
+        const sub = (c.username ? "@" + esc(c.username) : (c.phone ? esc(c.phone) : "")) + tagsInline;
+        html += `<div class="rub-row" onclick="openRubDetail(${c.id})">
+          <div class="rub-av" style="background:${bg};color:${fg}">${esc(ch)}</div>
+          <div class="rub-body">
+            <div class="rub-name">${esc(c.nome)}</div>
+            <div class="rub-sub">${sub || "&nbsp;"}</div>
           </div>
-        </div>
-      `).join("") + (list.length > 100 ? `<p class="empty">Mostrati i primi 100 di ${list.length} — usa la ricerca.</p>` : "");
+          ${c.username ? `<a class="icon-btn" href="https://t.me/${esc(c.username)}" target="_blank" onclick="event.stopPropagation()" title="Apri chat">✉</a>` : ""}
+        </div>`;
+      }
+      if (list.length > 400) html += `<p class="empty">Mostrati i primi 400 di ${list.length} — usa la ricerca.</p>`;
+      el.innerHTML = html;
     }
 
     let rubDetailId = null;
