@@ -1552,6 +1552,30 @@ async function apiAdminCrm() {
   return json({ contatti, tags: tuttiTag })
 }
 
+// ---------- ADMIN: MIEI CONTATTI (rubrica Telegram personale, sincronizzata via tool MTProto) ----------
+async function apiAdminMieiContatti() {
+  const { data } = await supabase.from("contatti_telegram")
+    .select("id, tg_user_id, first_name, last_name, username, phone, tags, note")
+    .eq("owner_id", ADMIN_ID).order("first_name", { ascending: true })
+  const contatti = (data ?? []).map((c: any) => ({
+    ...c,
+    tags: Array.isArray(c.tags) ? c.tags : [],
+    nome: [c.first_name, c.last_name].filter(Boolean).join(" ") || c.username || c.phone || `ID ${c.tg_user_id}`,
+  }))
+  const tags = [...new Set((data ?? []).flatMap((c: any) => Array.isArray(c.tags) ? c.tags : []))].sort()
+  return json({ contatti, tags })
+}
+
+async function apiAdminMieiContattiTags(body: any) {
+  const id = parseInt(body?.id)
+  if (!id) return json({ error: "id_richiesto" }, 400)
+  const raw = Array.isArray(body?.tags) ? body.tags : []
+  const tags = [...new Set(raw.map((t: any) => String(t || "").trim().slice(0, 24)).filter(Boolean))].slice(0, 12)
+  const { error } = await supabase.from("contatti_telegram").update({ tags }).eq("id", id).eq("owner_id", ADMIN_ID)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true, tags })
+}
+
 // Salva i tag di un contatto (lista completa, sostituisce quelli esistenti).
 async function apiAdminCrmTags(body: any) {
   const telegramId = parseInt(body?.telegram_id)
@@ -1944,6 +1968,8 @@ serve(async (req) => {
       if (sub === "admin/crm-detail" && req.method === "GET") return await apiAdminCrmDetail(parseInt(url.searchParams.get("id") || "0"))
       if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
       if (sub === "admin/crm-tags" && req.method === "POST") return await apiAdminCrmTags(await req.json())
+      if (sub === "admin/miei-contatti" && req.method === "GET") return await apiAdminMieiContatti()
+      if (sub === "admin/miei-contatti-tags" && req.method === "POST") return await apiAdminMieiContattiTags(await req.json())
       if (sub === "admin/messaggio" && req.method === "POST") return await apiAdminMessaggio(await req.json())
 
       if (sub === "admin/segnalazioni" && req.method === "GET") return await apiAdminSegnalazioniList()

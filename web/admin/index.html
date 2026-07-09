@@ -207,6 +207,14 @@
     </div>
 
     <div class="section">
+      <div class="section-head"><h2>Miei contatti</h2></div>
+      <p class="item-meta" style="margin-bottom:10px">La tua rubrica Telegram personale, sincronizzata dal tool <code>tg-contacts-sync</code>. Taggali e filtrali qui.</p>
+      <div class="chip-row" id="rubTagChips"></div>
+      <input class="search-inline" id="rubSearch" placeholder="Cerca per nome, username o telefono..." oninput="renderRubrica()" />
+      <div id="rubList"><p class="empty">Nessun contatto sincronizzato. Lancia <code>tg-contacts-sync</code> per importarli.</p></div>
+    </div>
+
+    <div class="section">
       <div class="section-head"><h2>Whitelist domini link referral</h2></div>
       <div class="item">
         <p class="item-meta" style="margin-bottom:10px">I link su questi domini si attivano da soli; tutti gli altri restano in attesa della tua approvazione.</p>
@@ -436,6 +444,18 @@
     </div>
   </div>
 
+  <!-- Modal tag per contatto rubrica -->
+  <div class="overlay" id="rubOverlay">
+    <div class="modal">
+      <h3 id="rubModalTitle">Contatto</h3>
+      <div id="rubDetailBody"></div>
+      <datalist id="rubTagSuggest"></datalist>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('rubOverlay')">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal invio messaggio singolo -->
   <div class="overlay" id="msgOverlay">
     <div class="modal">
@@ -539,6 +559,7 @@
       templates = tplRes.templates || [];
       renderTemplates();
       renderBcServizi();
+      loadRubrica();
     }
 
     function esc(s) {
@@ -892,6 +913,115 @@
     }
     window.addDetailTag = addDetailTag;
     window.removeDetailTag = removeDetailTag;
+
+    // ---- RUBRICA (Miei contatti Telegram) ----
+    let rubContatti = [];
+    let rubTags = [];
+    let rubTagFiltro = "";
+    async function loadRubrica() {
+      try {
+        const d = await (await api("admin/miei-contatti")).json();
+        rubContatti = d.contatti || [];
+        rubTags = d.tags || [];
+      } catch (e) { rubContatti = []; rubTags = []; }
+      renderRubTagChips();
+      renderRubrica();
+    }
+    function renderRubTagChips() {
+      const el = document.getElementById("rubTagChips");
+      if (!el) return;
+      if (!rubTags.length) { el.innerHTML = ""; return; }
+      el.innerHTML = rubTags.map((t) => {
+        const [fg, bg] = tagColor(t);
+        const active = rubTagFiltro === t;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setRubTag('${esc(t).replace(/'/g, "\\'")}')">🏷 ${esc(t)}</button>`;
+      }).join("") + (rubTagFiltro ? `<button class="tag-filter" onclick="setRubTag('')">✕ tag</button>` : "");
+    }
+    function setRubTag(t) { rubTagFiltro = (rubTagFiltro === t) ? "" : t; renderRubTagChips(); renderRubrica(); }
+    window.setRubTag = setRubTag;
+    function renderRubrica() {
+      const el = document.getElementById("rubList");
+      if (!el) return;
+      const term = (document.getElementById("rubSearch").value || "").trim().toLowerCase();
+      let list = rubContatti;
+      if (rubTagFiltro) list = list.filter((c) => (c.tags || []).includes(rubTagFiltro));
+      if (term) list = list.filter((c) => (c.nome || "").toLowerCase().includes(term) || (c.username || "").toLowerCase().includes(term) || (c.phone || "").includes(term));
+      if (!list.length) { el.innerHTML = '<p class="empty">' + (rubContatti.length ? "Nessun contatto con questi filtri." : "Nessun contatto sincronizzato. Lancia <code>tg-contacts-sync</code>.") + '</p>'; return; }
+      el.innerHTML = `<p class="item-meta" style="margin-bottom:8px">${list.length} contatti</p>` + list.slice(0, 100).map((c) => `
+        <div class="item">
+          <div class="row-flex">
+            <div class="avatar-sm">${esc((c.nome || "?")[0].toUpperCase())}</div>
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="openRubDetail(${c.id})">
+              <div class="item-title">${esc(c.nome)}</div>
+              <div class="item-meta">${c.username ? "@" + esc(c.username) : (c.phone ? esc(c.phone) : "")}</div>
+              ${(c.tags || []).length ? `<div class="tag-row">${c.tags.map((t) => tagChip(t)).join("")}</div>` : ""}
+            </div>
+            <div class="item-actions">
+              ${c.username ? `<a class="icon-btn" href="https://t.me/${esc(c.username)}" target="_blank" title="Apri chat">✉</a>` : ""}
+              <button class="icon-btn" onclick="openRubDetail(${c.id})" title="Tag">🏷</button>
+            </div>
+          </div>
+        </div>
+      `).join("") + (list.length > 100 ? `<p class="empty">Mostrati i primi 100 di ${list.length} — usa la ricerca.</p>` : "");
+    }
+
+    let rubDetailId = null;
+    let rubDetailTags = [];
+    function openRubDetail(id) {
+      const c = rubContatti.find((x) => x.id === id);
+      if (!c) return;
+      rubDetailId = id;
+      rubDetailTags = (c.tags || []).slice();
+      document.getElementById("rubModalTitle").textContent = c.nome;
+      document.getElementById("rubTagSuggest").innerHTML = rubTags.map((t) => `<option value="${esc(t)}"></option>`).join("");
+      document.getElementById("rubDetailBody").innerHTML = `
+        <div class="detail-block">
+          <div class="db-label">Contatto</div>
+          ${c.username ? `<a href="https://t.me/${esc(c.username)}" target="_blank" style="color:var(--blue);font-size:12px">@${esc(c.username)}</a>` : ""}
+          ${c.phone ? `<div class="item-meta" style="margin-top:4px">${esc(c.phone)}</div>` : ""}
+        </div>
+        <div class="detail-block" id="rubTagBlock"></div>`;
+      openModal("rubOverlay");
+      renderRubDetailTags();
+    }
+    window.openRubDetail = openRubDetail;
+    function renderRubDetailTags() {
+      const el = document.getElementById("rubTagBlock");
+      if (!el) return;
+      el.innerHTML =
+        `<div class="db-label">Tag</div>` +
+        (rubDetailTags.length
+          ? `<div class="tag-row">${rubDetailTags.map((t) => tagChip(t, `removeRubTag('${esc(t).replace(/'/g, "\\'")}')`)).join("")}</div>`
+          : `<span style="color:var(--text-dim)">Nessun tag</span>`) +
+        `<div class="tag-add-row">
+          <input id="rubTagInput" list="rubTagSuggest" placeholder="Aggiungi tag" maxlength="24"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addRubTag();}" />
+          <button onclick="addRubTag()">Aggiungi</button>
+        </div>`;
+    }
+    function addRubTag() {
+      const inp = document.getElementById("rubTagInput");
+      const val = (inp.value || "").trim().slice(0, 24);
+      if (!val) return;
+      if (!rubDetailTags.some((t) => t.toLowerCase() === val.toLowerCase())) rubDetailTags.push(val);
+      inp.value = "";
+      saveRubTags();
+    }
+    function removeRubTag(tag) { rubDetailTags = rubDetailTags.filter((t) => t !== tag); saveRubTags(); }
+    async function saveRubTags() {
+      renderRubDetailTags();
+      const res = await api("admin/miei-contatti-tags", { method: "POST", body: JSON.stringify({ id: rubDetailId, tags: rubDetailTags }) });
+      const d = await res.json().catch(() => ({}));
+      if (d.tags) rubDetailTags = d.tags;
+      const c = rubContatti.find((x) => x.id === rubDetailId);
+      if (c) c.tags = rubDetailTags.slice();
+      rubTags = [...new Set(rubContatti.flatMap((x) => x.tags || []))].sort();
+      renderRubDetailTags();
+      renderRubTagChips();
+      renderRubrica();
+    }
+    window.addRubTag = addRubTag;
+    window.removeRubTag = removeRubTag;
 
     function openMsgModal(telegramId, nome) {
       document.getElementById("msgModalTitle").textContent = `Messaggio a ${nome}`;
@@ -1305,6 +1435,7 @@
       { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi"] },
       { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
+      { key: "rubrica", label: "Rubrica", titles: ["Miei contatti"] },
       { key: "stats", label: "Statistiche", titles: ["Onboarding", "Top business", "Top Sponsorboard"] },
       { key: "affil", label: "Affiliazione", titles: ["Whitelist domini link referral"] },
     ];
