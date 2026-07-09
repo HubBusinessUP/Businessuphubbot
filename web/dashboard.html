@@ -44,10 +44,17 @@
   .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
   .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
   @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
-  .greet-hero { margin-bottom: 14px; }
-  .greet-hero .greet-identity { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
-  .greet-hero .greet { font-size: 15px; font-weight: 700; }
+  .greet-hero { display: none; }
+  /* Saluto senza card, sotto il carosello */
+  .home-greet { display: flex; align-items: center; gap: 11px; width: 100%; background: none; border: none; padding: 4px 2px; margin: 16px 0 4px; cursor: pointer; font-family: inherit; color: inherit; text-align: left; }
+  .home-greet .hg-text { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
   /* ===== Command center (Home) ===== */
+  .hsec { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 18px; }
+  .hsec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .hsec-title { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+  .hsec-desc { font-size: 12.5px; color: var(--text-dim); margin: 2px 0 12px; }
+  .hsec-cta { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); color: var(--blue); font-size: 13px; font-weight: 800; text-decoration: none; }
+  .hsec-cta svg { width: 15px; height: 15px; }
   .hc-head { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 10px; }
   .hc-all { font-size: 12.5px; font-weight: 700; color: var(--blue); text-decoration: none; white-space: nowrap; }
   .prev-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 9px; text-decoration: none; color: inherit; }
@@ -442,26 +449,6 @@
       </div>
     </div>
 
-    <div class="greet-hero">
-      <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
-        <div class="avatar-wrap">
-          <img class="avatar-img" id="avatarImg" alt="" />
-          <div class="avatar-fallback" id="avatarFallback">--</div>
-        </div>
-        <div class="greet">Ciao, <span id="userName">Utente</span></div>
-      </button>
-    </div>
-
-    <div class="section-gap"></div>
-
-    <div class="lock-card" id="anagraficaPrompt" style="display:none">
-      <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-      <h3>Completa la tua anagrafica</h3>
-      <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
-      <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
-    </div>
-
-
     <div class="aff-carousel">
       <div class="aff-track">
         <div class="aff-slide c-green">
@@ -480,59 +467,68 @@
       <div class="aff-dots"></div>
     </div>
 
-    <!-- Anteprima Business List (il core) -->
-    <div class="hc-head">
-      <div class="section-title"><span class="live-dot"></span>Business list<span class="live-badge">LIVE</span></div>
-      <a class="hc-all" href="lista.html">Esplora tutto →</a>
-    </div>
-    <div id="listPreview"><p class="empty">Caricamento...</p></div>
-
-    <!-- Invita e guadagna -->
-    <button class="invite-banner" onclick="openShareSheet()">
-      <div class="ib-body">
-        <div class="ib-title">Invita e guadagna</div>
-        <div class="ib-sub">La tua rete resta tua per sempre. Condividi il link.</div>
+    <!-- Saluto (senza card, sotto il carosello) -->
+    <button class="home-greet" onclick="goProfilo()" aria-label="Il tuo profilo">
+      <div class="avatar-wrap">
+        <img class="avatar-img" id="avatarImg" alt="" />
+        <div class="avatar-fallback" id="avatarFallback">--</div>
       </div>
-      <div class="ib-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="hg-text">Ciao, <span id="userName">Utente</span> 👋</div>
     </button>
 
-    <!-- Riepilogo rete -->
-    <div class="hc-grid2">
-      <a class="mini-card" href="account.html#affiliazione">
-        <div class="mc-label">La tua rete</div>
-        <div class="mc-num" id="hcRete">–</div>
-        <div class="mc-sub" id="hcReteSub">invitati</div>
-      </a>
-      <a class="mini-card" href="account.html#affiliazione">
-        <div class="mc-label">Click invito</div>
-        <div class="mc-num" id="hcClick">–</div>
-        <div class="mc-sub">totali</div>
-      </a>
+    <div class="lock-card" id="anagraficaPrompt" style="display:none;margin-top:14px">
+      <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h3>Completa la tua anagrafica</h3>
+      <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
+      <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
     </div>
 
-    <!-- Attività / Riprendi -->
-    <div id="hcAttivita"></div>
+    <!-- SEZIONE · Business List (il core) -->
+    <section class="hsec">
+      <div class="hsec-head">
+        <div class="section-title"><span class="live-dot"></span>Business list<span class="live-badge">LIVE</span></div>
+      </div>
+      <p class="hsec-desc">I business e i tool selezionati, votati dalla community.</p>
+      <div id="listPreview"><p class="empty">Caricamento...</p></div>
+      <a class="hsec-cta" href="lista.html">Esplora tutta la lista <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </section>
 
-    <!-- Scorciatoie sezioni -->
-    <div class="section-mini-title">Le sezioni dell'hub</div>
-    <div class="hc-shortcuts">
-      <a class="sc-card" href="lista.html">
-        <span class="sc-ico" style="background:var(--lime-dim);color:var(--lime)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
-        Business list
-      </a>
-      <a class="sc-card" href="account.html#affiliazione">
-        <span class="sc-ico" style="background:var(--blue-dim);color:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg></span>
-        Affiliazione
-      </a>
-      <a class="sc-card" href="account.html#profilo">
-        <span class="sc-ico" style="background:var(--amber-dim);color:var(--amber)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
-        Profilo
-      </a>
-      <a class="sc-card" href="mia-pagina.html">
-        <span class="sc-ico" style="background:rgba(155,110,240,.16);color:#9b6ef0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span>
-        Pagina pubblica
-      </a>
-    </div>
+    <!-- SEZIONE · La tua rete -->
+    <section class="hsec">
+      <div class="hsec-head"><h2 class="hsec-title">La tua rete</h2></div>
+      <p class="hsec-desc">Chi inviti resta tuo per sempre e ti fa guadagnare.</p>
+      <div class="hc-grid2">
+        <div class="mini-card" style="cursor:default">
+          <div class="mc-label">Invitati</div>
+          <div class="mc-num" id="hcRete">–</div>
+          <div class="mc-sub" id="hcReteSub">nella tua rete</div>
+        </div>
+        <div class="mini-card" style="cursor:default">
+          <div class="mc-label">Click invito</div>
+          <div class="mc-num" id="hcClick">–</div>
+          <div class="mc-sub">totali</div>
+        </div>
+      </div>
+      <a class="hsec-cta" href="account.html#affiliazione">Gestisci l'affiliazione <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </section>
+
+    <!-- SEZIONE · Attività (solo se ci sono tutorial da riprendere) -->
+    <section class="hsec" id="attivitaSec" style="display:none">
+      <div class="hsec-head"><h2 class="hsec-title">Riprendi dove eri</h2></div>
+      <p class="hsec-desc">I tutorial che hai iniziato e non ancora completato.</p>
+      <div id="hcAttivita"></div>
+    </section>
+
+    <!-- SEZIONE · Invita e guadagna (banner, in fondo) -->
+    <section class="hsec">
+      <button class="invite-banner" onclick="openShareSheet()" style="margin:14px 0 0">
+        <div class="ib-body">
+          <div class="ib-title">Invita e guadagna</div>
+          <div class="ib-sub">La tua rete resta tua per sempre. Condividi il link.</div>
+        </div>
+        <div class="ib-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      </button>
+    </section>
 
     <nav class="bnav">
       <button class="bnav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -713,10 +709,12 @@
     // Card "Attività / Riprendi" nella Home: tutorial iniziati e non finiti; apre il business nella Lista.
     function renderAttivita(list) {
       const box = document.getElementById("hcAttivita");
+      const sec = document.getElementById("attivitaSec");
       if (!box) return;
       list = list || [];
-      if (!list.length) { box.innerHTML = ""; return; }
-      box.innerHTML = '<div class="hc-attivita"><div class="hca-title">Riprendi dove eri</div>' +
+      if (!list.length) { box.innerHTML = ""; if (sec) sec.style.display = "none"; return; }
+      if (sec) sec.style.display = "";
+      box.innerHTML = '<div class="hc-attivita">' +
         list.map((r) => {
           const pct = Math.min(100, Math.round((r.ultimo_step / (r.totale_step || 1)) * 100));
           return `<a class="hca-row" href="lista.html#biz-${r.servizio_id}">

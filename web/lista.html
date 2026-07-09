@@ -206,6 +206,10 @@
   .vote-btn.voted .vote-num { color: var(--lime); }
 
   .search-row { margin-bottom: 10px; }
+  .ltabs { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+  .ltabs::-webkit-scrollbar { display: none; }
+  .ltab { flex: 0 0 auto; padding: 8px 15px; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .ltab.active { background: var(--blue); color: #fff; border-color: transparent; }
   .search-input {
     width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
     padding: 11px 12px 11px 36px; border-radius: 4px; font-size: 13px; font-family: inherit;
@@ -433,6 +437,12 @@
     <div class="section-row">
       <div class="section-title"><span class="live-dot"></span>Business list<span class="live-badge">LIVE</span></div>
       <div class="section-date" id="sectionDate"></div>
+    </div>
+
+    <div class="ltabs" id="ltabs">
+      <button class="ltab active" onclick="setListView('tutti', this)">Tutti</button>
+      <button class="ltab" onclick="setListView('evidenza', this)">In evidenza</button>
+      <button class="ltab" onclick="setListView('nuovi', this)">Nuovi</button>
     </div>
 
     <div class="search-row">
@@ -672,6 +682,15 @@
     let macroCategorie = [];
     let categorie = [];
     const filtri = { macroId: "", catId: "", sem: "" };
+    let listView = "tutti";
+    function setListView(v, btn) {
+      listView = v;
+      document.querySelectorAll("#ltabs .ltab").forEach((b) => b.classList.toggle("active", b === btn));
+      visibleCount = PAGE_SIZE;
+      try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
+      renderList();
+    }
+    window.setListView = setListView;
 
     function toggleDd(id) {
       const dd = document.getElementById(id);
@@ -767,6 +786,10 @@
       }
       // Filtro per pallino di compatibilità (semaforo) col profilo utente.
       if (filtri.sem) filtered = filtered.filter((s) => computeSemaforo(window.userParams, s) === filtri.sem);
+
+      // Scheda attiva: In evidenza (più votati) / Nuovi (più recenti) / Tutti (ordine di default).
+      if (listView === "nuovi") filtered = [...filtered].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+      else if (listView === "evidenza") filtered = [...filtered].sort((a, b) => (b.voti || 0) - (a.voti || 0) || (a.created_at < b.created_at ? 1 : -1));
 
       if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun business in questa vista.</p>'; return; }
 
