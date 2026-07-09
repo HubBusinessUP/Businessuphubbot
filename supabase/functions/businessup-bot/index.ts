@@ -263,18 +263,15 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     chatId,
     `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
     `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n` +
-    `Qui trovi in un unico posto i <b>business e gli strumenti online selezionati</b>, spiegati in chiaro e pronti da attivare.\n\n` +
-    `<b>Cosa puoi fare</b>\n` +
-    `🔎 <b>Scopri</b> i business della lista, con scheda e requisiti chiari\n` +
-    `📚 <b>Attiva</b> ogni business con un tutorial passo-passo, senza arrangiarti\n` +
-    `🟢 <b>Compatibilità</b>: un pallino ti dice al volo se un business fa per te\n` +
-    `🤝 <b>Crea la tua rete</b>: inviti persone, restano collegate a te per sempre e guadagni con l'affiliazione\n` +
-    `🔗 <b>I tuoi link</b>: metti i tuoi referral sui business che usi\n\n` +
-    `<b>Come iniziare</b>\n` +
-    `1️⃣ Apri l'app col pulsante qui sotto\n` +
-    `2️⃣ Completa il tuo profilo in 2 minuti e crea il tuo hub\n` +
-    `3️⃣ Cerca il business che ti farà cambiare vita 💸\n\n` +
-    `Tocca <b>Apri Cashly</b> 👇 (o il pulsante <b>Menu</b> accanto a dove scrivi).`,
+    `I <b>business e gli strumenti online selezionati</b>, spiegati in chiaro e pronti da attivare.\n\n` +
+    `🔎 <b>Scopri</b> i business, con requisiti chiari\n` +
+    `📚 <b>Attivali</b> con un tutorial passo-passo\n` +
+    `🤝 <b>Crea la tua rete</b>: chi inviti resta tuo e ti fa guadagnare\n\n` +
+    `<b>Inizia in 3 passi</b>\n` +
+    `1️⃣ Apri l'app qui sotto\n` +
+    `2️⃣ Completa il profilo in 2 minuti\n` +
+    `3️⃣ Trova il business che fa per te 💸\n\n` +
+    `Tocca <b>Apri Cashly</b> 👇`,
     btn,
     "HTML",
   )
