@@ -262,11 +262,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   await sendMessage(
     chatId,
     `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
-    `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n` +
-    `I <b>business e gli strumenti online selezionati</b>, spiegati in chiaro e pronti da attivare.\n\n` +
-    `🔎 <b>Scopri</b> i business, con requisiti chiari\n` +
-    `📚 <b>Attivali</b> con un tutorial passo-passo\n` +
-    `🤝 <b>Crea la tua rete</b>: chi inviti resta tuo e ti fa guadagnare\n\n` +
+    `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n\n` +
+    `<b>CREA IL TUO HUB PER IL BUSINESS ONLINE</b>\n\n` +
     `<b>Inizia in 3 passi</b>\n` +
     `1️⃣ Apri l'app qui sotto\n` +
     `2️⃣ Completa il profilo in 2 minuti\n` +
