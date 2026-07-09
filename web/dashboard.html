@@ -467,16 +467,7 @@
       <div class="aff-dots"></div>
     </div>
 
-    <!-- Saluto (senza card, sotto il carosello) -->
-    <button class="home-greet" onclick="goProfilo()" aria-label="Il tuo profilo">
-      <div class="avatar-wrap">
-        <img class="avatar-img" id="avatarImg" alt="" />
-        <div class="avatar-fallback" id="avatarFallback">--</div>
-      </div>
-      <div class="hg-text">Ciao, <span id="userName">Utente</span> 👋</div>
-    </button>
-
-    <div class="lock-card" id="anagraficaPrompt" style="display:none;margin-top:14px">
+    <div class="lock-card" id="anagraficaPrompt" style="display:none;margin-top:16px">
       <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <h3>Completa la tua anagrafica</h3>
       <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
@@ -648,10 +639,12 @@
     function renderTelegramProfile() {
       const user = tg?.initDataUnsafe?.user;
       const firstName = user?.first_name || "";
-      document.getElementById("userName").textContent = firstName || "Utente";
+      const nameEl = document.getElementById("userName");
+      if (nameEl) nameEl.textContent = firstName || "Utente";
 
       const img = document.getElementById("avatarImg");
       const fallback = document.getElementById("avatarFallback");
+      if (!img || !fallback) return;
       if (user?.photo_url) {
         img.src = user.photo_url;
         img.onload = () => { img.style.display = "block"; fallback.style.display = "none"; };
