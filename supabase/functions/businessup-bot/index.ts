@@ -1588,6 +1588,76 @@ async function apiAdminContattiImport(body: any) {
   return json({ ok: true, importati })
 }
 
+// ---------- ADMIN: BROADCAST ai contatti (inviato dal client MTProto di UniChat) ----------
+async function apiAdminBroadcastCreate(body: any) {
+  const message = String(body?.message || "").trim()
+  const tag = body?.tag ? String(body.tag) : null
+  let delay = parseInt(body?.delay_min)
+  if (!(delay >= 1 && delay <= 20)) delay = 5
+  if (!message) return json({ error: "message_richiesto" }, 400)
+
+  const { data: attivo } = await supabase.from("contatti_broadcast").select("id").eq("owner_id", ADMIN_ID).eq("stato", "running").limit(1).maybeSingle()
+  if (attivo) return json({ error: "broadcast_gia_attivo" }, 409)
+
+  let q = supabase.from("contatti_telegram").select("tg_user_id, username, first_name, last_name").eq("owner_id", ADMIN_ID)
+  if (tag) q = q.contains("tags", [tag])
+  const { data: contatti } = await q
+  const dest = (contatti ?? []).filter((c: any) => c.tg_user_id)
+  if (!dest.length) return json({ error: "nessun_destinatario" }, 400)
+
+  const { data: job, error } = await supabase.from("contatti_broadcast")
+    .insert({ owner_id: ADMIN_ID, message, tag, delay_min: delay, stato: "running", totali: dest.length })
+    .select("id").single()
+  if (error) return json({ error: error.message }, 500)
+
+  const rows = dest.map((c: any) => ({
+    job_id: job.id,
+    tg_user_id: c.tg_user_id,
+    username: c.username || null,
+    nome: [c.first_name, c.last_name].filter(Boolean).join(" ") || c.username || String(c.tg_user_id),
+  }))
+  for (let i = 0; i < rows.length; i += 300) await supabase.from("contatti_broadcast_dest").insert(rows.slice(i, i + 300))
+  return json({ ok: true, job_id: job.id, totali: dest.length })
+}
+
+async function apiAdminBroadcastStatus() {
+  const { data } = await supabase.from("contatti_broadcast").select("*").eq("owner_id", ADMIN_ID).order("created_at", { ascending: false }).limit(1).maybeSingle()
+  return json({ job: data || null })
+}
+
+async function apiAdminBroadcastStop(body: any) {
+  const jobId = body?.job_id ? parseInt(body.job_id) : null
+  let q = supabase.from("contatti_broadcast").update({ stato: "stopped", updated_at: new Date().toISOString() }).eq("owner_id", ADMIN_ID).eq("stato", "running")
+  if (jobId) q = q.eq("id", jobId)
+  await q
+  return json({ ok: true })
+}
+
+// Usato dal worker UniChat: restituisce il prossimo destinatario da servire per il job attivo.
+async function apiAdminBroadcastPoll() {
+  const { data: job } = await supabase.from("contatti_broadcast").select("*").eq("owner_id", ADMIN_ID).eq("stato", "running").order("created_at", { ascending: true }).limit(1).maybeSingle()
+  if (!job) return json({ job: null })
+  const { data: next } = await supabase.from("contatti_broadcast_dest").select("id, tg_user_id, username, nome").eq("job_id", job.id).eq("stato", "pending").order("id", { ascending: true }).limit(1).maybeSingle()
+  if (!next) {
+    await supabase.from("contatti_broadcast").update({ stato: "done", updated_at: new Date().toISOString() }).eq("id", job.id)
+    return json({ job: null })
+  }
+  return json({ job: { id: job.id, message: job.message, delay_min: job.delay_min }, next })
+}
+
+async function apiAdminBroadcastMark(body: any) {
+  const destId = parseInt(body?.dest_id)
+  const ok = !!body?.ok
+  if (!destId) return json({ error: "dest_id" }, 400)
+  const { data: d } = await supabase.from("contatti_broadcast_dest").select("job_id, stato").eq("id", destId).maybeSingle()
+  if (!d || d.stato !== "pending") return json({ ok: true })
+  await supabase.from("contatti_broadcast_dest").update({ stato: ok ? "sent" : "failed", sent_at: new Date().toISOString() }).eq("id", destId)
+  const col = ok ? "inviati" : "falliti"
+  const { data: job } = await supabase.from("contatti_broadcast").select("inviati, falliti").eq("id", d.job_id).maybeSingle()
+  if (job) await supabase.from("contatti_broadcast").update({ [col]: ((job as any)[col] || 0) + 1, updated_at: new Date().toISOString() }).eq("id", d.job_id)
+  return json({ ok: true })
+}
+
 async function apiAdminMieiContattiTags(body: any) {
   const id = parseInt(body?.id)
   if (!id) return json({ error: "id_richiesto" }, 400)
@@ -1991,6 +2061,11 @@ serve(async (req) => {
       if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
       if (sub === "admin/crm-tags" && req.method === "POST") return await apiAdminCrmTags(await req.json())
       if (sub === "admin/contatti-import" && req.method === "POST") return await apiAdminContattiImport(await req.json())
+      if (sub === "admin/broadcast-create" && req.method === "POST") return await apiAdminBroadcastCreate(await req.json())
+      if (sub === "admin/broadcast-status" && req.method === "GET") return await apiAdminBroadcastStatus()
+      if (sub === "admin/broadcast-stop" && req.method === "POST") return await apiAdminBroadcastStop(await req.json())
+      if (sub === "admin/broadcast-poll" && req.method === "GET") return await apiAdminBroadcastPoll()
+      if (sub === "admin/broadcast-mark" && req.method === "POST") return await apiAdminBroadcastMark(await req.json())
       if (sub === "admin/miei-contatti" && req.method === "GET") return await apiAdminMieiContatti()
       if (sub === "admin/miei-contatti-tags" && req.method === "POST") return await apiAdminMieiContattiTags(await req.json())
       if (sub === "admin/messaggio" && req.method === "POST") return await apiAdminMessaggio(await req.json())

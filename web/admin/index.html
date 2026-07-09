@@ -220,6 +220,23 @@
       <div class="section-head"><h2>Miei contatti</h2></div>
       <p class="item-meta" style="margin-bottom:10px">La tua rubrica Telegram personale, sincronizzata dal tool <code>tg-contacts-sync</code>. Taggali e filtrali qui.</p>
       <div class="chip-row" id="rubTagChips"></div>
+
+      <div class="item" id="bcBox" style="margin-bottom:10px">
+        <div class="db-label" style="margin-bottom:6px">📣 Broadcast dal tuo account</div>
+        <p class="item-meta" style="margin-bottom:8px">Invia a <b id="bcTarget">tutti</b> · <b id="bcCount">0</b> contatti — un messaggio ogni tot minuti, dal <b>tuo account</b> (via UniChat). Usa il tag selezionato sopra per scegliere i destinatari.</p>
+        <textarea id="bcMsg" placeholder="Scrivi il messaggio da inviare ai contatti..." maxlength="1000" style="width:100%;min-height:70px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:4px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--text-dim)">Delay tra un invio e l'altro:</span>
+          <select id="bcDelay" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:4px;font-size:13px;font-family:inherit"></select>
+        </div>
+        <div id="bcProgress" style="font-size:12.5px;color:var(--text-dim);margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-small" id="bcStartBtn" onclick="bcStart()">Avvia broadcast</button>
+          <button class="btn btn-secondary btn-small" id="bcStopBtn" onclick="bcStop()" style="display:none">Ferma</button>
+        </div>
+        <p class="item-meta" style="margin-top:8px;color:var(--amber)">⚠️ Invio massivo dal tuo account: usa delay ampi e messaggi non-spam per evitare limiti Telegram.</p>
+      </div>
+
       <input class="search-inline" id="rubSearch" placeholder="Cerca per nome, username o telefono..." oninput="renderRubrica()" />
       <div id="rubList"><p class="empty">Nessun contatto sincronizzato. Lancia <code>tg-contacts-sync</code> per importarli.</p></div>
     </div>
@@ -936,6 +953,9 @@
       } catch (e) { rubContatti = []; rubTags = []; }
       renderRubTagChips();
       renderRubrica();
+      bcInitDelay();
+      bcRefreshTarget();
+      bcPollStatus();
     }
     function renderRubTagChips() {
       const el = document.getElementById("rubTagChips");
@@ -951,7 +971,7 @@
       }).join("");
       el.innerHTML = html;
     }
-    function setRubTag(t) { rubTagFiltro = (rubTagFiltro === t) ? "" : t; renderRubTagChips(); renderRubrica(); }
+    function setRubTag(t) { rubTagFiltro = (rubTagFiltro === t) ? "" : t; renderRubTagChips(); renderRubrica(); bcRefreshTarget(); }
     window.setRubTag = setRubTag;
     function rubFiltered() {
       const term = (document.getElementById("rubSearch").value || "").trim().toLowerCase();
@@ -1044,6 +1064,66 @@
     }
     window.addRubTag = addRubTag;
     window.removeRubTag = removeRubTag;
+
+    // ---- BROADCAST ai contatti (invio dal tuo account via UniChat) ----
+    function bcInitDelay() {
+      const sel = document.getElementById("bcDelay");
+      if (!sel || sel.options.length) return;
+      sel.innerHTML = Array.from({ length: 20 }, (_, i) => i + 1).map((m) => `<option value="${m}"${m === 5 ? " selected" : ""}>${m} min</option>`).join("");
+    }
+    function bcRefreshTarget() {
+      const t = document.getElementById("bcTarget");
+      const n = document.getElementById("bcCount");
+      if (!t || !n) return;
+      const count = rubTagFiltro ? rubContatti.filter((c) => (c.tags || []).includes(rubTagFiltro)).length : rubContatti.length;
+      t.textContent = rubTagFiltro ? ("tag «" + rubTagFiltro + "»") : "tutti";
+      n.textContent = count;
+    }
+    async function bcStart() {
+      const msg = (document.getElementById("bcMsg").value || "").trim();
+      if (!msg) { if (tg?.showAlert) tg.showAlert("Scrivi il messaggio."); return; }
+      const delay = parseInt(document.getElementById("bcDelay").value) || 5;
+      const count = rubTagFiltro ? rubContatti.filter((c) => (c.tags || []).includes(rubTagFiltro)).length : rubContatti.length;
+      const ok = await askConfirm(`Invio a ${count} contatti, uno ogni ${delay} min (≈ ${Math.round(count * delay / 60)}h). Dal tuo account Telegram. Procedo?`);
+      if (!ok) return;
+      const res = await api("admin/broadcast-create", { method: "POST", body: JSON.stringify({ message: msg, tag: rubTagFiltro || null, delay_min: delay }) });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || !d.ok) {
+        const m = d.error === "broadcast_gia_attivo" ? "C'è già un broadcast in corso: fermalo prima." : d.error === "nessun_destinatario" ? "Nessun destinatario per questo tag." : "Errore: " + (d.error || res.status);
+        if (tg?.showAlert) tg.showAlert(m); else alert(m);
+        return;
+      }
+      document.getElementById("bcMsg").value = "";
+      bcPollStatus();
+    }
+    async function bcStop() {
+      const ok = await askConfirm("Fermare il broadcast in corso?");
+      if (!ok) return;
+      await api("admin/broadcast-stop", { method: "POST", body: JSON.stringify({}) });
+      bcPollStatus();
+    }
+    window.bcStart = bcStart; window.bcStop = bcStop;
+
+    let bcTimer = null;
+    async function bcPollStatus() {
+      let job = null;
+      try { job = (await (await api("admin/broadcast-status")).json()).job; } catch (e) {}
+      const prog = document.getElementById("bcProgress");
+      const startBtn = document.getElementById("bcStartBtn");
+      const stopBtn = document.getElementById("bcStopBtn");
+      const running = job && job.stato === "running";
+      if (prog) {
+        if (!job) prog.innerHTML = "";
+        else {
+          const stLabel = { running: "▶️ in corso", done: "✅ completato", stopped: "⏹ fermato" }[job.stato] || job.stato;
+          prog.innerHTML = `${stLabel} — inviati <b>${job.inviati}</b>/${job.totali}${job.falliti ? ` · falliti ${job.falliti}` : ""}${running ? ` · ogni ${job.delay_min} min` : ""}`;
+        }
+      }
+      if (startBtn) startBtn.style.display = running ? "none" : "";
+      if (stopBtn) stopBtn.style.display = running ? "" : "none";
+      clearTimeout(bcTimer);
+      if (running) bcTimer = setTimeout(bcPollStatus, 8000);
+    }
 
     function openMsgModal(telegramId, nome) {
       document.getElementById("msgModalTitle").textContent = `Messaggio a ${nome}`;
