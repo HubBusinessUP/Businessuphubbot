@@ -139,6 +139,15 @@
   .rub-name { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rub-sub { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
   .rub-row .icon-btn { text-decoration: none; }
+  .rub-kpi { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 4px 0 2px; }
+  .rub-kpi::-webkit-scrollbar { display: none; }
+  .rk-cell { flex: 1 0 auto; min-width: 62px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; text-align: center; }
+  .rk-num { font-size: 18px; font-weight: 800; }
+  .rk-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); margin-top: 1px; }
+  .inv-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .inv-row:last-child { border-bottom: none; }
+  .inv-t { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inv-s { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ===== Mobile ===== */
   @media (max-width: 560px) {
@@ -218,8 +227,16 @@
 
     <div class="section">
       <div class="section-head"><h2>Miei contatti</h2></div>
-      <p class="item-meta" style="margin-bottom:10px">La tua rubrica Telegram personale, sincronizzata dal tool <code>tg-contacts-sync</code>. Taggali e filtrali qui.</p>
+      <div id="rubKpi" class="rub-kpi"></div>
+      <p class="item-meta" style="margin:6px 0 8px">Rubrica Telegram sincronizzata da <code>tg-contacts-sync</code>. Tag, cartelle, messaggi e broadcast dal tuo account.</p>
       <div class="chip-row" id="rubTagChips"></div>
+      <div class="chip-row" id="rubCartelleChips" style="margin-top:-2px"></div>
+
+      <div class="item" id="invBox" style="margin-bottom:10px">
+        <div class="db-label" style="margin-bottom:6px">📋 Invii & programmati</div>
+        <div id="invList"><p class="item-meta">Nessun invio.</p></div>
+      </div>
+
 
       <div class="item" id="bcBox" style="margin-bottom:10px">
         <div class="db-label" style="margin-bottom:6px">📣 Broadcast dal tuo account</div>
@@ -962,14 +979,21 @@
     let rubContatti = [];
     let rubTags = [];
     let rubTagFiltro = "";
+    let rubCartelle = [];
+    let rubCartellaFiltro = "";
+    let rubDetailCartelle = [];
     async function loadRubrica() {
       try {
         const d = await (await api("admin/miei-contatti")).json();
         rubContatti = d.contatti || [];
         rubTags = d.tags || [];
-      } catch (e) { rubContatti = []; rubTags = []; }
+        rubCartelle = d.cartelle || [];
+      } catch (e) { rubContatti = []; rubTags = []; rubCartelle = []; }
       renderRubTagChips();
+      renderRubCartelleChips();
       renderRubrica();
+      renderRubKpi();
+      loadInvii();
       bcInitDelay();
       bcRefreshTarget();
       bcPollStatus();
@@ -994,6 +1018,7 @@
       const term = (document.getElementById("rubSearch").value || "").trim().toLowerCase();
       let list = rubContatti;
       if (rubTagFiltro) list = list.filter((c) => (c.tags || []).includes(rubTagFiltro));
+      if (rubCartellaFiltro) list = list.filter((c) => (c.cartelle || []).includes(rubCartellaFiltro));
       if (term) list = list.filter((c) => (c.nome || "").toLowerCase().includes(term) || (c.username || "").toLowerCase().includes(term) || (c.phone || "").includes(term));
       return list;
     }
@@ -1010,7 +1035,8 @@
         if (L !== lastLetter) { html += `<div class="rub-letter">${L}</div>`; lastLetter = L; }
         const [fg, bg] = tagColor(c.nome || "?");
         const tagsInline = (c.tags || []).length ? " · " + c.tags.map((t) => `<span style="color:${tagColor(t)[0]}">#${esc(t)}</span>`).join(" ") : "";
-        const sub = (c.username ? "@" + esc(c.username) : (c.phone ? esc(c.phone) : "")) + tagsInline;
+        const cartInline = (c.cartelle || []).length ? " · " + c.cartelle.map((t) => `<span style="color:var(--amber)">📁${esc(t)}</span>`).join(" ") : "";
+        const sub = (c.username ? "@" + esc(c.username) : (c.phone ? esc(c.phone) : "")) + tagsInline + cartInline;
         html += `<div class="rub-row" onclick="openRubDetail(${c.id})">
           <div class="rub-av" style="background:${bg};color:${fg}">${esc(ch)}</div>
           <div class="rub-body">
@@ -1018,6 +1044,7 @@
             <div class="rub-sub">${sub || "&nbsp;"}</div>
           </div>
           <button class="icon-btn" onclick="event.stopPropagation();composeContatto(${c.id})" title="Scrivi messaggio">✉</button>
+          <button class="icon-btn" onclick="event.stopPropagation();openRubDetail(${c.id})" title="Profilo, tag e cartelle">👤</button>
         </div>`;
       }
       if (list.length > 400) html += `<p class="empty">Mostrati i primi 400 di ${list.length} — usa la ricerca.</p>`;
@@ -1031,8 +1058,9 @@
       if (!c) return;
       rubDetailId = id;
       rubDetailTags = (c.tags || []).slice();
+      rubDetailCartelle = (c.cartelle || []).slice();
       document.getElementById("rubModalTitle").textContent = c.nome;
-      document.getElementById("rubTagSuggest").innerHTML = rubTags.map((t) => `<option value="${esc(t)}"></option>`).join("");
+      document.getElementById("rubTagSuggest").innerHTML = [...rubTags, ...rubCartelle].map((t) => `<option value="${esc(t)}"></option>`).join("");
       document.getElementById("rubDetailBody").innerHTML = `
         <div class="detail-block">
           <div class="db-label">Contatto</div>
@@ -1040,9 +1068,11 @@
           ${c.phone ? `<div class="item-meta" style="margin-top:4px">${esc(c.phone)}</div>` : ""}
           <button class="btn btn-primary btn-small" style="margin-top:10px" onclick="closeModal('rubOverlay');composeContatto(${c.id})">✉ Scrivi messaggio</button>
         </div>
-        <div class="detail-block" id="rubTagBlock"></div>`;
+        <div class="detail-block" id="rubTagBlock"></div>
+        <div class="detail-block" id="rubCartelleBlock"></div>`;
       openModal("rubOverlay");
       renderRubDetailTags();
+      renderRubCartelleEditor();
     }
     window.openRubDetail = openRubDetail;
     function renderRubDetailTags() {
@@ -1082,6 +1112,125 @@
     }
     window.addRubTag = addRubTag;
     window.removeRubTag = removeRubTag;
+
+    // ---- CARTELLE ----
+    function renderRubCartelleChips() {
+      const el = document.getElementById("rubCartelleChips");
+      if (!el) return;
+      if (!rubCartelle.length) { el.innerHTML = ""; return; }
+      el.innerHTML = rubCartelle.map((t) => {
+        const active = rubCartellaFiltro === t;
+        const n = rubContatti.filter((c) => (c.cartelle || []).includes(t)).length;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? "background:var(--amber);color:#111" : ""}" onclick="setRubCartella('${esc(t).replace(/'/g, "\\'")}')">📁 ${esc(t)} <b>${n}</b></button>`;
+      }).join("") + (rubCartellaFiltro ? `<button class="tag-filter" onclick="setRubCartella('')">✕ cartella</button>` : "");
+    }
+    function setRubCartella(t) { rubCartellaFiltro = (rubCartellaFiltro === t) ? "" : t; renderRubCartelleChips(); renderRubrica(); bcRefreshTarget(); }
+    window.setRubCartella = setRubCartella;
+
+    function renderRubCartelleEditor() {
+      const el = document.getElementById("rubCartelleBlock");
+      if (!el) return;
+      el.innerHTML =
+        `<div class="db-label">📁 Cartelle</div>` +
+        (rubDetailCartelle.length
+          ? `<div class="tag-row">${rubDetailCartelle.map((t) => `<span class="tag-chip" style="background:rgba(232,179,76,0.16);color:var(--amber);border-color:var(--amber)">${esc(t)} <span class="tx" onclick="removeRubCartella('${esc(t).replace(/'/g, "\\'")}')">✕</span></span>`).join("")}</div>`
+          : `<span style="color:var(--text-dim)">In nessuna cartella</span>`) +
+        `<div class="tag-add-row">
+          <input id="rubCartInput" list="rubTagSuggest" placeholder="Aggiungi a cartella (es. Clienti, Lead caldi)" maxlength="30"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addRubCartella();}" />
+          <button onclick="addRubCartella()">Aggiungi</button>
+        </div>`;
+    }
+    function addRubCartella() {
+      const inp = document.getElementById("rubCartInput");
+      const val = (inp.value || "").trim().slice(0, 30);
+      if (!val) return;
+      if (!rubDetailCartelle.some((t) => t.toLowerCase() === val.toLowerCase())) rubDetailCartelle.push(val);
+      inp.value = "";
+      saveRubCartelle();
+    }
+    function removeRubCartella(t) { rubDetailCartelle = rubDetailCartelle.filter((x) => x !== t); saveRubCartelle(); }
+    async function saveRubCartelle() {
+      renderRubCartelleEditor();
+      const res = await api("admin/contatto-cartelle", { method: "POST", body: JSON.stringify({ id: rubDetailId, cartelle: rubDetailCartelle }) });
+      const d = await res.json().catch(() => ({}));
+      if (d.cartelle) rubDetailCartelle = d.cartelle;
+      const c = rubContatti.find((x) => x.id === rubDetailId);
+      if (c) c.cartelle = rubDetailCartelle.slice();
+      rubCartelle = [...new Set(rubContatti.flatMap((x) => x.cartelle || []))].sort();
+      renderRubCartelleEditor();
+      renderRubCartelleChips();
+      renderRubKpi();
+      renderRubrica();
+    }
+    window.addRubCartella = addRubCartella;
+    window.removeRubCartella = removeRubCartella;
+
+    // ---- KPI rubrica ----
+    function renderRubKpi() {
+      const el = document.getElementById("rubKpi");
+      if (!el) return;
+      const nContatti = rubContatti.length;
+      const nRisposte = window.invBroadcasts ? window.invBroadcasts.reduce((s, b) => s + (b.risposti || 0), 0) : 0;
+      const nInviati = window.invBroadcasts ? window.invBroadcasts.reduce((s, b) => s + (b.inviati || 0), 0) : 0;
+      const cells = [
+        ["Contatti", nContatti], ["Tag", rubTags.length], ["Cartelle", rubCartelle.length],
+        ["Inviati", nInviati], ["Risposte", nRisposte],
+      ];
+      el.innerHTML = cells.map(([l, v]) => `<div class="rk-cell"><div class="rk-num">${v}</div><div class="rk-lbl">${l}</div></div>`).join("");
+    }
+
+    // ---- Invii & programmati ----
+    async function loadInvii() {
+      let bc = [], ms = [];
+      try { bc = (await (await api("admin/broadcast-list")).json()).broadcasts || []; } catch (e) {}
+      try { ms = (await (await api("admin/msg-list")).json()).messaggi || []; } catch (e) {}
+      window.invBroadcasts = bc;
+      renderInvii(bc, ms);
+      renderRubKpi();
+    }
+    function renderInvii(bc, ms) {
+      const el = document.getElementById("invList");
+      if (!el) return;
+      const stB = { running: "▶️ in corso", done: "✅ completato", stopped: "⏹ fermato" };
+      const now = Date.now();
+      let html = "";
+      const bcRows = bc.filter((b) => b.stato !== "done" || b.inviati > 0).slice(0, 8).map((b) => {
+        const sched = b.scheduled_at && new Date(b.scheduled_at) > now;
+        const label = sched ? "🕒 " + new Date(b.scheduled_at).toLocaleString("it-IT") : (stB[b.stato] || b.stato);
+        const canStop = b.stato === "running";
+        return `<div class="inv-row">
+          <div style="flex:1;min-width:0">
+            <div class="inv-t">📣 ${b.tag ? "tag «" + esc(b.tag) + "»" : "tutti"} · ${b.totali} dest.</div>
+            <div class="inv-s">${label} — ${b.inviati}/${b.totali} inviati${b.risposti ? ` · <span style="color:var(--lime)">${b.risposti} risposte</span>` : ""}${b.falliti ? ` · ${b.falliti} falliti` : ""}</div>
+          </div>
+          ${canStop ? `<button class="icon-btn danger" onclick="bcStopId(${b.id})" title="Ferma">⏹</button>` : ""}
+        </div>`;
+      }).join("");
+      const msRows = ms.filter((m) => m.stato === "pending" || (m.scheduled_at && new Date(m.scheduled_at) > now)).slice(0, 8).map((m) => {
+        const sched = m.scheduled_at ? new Date(m.scheduled_at).toLocaleString("it-IT") : "in coda";
+        return `<div class="inv-row">
+          <div style="flex:1;min-width:0">
+            <div class="inv-t">✉ ${esc(m.nome || m.username || "contatto")}</div>
+            <div class="inv-s">🕒 ${sched} — «${esc((m.message || "").slice(0, 40))}»</div>
+          </div>
+          <button class="icon-btn danger" onclick="annullaMsg(${m.id})" title="Annulla">🗑</button>
+        </div>`;
+      }).join("");
+      html = (bcRows + msRows) || '<p class="item-meta">Nessun invio o programmato.</p>';
+      el.innerHTML = html;
+    }
+    async function bcStopId(id) {
+      if (!(await askConfirm("Fermare questo broadcast?"))) return;
+      await api("admin/broadcast-stop", { method: "POST", body: JSON.stringify({ job_id: id }) });
+      loadInvii(); bcPollStatus();
+    }
+    async function annullaMsg(id) {
+      if (!(await askConfirm("Annullare questo messaggio programmato?"))) return;
+      await api("admin/msg-annulla", { method: "POST", body: JSON.stringify({ id }) });
+      loadInvii();
+    }
+    window.bcStopId = bcStopId; window.annullaMsg = annullaMsg;
 
     // ---- Messaggio singolo a un contatto (dal tuo account via UniChat) ----
     let msgContattoDest = null;

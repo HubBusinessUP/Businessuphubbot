@@ -1555,15 +1555,61 @@ async function apiAdminCrm() {
 // ---------- ADMIN: MIEI CONTATTI (rubrica Telegram personale, sincronizzata via tool MTProto) ----------
 async function apiAdminMieiContatti() {
   const { data } = await supabase.from("contatti_telegram")
-    .select("id, tg_user_id, first_name, last_name, username, phone, tags, note")
+    .select("id, tg_user_id, first_name, last_name, username, phone, tags, cartelle, note")
     .eq("owner_id", ADMIN_ID).order("first_name", { ascending: true })
   const contatti = (data ?? []).map((c: any) => ({
     ...c,
     tags: Array.isArray(c.tags) ? c.tags : [],
+    cartelle: Array.isArray(c.cartelle) ? c.cartelle : [],
     nome: [c.first_name, c.last_name].filter(Boolean).join(" ") || c.username || c.phone || `ID ${c.tg_user_id}`,
   }))
   const tags = [...new Set((data ?? []).flatMap((c: any) => Array.isArray(c.tags) ? c.tags : []))].sort()
-  return json({ contatti, tags })
+  const cartelle = [...new Set((data ?? []).flatMap((c: any) => Array.isArray(c.cartelle) ? c.cartelle : []))].sort()
+  return json({ contatti, tags, cartelle })
+}
+
+async function apiAdminContattoCartelle(body: any) {
+  const id = parseInt(body?.id)
+  if (!id) return json({ error: "id_richiesto" }, 400)
+  const raw = Array.isArray(body?.cartelle) ? body.cartelle : []
+  const cartelle = [...new Set(raw.map((t: any) => String(t || "").trim().slice(0, 30)).filter(Boolean))].slice(0, 20)
+  const { error } = await supabase.from("contatti_telegram").update({ cartelle }).eq("id", id).eq("owner_id", ADMIN_ID)
+  if (error) return json({ error: error.message }, 500)
+  return json({ ok: true, cartelle })
+}
+
+// UniChat segnala un messaggio in arrivo da un contatto: marca come "risposto" gli invii recenti a quel contatto.
+async function apiAdminContattoInbound(body: any) {
+  const uid = parseInt(body?.tg_user_id)
+  if (!uid) return json({ error: "tg_user_id" }, 400)
+  const since = new Date(Date.now() - 30 * 864e5).toISOString() // finestra 30 giorni
+  // Broadcast dest inviati e non ancora risposti.
+  const { data: dests } = await supabase.from("contatti_broadcast_dest").select("id, job_id").eq("tg_user_id", uid).eq("stato", "sent").eq("risposto", false).gte("sent_at", since)
+  for (const d of dests ?? []) {
+    await supabase.from("contatti_broadcast_dest").update({ risposto: true, risposto_at: new Date().toISOString() }).eq("id", (d as any).id)
+    const { data: job } = await supabase.from("contatti_broadcast").select("risposti").eq("id", (d as any).job_id).maybeSingle()
+    if (job) await supabase.from("contatti_broadcast").update({ risposti: ((job as any).risposti || 0) + 1 }).eq("id", (d as any).job_id)
+  }
+  await supabase.from("messaggi_singoli").update({ risposto: true, risposto_at: new Date().toISOString() }).eq("owner_id", ADMIN_ID).eq("tg_user_id", uid).eq("stato", "sent").eq("risposto", false).gte("sent_at", since)
+  return json({ ok: true })
+}
+
+async function apiAdminBroadcastList() {
+  const { data } = await supabase.from("contatti_broadcast").select("id, message, tag, delay_min, stato, totali, inviati, falliti, risposti, scheduled_at, created_at").eq("owner_id", ADMIN_ID).order("created_at", { ascending: false }).limit(30)
+  return json({ broadcasts: data ?? [] })
+}
+
+async function apiAdminMsgList() {
+  const { data } = await supabase.from("messaggi_singoli").select("id, nome, username, message, stato, scheduled_at, risposto, created_at, sent_at").eq("owner_id", ADMIN_ID).order("created_at", { ascending: false }).limit(40)
+  return json({ messaggi: data ?? [] })
+}
+
+async function apiAdminMsgAnnulla(body: any) {
+  const id = parseInt(body?.id)
+  if (!id) return json({ error: "id" }, 400)
+  // Annulla solo se ancora in attesa (non già inviato).
+  await supabase.from("messaggi_singoli").update({ stato: "annullato" }).eq("id", id).eq("owner_id", ADMIN_ID).eq("stato", "pending")
+  return json({ ok: true })
 }
 
 // Import massivo dei contatti Telegram dal tool di sync (protetto dalla admin key).
@@ -2097,6 +2143,11 @@ serve(async (req) => {
       if (sub === "admin/crm-stage" && req.method === "POST") return await apiAdminCrmStage(await req.json())
       if (sub === "admin/crm-tags" && req.method === "POST") return await apiAdminCrmTags(await req.json())
       if (sub === "admin/contatti-import" && req.method === "POST") return await apiAdminContattiImport(await req.json())
+      if (sub === "admin/contatto-cartelle" && req.method === "POST") return await apiAdminContattoCartelle(await req.json())
+      if (sub === "admin/contatto-inbound" && req.method === "POST") return await apiAdminContattoInbound(await req.json())
+      if (sub === "admin/broadcast-list" && req.method === "GET") return await apiAdminBroadcastList()
+      if (sub === "admin/msg-list" && req.method === "GET") return await apiAdminMsgList()
+      if (sub === "admin/msg-annulla" && req.method === "POST") return await apiAdminMsgAnnulla(await req.json())
       if (sub === "admin/contatto-invia" && req.method === "POST") return await apiAdminContattoInvia(await req.json())
       if (sub === "admin/msg-poll" && req.method === "GET") return await apiAdminMsgPoll()
       if (sub === "admin/msg-mark" && req.method === "POST") return await apiAdminMsgMark(await req.json())
