@@ -210,6 +210,16 @@
   .ltabs::-webkit-scrollbar { display: none; }
   .ltab { flex: 0 0 auto; padding: 8px 15px; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .ltab.active { background: var(--blue); color: #fff; border-color: transparent; }
+  .ltab-sugg { color: var(--lime); border-color: rgba(46,204,113,0.4); }
+  .ltab-sugg.active { background: var(--lime); color: #06210f; border-color: transparent; }
+  .sugg-hero { text-align: center; padding: 8px 10px 20px; }
+  .sugg-hero-ico { width: 56px; height: 56px; border-radius: 16px; background: var(--lime-dim); color: var(--lime); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .sugg-hero h3 { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .sugg-hero p { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; max-width: 340px; margin: 0 auto; }
+  .sugg-perk { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+  .sp-row { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .sp-row b { color: var(--text); }
+  .sp-ico { font-size: 20px; flex-shrink: 0; line-height: 1.2; }
   .search-input {
     width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
     padding: 11px 12px 11px 36px; border-radius: 4px; font-size: 13px; font-family: inherit;
@@ -443,6 +453,7 @@
       <button class="ltab active" onclick="setListView('tutti', this)">Tutti</button>
       <button class="ltab" onclick="setListView('evidenza', this)">In evidenza</button>
       <button class="ltab" onclick="setListView('nuovi', this)">Nuovi</button>
+      <button class="ltab ltab-sugg" onclick="setListView('suggerisci', this)">＋ Suggerisci</button>
     </div>
 
     <div class="search-row">
@@ -474,6 +485,21 @@
     </div>
 
     <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
+
+    <!-- Scheda Suggerisci -->
+    <div id="suggerisciPanel" style="display:none">
+      <div class="sugg-hero">
+        <div class="sugg-hero-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h3>Suggerisci un business</h3>
+        <p>Conosci un tool o un business online che funziona? Proponilo alla community: se approvato entra nella Business list.</p>
+      </div>
+      <div class="sugg-perk">
+        <div class="sp-row"><span class="sp-ico">🥇</span><div><b>Sei il primo?</b> Se lo suggerisci per primo e viene approvato, il tuo <b>link di affiliazione</b> diventa quello ufficiale della scheda.</div></div>
+        <div class="sp-row"><span class="sp-ico">🛡️</span><div><b>Lista curata.</b> Ogni proposta è vagliata manualmente: teniamo dentro solo business trasparenti e affidabili.</div></div>
+        <div class="sp-row"><span class="sp-ico">📈</span><div><b>Fai crescere l'hub.</b> Più la lista è ricca, più valore per te e per la tua rete.</div></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="openSuggestSheet()">Candida un business</button>
+    </div>
 
     <nav class="bnav">
       <a class="bnav-item" href="dashboard.html">
@@ -686,9 +712,14 @@
     function setListView(v, btn) {
       listView = v;
       document.querySelectorAll("#ltabs .ltab").forEach((b) => b.classList.toggle("active", b === btn));
+      const sugg = v === "suggerisci";
+      const sr = document.querySelector(".search-row"); if (sr) sr.style.display = sugg ? "none" : "";
+      const fr = document.querySelector(".filter-row"); if (fr) fr.style.display = sugg ? "none" : "";
+      const bl = document.getElementById("businessList"); if (bl) bl.style.display = sugg ? "none" : "";
+      const sp = document.getElementById("suggerisciPanel"); if (sp) sp.style.display = sugg ? "block" : "none";
       visibleCount = PAGE_SIZE;
       try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
-      renderList();
+      if (!sugg) renderList();
     }
     window.setListView = setListView;
 
