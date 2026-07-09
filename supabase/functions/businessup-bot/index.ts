@@ -1596,14 +1596,16 @@ async function apiAdminContattoInvia(body: any) {
   const username = body?.username ? String(body.username) : null
   const nome = body?.nome ? String(body.nome) : null
   if (!tg_user_id && !username) return json({ error: "destinatario_richiesto" }, 400)
-  const { error } = await supabase.from("messaggi_singoli").insert({ owner_id: ADMIN_ID, tg_user_id, username, nome, message, stato: "pending" })
+  const scheduledAt = body?.scheduled_at ? new Date(body.scheduled_at).toISOString() : null
+  const { error } = await supabase.from("messaggi_singoli").insert({ owner_id: ADMIN_ID, tg_user_id, username, nome, message, stato: "pending", scheduled_at: scheduledAt })
   if (error) return json({ error: error.message }, 500)
-  return json({ ok: true })
+  return json({ ok: true, scheduled_at: scheduledAt })
 }
 
-// Worker UniChat: prossimo messaggio singolo in coda (priorità sui broadcast, invio immediato).
+// Worker UniChat: prossimo messaggio singolo in coda (priorità sui broadcast, invio immediato). Salta i programmati non ancora scaduti.
 async function apiAdminMsgPoll() {
-  const { data } = await supabase.from("messaggi_singoli").select("id, tg_user_id, username, nome, message").eq("owner_id", ADMIN_ID).eq("stato", "pending").order("id", { ascending: true }).limit(1).maybeSingle()
+  const now = new Date().toISOString()
+  const { data } = await supabase.from("messaggi_singoli").select("id, tg_user_id, username, nome, message").eq("owner_id", ADMIN_ID).eq("stato", "pending").or(`scheduled_at.is.null,scheduled_at.lte.${now}`).order("id", { ascending: true }).limit(1).maybeSingle()
   return json({ msg: data || null })
 }
 async function apiAdminMsgMark(body: any) {
@@ -1621,9 +1623,14 @@ async function apiAdminBroadcastCreate(body: any) {
   let delay = parseInt(body?.delay_min)
   if (!(delay >= 1 && delay <= 20)) delay = 5
   if (!message) return json({ error: "message_richiesto" }, 400)
+  const scheduledAt = body?.scheduled_at ? new Date(body.scheduled_at).toISOString() : null
 
-  const { data: attivo } = await supabase.from("contatti_broadcast").select("id").eq("owner_id", ADMIN_ID).eq("stato", "running").limit(1).maybeSingle()
-  if (attivo) return json({ error: "broadcast_gia_attivo" }, 409)
+  // Blocca un broadcast IMMEDIATO solo se ce n'è già uno attivo e "dovuto"; i programmati futuri si accodano.
+  if (!scheduledAt) {
+    const { data: attivi } = await supabase.from("contatti_broadcast").select("id, scheduled_at").eq("owner_id", ADMIN_ID).eq("stato", "running")
+    const dueActive = (attivi ?? []).some((j: any) => !j.scheduled_at || new Date(j.scheduled_at) <= new Date())
+    if (dueActive) return json({ error: "broadcast_gia_attivo" }, 409)
+  }
 
   let q = supabase.from("contatti_telegram").select("tg_user_id, username, first_name, last_name").eq("owner_id", ADMIN_ID)
   if (tag) q = q.contains("tags", [tag])
@@ -1632,7 +1639,7 @@ async function apiAdminBroadcastCreate(body: any) {
   if (!dest.length) return json({ error: "nessun_destinatario" }, 400)
 
   const { data: job, error } = await supabase.from("contatti_broadcast")
-    .insert({ owner_id: ADMIN_ID, message, tag, delay_min: delay, stato: "running", totali: dest.length })
+    .insert({ owner_id: ADMIN_ID, message, tag, delay_min: delay, stato: "running", totali: dest.length, scheduled_at: scheduledAt })
     .select("id").single()
   if (error) return json({ error: error.message }, 500)
 
@@ -1661,7 +1668,10 @@ async function apiAdminBroadcastStop(body: any) {
 
 // Usato dal worker UniChat: restituisce il prossimo destinatario da servire per il job attivo.
 async function apiAdminBroadcastPoll() {
-  const { data: job } = await supabase.from("contatti_broadcast").select("*").eq("owner_id", ADMIN_ID).eq("stato", "running").order("created_at", { ascending: true }).limit(1).maybeSingle()
+  const now = new Date().toISOString()
+  const { data: job } = await supabase.from("contatti_broadcast").select("*").eq("owner_id", ADMIN_ID).eq("stato", "running")
+    .or(`scheduled_at.is.null,scheduled_at.lte.${now}`)
+    .order("scheduled_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: true }).limit(1).maybeSingle()
   if (!job) return json({ job: null })
   const { data: next } = await supabase.from("contatti_broadcast_dest").select("id, tg_user_id, username, nome").eq("job_id", job.id).eq("stato", "pending").order("id", { ascending: true }).limit(1).maybeSingle()
   if (!next) {
