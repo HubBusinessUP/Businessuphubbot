@@ -675,7 +675,8 @@
       const data = await res.json();
       if (data.is_admin) { const na = document.getElementById("navAdmin"); if (na) na.style.display = ""; }
       const lead = data.lead || {};
-      const completato = !!lead.sondaggio_completato;
+      // L'admin (e chi ha già completato) non deve mai vedere il gate anagrafica.
+      const completato = !!lead.sondaggio_completato || !!data.is_admin;
       window.sondaggioCompletato = completato;
       window.isCliente = !!lead.is_cliente;
       window.userParams = data.sondaggio?.identikit?.params || null;
