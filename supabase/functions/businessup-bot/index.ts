@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7"
 // Redeploy: allinea la function online al codice (fix conteggio iscritti / ref_code).
+// Redeploy per rileggere il secret SB_SECRET_KEY.
 
 const BOT_TOKEN = Deno.env.get("BOT_TOKEN") || ""
 const ADMIN_ID = parseInt(Deno.env.get("ADMIN_ID") || "334179105")
