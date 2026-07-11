@@ -11,9 +11,12 @@ const BOT_USERNAME = "cashlyhub_bot"
 
 const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`
 
+// Chiave con privilegi elevati (bypassa RLS): usa la nuova secret key sb_secret_... se
+// impostata (SB_SECRET_KEY), altrimenti ripiega sulla vecchia service_role legacy.
+const SERVICE_KEY = Deno.env.get("SB_SECRET_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  SERVICE_KEY,
   { db: { schema: "businessup" }, auth: { persistSession: false } },
 )
 
