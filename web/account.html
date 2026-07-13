@@ -9,242 +9,227 @@
 <title>Il mio account - Cashly</title>
 <style>
   :root {
-    --ink: #181b22;
-    --panel: #232834;
-    --card2: #2b313f;
-    --blue: #5aa9f0;
-    --blue-dim: rgba(90, 169, 240, 0.16);
-    --lime: #2ecc71;
-    --lime-dim: rgba(46, 204, 113, 0.15);
-    --amber: #e8b34c;
-    --amber-dim: rgba(232, 179, 76, 0.15);
-    --teal: #38c6c6;
-    --slate: #3a4358;
-    --text: #f5f6f9;
-    --text-dim: #98a0b2;
-    --border: #30374a;
+    /* ===== Token prototipo Cashly (da app.html) ===== */
+    --bg:#1b1f28;--s0:#222732;--s1:#2a3040;--s2:#333a4b;--s3:#414a5d;
+    --line:#3a4251;--line2:#4a5568;
+    --tx:#f7f9fc;--dim:#adb4c4;--mut:#818a9c;
+    --acc:#25c366;--acc-d:#1ea555;--on:#052210;
+    --amber:#e6b24c;--purple:#9b6ef0;--coral:#e2574a;--teal:#38c6c6;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+    /* ===== Alias legacy: gli script inline referenziano questi nomi; rimappati ai token prototipo ===== */
+    /* (i <script> non si toccano, quindi qui i vecchi nomi puntano ai colori nuovi) */
+    --ink:#12151c;--panel:var(--s1);--card2:var(--s1);--slate:var(--s2);
+    --text:var(--tx);--text-dim:var(--dim);--border:var(--line);
+    --lime:var(--acc);--lime-dim:rgba(37,195,102,.14);
+    --amber-dim:rgba(230,178,76,.15);
+    --blue:var(--acc);--blue-dim:rgba(37,195,102,.14); /* nessun blu sugli stati interattivi */
   }
-  .apphdr { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
-  .applogo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
-  .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
-  @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
-  .greet-hero { display: none; }
-  .greet-hero .greet-identity { flex-direction: column; gap: 10px; text-align: center; align-items: center; }
-  .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
-  .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
-  .top-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
-  .icon-circle { width: 34px; height: 34px; border-radius: 4px; flex-shrink: 0; background: #232636; color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
-  .icon-circle.plus { background: var(--lime); color: #06110b; }
-  .hdr-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 1px; }
-  .notif-wrap { position: relative; }
-  .notif-badge { position: absolute; top: -4px; right: -4px; background: #e2574a; color: #fff; font-size: 10px; font-weight: 800; min-width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 4px; padding: 0 4px; border: 2px solid var(--panel); box-sizing: content-box; }
-  .notif-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 290px; max-width: 80vw; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); z-index: 60; padding: 8px; display: none; }
-  .notif-panel.open { display: block; }
-  .notif-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; padding: 6px 8px 8px; }
-  .notif-item { display: flex; gap: 11px; align-items: center; padding: 10px 8px; border-radius: 3px; cursor: pointer; width: 100%; text-align: left; background: none; border: none; color: inherit; font-family: inherit; text-decoration: none; }
-  .notif-item:active { background: var(--ink); }
-  .notif-item .n-ico { width: 30px; height: 30px; border-radius: 3px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .notif-item .n-body { flex: 1; min-width: 0; }
-  .notif-item .n-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .notif-item .n-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
-  .notif-empty { padding: 16px 8px; color: var(--text-dim); font-size: 13px; text-align: center; }
-  .icon-circle.plus { background: var(--lime); color: #06110b; animation: cta-glow 2.4s ease-in-out infinite; }
-  @keyframes cta-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); } 50% { box-shadow: 0 0 0 5px rgba(46,204,113,0); } }
-  .avatar-wrap { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; position: relative; border: none; padding: 0; cursor: pointer; overflow: hidden; }
-  .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; }
-  .avatar-fallback { width: 100%; height: 100%; border-radius: 50%; background: var(--slate); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; }
-  .greet { font-size: 15px; font-weight: 700; }
+
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-numeric: tabular-nums; }
   body {
-    min-height: 100vh; background: var(--ink); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, sans-serif;
-    -webkit-font-smoothing: antialiased;
+    min-height: 100vh; background: var(--ink); color: var(--tx);
+    font-family: var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
   }
-  .container { max-width: 480px; margin: 0 auto; padding: 18px 16px 92px; }
+  svg { display: block; }
+  .ico { stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-  .bnav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 50; }
-  .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 600; font-family: inherit; text-decoration: none; cursor: pointer; }
-  .bnav-item.active { color: var(--lime); }
-  .bnav-item svg { width: 22px; height: 22px; }
-  .af-hero { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin: 2px 2px 12px; }
-  .af-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .af-metric { background: var(--card2); border-radius: 4px; padding: 14px; }
-  .af-n { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
-  .af-n.lime { color: var(--lime); } .af-n.blue { color: var(--blue); }
-  .af-k { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-  .af-ta { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 3px; color: var(--text); padding: 11px; font-size: 13px; font-family: inherit; min-height: 64px; resize: vertical; }
-  .af-info { display: flex; gap: 10px; background: var(--blue-dim); border-radius: 4px; padding: 12px 13px; }
-  .af-info svg { width: 18px; height: 18px; color: var(--blue); flex-shrink: 0; margin-top: 1px; }
-  .af-info p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-  .af-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .af-row:last-child { border-bottom: none; }
-  .af-row .rl-name { font-size: 13.5px; font-weight: 700; flex: 1; min-width: 0; }
-  .af-row .rl-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; }
-  .af-row .rl-badge.on { background: var(--lime-dim); color: var(--lime); }
-  .af-row .rl-badge.wait { background: var(--amber-dim); color: var(--amber); }
-  .af-row .rl-input { flex: 1 1 100%; min-width: 0; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 3px; font-size: 12.5px; font-family: inherit; }
-  .af-partner-ico { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .container { max-width: 460px; margin: 0 auto; background: var(--bg); color: var(--tx); min-height: 100vh; position: relative; padding: 0 0 calc(84px + env(safe-area-inset-bottom)); }
+  .wrap { padding: 14px 16px; }
 
-  .rtabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-bottom: 14px; }
-  .rtab { flex: 1; padding: 10px 6px; border: none; border-radius: 4px; background: none; color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .rtab.active { background: rgba(46,204,113,0.14); color: var(--lime); }
+  /* ===== HEADER ===== */
+  .hdr { position: sticky; top: 0; z-index: 50; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px 18px; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .set { justify-self: start; background: none; border: none; color: var(--dim); cursor: pointer; padding: 4px; display: flex; align-items: center; }
+  .logo { justify-self: center; font-family: var(--sans); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--tx); }
+  .logo .ly { color: var(--acc); }
+  .hdr-right { justify-self: end; display: flex; align-items: center; gap: 12px; }
+  .av { width: 34px; height: 34px; border-radius: 50%; background: var(--s2); border: 1px solid var(--line2); display: flex; align-items: center; justify-content: center; color: var(--acc); font-weight: 700; font-size: 14px; overflow: hidden; position: relative; padding: 0; cursor: pointer; flex-shrink: 0; }
+  .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; }
+  .avatar-fallback { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--acc); }
+
+  .notif-wrap { position: relative; display: flex; }
+  .bell { background: none; border: none; color: var(--dim); cursor: pointer; padding: 2px; display: flex; align-items: center; position: relative; }
+  .notif-badge { position: absolute; top: -3px; right: -3px; background: var(--coral); color: #fff; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; line-height: 15px; text-align: center; border-radius: 4px; padding: 0 3px; border: 2px solid var(--bg); box-sizing: content-box; }
+  .notif-panel { position: absolute; top: calc(100% + 12px); right: 0; width: 290px; max-width: 80vw; background: var(--s0); border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 12px 34px rgba(0,0,0,0.5); z-index: 60; padding: 8px; display: none; }
+  .notif-panel.open { display: block; }
+  .notif-head { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mut); font-weight: 700; padding: 6px 8px 8px; }
+  .notif-item { display: flex; gap: 11px; align-items: center; padding: 10px 8px; border-radius: 4px; cursor: pointer; width: 100%; text-align: left; background: none; border: none; color: inherit; font-family: inherit; text-decoration: none; }
+  .notif-item:active { background: var(--s1); }
+  .notif-item .n-ico { width: 30px; height: 30px; border-radius: 4px; background: var(--acc); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .notif-item .n-body { flex: 1; min-width: 0; }
+  .notif-item .n-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx); }
+  .notif-item .n-sub { font-size: 11.5px; color: var(--dim); margin-top: 1px; }
+  .notif-empty { padding: 16px 8px; color: var(--mut); font-size: 13px; text-align: center; }
+
+  /* ===== TESTATE / TITOLI ===== */
+  .sechd { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 12px; }
+  .sectitle { display: flex; align-items: center; gap: 9px; }
+  .sectitle .t { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--tx); }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; color: var(--acc); background: rgba(37,195,102,.12); padding: 3px 7px; border-radius: 4px; }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); animation: pls 1.8s infinite; }
+  @keyframes pls { 0% { box-shadow: 0 0 0 0 rgba(37,195,102,.5); } 70% { box-shadow: 0 0 0 6px rgba(37,195,102,0); } 100% { box-shadow: 0 0 0 0 rgba(37,195,102,0); } }
+  .sec-hint { font-family: var(--mono); font-size: 10px; color: var(--mut); }
+
+  /* ===== IDENTITY STRIP (Profilo) ===== */
+  .idhead { display: flex; align-items: center; gap: 12px; background: var(--s1); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; margin-bottom: 14px; }
+  .idav { width: 44px; height: 44px; border-radius: 50%; background: var(--s2); border: 1px solid var(--line2); display: flex; align-items: center; justify-content: center; color: var(--acc); flex-shrink: 0; }
+  .idbody { min-width: 0; }
+  .idn { font-size: 15px; font-weight: 700; color: var(--tx); }
+  .idu { font-size: 12px; color: var(--dim); margin-top: 2px; }
+
+  /* ===== CARD ===== */
+  .card { background: var(--s1); border: 1px solid var(--line); border-radius: 4px; padding: 16px; margin-bottom: 12px; }
+  .card h2, .section-title { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--tx); margin-bottom: 14px; }
+
+  /* ===== SUBTAB (.rtabs -> stile .seg) ===== */
+  .rtabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .rtab { flex: 1; height: 44px; border-radius: 4px; border: 1px solid var(--line2); background: var(--s1); color: var(--dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+  .rtab.active { background: rgba(37,195,102,.14); border-color: rgba(37,195,102,.55); color: var(--acc); font-weight: 700; }
   .rpanel { display: none; }
   .rpanel.active { display: block; }
-
-  .aff-carousel { margin-bottom: 14px; position: relative; }
-  .aff-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab; }
-  .aff-track.dragging { cursor: grabbing; scroll-snap-type: none; }
-  .aff-track.dragging .aff-slide { pointer-events: none; }
-  .aff-track::-webkit-scrollbar { display: none; }
-  .aff-slide { flex: 0 0 100%; scroll-snap-align: center; border-radius: 4px; padding: 26px 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.28); color: #fff; }
-  .aff-ic { display: none; }
-  .aff-slide h4 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 10px; }
-  .aff-slide p { font-size: 14.5px; color: rgba(255,255,255,0.9); line-height: 1.65; }
-  .aff-slide p b { color: #fff; font-weight: 800; }
-  .c-green  { background: linear-gradient(135deg, #16a34a, #22c55e); }
-  .c-blue   { background: linear-gradient(135deg, #2563eb, #4a90e2); }
-  .c-amber  { background: linear-gradient(135deg, #d98a1f, #f0b64c); }
-  .c-purple { background: linear-gradient(135deg, #7c3aed, #a06bf5); }
-  .aff-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 14px; }
-  .aff-arrow { width: 34px; height: 34px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s; }
-  .aff-arrow:active { transform: scale(0.9); }
-  .aff-arrow:disabled { opacity: 0.35; cursor: default; }
-  .aff-dots { display: flex; justify-content: center; gap: 7px; }
-  .aff-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; cursor: pointer; }
-  .aff-dot.on { background: var(--lime); width: 20px; border-radius: 4px; }
-
-  .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
-
-  .ik-arch { background: var(--ink); border: 1px solid var(--border); border-radius: 3px; padding: 14px; margin-bottom: 14px; }
-  .ik-arch-lbl { font-size: 11.5px; color: var(--text-dim); }
-  .ik-arch-name { font-size: 17px; font-weight: 800; margin: 3px 0 5px; }
-  .ik-arch-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
-  .ik-row { margin-bottom: 12px; }
-  .ik-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-  .ik-name { font-size: 13.5px; font-weight: 600; }
-  .ik-val { font-size: 14.5px; font-weight: 800; }
-  .ik-track { height: 8px; background: var(--ink); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
-  .ik-fill { height: 100%; border-radius: 3px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
-  .ik-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 4px; }
-  .ik-mini { background: var(--ink); border: 1px solid var(--border); border-radius: 3px; padding: 12px; }
-  .ik-mini-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
-  .ik-mini-h.ok { color: var(--lime); }
-  .ik-mini-h.warn { color: #e8b34c; }
-  .ik-mini div:not(.ik-mini-h) { font-size: 12.5px; margin-bottom: 3px; }
-
-  .share-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
-  .share-overlay.open { display: flex; }
-  .share-sheet { background: var(--ink); border: 1px solid var(--border); border-radius: 4px 12px 0 0; width: 100%; max-width: 480px; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
-  .share-handle { width: 36px; height: 4px; border-radius: 3px; background: var(--border); margin: 0 auto 14px; }
-  .share-sheet h3 { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 16px; }
-  .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; margin-bottom: 14px; }
-  .share-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; color: var(--text); font-family: inherit; cursor: pointer; }
-  .share-ico { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .share-opt span { font-size: 10.5px; font-weight: 600; color: var(--text-dim); }
-
-  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .back { width: 36px; height: 36px; border-radius: 4px; background: var(--panel); display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; cursor: pointer; border: none; }
-  .top h1 { font-size: 19px; font-weight: 700; }
-  .top p { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
-
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
-  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; margin-bottom: 14px; }
-
-  .field { margin-bottom: 14px; }
-  .field:last-child { margin-bottom: 0; }
-  .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
-  .field input, .field select, .field textarea {
-    width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
-    padding: 12px; border-radius: 4px; font-size: 14px; font-family: inherit;
-  }
-  .field textarea { resize: vertical; min-height: 60px; }
-  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--blue); }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  .btn { width: 100%; padding: 15px; border: none; border-radius: 4px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
-  .btn-primary { background: var(--lime); color: #06110b; }
-  .btn-done { background: var(--lime-dim); color: var(--lime); }
-  .save-note { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
-
-  .profile-head { display: flex; align-items: center; gap: 14px; }
-  .ph-avatar { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #3a4358; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px; font-weight: 800; }
-  .ph-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .ph-name { font-size: 17px; font-weight: 700; }
-  .ph-user { font-size: 12.5px; color: var(--text-dim); margin-top: 1px; }
-  .ph-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 4px; margin-top: 7px; background: rgba(232,179,76,0.14); color: #e8b34c; }
-  .ph-badge.ok { background: var(--lime-dim); color: var(--lime); }
-
-  .perf-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-  .perf-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 8px; text-align: center; }
-  .perf-box .n { font-size: 20px; font-weight: 700; }
-  .perf-box .n.lime { color: var(--lime); }
-  .perf-box .l { font-size: 10px; color: var(--text-dim); margin-top: 3px; line-height: 1.3; }
-
-  .invite-row { display: flex; align-items: center; gap: 8px; }
-  .invite-link { flex: 1; min-width: 0; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; padding: 11px 12px; font-size: 11.5px; color: var(--blue); word-break: break-all; }
-  .invite-copy { width: 40px; height: 40px; border-radius: 4px; background: var(--blue); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-
-  .sugg-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .sugg-row:last-child { border-bottom: none; }
-  .sugg-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; }
-  .sugg-stato { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; flex-shrink: 0; }
-  .sugg-stato.in_revisione { background: rgba(232,179,76,0.14); color: #e8b34c; }
-  .sugg-stato.approvato { background: var(--lime-dim); color: var(--lime); }
-  .sugg-stato.rifiutato { background: rgba(226,87,74,0.12); color: #e2574a; }
-  .sugg-why { background: none; border: none; color: #e2574a; cursor: pointer; font-size: 14px; flex-shrink: 0; padding: 2px; }
-
-  .rete-search {
-    width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text);
-    padding: 10px 12px; border-radius: 4px; font-size: 13px; font-family: inherit; margin-bottom: 10px;
-  }
-  .rete-search:focus { outline: none; border-color: var(--blue); }
-
-  .aff-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .aff-row:last-child { border-bottom: none; }
-  .aff-foto { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #3a4358; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; }
-  .aff-foto img { width: 100%; height: 100%; object-fit: cover; }
-  .aff-body { flex: 1; min-width: 0; }
-  .aff-name { font-size: 13px; font-weight: 700; }
-  .aff-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
-  .aff-count { font-size: 11px; font-weight: 700; color: var(--lime); flex-shrink: 0; text-align: right; }
-  .aff-count.zero { color: var(--text-dim); font-weight: 500; }
-  .aff-chat { width: 32px; height: 32px; border-radius: 4px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; }
-
-  .tabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 4px; margin-bottom: 16px; }
-  .tab { flex: 1; padding: 10px 6px; border: none; border-radius: 4px; background: none; color: var(--text-dim); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center; transition: background 0.15s, color 0.15s; }
-  .tab.active { background: rgba(46,204,113,0.14); color: var(--lime); }
   .tabpanel { display: none; }
   .tabpanel.active { display: block; }
 
-  .prod-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  /* ===== FORM / BOTTONI ===== */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: var(--tx); }
+  .field input, .field select, .field textarea {
+    width: 100%; background: var(--s1); border: 1px solid var(--line); color: var(--tx);
+    padding: 12px; border-radius: 4px; font-size: 14px; font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field input::placeholder, .field textarea::placeholder { color: var(--mut); }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--acc); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn { width: 100%; padding: 15px; border: none; border-radius: 4px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--acc); color: var(--on); }
+  .btn-ghost { background: var(--s1); border: 1px solid var(--line2); color: var(--tx); }
+  .btn-done { background: rgba(37,195,102,.14); color: var(--acc); }
+  .btn-sm { width: auto; padding: 8px 14px; font-size: 12.5px; line-height: 1.2; border-radius: 4px; }
+  .save-note { text-align: center; font-size: 12px; color: var(--dim); margin-top: 10px; }
+  .btn-row { display: flex; gap: 8px; }
+
+  /* ===== LINKBOX (invito / pagina) ===== */
+  .invite-row { display: flex; align-items: center; gap: 8px; }
+  .invite-link { flex: 1; min-width: 0; background: var(--s1); border: 1px solid var(--line); border-radius: 4px; padding: 11px 12px; font-size: 11.5px; color: var(--acc); word-break: break-all; font-family: var(--mono); }
+  .invite-copy { width: 40px; height: 40px; border-radius: 4px; background: var(--acc); color: var(--on); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+  /* ===== CALLOUT / NOTE ===== */
+  .af-info { display: flex; gap: 10px; background: rgba(37,195,102,.10); border: 1px solid rgba(37,195,102,.30); border-radius: 4px; padding: 12px 13px; }
+  .af-info svg { width: 18px; height: 18px; color: var(--acc); flex-shrink: 0; margin-top: 1px; }
+  .af-info p { font-size: 12px; color: var(--dim); line-height: 1.5; }
+  .note-amber { background: rgba(230,178,76,.10); border: 1px solid rgba(230,178,76,.30); border-radius: 4px; padding: 12px 13px; }
+  .locked { font-size: 13px; color: var(--dim); line-height: 1.5; }
+
+  /* ===== STATISTICHE ===== */
+  .af-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .af-metric { background: var(--s0); border: 1px solid var(--line); border-radius: 4px; padding: 14px; }
+  .af-n { font-family: var(--mono); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--tx); }
+  .af-n.acc { color: var(--acc); }
+  .af-k { font-size: 12px; color: var(--dim); margin-top: 2px; }
+
+  /* ===== RIGA LINK / RETE (af-row + rl-*) ===== */
+  .af-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .af-row:last-child { border-bottom: none; }
+  .rl-name { font-size: 13.5px; font-weight: 700; flex: 1; min-width: 0; color: var(--tx); }
+  .rl-badge { font-family: var(--mono); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
+  .rl-badge.on { background: rgba(37,195,102,.14); color: var(--acc); }
+  .rl-badge.wait { background: rgba(230,178,76,.15); color: var(--amber); }
+  .rl-input { flex: 1 1 100%; min-width: 0; background: var(--s0); border: 1px solid var(--line); color: var(--tx); padding: 9px 11px; border-radius: 4px; font-size: 12.5px; font-family: inherit; }
+  .rl-input::placeholder { color: var(--mut); }
+  .rl-input:focus { outline: none; border-color: var(--acc); }
+  .af-partner-ico { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* ===== IDENTIKIT ===== */
+  .ik-arch { background: var(--s0); border: 1px solid var(--line); border-radius: 4px; padding: 14px; margin-bottom: 14px; }
+  .ik-arch-lbl { font-size: 11.5px; color: var(--dim); }
+  .ik-arch-name { font-size: 17px; font-weight: 800; margin: 3px 0 5px; color: var(--tx); }
+  .ik-arch-desc { font-size: 12.5px; color: var(--dim); line-height: 1.45; }
+  .ik-row { margin-bottom: 12px; }
+  .ik-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .ik-name { font-size: 13.5px; font-weight: 600; color: var(--tx); }
+  .ik-val { font-family: var(--mono); font-size: 14.5px; font-weight: 800; }
+  .ik-track { height: 8px; background: var(--s0); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .ik-fill { height: 100%; border-radius: 4px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .ik-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 4px; }
+  .ik-mini { background: var(--s0); border: 1px solid var(--line); border-radius: 4px; padding: 12px; }
+  .ik-mini-h { font-family: var(--mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
+  .ik-mini-h.ok { color: var(--acc); }
+  .ik-mini-h.warn { color: var(--amber); }
+  .ik-mini div:not(.ik-mini-h) { font-size: 12.5px; margin-bottom: 3px; color: var(--tx); }
+
+  /* ===== PRODOTTI / ATTIVITA ===== */
+  .prod-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .prod-row:last-child { border-bottom: none; }
   .prod-body { flex: 1; min-width: 0; }
-  .prod-name { font-size: 14px; font-weight: 700; }
-  .prod-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
-  .prod-open { width: 34px; height: 34px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; border: none; cursor: pointer; }
-  .prod-done { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); flex-shrink: 0; }
-  .ph-home { width: 40px; height: 40px; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-  .ph-home:active { transform: scale(0.94); }
+  .prod-name { font-size: 14px; font-weight: 700; color: var(--tx); }
+  .prod-sub { font-size: 11.5px; color: var(--dim); margin-top: 2px; }
+  .prod-open { width: 34px; height: 34px; border-radius: 4px; background: rgba(37,195,102,.14); color: var(--acc); display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; border: none; cursor: pointer; }
+  .prod-done { font-family: var(--mono); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; background: rgba(37,195,102,.14); color: var(--acc); flex-shrink: 0; }
+
+  /* ===== CANDIDATURE ===== */
+  .sugg-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .sugg-row:last-child { border-bottom: none; }
+  .sugg-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--tx); }
+  .sugg-stato { font-family: var(--mono); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; flex-shrink: 0; }
+  .sugg-stato.in_revisione { background: rgba(230,178,76,.15); color: var(--amber); }
+  .sugg-stato.approvato { background: rgba(37,195,102,.14); color: var(--acc); }
+  .sugg-stato.rifiutato { background: rgba(226,87,74,.14); color: var(--coral); }
+  .sugg-why { background: none; border: none; color: var(--coral); cursor: pointer; font-size: 14px; flex-shrink: 0; padding: 2px; }
+
+  /* ===== RETE (aff-row nel view-rete legacy) ===== */
+  .aff-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .aff-row:last-child { border-bottom: none; }
+  .aff-foto { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--s2); color: var(--tx); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+  .aff-foto img { width: 100%; height: 100%; object-fit: cover; }
+  .aff-body { flex: 1; min-width: 0; }
+  .aff-name { font-size: 13px; font-weight: 700; color: var(--tx); }
+  .aff-sub { font-size: 11px; color: var(--dim); margin-top: 1px; }
+  .aff-count { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--acc); flex-shrink: 0; text-align: right; }
+  .aff-count.zero { color: var(--dim); font-weight: 500; }
+  .aff-chat { width: 32px; height: 32px; border-radius: 4px; background: var(--acc); color: var(--on); display: flex; align-items: center; justify-content: center; flex-shrink: 0; text-decoration: none; }
+
+  .rete-search { width: 100%; background: var(--s1); border: 1px solid var(--line); color: var(--tx); padding: 10px 12px; border-radius: 4px; font-size: 13px; font-family: inherit; margin-bottom: 10px; }
+  .rete-search::placeholder { color: var(--mut); }
+  .rete-search:focus { outline: none; border-color: var(--acc); }
+
+  .empty { padding: 24px; text-align: center; color: var(--mut); font-size: 13px; line-height: 1.6; }
+
+  /* ===== BOTTOM SHEET (condivisione + impostazioni) ===== */
+  .share-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
+  .share-overlay.open { display: flex; }
+  .share-sheet { background: var(--s0); border: 1px solid var(--line); border-radius: 12px 12px 0 0; width: 100%; max-width: 460px; padding: 18px 18px calc(20px + env(safe-area-inset-bottom)); }
+  .share-handle { width: 36px; height: 4px; border-radius: 3px; background: var(--line2); margin: 0 auto 14px; }
+  .share-sheet h3 { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 16px; color: var(--tx); }
+  .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; margin-bottom: 14px; }
+  .share-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; color: var(--tx); font-family: inherit; cursor: pointer; }
+  .share-ico { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .share-opt span { font-size: 10.5px; font-weight: 600; color: var(--dim); }
+  .set-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .set-item { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--s1); border: 1px solid var(--line); border-radius: 4px; padding: 13px 14px; color: var(--tx); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .set-item svg { width: 18px; height: 18px; color: var(--dim); flex-shrink: 0; }
+
+  /* ===== BOTTOM NAV ===== */
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; max-width: 460px; margin: 0 auto; display: flex; background: var(--s0); border-top: 1px solid var(--line); padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); z-index: 50; }
+  .nav a, .nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--mut); text-decoration: none; font-size: 10px; font-weight: 600; background: none; border: none; font-family: inherit; cursor: pointer; padding: 0; }
+  .nav a.active, .nav button.active, .nav a.on { color: var(--acc); }
+  .nav svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .nav .lb { font-family: var(--mono); font-size: 10px; letter-spacing: .02em; }
 </style>
 </head>
 <body>
   <div class="container">
-    <div class="apphdr">
-      <div class="applogo" onclick="window.location.href='dashboard.html'" style="cursor:pointer">Cash<span class="ly">ly</span></div>
-      <div class="top-actions">
-        <button class="icon-circle plus" onclick="window.location.href='dashboard.html?_=' + Date.now() + '#suggerisci'" aria-label="Candida un business">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-        <button class="icon-circle" onclick="condividiInvito()" aria-label="Condividi il tuo link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
-        </button>
-        <button class="icon-circle" onclick="window.location.reload()" aria-label="Aggiorna la pagina">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-        </button>
-        <span class="hdr-sep"></span>
+    <div class="hdr">
+      <button class="set" aria-label="Impostazioni" onclick="document.getElementById('setSheet').classList.add('open')">
+        <svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3M9 4.6a1.6 1.6 0 0 1-1.8.3M15 19.4a1.6 1.6 0 0 1 1.8-.3M4.6 15a1.6 1.6 0 0 1-.3 1.8M19.4 9a1.6 1.6 0 0 1 .3-1.8"/></svg>
+      </button>
+      <div class="logo">Cash<span class="ly">ly</span></div>
+      <div class="hdr-right">
         <div class="notif-wrap">
-          <button class="icon-circle" id="notifBtn" onclick="toggleNotif()" aria-label="Notifiche">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <button class="bell" id="notifBtn" onclick="toggleNotif()" aria-label="Notifiche">
+            <svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span class="notif-badge" id="notifBadge" style="display:none">0</span>
           </button>
           <div class="notif-panel" id="notifPanel">
@@ -252,20 +237,16 @@
             <div id="notifList"><div class="notif-empty">Nessuna notifica</div></div>
           </div>
         </div>
+        <button class="av" onclick="switchView('profilo')" aria-label="Il tuo profilo">
+          <img class="avatar-img" id="avatarImg" alt="" />
+          <div class="avatar-fallback" id="avatarFallback">--</div>
+        </button>
       </div>
     </div>
 
-    <div class="greet-hero">
-      <button class="greet-identity" onclick="switchView('profilo')" aria-label="Il tuo profilo">
-        <div class="avatar-wrap">
-          <img class="avatar-img" id="avatarImg" alt="" />
-          <div class="avatar-fallback" id="avatarFallback">--</div>
-        </div>
-        <div class="greet">Ciao, <span id="userName">Utente</span></div>
-      </button>
-    </div>
+    <div class="wrap">
 
-    <!-- ===== VISTA RETE ===== -->
+    <!-- ===== VISTA RETE (codice morto: switchView non la mostra, ma gli id servono al JS) ===== -->
     <div class="tabpanel" id="view-rete">
       <div class="rtabs">
         <button class="rtab active" id="rtabIscritti" onclick="switchRete('iscritti')">Iscritti</button>
@@ -274,38 +255,12 @@
 
       <!-- Scheda: Iscritti -->
       <div class="rpanel active" id="rete-iscritti">
-        <div class="aff-carousel">
-          <div class="aff-track">
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15.5 20c0-2 .6-3.3 2-4"/></svg></div>
-              <h4>Una rete che resta tua</h4>
-              <p>Ogni persona che entra dal tuo invito è collegata a te in modo <b style="color:var(--text)">permanente</b>. Un patrimonio di contatti che costruisci una volta e conservi nel tempo.</p>
-            </div>
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div>
-              <h4>Contatti diretti, senza intermediari</h4>
-              <p>Sono relazioni Telegram dirette: <b style="color:var(--text)">nessun limite</b>, nessuna lista che si disperde, nessun algoritmo tra te e le persone della tua rete.</p>
-            </div>
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg></div>
-              <h4>Crescita a effetto rete</h4>
-              <p>Ogni tuo contatto può portarne altri. La rete si espande in autonomia, <b style="color:var(--text)">moltiplicando la tua portata</b> nel tempo.</p>
-            </div>
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg></div>
-              <h4>Il tuo canale di distribuzione</h4>
-              <p>Da <b style="color:var(--text)">Partner</b>, i tuoi link vengono mostrati ai tuoi contatti sui business dell'hub. Costruisci un canale che lavora al posto tuo.</p>
-            </div>
-          </div>
-          <div class="aff-dots"></div>
-        </div>
-
         <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div>
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);font-weight:700">Iscritti nella tua rete</div>
-            <div style="font-size:11.5px;color:var(--text-dim);margin-top:3px">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
+            <div class="section-title" style="margin-bottom:3px">Iscritti nella tua rete</div>
+            <div style="font-size:11.5px;color:var(--dim)">Tuoi per sempre: chi entra con il tuo link resta legato a te</div>
           </div>
-          <div style="font-size:30px;font-weight:700;color:var(--lime)" id="perfRete">0</div>
+          <div style="font-family:var(--mono);font-size:30px;font-weight:800;color:var(--acc)" id="perfRete">0</div>
         </div>
 
         <div class="card">
@@ -316,7 +271,7 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          <button class="btn btn-sm" style="background:var(--blue);color:#fff;margin-top:10px" onclick="condividiInvito()">Condividi</button>
+          <button class="btn btn-sm btn-primary" style="margin-top:10px" onclick="condividiInvito()">Condividi</button>
         </div>
 
         <div class="card" id="partnerCard" style="display:none">
@@ -339,46 +294,20 @@
         <div class="card">
           <h2>La mia rete</h2>
           <input class="rete-search" id="reteSearch" placeholder="Cerca nella tua rete..." maxlength="60" />
-          <div id="affRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Nessun iscritto ancora.</p></div>
+          <div id="affRows"><p class="empty">Nessun iscritto ancora.</p></div>
         </div>
       </div>
 
       <!-- Scheda: La mia pagina -->
       <div class="rpanel" id="rete-pagina">
-        <div class="aff-carousel">
-          <div class="aff-track">
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></div>
-              <h4>La tua vetrina pubblica</h4>
-              <p>Una pagina professionale con la tua bio, i social e i tuoi link, <b style="color:var(--text)">raggiungibile da un solo indirizzo</b>.</p>
-            </div>
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg></div>
-              <h4>Un solo link da condividere</h4>
-              <p>Metti un unico indirizzo in bio o in chat: chi lo apre trova <b style="color:var(--text)">tutto ciò che offri</b>, ordinato e curato.</p>
-            </div>
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20v-4M18 20v-9"/><path d="M3 20h18"/></svg></div>
-              <h4>Trasforma i contatti in iscritti</h4>
-              <p>Chi visita la tua pagina accede ai business con il <b style="color:var(--text)">tuo link di affiliazione</b>: la pagina lavora alla conversione.</p>
-            </div>
-            <div class="aff-slide">
-              <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg></div>
-              <h4>Attiva 24 ore su 24</h4>
-              <p>Resta online e aggiornata anche quando non ci sei. La condividi una volta e <b style="color:var(--text)">continua a portare risultati</b>.</p>
-            </div>
-          </div>
-          <div class="aff-dots"></div>
-        </div>
-
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <h2 style="margin:0">La mia pagina pubblica</h2>
-            <span id="paginaStato" style="display:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px"></span>
+            <span id="paginaStato" style="display:none;font-family:var(--mono);font-size:11px;font-weight:800;padding:3px 9px;border-radius:4px"></span>
           </div>
           <div id="paginaLocked" style="display:none">
-            <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
-            <button class="btn" style="background:var(--blue-dim);color:var(--blue)" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+            <p class="locked" style="margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
+            <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
           </div>
           <div id="paginaReady" style="display:none">
             <div class="invite-row" style="margin-bottom:10px">
@@ -387,9 +316,9 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               </button>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-sm" style="background:var(--blue);color:#fff;flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
-              <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="condividiPagina()">Condividi</button>
+            <div class="btn-row">
+              <button class="btn btn-sm btn-primary" style="flex:1" id="btnEditPagina" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Crea la tua pagina pubblica</button>
+              <button class="btn btn-sm btn-ghost" onclick="condividiPagina()">Condividi</button>
             </div>
           </div>
         </div>
@@ -398,7 +327,7 @@
 
     <!-- ===== VISTA AFFILIAZIONE ===== -->
     <div class="tabpanel" id="view-affiliazione">
-      <div class="af-hero">Affiliazione</div>
+      <div class="sechd"><div class="sectitle"><span class="t">Affiliazione</span></div></div>
       <div class="rtabs">
         <button class="rtab active" id="atabPanoramica" onclick="switchAff('panoramica')">Panoramica</button>
         <button class="rtab" id="atabRete" onclick="switchAff('rete')">Rete</button>
@@ -409,15 +338,15 @@
       <!-- Scheda: Panoramica -->
       <div class="rpanel active" id="aff-panoramica">
         <div class="card" style="margin-bottom:12px">
-          <div class="section-title">Le tue statistiche</div>
+          <div class="section-title" style="display:flex;align-items:center;gap:9px">Le tue statistiche <span class="live"><span class="pulse"></span>LIVE</span></div>
           <div class="af-stats">
-            <div class="af-metric"><div class="af-n blue" id="stClick">0</div><div class="af-k">Click sul link</div></div>
-            <div class="af-metric"><div class="af-n lime" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
+            <div class="af-metric"><div class="af-n" id="stClick">0</div><div class="af-k">Click sul link</div></div>
+            <div class="af-metric"><div class="af-n acc" id="stIscritti">0</div><div class="af-k">Iscritti</div></div>
             <div class="af-metric"><div class="af-n" id="stAttivazioni">0</div><div class="af-k">Attivazioni</div></div>
-            <div class="af-metric"><div class="af-n" id="stClienti">0</div><div class="af-k">Clienti</div></div>
+            <div class="af-metric"><div class="af-n acc" id="stClienti">0</div><div class="af-k">Clienti</div></div>
           </div>
         </div>
-        <div class="card" id="affPartner" style="margin-bottom:12px"><p style="font-size:13px;color:var(--text-dim);text-align:center;padding:4px 0">Caricamento…</p></div>
+        <div class="card" id="affPartner" style="margin-bottom:12px"><p class="empty" style="padding:4px 0">Caricamento…</p></div>
         <div class="card" style="margin-bottom:12px">
           <div class="section-title">Il tuo link d'invito</div>
           <div class="invite-row" style="margin-bottom:10px">
@@ -426,9 +355,9 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="condividiAff()">Condividi</button>
-            <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="toggleQr()">QR code</button>
+          <div class="btn-row">
+            <button class="btn btn-sm btn-primary" style="flex:1" onclick="condividiAff()">Condividi</button>
+            <button class="btn btn-sm btn-ghost" style="flex:1" onclick="toggleQr()">QR code</button>
           </div>
           <div id="affQr" style="display:none;text-align:center;margin-top:14px">
             <img id="affQrImg" alt="QR del tuo link" style="width:200px;height:200px;border-radius:4px;background:#fff;padding:8px" />
@@ -453,22 +382,22 @@
       <!-- Scheda: La mia pagina -->
       <div class="rpanel" id="aff-pagina">
         <div class="card">
-          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">La tua pagina pubblica <span id="affPaginaStato" style="display:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px"></span></div>
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">La tua pagina pubblica <span id="affPaginaStato" style="display:none;font-family:var(--mono);font-size:11px;font-weight:800;padding:3px 9px;border-radius:4px"></span></div>
           <div id="affPaginaLocked" style="display:none">
-            <p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, foto, social e i tuoi link.</p>
-            <button class="btn btn-sm" style="background:var(--blue-dim);color:var(--blue);width:100%" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+            <p class="locked" style="margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, foto, social e i tuoi link.</p>
+            <button class="btn btn-sm btn-primary" style="width:100%" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
           </div>
           <div id="affPaginaReady" style="display:none">
-            <p style="font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">La tua vetrina pubblica: bio, foto, social e i tuoi link in un unico posto. Gestiscila completa qui.</p>
+            <p class="locked" style="margin-bottom:12px">La tua vetrina pubblica: bio, foto, social e i tuoi link in un unico posto. Gestiscila completa qui.</p>
             <div class="invite-row" style="margin-bottom:10px">
               <div class="invite-link" id="affPaginaLink">-</div>
               <button class="invite-copy" onclick="copiaAffPagina()" aria-label="Copia link pagina">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               </button>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-sm" style="background:var(--lime);color:#06110b;flex:1" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
-              <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);flex:1" onclick="condividiAffPagina()">Condividi</button>
+            <div class="btn-row">
+              <button class="btn btn-sm btn-primary" style="flex:1" onclick="window.location.href='mia-pagina.html?_=' + Date.now()">Modifica pagina</button>
+              <button class="btn btn-sm btn-ghost" style="flex:1" onclick="condividiAffPagina()">Condividi</button>
             </div>
           </div>
         </div>
@@ -478,11 +407,11 @@
       <div class="rpanel" id="aff-link">
         <div class="card">
           <div class="section-title">I miei link per business</div>
-          <div id="affLinkLocked" style="display:none">
-            <p style="font-size:13px;color:var(--text-dim);line-height:1.5">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b> (in Panoramica vedi a che punto sei). Da Partner potrai mettere il TUO link su ogni business.</p>
+          <div id="affLinkLocked" class="note-amber" style="display:none">
+            <p class="locked">Questa sezione si sblocca con lo status <b style="color:var(--text)">Partner</b> (in Panoramica vedi a che punto sei). Da Partner potrai mettere il TUO link su ogni business.</p>
           </div>
           <div id="affLinkEditor" style="display:none">
-            <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link. I domini conosciuti si attivano subito, gli altri passano dall'approvazione.</p>
+            <p class="locked" style="margin-bottom:12px">Incolla il tuo link referral accanto ai business che usi: i tuoi invitati vedranno il TUO link. I domini conosciuti si attivano subito, gli altri passano dall'approvazione.</p>
             <div id="affLinkRows"></div>
           </div>
         </div>
@@ -491,6 +420,11 @@
 
     <!-- ===== VISTA PROFILO ===== -->
     <div class="tabpanel active" id="view-profilo">
+      <div class="sechd"><div class="sectitle"><span class="t">Profilo</span></div></div>
+      <div class="idhead">
+        <div class="idav"><svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+        <div class="idbody"><div class="idn">Ciao, <span id="userName">Utente</span></div><div class="idu">Il tuo profilo</div></div>
+      </div>
       <div class="rtabs">
         <button class="rtab active" id="ptabDati" onclick="switchProfilo('dati')">Dati</button>
         <button class="rtab" id="ptabIdentikit" onclick="switchProfilo('identikit')">Identikit</button>
@@ -498,21 +432,6 @@
       </div>
 
       <div class="rpanel active" id="profilo-dati">
-      <div class="aff-carousel">
-        <div class="aff-track">
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
-            <h4>Il tuo profilo di base</h4>
-            <p>Nome, contatti e citt&agrave;: servono per la tua <b style="color:var(--text)">pagina pubblica</b> e per essere ricontattato quando serve.</p>
-          </div>
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
-            <h4>Sempre aggiornabili</h4>
-            <p>Puoi modificare i tuoi dati quando vuoi. <b style="color:var(--text)">Nulla &egrave; definitivo</b>: salvi e sono subito attivi.</p>
-          </div>
-        </div>
-        <div class="aff-dots"></div>
-      </div>
       <div class="card">
         <h2>Dati anagrafici</h2>
         <div class="field"><label>Nome</label><input id="fNome" /></div>
@@ -520,9 +439,9 @@
         <div class="field"><label>Email</label><input id="fEmail" type="email" /></div>
         <div class="field">
           <label>Telefono</label>
-          <div style="display:flex;gap:8px">
+          <div class="btn-row">
             <input id="fTelefono" type="tel" placeholder="+39..." style="flex:1" />
-            <button type="button" class="btn" style="width:auto;padding:0 14px;background:var(--panel);border:1px solid var(--border);color:var(--text)" id="btnContatto">Da Telegram</button>
+            <button type="button" class="btn btn-ghost" style="width:auto;padding:0 14px" id="btnContatto">Da Telegram</button>
           </div>
         </div>
         <div class="field"><label>Città</label><input id="fCitta" /></div>
@@ -533,26 +452,6 @@
       </div>
 
       <div class="rpanel" id="profilo-identikit">
-      <div class="aff-carousel">
-        <div class="aff-track">
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--blue-dim);color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-            <h4>Un test, un identikit</h4>
-            <p>22 domande per fotografare <b style="color:var(--text)">dove sei oggi</b> in ambito business, con lucidità e senza illusioni.</p>
-          </div>
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20h-20"/></svg></div>
-            <h4>I tuoi numeri</h4>
-            <p>Sei aree misurate: <b style="color:var(--text)">motivazione, risorse, rischio, competenze, disciplina e consapevolezza</b>.</p>
-          </div>
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg></div>
-            <h4>Ti guida ai business giusti</h4>
-            <p>In base al tuo profilo, ogni business mostra un <b style="color:var(--text)">pallino di compatibilità</b> nella lista.</p>
-          </div>
-        </div>
-        <div class="aff-dots"></div>
-      </div>
       <div class="card">
         <h2>Il tuo identikit business</h2>
         <div id="identikitBox"></div>
@@ -560,21 +459,8 @@
       </div>
 
       <div class="rpanel" id="profilo-attivita">
-      <div class="aff-carousel">
-        <div class="aff-track">
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--lime-dim);color:var(--lime)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-            <h4>I tuoi business attivi</h4>
-            <p>Ritrova qui i business che hai avviato, con il <b style="color:var(--text)">link per riaprirli</b> e lo stato del tutorial.</p>
-          </div>
-          <div class="aff-slide">
-            <div class="aff-ic" style="background:var(--amber-dim);color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
-            <h4>Le tue candidature</h4>
-            <p>Proponi nuovi business all'hub: qui <b style="color:var(--text)">segui lo stato</b> di ogni proposta inviata.</p>
-          </div>
-        </div>
-        <div class="aff-dots"></div>
-      </div>
+      <button class="btn btn-primary" style="margin-bottom:12px" onclick="window.location.href='dashboard.html?_=' + Date.now() + '#suggerisci'">+ Candida un business</button>
+
       <div class="card" id="attivitaRipreseCard" style="display:none">
         <h2>Tutorial da recuperare</h2>
         <div id="attivitaRiprese"></div>
@@ -582,7 +468,7 @@
 
       <div class="card">
         <h2>I miei business attivi</h2>
-        <div id="prodottiRows"><p style="text-align:center;color:var(--text-dim);font-size:13px;padding:8px 0">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>
+        <div id="prodottiRows"><p class="empty">Non hai ancora attivato nessun business. Vai nella Business List per iniziare.</p></div>
       </div>
 
       <div class="card" id="suggStatiCard" style="display:none">
@@ -592,6 +478,9 @@
       </div>
     </div>
 
+    </div><!-- /.wrap -->
+
+    <!-- Bottom sheet: condivisione multi-social -->
     <div class="share-overlay" id="shareOverlay" onclick="if(event.target===this) closeShare()">
       <div class="share-sheet">
         <div class="share-handle"></div>
@@ -601,33 +490,48 @@
           <button class="share-opt" onclick="shareTo('telegram')"><span class="share-ico" style="background:#29a9eb"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="m22 2-7 20-4-9-9-4Z"/></svg></span><span>Telegram</span></button>
           <button class="share-opt" onclick="shareTo('facebook')"><span class="share-ico" style="background:#1877f2"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></span><span>Facebook</span></button>
           <button class="share-opt" onclick="shareTo('x')"><span class="share-ico" style="background:#000"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M18.9 2h3.3l-7.2 8.3L23.5 22h-6.6l-5.2-6.8L5.7 22H2.4l7.7-8.8L2 2h6.8l4.7 6.2L18.9 2zm-1.2 18h1.8L7.1 3.9H5.2L17.7 20z"/></svg></span><span>X</span></button>
-          <button class="share-opt" onclick="shareTo('email')"><span class="share-ico" style="background:var(--blue)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7 10-7"/></svg></span><span>Email</span></button>
-          <button class="share-opt" onclick="shareCopy()"><span class="share-ico" style="background:#2b3040"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span><span>Copia</span></button>
+          <button class="share-opt" onclick="shareTo('email')"><span class="share-ico" style="background:var(--acc)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7 10-7"/></svg></span><span>Email</span></button>
+          <button class="share-opt" onclick="shareCopy()"><span class="share-ico" style="background:var(--s2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span><span>Copia</span></button>
         </div>
-        <button class="btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="closeShare()">Chiudi</button>
+        <button class="btn btn-ghost" onclick="closeShare()">Chiudi</button>
       </div>
     </div>
 
-    <nav class="bnav">
-      <a class="bnav-item" href="dashboard.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
-        <span>Home</span>
+    <!-- Bottom sheet: impostazioni (riusa .share-sheet; solo azioni già esistenti) -->
+    <div class="share-overlay" id="setSheet" onclick="if(event.target===this) this.classList.remove('open')">
+      <div class="share-sheet">
+        <div class="share-handle"></div>
+        <h3>Impostazioni</h3>
+        <div class="set-list">
+          <button class="set-item" onclick="switchView('profilo');switchProfilo('dati');document.getElementById('setSheet').classList.remove('open')">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Aggiorna i tuoi dati
+          </button>
+          <button class="set-item" onclick="window.location.reload()">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+            Ricarica la pagina
+          </button>
+        </div>
+        <button class="btn btn-ghost" onclick="document.getElementById('setSheet').classList.remove('open')">Chiudi</button>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="app.html">
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+        <span class="lb">Home</span>
       </a>
-      <a class="bnav-item" href="lista.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
-        <span>Lista</span>
-      </a>
-      <button class="bnav-item" id="navAffiliazione" onclick="switchView('affiliazione')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
-        <span>Affiliazione</span>
+      <button id="navAffiliazione" onclick="switchView('affiliazione')">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg>
+        <span class="lb">Affiliazione</span>
       </button>
-      <button class="bnav-item active" id="navProfilo" onclick="switchView('profilo')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <span>Profilo</span>
+      <button id="navProfilo" class="active" onclick="switchView('profilo')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="lb">Profilo</span>
       </button>
-      <a class="bnav-item" id="navAdmin" href="admin/index.html" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-        <span>Admin</span>
+      <a id="navAdmin" href="admin/index.html" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h18M3 20h18"/></svg>
+        <span class="lb">Admin</span>
       </a>
     </nav>
   </div>
@@ -636,7 +540,7 @@
     window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="identikit.js?v=8"></script>
+  <script src="identikit.js?v=9"></script>
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     const tg = window.Telegram?.WebApp;

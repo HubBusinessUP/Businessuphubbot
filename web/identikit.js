@@ -49,10 +49,10 @@ const CONS_Q = [
 
 const CONS_DIM = {
   motivazione:   { label: "Motivazione",    color: "#e2574a" },
-  risorse:       { label: "Risorse",        color: "#4a90e2" },
-  rischio:       { label: "Rischio",        color: "#e8b34c" },
-  competenze:    { label: "Competenze",     color: "#2ecc71" },
-  disciplina:    { label: "Disciplina",     color: "#9b6dff" },
+  risorse:       { label: "Risorse",        color: "#5aa9f0" },
+  rischio:       { label: "Rischio",        color: "#e6b24c" },
+  competenze:    { label: "Competenze",     color: "#25c366" },
+  disciplina:    { label: "Disciplina",     color: "#9b6ef0" },
   consapevolezza:{ label: "Consapevolezza", color: "#38c6c6" },
 };
 
@@ -181,7 +181,7 @@ if (typeof document !== "undefined") {
 
 // Auto-update: se il server ha una build più nuova, l'app si ricarica DA SOLA (nessuna cache da svuotare,
 // batte anche Telegram che tiene viva la webview). Controlla all'avvio e ogni volta che torna in primo piano.
-var APP_BUILD = "8";
+var APP_BUILD = "9";
 if (typeof document !== "undefined" && typeof fetch !== "undefined") {
   var checkBuild = function () {
     if (document.hidden) return;
