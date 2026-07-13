@@ -37,7 +37,7 @@
 
   .bnav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 50; }
   .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 600; font-family: inherit; text-decoration: none; cursor: pointer; }
-  .bnav-item.active { color: var(--blue); }
+  .bnav-item.active { color: var(--lime); }
   .bnav-item svg { width: 22px; height: 22px; }
 
   .apphdr { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
@@ -603,7 +603,7 @@
     })();
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="identikit.js?v=6"></script>
+  <script src="identikit.js?v=7"></script>
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     const tg = window.Telegram?.WebApp;
