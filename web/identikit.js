@@ -161,3 +161,20 @@ if (typeof window !== "undefined") {
   window.computeSemaforo = computeSemaforo;
   window.computeCompat = computeCompat;
 }
+
+// Cache-busting: ogni click su un link interno a una pagina .html forza l'ultima versione.
+// Così gli aggiornamenti arrivano subito, senza che l'utente svuoti la cache.
+if (typeof document !== "undefined") {
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a) return;
+    var href = a.getAttribute("href") || "";
+    if (/^https?:\/\//i.test(href) || /^(mailto:|tel:|javascript:|#)/i.test(href)) return;
+    if (href.indexOf(".html") < 0 || href.indexOf("_=") >= 0) return;
+    var hi = href.indexOf("#");
+    var hash = hi >= 0 ? href.slice(hi) : "";
+    var base = hi >= 0 ? href.slice(0, hi) : href;
+    base += (base.indexOf("?") < 0 ? "?" : "&") + "_=" + Date.now();
+    a.href = base + hash;
+  }, true);
+}
