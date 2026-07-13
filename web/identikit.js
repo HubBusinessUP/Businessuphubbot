@@ -178,3 +178,22 @@ if (typeof document !== "undefined") {
     a.href = base + hash;
   }, true);
 }
+
+// Auto-update: se il server ha una build più nuova, l'app si ricarica DA SOLA (nessuna cache da svuotare,
+// batte anche Telegram che tiene viva la webview). Controlla all'avvio e ogni volta che torna in primo piano.
+var APP_BUILD = "4";
+if (typeof document !== "undefined" && typeof fetch !== "undefined") {
+  var checkBuild = function () {
+    fetch("version.json?_=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.v || d.v === APP_BUILD) return;
+        var k = "reloaded_for_" + d.v;
+        try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch (e) {}
+        location.replace(location.pathname + "?_=" + Date.now() + (location.hash || ""));
+      })
+      .catch(function () {});
+  };
+  checkBuild();
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) checkBuild(); });
+}
