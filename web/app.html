@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Cashly</title>
+<title>Cashly · Business list</title>
 <style>
   :root {
     --ink: #181b22;
@@ -45,46 +45,7 @@
   .applogo .ly { color: var(--lime); display: inline-block; animation: lyp 1.8s ease-in-out infinite; }
   @keyframes lyp { 0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); } 50% { opacity: .85; text-shadow: 0 0 12px rgba(46,204,113,.7); } }
   .greet-hero { display: none; }
-  /* Saluto senza card, sotto il carosello */
-  .home-greet { display: flex; align-items: center; gap: 11px; width: 100%; background: none; border: none; padding: 4px 2px; margin: 16px 0 4px; cursor: pointer; font-family: inherit; color: inherit; text-align: left; }
-  .home-greet .hg-text { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
-  /* ===== Command center (Home) ===== */
-  .hsec { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 18px; }
-  .hsec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-  .hsec-title { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
-  .hsec-desc { font-size: 12.5px; color: var(--text-dim); margin: 2px 0 12px; }
-  .hsec-cta { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--blue); font-size: 13px; font-weight: 800; text-decoration: none; }
-  .hsec-cta svg { width: 15px; height: 15px; }
-  .hc-head { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 10px; }
-  .hc-all { font-size: 12.5px; font-weight: 700; color: var(--blue); text-decoration: none; white-space: nowrap; }
-  .prev-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 9px; text-decoration: none; color: inherit; }
-  .prev-rank { width: 20px; font-size: 13px; font-weight: 800; color: var(--text-dim); text-align: center; flex-shrink: 0; }
-  .prev-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .prev-votes { display: flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--lime); flex-shrink: 0; }
-  .invite-banner { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font-family: inherit; cursor: pointer; border: none; border-radius: 4px; padding: 16px 18px; margin: 6px 0 18px; background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; box-shadow: 0 8px 22px rgba(34,197,94,0.3); }
-  .invite-banner .ib-title { font-size: 16px; font-weight: 800; }
-  .invite-banner .ib-sub { font-size: 12.5px; opacity: 0.92; margin-top: 2px; }
-  .invite-banner .ib-body { flex: 1; min-width: 0; }
-  .invite-banner .ib-ico { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .hc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-  .mini-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 14px; text-decoration: none; color: inherit; display: block; }
-  .mini-card .mc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; }
-  .mini-card .mc-num { font-size: 26px; font-weight: 800; margin-top: 3px; line-height: 1.1; }
-  .mini-card .mc-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
-  .section-mini-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); font-weight: 700; margin: 4px 0 10px; }
-  .hc-shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-  .sc-card { display: flex; align-items: center; gap: 11px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 13px; text-decoration: none; color: inherit; font-size: 13.5px; font-weight: 700; }
-  .sc-card .sc-ico { width: 32px; height: 32px; border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .hc-attivita { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 6px 14px 10px; margin-bottom: 18px; }
-  .hc-attivita .hca-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); font-weight: 700; margin: 10px 0 4px; }
-  .hca-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; text-decoration: none; color: inherit; }
-  .hca-row + .hca-row { border-top: 1px solid var(--border); }
-  .hca-ico { width: 30px; height: 30px; border-radius: 3px; background: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .hca-body { flex: 1; min-width: 0; }
-  .hca-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hca-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; }
-  .hca-bar { height: 4px; border-radius: 4px; background: var(--border); margin-top: 5px; overflow: hidden; }
-  .hca-bar > i { display: block; height: 100%; background: var(--blue); border-radius: 4px; }
+  .greet-hero .greet-identity { flex-direction: column; gap: 10px; text-align: center; align-items: center; }
   .greet-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
   .greet-identity { display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: inherit; min-width: 0; }
   .top-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
@@ -157,7 +118,7 @@
     white-space: nowrap; overflow: hidden;
   }
   .dd-btn .dd-label { overflow: hidden; text-overflow: ellipsis; }
-  .dd-btn.active { border-color: var(--blue); color: var(--blue); }
+  .dd-btn.active { border-color: var(--lime); color: var(--lime); }
   .dd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .dd-btn svg { flex-shrink: 0; transition: transform 0.15s ease; }
   .dd.open .dd-btn svg { transform: rotate(180deg); }
@@ -174,7 +135,7 @@
     font-family: inherit; cursor: pointer; border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   .dd-opt:last-child { border-bottom: none; }
-  .dd-opt.selected { color: var(--blue); }
+  .dd-opt.selected { color: var(--lime); }
   .dd-opt:active { background: rgba(255,255,255,0.04); }
 
   .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
@@ -245,13 +206,31 @@
   .vote-btn.voted .vote-num { color: var(--lime); }
 
   .search-row { margin-bottom: 10px; }
+  .ltabs { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+  .ltabs::-webkit-scrollbar { display: none; }
+  .ltab { flex: 0 0 auto; padding: 8px 15px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .ltab.active { background: rgba(46,204,113,0.14); color: var(--lime); border-color: rgba(46,204,113,0.5); }
+  .ltab-sugg { color: var(--lime); border-color: rgba(46,204,113,0.4); }
+  .ltab-sugg.active { background: var(--lime); color: #06210f; border-color: transparent; }
+  .sugg-hero { text-align: center; padding: 8px 10px 20px; }
+  .sugg-hero-ico { width: 56px; height: 56px; border-radius: 4px; background: var(--lime-dim); color: var(--lime); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .sugg-hero h3 { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .sugg-hero p { font-size: 13.5px; color: var(--text-dim); line-height: 1.55; max-width: 340px; margin: 0 auto; }
+  .sugg-perk { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+  .sp-row { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 14px; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .sp-row b { color: var(--text); }
+  .sp-ico { font-size: 20px; flex-shrink: 0; line-height: 1.2; }
   .search-input {
     width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
     padding: 11px 12px 11px 36px; border-radius: 4px; font-size: 13px; font-family: inherit;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%238b90a0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>');
     background-repeat: no-repeat; background-position: 11px center; background-size: 15px;
   }
-  .search-input:focus { outline: none; border-color: var(--blue); }
+  .search-input:focus { outline: none; border-color: var(--lime); }
+  .compat-pct { font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; align-self: center; }
+  .cp-hi { color: var(--lime); background: rgba(46,204,113,0.14); }
+  .cp-mid { color: var(--amber); background: var(--amber-dim); }
+  .cp-lo { color: var(--text-dim); background: rgba(129,138,156,0.14); }
 
   .new-badge { font-size: 8.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: var(--blue-dim); color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; vertical-align: 2px; margin-left: 6px; }
 
@@ -426,7 +405,7 @@
     <div class="apphdr">
       <div class="applogo" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer">Cash<span class="ly">ly</span></div>
       <div class="top-actions">
-        <button class="icon-circle plus" onclick="window.location.href='lista.html?_=' + Date.now() + '#suggerisci'" aria-label="Candida un business">
+        <button class="icon-circle plus" onclick="openSuggestSheet()" aria-label="Candida un business">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
         <button class="icon-circle" onclick="openShareSheet()" aria-label="Condividi il tuo link">
@@ -449,87 +428,93 @@
       </div>
     </div>
 
-    <div class="aff-carousel" style="display:none">
-      <div class="aff-track">
-        <div class="aff-slide c-green">
-          <h4>Benvenuto in Cashly</h4>
-          <p>La directory del Business Online. Esplora servizi e prodotti nella lista e <b>contribuisci a farla crescere</b>.</p>
+    <div class="greet-hero">
+      <button class="greet-identity" onclick="goProfilo()" aria-label="Il tuo profilo">
+        <div class="avatar-wrap">
+          <img class="avatar-img" id="avatarImg" alt="" />
+          <div class="avatar-fallback" id="avatarFallback">--</div>
         </div>
-        <div class="aff-slide c-blue">
-          <h4>Falla crescere anche tu</h4>
-          <p>Suggerisci prodotti e servizi che utilizzi e crea la tua <b>rete fidelizzata</b> nell'hub.</p>
-        </div>
-        <div class="aff-slide c-amber">
-          <h4>La tua rete lavora per te</h4>
-          <p>Ogni utente che inviti nell'hub vedrà nella directory i prodotti e servizi con <b>il tuo link di affiliazione</b>, se presente.</p>
-        </div>
-      </div>
-      <div class="aff-dots"></div>
+        <div class="greet">Ciao, <span id="userName">Utente</span></div>
+      </button>
     </div>
 
-    <div class="lock-card" id="anagraficaPrompt" style="display:none;margin-top:16px">
+    <div class="section-gap"></div>
+
+    <div class="lock-card" id="anagraficaPrompt" style="display:none">
       <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <h3>Completa la tua anagrafica</h3>
       <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
       <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
     </div>
 
-    <!-- SEZIONE · Business List (il core) -->
-    <section class="hsec">
-      <div class="hsec-head">
-        <div class="section-title"><span class="live-dot"></span>Esplora directory<span class="live-badge">LIVE</span></div>
+
+    <p style="margin:2px 4px 12px;font-size:14px;font-weight:600;color:var(--text-dim);line-height:1.35">Cerca il business che ti farà <b style="color:var(--lime);font-weight:700">cambiare vita</b>.</p>
+    <div class="section-row">
+      <div class="section-title"><span class="live-dot"></span>Esplora directory<span class="live-badge">LIVE</span></div>
+      <div class="section-date" id="sectionDate"></div>
+    </div>
+
+    <div class="ltabs" id="ltabs">
+      <button class="ltab active" onclick="setListView('tutti', this)">Tutti</button>
+      <button class="ltab" onclick="setListView('evidenza', this)">In evidenza</button>
+      <button class="ltab" onclick="setListView('nuovi', this)">Nuovi</button>
+      <button class="ltab ltab-sugg" onclick="setListView('suggerisci', this)">＋ Suggerisci</button>
+    </div>
+
+    <div class="search-row">
+      <input class="search-input" id="searchInput" placeholder="Cerca un business..." maxlength="60" />
+    </div>
+
+    <div class="filter-row">
+      <div class="dd" id="ddCategoria">
+        <button class="dd-btn" onclick="toggleDd('ddCategoria')">
+          <span class="dd-label">Categoria</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd-menu"></div>
       </div>
-      <p class="hsec-desc">Cerca il business che ti farà <b style="color:var(--lime)">cambiare vita</b> — selezionati e votati dalla community.</p>
-      <div id="listPreview"><p class="empty">Caricamento...</p></div>
-      <a class="hsec-cta" href="lista.html">Esplora tutta la lista <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-    </section>
-
-    <!-- SEZIONE · La tua rete -->
-    <section class="hsec">
-      <div class="hsec-head"><h2 class="hsec-title">La tua rete</h2></div>
-      <p class="hsec-desc">Chi inviti resta tuo per sempre e ti fa guadagnare.</p>
-      <div class="hc-grid2">
-        <div class="mini-card" style="cursor:default">
-          <div class="mc-label">Invitati</div>
-          <div class="mc-num" id="hcRete">–</div>
-          <div class="mc-sub" id="hcReteSub">nella tua rete</div>
-        </div>
-        <div class="mini-card" style="cursor:default">
-          <div class="mc-label">Click invito</div>
-          <div class="mc-num" id="hcClick">–</div>
-          <div class="mc-sub">totali</div>
-        </div>
+      <div class="dd" id="ddSottocategoria">
+        <button class="dd-btn" onclick="toggleDd('ddSottocategoria')">
+          <span class="dd-label">Sottocategoria</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd-menu"></div>
       </div>
-      <a class="hsec-cta" href="account.html#affiliazione">Gestisci l'affiliazione <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-    </section>
+      <div class="dd" id="ddFiltri">
+        <button class="dd-btn" disabled>
+          <span class="dd-label">Filtra</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dd-menu"></div>
+      </div>
+    </div>
 
-    <!-- SEZIONE · Attività (solo se ci sono tutorial da riprendere) -->
-    <section class="hsec" id="attivitaSec" style="display:none">
-      <div class="hsec-head"><h2 class="hsec-title">Riprendi dove eri</h2></div>
-      <p class="hsec-desc">I tutorial che hai iniziato e non ancora completato.</p>
-      <div id="hcAttivita"></div>
-    </section>
+    <div class="list-card" id="businessList"><p class="empty">Caricamento...</p></div>
 
-    <!-- SEZIONE · Invita e guadagna (banner, in fondo) -->
-    <section class="hsec">
-      <button class="invite-banner" onclick="openShareSheet()" style="margin:14px 0 0">
-        <div class="ib-body">
-          <div class="ib-title">Invita e guadagna</div>
-          <div class="ib-sub">La tua rete resta tua per sempre. Condividi il link.</div>
-        </div>
-        <div class="ib-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-      </button>
-    </section>
+    <!-- Scheda Suggerisci -->
+    <div id="suggerisciPanel" style="display:none">
+      <div class="sugg-hero">
+        <div class="sugg-hero-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h3>Suggerisci un business</h3>
+        <p>Conosci un tool o un business online che funziona? Proponilo alla community: se approvato entra nella Business list.</p>
+      </div>
+      <div class="sugg-perk">
+        <div class="sp-row"><span class="sp-ico">🥇</span><div><b>Sei il primo?</b> Se lo suggerisci per primo e viene approvato, il tuo <b>link di affiliazione</b> diventa quello ufficiale della scheda per tutti. E anche se non sei il primo, <b>la tua rete vedrà comunque il business con il tuo ref link</b> (se lo hai impostato).</div></div>
+        <div class="sp-row"><span class="sp-ico">🛡️</span><div><b>Lista curata.</b> Ogni proposta è vagliata manualmente: teniamo dentro solo business trasparenti e affidabili.</div></div>
+        <div class="sp-row"><span class="sp-ico">📈</span><div><b>Fai crescere l'hub.</b> Più la lista è ricca, più valore per te e per la tua rete.</div></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="openSuggestSheet()">Candida un business</button>
+    </div>
 
     <nav class="bnav">
-      <button class="bnav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <a class="bnav-item" href="app.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
         <span>Home</span>
-      </button>
-      <a class="bnav-item" href="lista.html">
+      </a>
+      <button class="bnav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
         <span>Lista</span>
-      </a>
+      </button>
       <a class="bnav-item" href="account.html#affiliazione">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.1 10.6 7.8-4.3M8.1 13.4l7.8 4.3"/></svg>
         <span>Affiliazione</span>
@@ -639,12 +624,10 @@
     function renderTelegramProfile() {
       const user = tg?.initDataUnsafe?.user;
       const firstName = user?.first_name || "";
-      const nameEl = document.getElementById("userName");
-      if (nameEl) nameEl.textContent = firstName || "Utente";
+      document.getElementById("userName").textContent = firstName || "Utente";
 
       const img = document.getElementById("avatarImg");
       const fallback = document.getElementById("avatarFallback");
-      if (!img || !fallback) return;
       if (user?.photo_url) {
         img.src = user.photo_url;
         img.onload = () => { img.style.display = "block"; fallback.style.display = "none"; };
@@ -655,6 +638,7 @@
     }
     renderTelegramProfile();
 
+    document.getElementById("sectionDate").textContent = "Aggiornato al " + new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
 
     // Tema chiaro/scuro in base alle impostazioni Telegram, aggiornato live se l'utente cambia tema.
     function applyTheme() {
@@ -675,8 +659,7 @@
       const data = await res.json();
       if (data.is_admin) { const na = document.getElementById("navAdmin"); if (na) na.style.display = ""; }
       const lead = data.lead || {};
-      // L'admin (e chi ha già completato) non deve mai vedere il gate anagrafica.
-      const completato = !!lead.sondaggio_completato || !!data.is_admin;
+      const completato = !!lead.sondaggio_completato;
       window.sondaggioCompletato = completato;
       window.isCliente = !!lead.is_cliente;
       window.userParams = data.sondaggio?.identikit?.params || null;
@@ -685,63 +668,8 @@
       window.supportUser = (sp && !sp.is_founder && sp.username) ? sp.username : "antonybusinesshub";
       document.getElementById("anagraficaPrompt").style.display = completato ? "none" : "block";
 
-      const riprese = data.riprese || (data.ripresa ? [data.ripresa] : []);
-      renderRiprese(riprese);
-      renderReteSummary(data);
-      renderAttivita(riprese);
+      renderRiprese(data.riprese || (data.ripresa ? [data.ripresa] : []));
       return completato;
-    }
-
-    // Riepilogo "La tua rete" nella Home.
-    function renderReteSummary(data) {
-      const n = document.getElementById("hcRete");
-      const sub = document.getElementById("hcReteSub");
-      if (n) n.textContent = data.rete_count ?? 0;
-      if (sub) sub.textContent = data.is_partner ? "invitati · Partner" : "invitati";
-    }
-
-    // Card "Attività / Riprendi" nella Home: tutorial iniziati e non finiti; apre il business nella Lista.
-    function renderAttivita(list) {
-      const box = document.getElementById("hcAttivita");
-      const sec = document.getElementById("attivitaSec");
-      if (!box) return;
-      list = list || [];
-      if (!list.length) { box.innerHTML = ""; if (sec) sec.style.display = "none"; return; }
-      if (sec) sec.style.display = "";
-      box.innerHTML = '<div class="hc-attivita">' +
-        list.map((r) => {
-          const pct = Math.min(100, Math.round((r.ultimo_step / (r.totale_step || 1)) * 100));
-          return `<a class="hca-row" href="lista.html#biz-${r.servizio_id}">
-            <div class="hca-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
-            <div class="hca-body">
-              <div class="hca-name">${esc(r.servizio_nome)}</div>
-              <div class="hca-sub">Step ${r.ultimo_step} di ${r.totale_step}</div>
-              <div class="hca-bar"><i style="width:${pct}%"></i></div>
-            </div>
-          </a>`;
-        }).join("") + '</div>';
-    }
-
-    // Anteprima dei business più votati; apre la scheda nella pagina Lista.
-    async function loadHomePreview() {
-      const el = document.getElementById("listPreview");
-      try {
-        const res = await fetch(`${API_URL}/business-list`, { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" });
-        const data = await res.json();
-        const servizi = [];
-        (data.categorie || []).forEach((c) => (c.servizi || []).forEach((s) => servizi.push(s)));
-        servizi.sort((a, b) => (b.voti || 0) - (a.voti || 0) || (String(a.created_at) < String(b.created_at) ? 1 : -1));
-        const top = servizi.slice(0, 4);
-        if (!top.length) { el.innerHTML = '<p class="empty">Ancora nessun business in lista.</p>'; return; }
-        el.innerHTML = top.map((s, i) => `
-          <a class="prev-row" href="lista.html#biz-${s.id}">
-            <div class="prev-rank">${i + 1}</div>
-            <div class="prev-name">${esc(s.nome)}</div>
-            <div class="prev-votes"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>${s.voti || 0}</div>
-          </a>`).join("");
-      } catch (e) {
-        el.innerHTML = '<p class="empty">Errore di caricamento.</p>';
-      }
     }
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -771,7 +699,7 @@
     }
     function openNotifBiz(id) {
       document.getElementById("notifPanel").classList.remove("open");
-      window.location.href = "lista.html?_=" + Date.now() + "#biz-" + id;
+      toggleBiz(id);
     }
     window.toggleNotif = toggleNotif; window.openNotifBiz = openNotifBiz;
     document.addEventListener("click", (e) => {
@@ -785,6 +713,20 @@
     let macroCategorie = [];
     let categorie = [];
     const filtri = { macroId: "", catId: "", sem: "" };
+    let listView = "tutti";
+    function setListView(v, btn) {
+      listView = v;
+      document.querySelectorAll("#ltabs .ltab").forEach((b) => b.classList.toggle("active", b === btn));
+      const sugg = v === "suggerisci";
+      const sr = document.querySelector(".search-row"); if (sr) sr.style.display = sugg ? "none" : "";
+      const fr = document.querySelector(".filter-row"); if (fr) fr.style.display = sugg ? "none" : "";
+      const bl = document.getElementById("businessList"); if (bl) bl.style.display = sugg ? "none" : "";
+      const sp = document.getElementById("suggerisciPanel"); if (sp) sp.style.display = sugg ? "block" : "none";
+      visibleCount = PAGE_SIZE;
+      try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
+      if (!sugg) renderList();
+    }
+    window.setListView = setListView;
 
     function toggleDd(id) {
       const dd = document.getElementById(id);
@@ -881,19 +823,24 @@
       // Filtro per pallino di compatibilità (semaforo) col profilo utente.
       if (filtri.sem) filtered = filtered.filter((s) => computeSemaforo(window.userParams, s) === filtri.sem);
 
+      // Scheda attiva: In evidenza (più votati) / Nuovi (più recenti) / Tutti (ordine di default).
+      if (listView === "nuovi") filtered = [...filtered].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+      else if (listView === "evidenza") filtered = [...filtered].sort((a, b) => (b.voti || 0) - (a.voti || 0) || (a.created_at < b.created_at ? 1 : -1));
+
       if (!filtered.length) { el.innerHTML = '<p class="empty">Nessun business in questa vista.</p>'; return; }
 
       const visible = filtered.slice(0, visibleCount);
       el.innerHTML = visible.map((s) => {
         const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
-        const sem = (typeof computeSemaforo === "function") ? computeSemaforo(window.userParams, s) : null;
-        const dot = sem ? `<span class="sem-dot sem-${sem}" title="Compatibilità col tuo profilo"></span>` : "";
+        const pct = (typeof computeCompat === "function") ? computeCompat(window.userParams, s) : null;
+        const pctBadge = pct != null ? `<span class="compat-pct ${pct >= 70 ? "cp-hi" : pct >= 45 ? "cp-mid" : "cp-lo"}" title="Compatibilità col tuo profilo">${pct}%</span>` : "";
         return `
         <div class="biz" id="biz-${s.id}">
           <div class="list-item" onclick="toggleBiz(${s.id})">
             <div class="cat-body">
-              <div class="cat-name">${dot}${s.nome}</div>
+              <div class="cat-name">${s.nome}</div>
             </div>
+            ${pctBadge}
             <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
               <span class="vote-num">${s.voti || 0}</span>
@@ -1202,14 +1149,18 @@
       }, "Tutti");
     }
 
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      searchTerm = e.target.value.trim().toLowerCase();
+      visibleCount = PAGE_SIZE;
+      renderList();
+    });
+
     window.currentRefLink = "";
 
     async function loadAffiliazione() {
       const res = await fetch(`${API_URL}/affiliazione`, { headers: { "x-telegram-init-data": initData }, cache: "no-store" });
       const data = await res.json();
-      window.currentRefLink = data.track_link || data.ref_link || "";
-      const c = document.getElementById("hcClick");
-      if (c) c.textContent = data.stats?.click ?? 0;
+      window.currentRefLink = data.ref_link || "";
     }
 
     const SHARE_TEXT = "Entra in Cashly con il mio link:";
@@ -1392,10 +1343,27 @@
       });
     })();
 
+    // Deep-link da Profilo > Attività: #biz-<id> apre quel business (resetta filtri ed espande la lista fin lì).
+    function openBizFromHash() {
+      const m = (location.hash || "").match(/^#biz-(\d+)$/);
+      if (!m) return;
+      const id = parseInt(m[1]);
+      history.replaceState(null, "", location.pathname);
+      searchTerm = ""; filtri.macroId = ""; filtri.catId = ""; filtri.sem = "";
+      const si = document.getElementById("searchInput"); if (si) si.value = "";
+      const idx = allServizi.findIndex((s) => String(s.id) === String(id));
+      if (idx >= 0) visibleCount = Math.max(visibleCount, idx + 1);
+      renderList();
+      setTimeout(() => toggleBiz(id), 80);
+    }
+
     async function init() {
       await loadMe();
-      loadHomePreview();
+      await loadBusinessList();
       loadAffiliazione();
+      // Arrivo da Rete/Profilo col bottone "+": apre subito il pannello candida business.
+      if (location.hash === "#suggerisci") { history.replaceState(null, "", location.pathname); openSuggestSheet(); }
+      else openBizFromHash();
     }
 
     if (!initData) {
