@@ -227,6 +227,10 @@
     background-repeat: no-repeat; background-position: 11px center; background-size: 15px;
   }
   .search-input:focus { outline: none; border-color: var(--lime); }
+  .compat-pct { font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; align-self: center; }
+  .cp-hi { color: var(--lime); background: rgba(46,204,113,0.14); }
+  .cp-mid { color: var(--amber); background: var(--amber-dim); }
+  .cp-lo { color: var(--text-dim); background: rgba(129,138,156,0.14); }
 
   .new-badge { font-size: 8.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: var(--blue-dim); color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; vertical-align: 2px; margin-left: 6px; }
 
@@ -828,14 +832,15 @@
       const visible = filtered.slice(0, visibleCount);
       el.innerHTML = visible.map((s) => {
         const color = macroColorById[catToMacro[s.categoria_id]] || "var(--slate)";
-        const sem = (typeof computeSemaforo === "function") ? computeSemaforo(window.userParams, s) : null;
-        const dot = sem ? `<span class="sem-dot sem-${sem}" title="Compatibilità col tuo profilo"></span>` : "";
+        const pct = (typeof computeCompat === "function") ? computeCompat(window.userParams, s) : null;
+        const pctBadge = pct != null ? `<span class="compat-pct ${pct >= 70 ? "cp-hi" : pct >= 45 ? "cp-mid" : "cp-lo"}" title="Compatibilità col tuo profilo">${pct}%</span>` : "";
         return `
         <div class="biz" id="biz-${s.id}">
           <div class="list-item" onclick="toggleBiz(${s.id})">
             <div class="cat-body">
-              <div class="cat-name">${dot}${s.nome}</div>
+              <div class="cat-name">${s.nome}</div>
             </div>
+            ${pctBadge}
             <button class="vote-btn ${mieiVoti.has(s.id) ? "voted" : ""}" onclick="event.stopPropagation(); vota(${s.id}, this)" aria-label="Vota questo business">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5 3 17h18L12 5Z"/></svg>
               <span class="vote-num">${s.voti || 0}</span>

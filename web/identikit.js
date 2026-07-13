@@ -125,9 +125,39 @@ function computeSemaforo(params, req) {
   return worst === 0 ? "verde" : (worst === 1 ? "giallo" : "rosso");
 }
 
+// Percentuale di compatibilità 0-100 tra i parametri utente e i requisiti del business.
+// Additiva: usa gli stessi req di computeSemaforo, non altera nulla di esistente.
+function computeCompat(params, req) {
+  if (!params) return null;
+  let tot = 0, got = 0;
+  if (req.budget_minimo) {                       // peso 35
+    tot += 35;
+    const u = params.budget || 0, need = req.budget_minimo;
+    got += u >= need ? 35 : (u >= need * 0.8 ? 18 : 0);
+  }
+  if (req.rischio_livello) {                      // peso 30
+    tot += 30;
+    const d = req.rischio_livello - (params.rischio || 1);
+    got += d <= 0 ? 30 : (d === 1 ? 15 : 3);
+  }
+  if (req.esperienza_richiesta) {                 // peso 20
+    tot += 20;
+    const d = req.esperienza_richiesta - (params.esperienza || 0);
+    got += d <= 0 ? 20 : (d === 1 ? 10 : 2);
+  }
+  if (req.tempo_richiesto) {                      // peso 15
+    tot += 15;
+    const d = req.tempo_richiesto - (params.tempo || 0);
+    got += d <= 0 ? 15 : (d === 1 ? 8 : 2);
+  }
+  if (!tot) return null;
+  return Math.round(got / tot * 100);
+}
+
 if (typeof window !== "undefined") {
   window.CONS_Q = CONS_Q;
   window.CONS_DIM = CONS_DIM;
   window.computeIdentikit = computeIdentikit;
   window.computeSemaforo = computeSemaforo;
+  window.computeCompat = computeCompat;
 }
