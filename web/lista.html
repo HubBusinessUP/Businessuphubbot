@@ -118,7 +118,7 @@
     white-space: nowrap; overflow: hidden;
   }
   .dd-btn .dd-label { overflow: hidden; text-overflow: ellipsis; }
-  .dd-btn.active { border-color: var(--blue); color: var(--blue); }
+  .dd-btn.active { border-color: var(--lime); color: var(--lime); }
   .dd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .dd-btn svg { flex-shrink: 0; transition: transform 0.15s ease; }
   .dd.open .dd-btn svg { transform: rotate(180deg); }
@@ -135,7 +135,7 @@
     font-family: inherit; cursor: pointer; border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   .dd-opt:last-child { border-bottom: none; }
-  .dd-opt.selected { color: var(--blue); }
+  .dd-opt.selected { color: var(--lime); }
   .dd-opt:active { background: rgba(255,255,255,0.04); }
 
   .stato-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
@@ -209,7 +209,7 @@
   .ltabs { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
   .ltabs::-webkit-scrollbar { display: none; }
   .ltab { flex: 0 0 auto; padding: 8px 15px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .ltab.active { background: var(--blue); color: #fff; border-color: transparent; }
+  .ltab.active { background: rgba(46,204,113,0.14); color: var(--lime); border-color: rgba(46,204,113,0.5); }
   .ltab-sugg { color: var(--lime); border-color: rgba(46,204,113,0.4); }
   .ltab-sugg.active { background: var(--lime); color: #06210f; border-color: transparent; }
   .sugg-hero { text-align: center; padding: 8px 10px 20px; }
@@ -226,7 +226,7 @@
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%238b90a0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>');
     background-repeat: no-repeat; background-position: 11px center; background-size: 15px;
   }
-  .search-input:focus { outline: none; border-color: var(--blue); }
+  .search-input:focus { outline: none; border-color: var(--lime); }
 
   .new-badge { font-size: 8.5px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: var(--blue-dim); color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; vertical-align: 2px; margin-left: 6px; }
 
@@ -444,8 +444,9 @@
     </div>
 
 
+    <p style="margin:2px 4px 12px;font-size:14px;font-weight:600;color:var(--text-dim);line-height:1.35">Cerca il business che ti farà <b style="color:var(--lime);font-weight:700">cambiare vita</b>.</p>
     <div class="section-row">
-      <div class="section-title"><span class="live-dot"></span>Business list<span class="live-badge">LIVE</span></div>
+      <div class="section-title"><span class="live-dot"></span>Esplora directory<span class="live-badge">LIVE</span></div>
       <div class="section-date" id="sectionDate"></div>
     </div>
 
