@@ -232,7 +232,19 @@ async function verificaRetentionPartner(sponsorId: number) {
   await notifyUser(sponsorId, `⚠️ Sei sceso sotto i ${PARTNER_SOGLIA} iscritti attivi e non hai ancora un suggerimento approvato né un link referral attivo: lo stato Partner è in pausa.\n\nInvita ancora qualcuno per riattivarlo.`, "👀 La mia rete", "/account.html?view=affiliazione").catch(() => {})
 }
 
+// Imposta il menu button (in basso nella chat) sull'app nuova (app.html), così l'ingresso non usa il vecchio dashboard.html cachato da Telegram.
+async function setMenuButton(chatId: number) {
+  try {
+    await fetch(`${TG_API}/setChatMenuButton`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, menu_button: { type: "web_app", text: "Cashly", web_app: { url: WEBAPP_URL + "/app.html" } } }),
+    })
+  } catch (e) { console.error("setMenuButton:", e) }
+}
+
 async function handleStart(chatId: number, from: any, payload?: string) {
+  setMenuButton(chatId).catch(() => {})
   let refBy: number | undefined
   if (payload?.startsWith("ref_")) {
     const code = payload.slice(4)
@@ -273,7 +285,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
-  const btn = { inline_keyboard: [[{ text: "🚀 Apri Cashly e crea il mio hub", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] }
+  const btn = { inline_keyboard: [[{ text: "🚀 Apri Cashly e crea il mio hub", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
 
   // Video di presentazione (se impostato dall'admin con /presentazione): appare sopra al benvenuto.
   const { data: vid } = await supabase.from("config").select("valore").eq("chiave", "welcome_video").maybeSingle()
@@ -1229,7 +1241,7 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number) 
     await sendMessage(
       tid,
       `🆕 Nuovo business nella categoria ${cat?.nome || "che segui"}!\n\n${nomeServizio} è appena arrivato nella Business List.`,
-      { inline_keyboard: [[{ text: "Guardalo ora", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] },
+      { inline_keyboard: [[{ text: "Guardalo ora", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] },
     )
   }
 }
@@ -1926,7 +1938,7 @@ async function apiAdminBroadcast(body: any) {
   // altrimenti resta il bottone di default che apre la Mini App.
   const btnText = String(body?.btn_text || "").trim()
   const btnUrl = String(body?.btn_url || "").trim()
-  let markup: any = { inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]] }
+  let markup: any = { inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
   if (btnText && btnUrl && /^https?:\/\//.test(btnUrl)) {
     markup = { inline_keyboard: [[{ text: btnText.slice(0, 40), url: btnUrl }]] }
   } else if (btnText === "" && btnUrl === "" && body?.senza_bottone) {
@@ -1976,7 +1988,7 @@ async function cronFollowup() {
       const soglia = Math.max(...applicabili)
       const nome = l.nome || l.username || "ciao"
       await sendMessage(l.telegram_id, testoFollowup(soglia, nome), {
-        inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/dashboard.html?_=" + Date.now() } }]],
+        inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]],
       })
       inviati++
       await new Promise((r) => setTimeout(r, 50))
