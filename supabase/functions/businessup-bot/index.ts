@@ -190,7 +190,8 @@ const PARTNER_SOGLIA = 3
 async function verificaSbloccoPartner(sponsorId: number) {
   const { data: sponsor } = await supabase.from("leads").select("is_partner").eq("telegram_id", sponsorId).maybeSingle()
   if (!sponsor || sponsor.is_partner) return
-  const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", sponsorId).eq("bot_started", true)
+  // Contano solo i diretti ATTIVI (attivo != false: true o non ancora impostato). Chi ha bloccato il bot (attivo=false) è escluso.
+  const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", sponsorId).eq("bot_started", true).not("attivo", "is", false)
   if ((count ?? 0) < PARTNER_SOGLIA) return
   await supabase.from("leads").update({ is_partner: true }).eq("telegram_id", sponsorId)
   await notifyUser(
@@ -199,6 +200,36 @@ async function verificaSbloccoPartner(sponsorId: number) {
     "🔗 Inserisci i miei link",
     "/account.html?view=affiliazione",
   )
+}
+
+// Un diretto ha bloccato/lasciato il bot: marcalo inattivo, avvisa il padrino (con tasto Scrivigli) e rivaluta il suo stato Partner.
+async function onIscrittoUscito(uid: number) {
+  const { data: lead } = await supabase.from("leads").select("referred_by, nome, username").eq("telegram_id", uid).maybeSingle()
+  await supabase.from("leads").update({ attivo: false, bloccato_at: new Date().toISOString() }).eq("telegram_id", uid)
+  await supabase.from("eventi").insert({ telegram_id: uid, tipo: "bot_bloccato", dettaglio: null }).catch(() => {})
+  const sponsor = lead?.referred_by
+  if (sponsor && sponsor !== ADMIN_ID) {
+    const nome = String(lead?.nome || lead?.username || "Un iscritto").replace(/[<>&]/g, "").trim() || "Un iscritto"
+    const uname = String(lead?.username || "").replace(/^@/, "")
+    // Il bot NON può scrivere a chi lo ha bloccato: notifichiamo il PADRINO, che scrive dal suo account.
+    const markup = uname ? { inline_keyboard: [[{ text: "✍️ Scrivigli", url: `https://t.me/${uname}` }]] } : undefined
+    await sendMessage(sponsor, `👋 <b>${nome}</b> ha lasciato la tua rete (ha chiuso il bot).\n\nNon conta più per lo stato Partner. Se vuoi, scrivigli tu.`, markup, "HTML").catch((e) => console.error("notifica uscita:", e))
+    await verificaRetentionPartner(sponsor).catch((e) => console.error("retention partner:", e))
+  }
+}
+
+// Se i diretti attivi scendono sotto soglia, il Partner resta SOLO se ha un suggerimento approvato o un ref link attivo.
+async function verificaRetentionPartner(sponsorId: number) {
+  if (sponsorId === ADMIN_ID) return
+  const { data: sponsor } = await supabase.from("leads").select("is_partner").eq("telegram_id", sponsorId).maybeSingle()
+  if (!sponsor?.is_partner) return
+  const { count: attivi } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", sponsorId).eq("bot_started", true).not("attivo", "is", false)
+  if ((attivi ?? 0) >= PARTNER_SOGLIA) return
+  const { count: suggOk } = await supabase.from("suggerimenti").select("id", { count: "exact", head: true }).eq("telegram_id", sponsorId).eq("stato", "approvato")
+  const { count: refOk } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("telegram_id", sponsorId).eq("approvato", true)
+  if ((suggOk ?? 0) > 0 || (refOk ?? 0) > 0) return // ha contribuito o ha ref link attivi -> mantiene Partner
+  await supabase.from("leads").update({ is_partner: false }).eq("telegram_id", sponsorId)
+  await notifyUser(sponsorId, `⚠️ Sei sceso sotto i ${PARTNER_SOGLIA} iscritti attivi e non hai ancora un suggerimento approvato né un link referral attivo: lo stato Partner è in pausa.\n\nInvita ancora qualcuno per riattivarlo.`, "👀 La mia rete", "/account.html?view=affiliazione").catch(() => {})
 }
 
 async function handleStart(chatId: number, from: any, payload?: string) {
@@ -218,6 +249,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     username: from.username ?? null,
     nome: from.first_name ?? null,
     bot_started: true,
+    attivo: true,
+    bloccato_at: null,
     start_count: (existing?.start_count ?? 0) + 1,
     primo_start_at: existing ? undefined : new Date().toISOString(),
     ultimo_messaggio: new Date().toISOString(),
@@ -460,6 +493,17 @@ async function handleUpdate(u: any) {
       if (chatId && messageId) await editMessageText(chatId, messageId, "Annuncio annullato.")
     } else {
       await answerCallback(cb.id)
+    }
+    return
+  }
+
+  // Un iscritto blocca/sblocca il bot -> aggiorna lo stato attivo; se esce, avvisa il padrino.
+  if (u.my_chat_member) {
+    const st = u.my_chat_member.new_chat_member?.status
+    const uid = u.my_chat_member.from?.id
+    if (uid) {
+      if (st === "kicked" || st === "left") await onIscrittoUscito(uid)
+      else if (st === "member" || st === "administrator" || st === "creator") await supabase.from("leads").update({ attivo: true, bloccato_at: null }).eq("telegram_id", uid)
     }
     return
   }
@@ -992,7 +1036,8 @@ async function notificaAttivazioneCompletata(telegramId: number, servizioId: num
 
 // Candidatura moderata: tutti i campi obbligatori, utenti bloccati esclusi, ref link accettato solo da profili verificati.
 async function apiSuggerisci(telegramId: number, body: any) {
-  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, sugg_bloccato").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, sugg_bloccato, is_partner").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.is_partner) return json({ error: "non_partner" }, 403)
   if (lead?.sugg_bloccato) return json({ error: "funzione_bloccata" }, 403)
 
   const nome = String(body?.nome || "").trim()
@@ -1967,7 +2012,7 @@ serve(async (req) => {
       const res = await fetch(`${TG_API}/setWebhook`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: webhookUrl, secret_token: WEBHOOK_SECRET, allowed_updates: ["message", "callback_query"] }),
+        body: JSON.stringify({ url: webhookUrl, secret_token: WEBHOOK_SECRET, allowed_updates: ["message", "callback_query", "my_chat_member"] }),
       })
       return json({ ok: true, telegram: await res.json(), webhook_url: webhookUrl })
     }
