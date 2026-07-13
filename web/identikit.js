@@ -181,19 +181,22 @@ if (typeof document !== "undefined") {
 
 // Auto-update: se il server ha una build più nuova, l'app si ricarica DA SOLA (nessuna cache da svuotare,
 // batte anche Telegram che tiene viva la webview). Controlla all'avvio e ogni volta che torna in primo piano.
-var APP_BUILD = "5";
+var APP_BUILD = "6";
 if (typeof document !== "undefined" && typeof fetch !== "undefined") {
   var checkBuild = function () {
+    if (document.hidden) return;
     fetch("version.json?_=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.v || d.v === APP_BUILD) return;
-        var k = "reloaded_for_" + d.v;
-        try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch (e) {}
-        location.replace(location.pathname + "?_=" + Date.now() + (location.hash || ""));
+        // Anti-loop robusto: marker nell'URL, sopravvive ai reload (non dipende da sessionStorage).
+        if (location.href.indexOf("_v=" + d.v) >= 0) return;
+        var q = location.search ? location.search + "&" : "?";
+        location.replace(location.pathname + q + "_v=" + d.v + "&_=" + Date.now() + (location.hash || ""));
       })
       .catch(function () {});
   };
-  checkBuild();
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) checkBuild(); });
+  // Primo check DOPO il rendering (non blocca il caricamento), poi a ogni ritorno in primo piano.
+  setTimeout(checkBuild, 1500);
+  document.addEventListener("visibilitychange", checkBuild);
 }
