@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Cashly</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
     --bg:#1b1f28;--s0:#222732;--s1:#2a3040;--s2:#333a4b;--s3:#414a5d;
@@ -17,169 +18,965 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#12151c;font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   .app{max-width:460px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--tx);display:flex;flex-direction:column;position:relative}
-  .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:78px}
+  .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .scr{display:none;flex-direction:column}
+  .scr.on{display:flex}
   svg{display:block}
   .ico{stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .row{display:flex;align-items:center}
 
-  .hdr{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 18px;background:var(--bg);border-bottom:1px solid var(--line)}
-  .hdr .set{justify-self:start;background:none;border:none;color:var(--dim);cursor:pointer;padding:4px}
-  .logo{justify-self:center;font-family:var(--sans);font-size:22px;font-weight:800;letter-spacing:-.02em}
-  .logo .ly{color:var(--acc)}
-  .av{justify-self:end;width:34px;height:34px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:14px}
+  /* header */
+  .hdr{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+    padding:15px 18px;background:var(--s0);border-bottom:1px solid var(--line)}
+  .logo{font-family:var(--mono);font-size:21px;font-weight:700;letter-spacing:-.06em;line-height:1}
+  .iconbtn{width:38px;height:38px;border-radius:4px;background:var(--s1);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--tx);position:relative;cursor:pointer}
+  .dot{position:absolute;top:8px;right:9px;width:7px;height:7px;background:var(--acc);border-radius:50%;box-shadow:0 0 0 2px var(--s1)}
 
-  .hook{padding:16px 18px 2px}
+  /* welcome */
   .eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-  .slogan{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.35;margin-top:7px}
-  .slogan b{color:var(--acc);font-weight:700}
+  .hello{font-size:22px;font-weight:700;letter-spacing:-.025em;line-height:1.1;margin-top:7px}
+  .subtle{font-size:13.5px;color:var(--dim);margin-top:5px;line-height:1.4}
 
-  .seg{display:flex;gap:8px;padding:16px 18px 2px}
-  .seg button{flex:1;height:46px;border-radius:4px;border:1px solid var(--line2);background:var(--s1);color:var(--dim);font-size:14px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;margin:16px 18px 0;background:var(--s0);
+    border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .stat{padding:13px 8px;text-align:center;border-right:1px solid var(--line)}
+  .stat:last-child{border-right:none}
+  .stat .n{font-family:var(--mono);font-size:21px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+  .stat .l{font-family:var(--mono);font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+
+  /* section header */
+  .sechd{display:flex;align-items:baseline;justify-content:space-between;padding:26px 18px 12px}
+  .sectitle{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:-.03em}
+  .seccount{font-family:var(--mono);font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums}
+
+  /* search + filters */
+  .search{display:flex;align-items:center;gap:10px;margin:0 18px;background:var(--s1);
+    border:1px solid var(--line);border-radius:4px;padding:0 14px;height:44px}
+  .search span{font-size:14px;color:var(--mut)}
+  .filters{display:flex;gap:8px;padding:12px 18px 4px;overflow-x:auto;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .pill{font-size:13px;font-weight:600;padding:8px 15px;border-radius:4px;white-space:nowrap;cursor:pointer;
+    background:var(--s1);border:1px solid var(--line);color:var(--dim)}
+  .pill.on{background:var(--acc);border-color:var(--acc);color:var(--on);font-weight:700}
+  .pill.sugg{background:transparent;border:1px solid var(--acc);color:var(--acc)}
+
+  /* directory rows */
+  .list{padding:8px 0 4px}
+  .dir{display:flex;align-items:center;gap:14px;padding:13px 18px;cursor:pointer;transition:background .12s}
+  .dir+.dir{border-top:1px solid var(--line)}
+  .dir:active{background:var(--s0)}
+  .dav{width:46px;height:46px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:18px;flex-shrink:0}
+  .dnm{font-size:15px;font-weight:700;line-height:1.2;letter-spacing:-.01em}
+  .dds{font-size:12.5px;color:var(--dim);line-height:1.45;margin-top:3px;
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .tag{font-size:9px;font-weight:700;color:var(--on);background:var(--acc);border-radius:5px;padding:2px 6px;letter-spacing:.02em}
+  .vote{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:40px;
+    background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 0;flex-shrink:0}
+  .vote .c{font-size:12px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+
+  /* segmented toggle (Product Hunt style) */
+  .seg{display:flex;gap:8px;padding:20px 16px 2px}
+  .seg button{flex:1;height:46px;border-radius:4px;border:1px solid var(--line2);background:var(--s1);color:var(--dim);
+    font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap}
   .seg button.on{background:rgba(37,195,102,.14);border-color:rgba(37,195,102,.55);color:var(--acc)}
 
-  .search-row{display:flex;gap:10px;margin:14px 18px 0}
-  .search{flex:1;display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:0 14px;height:44px}
-  .search input{flex:1;background:none;border:none;outline:none;color:var(--tx);font-size:14px;font-family:inherit}
-  .search input::placeholder{color:var(--mut)}
-  .star{width:44px;height:44px;flex-shrink:0;background:var(--s1);border:1px solid var(--line2);border-radius:4px;color:var(--amber);display:flex;align-items:center;justify-content:center;cursor:pointer}
-
-  .sechd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px}
-  .sectitle{display:flex;align-items:center;gap:9px}
-  .sectitle .t{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
-  .live{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--acc);background:rgba(37,195,102,.12);padding:3px 7px;border-radius:4px}
-  .pulse{width:7px;height:7px;border-radius:50%;background:var(--acc);animation:pls 1.8s infinite}
+  /* feed card */
+  .feed{margin:16px 14px 0;background:var(--s0);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .feedhd{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:-.04em;padding:20px 20px 8px}
   @keyframes pls{0%{box-shadow:0 0 0 0 rgba(37,195,102,.5)}70%{box-shadow:0 0 0 6px rgba(37,195,102,0)}100%{box-shadow:0 0 0 0 rgba(37,195,102,0)}}
-  .agg{font-family:var(--mono);font-size:10px;color:var(--mut)}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--acc);animation:pls 1.7s ease-out infinite;flex-shrink:0}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+  .live{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--acc)}
+  .frow{display:flex;gap:13px;padding:13px 18px;cursor:pointer;transition:background .12s;align-items:center}
+  .frow+.frow{border-top:1px solid var(--line)}
+  .frow:active{background:var(--s1)}
+  .flogo{width:40px;height:40px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;letter-spacing:-.03em}
+  .fbody{flex:1;min-width:0;padding-top:1px}
+  .fnm{font-size:15px;font-weight:700;letter-spacing:-.015em;line-height:1.25;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .fds{font-size:12.5px;color:var(--dim);line-height:1.4;margin-top:3px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .up{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:42px;padding-top:2px}
+  .up .n{font-family:var(--mono);font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .feed.hide{display:none}
+  .feedsub{font-size:12.5px;color:var(--dim);padding:0 20px 10px;margin-top:-4px}
+  .cbadge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(37,195,102,.16);color:var(--acc);letter-spacing:.02em;white-space:nowrap}
+  .cbadge.mid{background:rgba(230,178,76,.16);color:var(--amber)}
 
-  .fdd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 18px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:0 14px;height:44px;color:var(--dim);font-size:14px;font-weight:600;cursor:pointer}
-  .fdd b{color:var(--tx)}
+  /* category chips + existing filters */
+  .chips{display:flex;gap:8px;padding:14px 18px 0;overflow-x:auto;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{font-size:13px;font-weight:600;padding:8px 15px;border-radius:4px;white-space:nowrap;cursor:pointer;
+    background:var(--s1);border:1px solid var(--line2);color:var(--dim)}
+  .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on);font-weight:700}
+  .fdd-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 18px 0}
+  .fdd{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s1);
+    border:1px solid var(--line2);color:var(--dim);border-radius:4px;padding:11px 14px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .fdd.set{color:var(--tx);border-color:var(--s3)}
 
-  .list{padding:10px 0 4px}
-  .frow{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer}
-  .frow:active{background:var(--s0)}
-  .fbody{flex:1;min-width:0}
-  .fnm{font-size:15px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .fds{font-size:13px;color:var(--dim);margin-top:3px;line-height:1.4}
-  .pill{font-family:var(--mono);font-size:12.5px;font-weight:800;padding:3px 8px;border-radius:4px;flex-shrink:0}
-  .up{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;color:var(--dim)}
-  .up .n{font-family:var(--mono);font-size:12px;font-weight:700}
-  .badge{font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.06em;padding:2px 6px;border-radius:3px;text-transform:uppercase}
-  .badge.new{background:rgba(37,195,102,.16);color:var(--acc)}
-  .empty{padding:44px 24px;text-align:center;color:var(--mut);font-size:13.5px;line-height:1.6}
+  /* affiliazione: stato partner + progresso + perk bloccati */
+  .badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;letter-spacing:.03em}
+  .badge.amber{background:rgba(230,178,76,.16);color:var(--amber)}
+  .badge.green{background:var(--acc);color:var(--on)}
+  .prog{height:9px;border-radius:6px;background:var(--s2);overflow:hidden;margin:14px 0 0}
+  .prog>span{display:block;height:100%;background:var(--acc);border-radius:6px}
+  .dots{display:flex;gap:6px;margin-top:12px}
+  .dots i{flex:1;height:6px;border-radius:3px;background:var(--s2)}
+  .dots i.f{background:var(--acc)}
+  .perk{display:flex;align-items:center;gap:14px;padding:15px 18px}
+  .perk+.perk{border-top:1px solid var(--line)}
+  .perk.lock{opacity:.5}
 
-  .nav{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;display:flex;background:var(--s0);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
-  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut);text-decoration:none;font-size:10px;font-weight:600}
-  .nav a.on{color:var(--acc)}
-  .nav a .lb{font-family:var(--mono);letter-spacing:.02em}
+  /* editor link ref + pagina */
+  .minibtn{background:var(--s2);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .minibtn.add{background:transparent;border-color:var(--acc);color:var(--acc)}
+  .rl-set{font-size:11.5px;color:var(--acc);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rl-empty{font-size:12px;color:var(--mut);margin-top:3px}
+  .field{background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:11px 14px;margin-top:8px;cursor:text}
+  .field .k{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+  .field .v{font-size:14.5px;color:var(--tx);margin-top:3px}
+  .pvbtn{display:block;text-align:center;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:13px;font-size:14px;font-weight:700;margin-top:9px;text-decoration:none}
+  .toggle{width:40px;height:24px;border-radius:4px;background:var(--acc);position:relative;flex-shrink:0}
+  .toggle.off{background:var(--s3)}
+  .toggle i{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+  .toggle.off i{right:auto;left:3px}
+
+  /* scheda: bottoni vota/salva attivabili */
+  .actbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:4px;height:46px;font-size:14px;font-weight:700;cursor:pointer}
+  .actbtn svg{stroke:currentColor}
+  .actbtn.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+  .actbtn.on svg{fill:currentColor}
+  .statesel{display:flex;gap:8px;padding:14px 16px 0}
+  .statesel button{flex:1;height:38px;border-radius:4px;border:1px solid var(--line2);background:var(--s1);color:var(--dim);font-size:12.5px;font-weight:700;cursor:pointer}
+  .statesel button.on{background:var(--tx);border-color:var(--tx);color:#0c0d11}
+
+  /* scheda servizio */
+  .metarow{display:flex;gap:8px;padding:0 18px}
+  .metachip{flex:1;min-width:0;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:11px 10px;text-align:center}
+  .metachip .mk{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+  .metachip .mv{font-size:14px;font-weight:700;margin-top:3px}
+  .inforow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
+  .inforow+.inforow{border-top:1px solid var(--line)}
+  .step{display:flex;gap:13px;padding:15px 18px}
+  .step+.step{border-top:1px solid var(--line)}
+  .stepn{width:27px;height:27px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex-shrink:0;color:var(--acc)}
+  .steplink{display:inline-flex;align-items:center;gap:6px;margin-top:9px;background:var(--s2);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:8px 12px;font-size:12.5px;font-weight:600;text-decoration:none}
+
+  /* generic card bits reused in other screens */
+  .card{margin:0 18px;background:var(--s0);border:1px solid var(--line);border-radius:5px;padding:17px 18px}
+  .act{width:48px;height:48px;border-radius:4px;background:var(--s1);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--tx)}
+  .mv{display:flex;align-items:center;gap:12px;padding:13px 0}
+  .mv+.mv{border-top:1px solid var(--line)}
+  .mvi{width:38px;height:38px;border-radius:4px;background:var(--s1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* bottom nav */
+  .nav{position:sticky;bottom:0;display:flex;align-items:flex-end;justify-content:space-around;
+    background:var(--s0);border-top:1px solid var(--line);
+    padding:9px 6px calc(9px + env(safe-area-inset-bottom))}
+  .navb{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mut)}
+  .navb .lb{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .navb.on{color:var(--acc)}
+  .fab{width:46px;height:46px;border-radius:4px;background:var(--acc);color:var(--on);
+    display:flex;align-items:center;justify-content:center;margin-bottom:2px}
 </style>
 </head>
 <body>
+
 <div class="app">
   <div class="body">
-    <div class="hdr">
-      <button class="set" aria-label="Impostazioni"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3M9 4.6a1.6 1.6 0 0 1-1.8.3M15 19.4a1.6 1.6 0 0 1 1.8-.3M4.6 15a1.6 1.6 0 0 1-.3 1.8M19.4 9a1.6 1.6 0 0 1 .3-1.8"/></svg></button>
-      <div class="logo">Cash<span class="ly">ly</span></div>
-      <div class="av" id="avatar">A</div>
-    </div>
 
-    <div class="hook">
-      <div class="eyebrow">La directory del business online</div>
-      <div class="slogan">Cerca il business che ti far&agrave; <b>cambiare vita</b></div>
-    </div>
+    <!-- ===================== HOME ===================== -->
+    <section class="scr on" data-s="home">
+      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr;padding:14px 18px">
+        <button style="justify-self:start;background:none;border:none;color:var(--dim);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3M9 4.6a1.6 1.6 0 0 1-1.8.3M15 19.4a1.6 1.6 0 0 1 1.8-.3M4.6 15a1.6 1.6 0 0 1-.3 1.8M19.4 9a1.6 1.6 0 0 1 .3-1.8"/></svg></button>
+        <div style="justify-self:center;font-family:var(--sans);font-size:22px;font-weight:800;letter-spacing:-.02em">Cash<span style="color:var(--acc)">ly</span></div>
+        <div style="justify-self:end;width:34px;height:34px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:14px">A</div>
+      </div>
 
-    <div class="seg">
-      <button class="on" data-view="evidenza"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>In evidenza</button>
-      <button data-view="perte"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Per te</button>
-    </div>
+      <!-- HOOK / slogan -->
+      <div style="padding:16px 18px 2px">
+        <div class="eyebrow">La directory del business online</div>
+        <div style="font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.35;margin-top:7px">Cerca il business che ti farà <span style="color:var(--acc);font-weight:700">cambiare vita</span></div>
+      </div>
 
-    <div class="search-row">
-      <div class="search"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="search" placeholder="Cerca un business"></div>
-      <button class="star" aria-label="Salvati"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg></button>
-    </div>
+      <div class="seg" style="padding-top:16px">
+        <button class="on" data-view="evidenza"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>In evidenza</button>
+        <button data-view="perte"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Per te</button>
+      </div>
 
-    <div class="sechd">
-      <div class="sectitle"><span class="t">Esplora directory</span><span class="live"><span class="pulse"></span>LIVE</span></div>
-      <span class="agg" id="agg"></span>
-    </div>
+      <div class="row" style="gap:10px;margin:14px 18px 0">
+        <div class="search" style="flex:1;margin:0">
+          <svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Cerca un business</span>
+        </div>
+        <button aria-label="Salvati" style="width:44px;height:44px;flex-shrink:0;background:var(--s1);border:1px solid var(--line2);border-radius:4px;color:var(--amber);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg></button>
+      </div>
 
-    <div class="fdd" id="catDd"><span>Categoria: <b>Tutte</b></span><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--mut)"><path d="m6 9 6 6 6-6"/></svg></div>
+      <!-- Esplora directory + live + aggiornamento -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase">Esplora directory</span>
+          <span class="live"><span class="pulse"></span>LIVE</span>
+        </div>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--mut)">aggiornato 12 lug · 18:24</span>
+      </div>
 
-    <div class="list" id="list"><div class="empty">Caricamento&hellip;</div></div>
+      <!-- Categoria (dropdown) -->
+      <div style="padding:10px 18px 0">
+        <div class="fdd set"><span>Categoria: <b style="color:var(--tx);font-weight:700">Tutte</b></span><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--mut);flex-shrink:0"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+
+      <div class="feed" data-view="evidenza">
+        <div id="listaReale" style="padding:34px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6">Lista svuotata.<br>In attesa del primo prodotto reale.</div>
+      </div>
+
+      <div class="feed hide" data-view="perte">
+        <div class="feedhd">Compatibili con te</div>
+        <div class="feedsub" id="pertesub">Completa l'identikit per ordinare i business in base al tuo profilo.</div>
+        <div id="perteFeed"></div>
+      </div>
+
+      <div style="height:14px"></div>
+    </section>
+
+    <!-- ===================== AFFILIAZIONE ===================== -->
+    <section class="scr" data-s="wallet">
+      <div class="hdr"><div class="logo" style="font-size:19px">Affiliazione</div>
+        <div class="iconbtn"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
+      </div>
+      <div style="height:18px"></div>
+
+      <!-- Stato Partner + progresso -->
+      <div class="card" id="partnerCard"></div>
+
+      <!-- Panoramica KPI -->
+      <div class="stats" style="margin-top:12px">
+        <div class="stat"><div class="n" id="kpiIscritti">2</div><div class="l">Iscritti</div></div>
+        <div class="stat"><div class="n">4</div><div class="l">Click</div></div>
+        <div class="stat"><div class="n" style="color:var(--acc)">0</div><div class="l">Clienti</div></div>
+      </div>
+      <div class="row" style="gap:10px;padding:10px 18px 0">
+        <div class="row" data-goto="home" style="flex:1;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:11px 13px;cursor:pointer">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--amber);stroke:var(--amber)"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>
+          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Salvati</div></div>
+        </div>
+        <div class="row" style="flex:1;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:11px 13px">
+          <svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:var(--acc)"><path d="M12 5 3 18h18L12 5Z"/></svg>
+          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Voti dati</div></div>
+        </div>
+      </div>
+
+      <!-- Link invito -->
+      <div class="card" style="margin-top:12px">
+        <div class="eyebrow">Il tuo link invito</div>
+        <div class="row" style="gap:10px;margin-top:10px">
+          <div class="row" style="flex:1;min-width:0;gap:10px;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:11px 13px">
+            <div style="font-size:12px;color:var(--blue);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/r?c=uhifxl26</div>
+          </div>
+          <button style="background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:0 16px;height:44px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Invita</button>
+        </div>
+      </div>
+
+      <!-- La tua rete -->
+      <div class="sechd" style="padding-bottom:8px"><div class="eyebrow">La tua rete</div></div>
+      <div class="row" style="gap:10px;padding:0 18px">
+        <div style="flex:1;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:12px 13px">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:700" id="direttiN">2</div>
+          <div class="eyebrow" style="margin-top:4px">Diretti attivi</div>
+          <div style="font-size:10.5px;color:var(--mut);margin-top:2px">contano per Partner e payout</div>
+        </div>
+        <div style="flex:1;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:12px 13px">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--acc)">47</div>
+          <div class="eyebrow" style="margin-top:4px">Rete totale</div>
+          <div style="font-size:10.5px;color:var(--mut);margin-top:2px">tutti i livelli sotto di te</div>
+        </div>
+      </div>
+
+      <!-- hook: nuovo iscritto -->
+      <div class="row" style="gap:10px;margin:12px 18px 0;background:rgba(37,195,102,.1);border:1px solid rgba(37,195,102,.3);border-radius:4px;padding:11px 13px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
+        <div style="flex:1;font-size:12.5px"><b>Simon</b> si è appena iscritto alla tua rete</div>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--mut)">2h fa</span>
+      </div>
+
+      <!-- hook: iscritto uscito -->
+      <div class="row" style="gap:10px;margin:8px 18px 0;background:rgba(226,87,74,.1);border:1px solid rgba(226,87,74,.3);border-radius:4px;padding:11px 13px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--coral);flex-shrink:0"></span>
+        <div style="flex:1;font-size:12.5px"><b>Luca</b> ha lasciato la tua rete</div>
+        <a href="https://t.me/luca" target="_blank" style="font-size:11.5px;font-weight:700;color:var(--coral);text-decoration:none;white-space:nowrap">Scrivigli →</a>
+      </div>
+
+      <div class="list" style="padding-top:10px;padding-bottom:10px">
+        <div class="dir" data-goto="iscritto" style="cursor:pointer">
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">C</div>
+          <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Cristian</span><span class="cbadge mid">ISCRITTO</span></div><div class="dds">@Legalpowerr · ha 5 iscritti · 1 business</div></div>
+          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+        <div class="dir" data-goto="iscritto" style="cursor:pointer">
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--purple);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">S</div>
+          <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Simon</span><span class="cbadge">NUOVO</span></div><div class="dds">@RAMBACCI · profilo da completare</div></div>
+          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+        <div class="dir" style="opacity:.7">
+          <div style="width:46px;height:46px;border-radius:50%;background:#2c323e;color:var(--mut);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">L</div>
+          <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Luca</span><span class="cbadge" style="background:rgba(226,87,74,.18);color:var(--coral)">USCITO</span></div><div class="dds">Ha bloccato il bot · non conta per Partner</div></div>
+          <a href="https://t.me/luca" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PROFILO ===================== -->
+    <section class="scr" data-s="profile">
+      <div class="hdr"><div class="logo" style="font-size:18px">Profilo</div>
+        <div class="iconbtn"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3"/></svg></div>
+      </div>
+      <div class="row" style="gap:14px;padding:20px 18px 0">
+        <div style="width:66px;height:66px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:26px;font-weight:700;flex-shrink:0">A</div>
+        <div style="flex:1;min-width:0">
+          <div class="row" style="gap:8px"><span style="font-size:18px;font-weight:700;letter-spacing:-.02em">Antony</span><span class="badge green" id="profBadge">Partner</span></div>
+          <div style="font-size:12.5px;color:var(--dim);margin-top:4px">@anto · Membro Cashly</div>
+        </div>
+      </div>
+      <div class="stats" style="margin-top:18px">
+        <div class="stat"><div class="n">0</div><div class="l">Attivi</div></div>
+        <div class="stat" data-goto="home" style="cursor:pointer"><div class="n" style="color:var(--amber)">1</div><div class="l">Salvati</div></div>
+        <div class="stat"><div class="n" style="color:var(--acc)">1</div><div class="l">Voti</div></div>
+      </div>
+      <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Account</div></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir" data-goto="identikit" style="cursor:pointer"><div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></div><div style="flex:1"><div class="dnm">Il mio identikit</div><div class="dds">Crea, vedi o modifica il tuo profilo di compatibilità.</div></div><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg></div>
+        <div class="dir"><div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div style="flex:1"><div class="dnm">Dati personali</div><div class="dds">Nome, telefono e dettagli del profilo.</div></div><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg></div>
+      </div>
+      <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Business attivi</div></div>
+      <div style="padding:26px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Nessun business attivo.<br>Esplora la lista e attiva il tuo primo servizio.</div>
+      <div style="height:14px"></div>
+    </section>
+
+    <!-- ===================== I MIEI LINK REF ===================== -->
+    <section class="scr" data-s="reflink">
+      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
+        <button data-goto="vetrina" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="logo" style="justify-self:center;font-size:18px">Link ref</div>
+        <div></div>
+      </div>
+      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Applica i tuoi referral: la tua rete vedrà <b style="color:var(--dim)">questi link</b> al posto di quelli di default.</div>
+
+      <div id="refGate" class="hide" style="padding:14px 18px 0"></div>
+      <div id="refBody">
+      <div class="list rl-list" style="padding-top:12px">
+        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--acc)">S</div><div style="flex:1;min-width:0"><div class="dnm">Broker VS Broker · Swap</div><div class="rl-empty">Nessun ref applicato</div></div><button class="minibtn add">＋ Applica</button></div>
+        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--amber)">B</div><div style="flex:1;min-width:0"><div class="dnm">Broker VS Broker · Bonus</div><div class="rl-empty">Nessun ref applicato</div></div><button class="minibtn add">＋ Applica</button></div>
+        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--blue)">E</div><div style="flex:1;min-width:0"><div class="dnm">Edgefunds</div><div class="rl-empty">Nessun ref applicato</div></div><button class="minibtn add">＋ Applica</button></div>
+      </div>
+
+      <!-- Click per link -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Click sui tuoi ref</div><span class="seccount">0 totali</span></div>
+      <div style="padding:24px 24px 22px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Ancora nessun click.<br>Applica un ref e condividi la lista per iniziare.</div>
+      </div>
+    </section>
+
+    <!-- ===================== LA MIA PAGINA ===================== -->
+    <section class="scr" data-s="pagina">
+      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
+        <button data-goto="vetrina" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="logo" style="justify-self:center;font-size:18px">La mia pagina</div>
+        <div></div>
+      </div>
+      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Personalizza il tuo hub pubblico. L'anteprima si aggiorna qui sotto.</div>
+
+      <div class="card" style="margin-top:10px">
+        <div class="row" style="gap:14px">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:22px;font-weight:700;flex-shrink:0">A</div>
+          <button class="minibtn">Cambia foto</button>
+        </div>
+        <div class="field"><div class="k">Nome</div><div class="v">Antonio</div></div>
+        <div class="field"><div class="k">Handle</div><div class="v" style="color:var(--blue);font-family:var(--mono)">@anto</div></div>
+        <div class="field"><div class="k">Bio</div><div class="v">Ti aiuto a costruire rendite online, passo dopo passo.</div></div>
+      </div>
+
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Link in vetrina</div></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--tx)">R</div><div style="flex:1;min-width:0"><div class="dnm">Revolut</div></div><div class="toggle"><i></i></div></div>
+        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--amber)">T</div><div style="flex:1;min-width:0"><div class="dnm">Trading Matematico</div></div><div class="toggle"><i></i></div></div>
+        <div class="dir"><div class="dav" style="background:#9fe870;color:#163300">W</div><div style="flex:1;min-width:0"><div class="dnm">Wise</div></div><div class="toggle off"><i></i></div></div>
+      </div>
+
+      <div class="sechd" style="padding-bottom:6px"><div class="eyebrow">Anteprima</div><span class="seccount" style="color:var(--acc)">● Live</span></div>
+      <div style="margin:0 14px;background:var(--s0);border:1px solid var(--line);border-radius:5px;padding:24px 20px;text-align:center">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:28px;font-weight:700;margin:0 auto">A</div>
+        <div style="font-size:17px;font-weight:700;margin-top:12px">Antonio</div>
+        <div style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:2px">@anto</div>
+        <div style="font-size:13px;color:var(--dim);margin-top:8px;line-height:1.45">Ti aiuto a costruire rendite online, passo dopo passo.</div>
+        <a class="pvbtn">Broker VS Broker · Swap</a>
+        <a class="pvbtn">Entra nell'hub Cashly</a>
+        <div style="font-size:10.5px;color:var(--mut);margin-top:16px">⚡ Powered by Cashly</div>
+      </div>
+
+      <button style="display:block;margin:16px 14px 4px;width:calc(100% - 28px);background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer">Salva e pubblica</button>
+      <div style="height:14px"></div>
+    </section>
+
+    <!-- ===================== VETRINA (strumenti Partner) ===================== -->
+    <section class="scr" data-s="vetrina">
+      <div class="hdr"><div class="logo" style="font-size:19px">Hub</div>
+        <span class="badge green">Partner ✓</span>
+      </div>
+      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Il centro del tuo lavoro: la tua pagina, i tuoi link, la tua rete e i tuoi guadagni — tutto in un posto.</div>
+
+      <!-- hero: la tua pagina pubblica -->
+      <div class="card" style="margin-top:14px">
+        <div class="row" style="gap:13px">
+          <div style="width:50px;height:50px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:20px;font-weight:700;flex-shrink:0">A</div>
+          <div style="flex:1;min-width:0"><div class="eyebrow">Il tuo hub pubblico</div><div style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/u/uhifxl26</div></div>
+        </div>
+        <div class="row" style="gap:10px;margin-top:13px">
+          <button data-goto="pagina" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Apri / modifica</button>
+          <button class="row" style="display:flex;align-items:center;justify-content:center;gap:7px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:0 16px;height:44px;font-size:13.5px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3M8 7l4-4 4 4M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg>Condividi</button>
+        </div>
+      </div>
+
+      <!-- il tuo lavoro in numeri -->
+      <div class="stats" style="margin-top:12px;grid-template-columns:1fr 1fr">
+        <div class="stat"><div class="n">0</div><div class="l">Link ref</div></div>
+        <div class="stat"><div class="n">2</div><div class="l">Rete</div></div>
+      </div>
+
+      <!-- strumenti -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Costruisci</div></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir" data-goto="pagina" style="cursor:pointer">
+          <div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></div>
+          <div style="flex:1;min-width:0"><div class="dnm">La tua pagina</div><div class="dds">Foto, bio e tutti i tuoi link in un'unica pagina.</div></div>
+          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+        <div class="dir" data-goto="reflink" style="cursor:pointer">
+          <div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><path d="M9 15l6-6M10 6l1-1a4 4 0 0 1 6 6l-1 1M14 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg></div>
+          <div style="flex:1;min-width:0"><div class="fnm" style="font-size:15px">I tuoi link ref <span class="cbadge" style="background:rgba(155,110,240,.18);color:var(--purple)">ESCLUSIVA</span></div><div class="dds">La tua rete vede la stessa directory con i <b style="color:var(--tx)">tuoi link</b>.</div></div>
+          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+      </div>
+
+      <!-- riepilogo del lavoro -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Il tuo lavoro</div></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir" data-goto="reflink" style="cursor:pointer">
+          <div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 15l6-6"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg></div>
+          <div style="flex:1;min-width:0"><div class="dnm">Business con il tuo ref</div></div>
+          <span style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">0 attivi</span>
+        </div>
+        <div class="dir" data-goto="wallet" style="cursor:pointer">
+          <div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/></svg></div>
+          <div style="flex:1;min-width:0"><div class="dnm">La tua rete</div></div>
+          <span style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">2 iscritti</span>
+        </div>
+        <div class="dir" data-goto="suggerisci" style="cursor:pointer">
+          <div class="dav" style="background:rgba(232,179,76,.15);color:var(--amber)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/></svg></div>
+          <div style="flex:1;min-width:0"><div class="dnm">Business che hai suggerito</div></div>
+          <span style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">0 proposti</span>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </section>
+
+    <!-- ===================== SUGGERISCI ===================== -->
+    <section class="scr" data-s="suggerisci">
+      <div class="hdr"><div class="logo" style="font-size:19px">Suggerisci</div>
+        <span class="badge amber">moderato</span>
+      </div>
+      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Proponi un servizio o un prodotto per la directory. Lo valutiamo prima di pubblicarlo.</div>
+
+      <div id="suggGate" class="hide" style="padding:14px 18px 0"></div>
+      <div id="suggBody">
+      <div class="seg" style="padding:16px 18px 0">
+        <button class="on">Servizio</button>
+        <button>Prodotto</button>
+      </div>
+
+      <div style="padding:12px 18px 0">
+        <div class="field"><div class="k">Nome *</div><div class="v" style="color:var(--mut)">Es. Broker VS Broker · Swap</div></div>
+        <div class="field"><div class="k">Link *</div><div class="v" style="color:var(--mut)">https://…</div></div>
+        <div class="fdd" style="margin-top:8px"><span>Categoria</span><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--mut)"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="field"><div class="k">Cos'è (descrizione)</div><div class="v" style="color:var(--mut);line-height:1.5">Spiega in breve di cosa si tratta…</div></div>
+
+        <div class="sechd" style="padding:16px 0 2px"><div class="eyebrow">Requisiti e costi</div></div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1;margin-top:0"><div class="k">Budget</div><div class="v" style="color:var(--mut)">€ …</div></div>
+          <div class="field" style="flex:1;margin-top:0"><div class="k">Profit split</div><div class="v" style="color:var(--mut)">… %</div></div>
+        </div>
+        <div class="field"><div class="k">Costi fissi mensili</div><div class="v" style="color:var(--mut)">€ … (o nessuno)</div></div>
+        <div class="row" style="gap:8px;margin-top:10px">
+          <span class="chip">Rischio basso</span>
+          <span class="chip on">Rischio medio</span>
+          <span class="chip">Rischio alto</span>
+        </div>
+        <div class="field"><div class="k">Tipo di rischio</div><div class="v" style="color:var(--mut);line-height:1.5">Che rischio comporta…</div></div>
+
+        <div class="sechd" style="padding:16px 0 2px"><div class="eyebrow">Media (facoltativo)</div></div>
+        <div class="field"><div class="k">Video YouTube</div><div class="v" style="color:var(--mut)">https://youtu.be/…</div></div>
+        <div class="row" style="gap:10px;margin-top:8px;background:var(--s1);border:1px dashed var(--line2);border-radius:4px;padding:14px;cursor:pointer">
+          <svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px;color:var(--mut)"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          <span style="font-size:13px;color:var(--mut)">Aggiungi una foto</span>
+        </div>
+
+        <div style="font-size:11.5px;color:var(--mut);margin-top:14px;line-height:1.5">Verrà pubblicato solo dopo approvazione. Niente spam, MLM o link truffa.</div>
+        <button style="width:100%;margin-top:14px;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer">Invia suggerimento</button>
+      </div>
+      </div>
+      <div style="height:14px"></div>
+    </section>
+
+    <!-- ===================== SCHEDA SERVIZIO ===================== -->
+    <section class="scr" data-s="servizio">
+      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
+        <button data-goto="home" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="logo" style="justify-self:center;font-size:16px">Scheda servizio</div>
+        <div></div>
+      </div>
+
+      <!-- intestazione -->
+      <div class="row" style="gap:15px;padding:16px 18px 0">
+        <div class="flogo" style="background:var(--s2);color:var(--acc);width:60px;height:60px;font-size:24px">S</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2">Broker VS Broker · Swap</div>
+          <div class="row" style="gap:8px;margin-top:6px"><span id="svcBadge" class="badge amber">In corso · 2/4</span><span style="font-size:12px;color:var(--mut)">Trading Matematico</span></div>
+        </div>
+      </div>
+
+      <!-- voto (unico) + salva + condividi -->
+      <div class="row" style="gap:8px;padding:16px 18px 0">
+        <button class="actbtn" id="schedaVota"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg><span class="vtxt">Vota · 0</span></button>
+        <button class="actbtn" id="schedaSalva"><svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg><span class="stxt">Salva</span></button>
+        <button class="actbtn" id="schedaShare"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3M8 7l4-4 4 4M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg><span>Condividi</span></button>
+      </div>
+
+      <!-- panoramica AI -->
+      <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Panoramica</div></div>
+      <div style="padding:0 18px;font-size:14px;color:var(--dim);line-height:1.6">La strategia <b style="color:var(--tx)">Broker vs Broker</b> apre due posizioni opposte su due broker diversi: il mercato resta coperto (hedge) e ogni notte incassi la <b style="color:var(--tx)">differenza di swap</b> tra i due. Rendita costante, poco tempo di gestione, ma richiede due conti e un capitale adeguato.</div>
+
+      <!-- economics / requisiti -->
+      <div class="sechd" style="padding-bottom:0"><div class="eyebrow">Requisiti e costi</div></div>
+      <div style="padding:0 18px 6px">
+        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Budget richiesto</span><span style="font-size:13.5px;font-weight:600">da € 2.000</span></div>
+        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Costo attivazione</span><span style="font-size:13.5px;font-weight:600">50 USDT una tantum</span></div>
+        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Costi fissi mensili</span><span style="font-size:13.5px;font-weight:600">VPS · ~€ 15/mese</span></div>
+        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Profit split (tieni)</span><span style="font-size:13.5px;font-weight:700;color:var(--acc)">30%</span></div>
+        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Affiliazione</span><span style="font-size:13.5px;font-weight:600;color:var(--acc)">Sì</span></div>
+        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Rischio</span><span class="badge amber">MEDIO</span></div>
+      </div>
+      <div style="margin:6px 18px 0;font-size:12.5px;color:var(--dim);line-height:1.55"><b style="color:var(--tx)">Tipo di rischio:</b> di esecuzione — slippage o ritardo nell'apertura delle due posizioni; margine da tenere monitorato.</div>
+
+      <!-- tutorial -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Tutorial</div><span class="seccount" id="tutCount">2 di 4 completati</span></div>
+      <div class="list" style="padding-top:0">
+        <div class="step" id="tstep0"><div class="stepn">1</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Registra il primo broker</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Apri il conto e completa la verifica.</div><a class="steplink">Apri Broker A →</a></div></div>
+        <div class="step" id="tstep1"><div class="stepn">2</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Registra il secondo broker</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Stesso procedimento sul secondo broker.</div><a class="steplink">Apri Broker B →</a></div></div>
+        <div class="step" id="tstep2"><div class="stepn">3</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Apri le posizioni opposte</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Compra su A e vendi su B con lo <b style="color:var(--tx)">stesso volume</b>.</div><div class="row" style="gap:8px;margin-top:9px"><a class="steplink" style="margin-top:0">Guida configurazione →</a><button id="stepFatto" style="background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer">Fatto ✓</button></div></div></div>
+        <div class="step" id="tstep3"><div class="stepn">4</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Segna come completato</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Fatto! Monitora lo swap ogni notte.</div></div></div>
+      </div>
+
+      <!-- risorse -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Risorse</div></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir"><div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div><div style="flex:1"><div class="dnm" style="font-size:14px">Canale Telegram ufficiale</div></div><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;color:var(--mut)"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
+        <div class="dir"><div class="dav" style="background:rgba(226,87,74,.15);color:var(--coral)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/></svg></div><div style="flex:1"><div class="dnm" style="font-size:14px">Video guida completa</div></div><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;color:var(--mut)"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
+      </div>
+
+      <!-- CTA finale (cambia con lo stato) -->
+      <button id="svcCta" style="display:block;margin:18px 14px 6px;width:calc(100% - 28px);background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:16px;font-size:15px;font-weight:700;cursor:pointer">Riprendi dallo step 3</button>
+      <div id="svcNote" style="padding:0 20px;font-size:11.5px;color:var(--mut);text-align:center;line-height:1.5">Riprendi da dove ti sei fermato.</div>
+      <div style="height:16px"></div>
+    </section>
+
+    <!-- ===================== IDENTIKIT ===================== -->
+    <section class="scr" data-s="identikit">
+      <style>
+        .idk-bar{height:4px;border-radius:2px;background:var(--s2);overflow:hidden;margin:6px 18px 0}
+        .idk-bar i{display:block;height:100%;background:var(--dim);width:20%;transition:width .35s ease}
+        .idk-q{padding:22px 20px 20px}
+        .idk-kick{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+        .idk-title{font-size:23px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+        .idk-help{font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px}
+        .idk-opts{display:flex;flex-direction:column;gap:9px;margin-top:24px}
+        .idk-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--s1);border:1px solid var(--line);color:var(--tx);border-radius:6px;padding:15px;font-size:15px;font-weight:600;cursor:pointer;transition:transform .08s,border-color .15s,background .15s}
+        .idk-opt:active{transform:scale(.985)}
+        .idk-opt .rad{width:18px;height:18px;border-radius:50%;border:2px solid var(--line2);flex-shrink:0;position:relative}
+        .idk-opt.on{border-color:var(--tx);background:rgba(247,249,252,.06)}
+        .idk-opt.on .rad{border-color:var(--tx)}
+        .idk-opt.on .rad::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--tx)}
+        .pt-pill{font-family:var(--mono);font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;padding:4px 9px;border-radius:4px;flex-shrink:0}
+        .pt-bar{height:3px;border-radius:2px;background:var(--s2);margin-top:7px;overflow:hidden}
+        .pt-bar i{display:block;height:100%;border-radius:2px}
+      </style>
+      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
+        <button id="idkBack" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="logo" style="justify-self:center;font-size:16px">Il tuo identikit</div>
+        <div id="idkStep" style="justify-self:end;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--mut)">1 / 5</div>
+      </div>
+      <div class="idk-bar"><i id="idkBar"></i></div>
+      <div class="idk-q" id="idkQ"></div>
+    </section>
+
+    <!-- ===================== DETTAGLIO ISCRITTO ===================== -->
+    <section class="scr" data-s="iscritto">
+      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
+        <button data-goto="wallet" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="logo" style="justify-self:center;font-size:16px">Iscritto</div>
+        <div></div>
+      </div>
+
+      <!-- profilo -->
+      <div class="row" style="gap:14px;padding:20px 18px 0">
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:23px;flex-shrink:0">C</div>
+        <div style="flex:1;min-width:0">
+          <div class="row" style="gap:8px"><span style="font-size:18px;font-weight:700">Cristian</span><span class="cbadge mid">ISCRITTO</span></div>
+          <div style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px">@Legalpowerr</div>
+          <div style="font-size:11.5px;color:var(--mut);margin-top:2px">Nella tua rete dal 10 lug</div>
+        </div>
+      </div>
+
+      <!-- stats iscritto -->
+      <div class="stats" style="margin-top:16px">
+        <div class="stat"><div class="n">1</div><div class="l">Business</div></div>
+        <div class="stat"><div class="n" style="color:var(--acc)">5</div><div class="l">Suoi iscritti</div></div>
+        <div class="stat"><div class="n">3g</div><div class="l">Attivo da</div></div>
+      </div>
+
+      <!-- messaggio (via Telegram) -->
+      <div class="sechd" style="padding-bottom:6px"><div class="eyebrow">Scrivigli</div><span class="seccount">via Telegram</span></div>
+      <div class="card">
+        <div class="field" style="margin-top:0;cursor:text"><div class="v" style="color:var(--mut);line-height:1.5">Scrivi un messaggio a Cristian…</div></div>
+        <div class="row" style="gap:10px;margin-top:10px">
+          <button style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Invia ora</button>
+          <button class="row" style="display:flex;align-items:center;justify-content:center;gap:7px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:0 16px;height:44px;font-size:13.5px;font-weight:700;cursor:pointer"><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>Programma</button>
+        </div>
+      </div>
+
+      <!-- i suoi business attivi -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">I suoi business attivi</div><span class="seccount">1</span></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--acc)">S</div><div style="flex:1;min-width:0"><div class="dnm">Broker VS Broker · Swap</div><div class="dds">Attivato · tutorial completato</div></div><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--acc)"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+      </div>
+
+      <!-- la sua rete -->
+      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">La sua rete</div></div>
+      <div class="list" style="padding-top:0">
+        <div class="dir"><div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/></svg></div><div style="flex:1;min-width:0"><div class="dnm">Ha portato 5 iscritti</div><div class="dds">Fanno parte della tua rete totale.</div></div></div>
+      </div>
+      <div style="height:16px"></div>
+    </section>
+
   </div>
 
-  <nav class="nav">
-    <a class="on" href="app.html"><svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span class="lb">Home</span></a>
-    <a data-acc="#affiliazione"><svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg><span class="lb">Affiliazione</span></a>
-    <a data-acc="#profilo"><svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="lb">Profilo</span></a>
-    <a href="admin/index.html"><svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M3 4h18M3 12h18M3 20h18"/></svg><span class="lb">Admin</span></a>
-  </nav>
+  <!-- ===================== NAV ===================== -->
+  <div class="nav">
+    <button class="navb on" data-go="home"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span class="lb">Home</span></button>
+    <button class="navb" data-go="wallet"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg><span class="lb">Affiliazione</span></button>
+    <button class="navb" data-go="suggerisci"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><rect x="3" y="3" width="18" height="18" rx="6"/><path d="M12 8v8M8 12h8"/></svg><span class="lb">Suggerisci</span></button>
+    <button class="navb" data-go="vetrina"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><path d="M4 9h16l-1-4H5zM5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M9 20v-6h6v6"/></svg><span class="lb">Hub</span></button>
+    <button class="navb" data-go="profile"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="lb">Profilo</span></button>
+  </div>
 </div>
 
-<script src="identikit.js?v=9"></script>
 <script>
+(function(){
+  var app=document.querySelector('.app'), body=app.querySelector('.body');
+  app.querySelectorAll('.nav button').forEach(function(b){
+    b.addEventListener('click',function(){
+      var go=b.getAttribute('data-go');
+      app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===go);});
+      app.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('on',x===b);});
+      body.scrollTop=0;
+    });
+  });
+  // category chips (visual)
+  app.querySelectorAll('.chips').forEach(function(f){
+    f.querySelectorAll('.chip').forEach(function(p){
+      p.addEventListener('click',function(){
+        f.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});
+        p.classList.add('on');
+      });
+    });
+  });
+  // segmented toggle: switch feed/list within the SAME screen
+  app.querySelectorAll('.seg button').forEach(function(b){
+    b.addEventListener('click',function(){
+      var v=b.getAttribute('data-view'), scope=b.closest('.scr');
+      b.parentNode.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});
+      scope.querySelectorAll('.feed[data-view],.rl-list[data-view]').forEach(function(fd){
+        fd.classList.toggle('hide',fd.getAttribute('data-view')!==v);
+      });
+    });
+  });
+  // sub-screen navigation (perk rows, back buttons)
+  function showScreen(name){
+    app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===name);});
+    body.scrollTop=0;
+  }
+  app.querySelectorAll('[data-goto]').forEach(function(el){
+    el.addEventListener('click',function(){showScreen(el.getAttribute('data-goto'));});
+  });
+  // toggle switches (pagina)
+  app.querySelectorAll('.toggle').forEach(function(t){
+    t.addEventListener('click',function(){t.classList.toggle('off');});
+  });
+  // scheda: voto unico (Vota <-> Votato) + salva (Salva <-> Salvato)
+  var vBtn=document.getElementById('schedaVota');
+  if(vBtn){vBtn.addEventListener('click',function(){
+    var on=vBtn.classList.toggle('on');
+    vBtn.querySelector('.vtxt').textContent = on ? 'Votato · 1' : 'Vota · 0';
+  });}
+  var sBtn=document.getElementById('schedaSalva');
+  if(sBtn){sBtn.addEventListener('click',function(){
+    var on=sBtn.classList.toggle('on');
+    sBtn.querySelector('.stxt').textContent = on ? 'Salvato' : 'Salva';
+  });}
+  // identikit: calcola -> mostra risultato
+  var calcBtn=document.getElementById('calcIdentikit');
+  if(calcBtn){calcBtn.addEventListener('click',function(){
+    var r=document.getElementById('identikitResult'); if(r){r.classList.remove('hide'); r.scrollIntoView({behavior:'smooth',block:'center'});}
+  });}
+
+  // scheda servizio: stati Nuovo / In corso / Attivato
+  function setSvc(state){
+    var cfg={
+      nuovo:   {done:0,cur:0, badge:'Nuovo',bcl:'amber',       count:'0 di 4', cta:'Attiva servizio',       note:'Inizia il tutorial per attivare il servizio.'},
+      incorso: {done:2,cur:2, badge:'In corso · 2/4',bcl:'amber',count:'2 di 4 completati', cta:'Riprendi dallo step 3', note:'Riprendi da dove ti sei fermato.'},
+      attivato:{done:4,cur:-1,badge:'Attivato · cliente',bcl:'green',count:'4 di 4 · completato', cta:'Servizio attivato ✓', note:'Sei cliente. È nei tuoi Business attivi.'}
+    }[state];
+    if(!cfg)return;
+    var b=document.getElementById('svcBadge'); if(b){b.textContent=cfg.badge;b.className='badge '+cfg.bcl;}
+    var tc=document.getElementById('tutCount'); if(tc)tc.textContent=cfg.count;
+    for(var i=0;i<4;i++){
+      var st=document.getElementById('tstep'+i); if(!st)continue; var n=st.querySelector('.stepn');
+      st.style.background=''; st.style.opacity='';
+      if(i<cfg.done){ n.textContent='✓'; n.style.background='var(--acc)'; n.style.borderColor='var(--acc)'; n.style.color='var(--on)'; }
+      else { n.textContent=(i+1); n.style.background='var(--s2)'; n.style.borderColor='var(--line2)'; n.style.color='var(--acc)';
+        if(i===cfg.cur){ st.style.background='rgba(37,195,102,.06)'; } else { st.style.opacity='.55'; } }
+    }
+    var f=document.getElementById('stepFatto'); if(f)f.style.display=(state==='incorso')?'':'none';
+    var cta=document.getElementById('svcCta'); if(cta)cta.textContent=cfg.cta;
+    var nt=document.getElementById('svcNote'); if(nt)nt.textContent=cfg.note;
+  }
+  app.querySelectorAll('.statesel button').forEach(function(b){
+    b.addEventListener('click',function(){
+      b.parentNode.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});
+      setSvc(b.getAttribute('data-st'));
+    });
+  });
+  setSvc('incorso');
+  var h=location.hash.replace('#','');
+  if(h){app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===h);});}
+})();
+</script>
+
+<script>
+/* ===== Identikit wizard + matching + Per te ===== */
+(function(){
+  var app=document.querySelector('.app'), bodyEl=app.querySelector('.body');
+  function sc0(){ if(bodyEl) bodyEl.scrollTop=0; }
+  function scr(name){ app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===name);}); }
+
+  var QUESTIONS=[
+    {id:'settore',kick:'1 di 5',title:'Cosa ti interessa?',help:'Puoi lasciare aperto a tutto e decidere dopo.',
+     opts:[['trading','Trading e mercati'],['banking','Banca e conti'],['crypto','Crypto'],['ecom','E-commerce'],['online','Business online / digitale'],['rendite','Rendite automatiche'],['tutto','Va bene tutto']]},
+    {id:'capitale',kick:'2 di 5',title:'Quanto puoi investire?',help:'La base con cui il business opera. Non lo spendi: serve ad avere il minimo richiesto.',
+     opts:[['a','Meno di 1.000€'],['b','1.000 – 5.000€'],['c','5.000 – 20.000€'],['d','Oltre 20.000€']]},
+    {id:'spesa',kick:'3 di 5',title:'Budget per avviarlo?',help:'Soldi che escono davvero: attivazione + eventuali costi fissi mensili.',
+     opts:[['g','Solo gratis'],['s50','Fino a 50€'],['s200','Fino a 200€'],['over','Oltre 200€']]},
+    {id:'rischio',kick:'4 di 5',title:'Che rischio accetti?',help:'Serve solo a non proporti cose fuori dalla tua soglia.',
+     opts:[['sicuro','Basso — capitale al sicuro'],['regole','Medio — con regole chiare'],['alto','Alto — per guadagni alti']]},
+    {id:'esperienza',kick:'5 di 5',title:'Quanta esperienza hai?',help:'Se parti da zero, ti mostriamo cose adatte al tuo livello.',
+     opts:[['zero','Parto da zero'],['basi','Ho delle basi'],['esperto','Sono esperto']]}
+  ];
+  var SERVICES=[
+    {n:'Broker VS Broker · Swap',ic:'S',col:'var(--acc)',ds:'Hedging per incassare la differenza di swap, ogni notte.',budget:2000,att:50,fissi:15,risk:2,tipo:'esecuzione',sett:'trading',esp:2,split:30},
+    {n:'Broker VS Broker · Bonus',ic:'B',col:'var(--amber)',ds:'Hedging tra due broker per sfruttare il bonus tradabile.',budget:500,att:0,fissi:0,risk:2,tipo:'esecuzione',sett:'trading',esp:2,split:40},
+    {n:'Edgefunds',ic:'E',col:'var(--blue)',ds:'Servizio conto terzi per gestione hedging.',budget:5000,att:100,fissi:20,risk:2,tipo:'esecuzione',sett:'trading',esp:3,split:50}
+  ];
+  var CAP={a:800,b:3000,c:12000,d:30000},SPESA={g:0,s50:50,s200:200,over:100000},RISK={sicuro:1,regole:2,alto:3},TIPO={sicuro:'protetto',regole:'esecuzione',alto:'mercato'},ESP={zero:1,basi:2,esperto:3};
+  var RECAP={settore:{trading:'Trading',banking:'Banca e conti',crypto:'Crypto',ecom:'E-commerce',online:'Business online',rendite:'Rendite',tutto:'aperto a tutto'},capitale:{a:'capitale piccolo',b:'capitale medio',c:'capitale alto',d:'capitale ampio'},rischio:{sicuro:'rischio basso',regole:'rischio medio',alto:'rischio alto'}};
+
+  function compat(s,a){
+    var capU=CAP[a.capitale],spesaU=SPESA[a.spesa],riskU=RISK[a.rischio],tipoU=TIPO[a.rischio],espU=ESP[a.esperienza],settU=a.settore;
+    var need=s.att+s.fissi,capHard=false,spesaHard=false,capSoft=false;
+    var cCap; if(s.budget>0&&capU<0.8*s.budget){cCap=0;capHard=true;} else if(s.budget>0&&capU<s.budget){cCap=0.5;capSoft=true;} else cCap=1;
+    var cSpesa; if(need>0&&spesaU===0){cSpesa=0;spesaHard=true;} else if(need>0&&spesaU>=need)cSpesa=1; else if(need>0&&spesaU>=0.8*need)cSpesa=0.5; else if(need===0)cSpesa=1; else cSpesa=0.2;
+    var d=s.risk-riskU,cRisk=d<=0?1:(d===1?0.5:0.1); if(tipoU==='protetto'&&s.tipo==='mercato')cRisk=Math.min(cRisk,0.15);
+    var de=s.esp-espU,cEsp=de<=0?1:(de===1?0.5:0.15);
+    var cSett=(settU==='tutto'||settU===s.sett)?1:0.25;
+    var base=25*cCap+15*cSpesa+25*cRisk+15*cEsp+20*cSett+Math.round(s.split/100*3);
+    var raw=Math.max(0,Math.min(100,base));
+    if(capHard||spesaHard)raw=Math.min(raw,15);
+    if(capSoft)raw=Math.min(raw,50);
+    if(riskU===1&&s.risk===3)raw=Math.min(raw,42);
+    var val=Math.round(raw),reason='Adatto al tuo profilo';
+    if(capHard)reason='Ti serve più capitale'; else if(spesaHard)reason='Costo di avvio troppo alto'; else if(cRisk<=0.15)reason='Più rischioso di quanto vuoi'; else if(cEsp<=0.15)reason='Serve più esperienza'; else if(cSett<1)reason='Fuori dal tuo settore'; else if(capSoft)reason='Sei al limite di capitale';
+    return {val:val,reason:reason,locked:(capHard||spesaHard)};
+  }
+  function band(v){ if(v>=80)return{c:'#f7f9fc',bg:'rgba(247,249,252,.13)'}; if(v>=60)return{c:'#c4cbd6',bg:'rgba(196,203,214,.10)'}; if(v>=40)return{c:'#e6b24c',bg:'rgba(230,178,76,.14)'}; return{c:'#818a9c',bg:'rgba(129,138,156,.12)'}; }
+
+  function rowHtml(s,c){
+    var b=c?band(c.val):null;
+    var right = c ? '<div class="pt-pill" style="color:'+b.c+';background:'+b.bg+'">'+c.val+'%</div>'
+      : '<div class="up"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg><span class="n" style="color:var(--dim)">0</span></div>';
+    var barHtml = c ? '<div class="pt-bar"><i style="width:'+c.val+'%;background:'+b.c+'"></i></div>' : '';
+    var ds = c ? c.reason : s.ds;
+    return '<div class="frow" data-goto="servizio">'
+      +'<div class="fbody"><div class="fnm">'+s.n+'</div><div class="fds">'+ds+'</div>'+barHtml+'</div>'+right+'</div>';
+  }
+  function bindRows(container){ container.querySelectorAll('[data-goto]').forEach(function(el){ el.addEventListener('click',function(){ scr(el.getAttribute('data-goto')); sc0(); }); }); }
+  function renderPerte(a){
+    var feed=document.getElementById('perteFeed'),sub=document.getElementById('pertesub'); if(!feed)return;
+    if(!a){ feed.innerHTML=SERVICES.map(function(s){return rowHtml(s,null);}).join(''); bindRows(feed); return; }
+    if(sub) sub.innerHTML='In base al tuo identikit · <b style="color:var(--dim)">'+[RECAP.settore[a.settore],RECAP.capitale[a.capitale],RECAP.rischio[a.rischio]].join(' · ')+'</b>';
+    var scored=SERVICES.map(function(s){return {s:s,c:compat(s,a)};}).sort(function(x,y){return y.c.val-x.c.val;});
+    feed.innerHTML=scored.map(function(x){return rowHtml(x.s,x.c);}).join('');
+    bindRows(feed);
+  }
+
+  var ans={},cur=0;
+  var Q=document.getElementById('idkQ'),bar=document.getElementById('idkBar'),stepL=document.getElementById('idkStep'),back=document.getElementById('idkBack');
+  function render(){
+    var q=QUESTIONS[cur];
+    if(bar)bar.style.width=((cur+1)/QUESTIONS.length*100)+'%';
+    if(stepL)stepL.textContent=(cur+1)+' / '+QUESTIONS.length;
+    var h='<div class="idk-kick">'+q.kick+'</div><div class="idk-title">'+q.title+'</div><div class="idk-help">'+q.help+'</div><div class="idk-opts">';
+    q.opts.forEach(function(o){ h+='<button class="idk-opt'+(ans[q.id]===o[0]?' on':'')+'" data-v="'+o[0]+'"><span class="rad"></span><span>'+o[1]+'</span></button>'; });
+    h+='</div>';
+    Q.innerHTML=h;
+    Q.querySelectorAll('.idk-opt').forEach(function(b){ b.addEventListener('click',function(){ choose(q,b.getAttribute('data-v')); }); });
+  }
+  function choose(q,v){
+    ans[q.id]=v;
+    Q.querySelectorAll('.idk-opt').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-v')===v);});
+    setTimeout(function(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); },220);
+  }
+  function finish(){
+    renderPerte(ans);
+    scr('home');
+    app.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-go')==='home');});
+    var home=app.querySelector('.scr[data-s="home"]');
+    if(home){
+      home.querySelectorAll('.seg button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-view')==='perte');});
+      home.querySelectorAll('.feed[data-view]').forEach(function(fd){fd.classList.toggle('hide',fd.getAttribute('data-view')!=='perte');});
+    }
+    sc0();
+  }
+  if(back) back.onclick=function(){ if(cur>0){cur--;render();} else scr('profile'); };
+  app.querySelectorAll('[data-goto="identikit"]').forEach(function(el){ el.addEventListener('click',function(){ ans={};cur=0;render(); }); });
+  if(Q){ render(); renderPerte(null); }
+  if(/demo=perte/.test(location.search)){ ans={settore:'trading',capitale:'b',spesa:'s50',rischio:'regole',esperienza:'basi'}; finish(); }
+})();
+</script>
+
+<script>
+/* ===== Logica Partner: invita 3 -> sblocca Suggerisci + Link ref ===== */
+(function(){
+  var app=document.querySelector('.app'), bodyEl=app.querySelector('.body');
+  var SOGLIA=3, activeDirects=2, everPartner=false, contributed=false, hasRef=false; // demo: 2/3 attivi, non ancora Partner
+  // Partner se: 3 diretti ATTIVI, oppure (già stato Partner E ha contribuito o ha ref link attivi) -> retention
+  function isPartner(){ return activeDirects>=SOGLIA || (everPartner && (contributed||hasRef)); }
+
+  function progHtml(){
+    var pct=Math.min(100, Math.round(activeDirects/SOGLIA*100)), left=Math.max(0,SOGLIA-activeDirects);
+    return '<div style="margin-top:14px">'
+      +'<div class="row" style="justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--mut)"><span>'+activeDirects+' / '+SOGLIA+' invitati</span><span>'+(left>0?('ancora '+left):'obiettivo raggiunto')+'</span></div>'
+      +'<div style="height:6px;border-radius:3px;background:var(--s2);margin-top:6px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:var(--acc);border-radius:3px;transition:width .3s"></i></div></div>';
+  }
+  function partnerCardHtml(){
+    if(isPartner()){
+      return '<div class="row" style="justify-content:space-between"><div class="eyebrow">Il tuo stato</div><span class="badge green">Attivo</span></div>'
+        +'<div class="row" style="gap:12px;margin-top:10px"><div style="width:40px;height:40px;border-radius:50%;background:rgba(37,195,102,.16);color:var(--acc);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg class="ico" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M20 6 9 17l-5-5"/></svg></div>'
+        +'<div style="flex:1"><div style="font-size:16px;font-weight:700">Sei Partner</div><div style="font-size:12.5px;color:var(--dim);margin-top:1px">Puoi suggerire servizi e inserire i tuoi link ref.</div></div></div>';
+    }
+    return '<div class="row" style="justify-content:space-between"><div class="eyebrow">Il tuo stato</div><span class="badge amber">In corso</span></div>'
+      +'<div style="font-size:16px;font-weight:700;margin-top:10px">Diventa Partner</div>'
+      +'<div style="font-size:12.5px;color:var(--dim);margin-top:4px;line-height:1.5">Invita <b style="color:var(--tx)">'+SOGLIA+' persone</b> nella tua rete per sbloccare <b style="color:var(--tx)">Suggerisci</b> e i <b style="color:var(--tx)">tuoi link ref</b>.</div>'
+      + progHtml()
+      +'<button class="demoInvite" style="width:100%;margin-top:12px;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Invita &nbsp;·&nbsp; simula un nuovo iscritto (+1)</button>';
+  }
+  function gateHtml(what){
+    return '<div class="card">'
+      +'<div class="row" style="gap:11px"><div style="width:38px;height:38px;border-radius:8px;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--mut);flex-shrink:0"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>'
+      +'<div style="flex:1"><div class="eyebrow">Riservato ai Partner</div><div style="font-size:15.5px;font-weight:700;margin-top:3px">Diventa Partner per '+what+'</div></div></div>'
+      +'<div style="font-size:12.5px;color:var(--dim);margin-top:11px;line-height:1.5">Invita <b style="color:var(--tx)">'+SOGLIA+' persone</b> nella tua rete e sblocchi: <b style="color:var(--tx)">suggerire</b> servizi/prodotti e <b style="color:var(--tx)">inserire i tuoi link ref</b> su tutta la directory.</div>'
+      + progHtml()
+      +'<button class="goWallet" style="width:100%;margin-top:14px;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Vai a Affiliazione e invita →</button>'
+      +'</div>';
+  }
+  function goWallet(){
+    app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')==='wallet');});
+    app.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-go')==='wallet');});
+    if(bodyEl)bodyEl.scrollTop=0;
+  }
+  function setGate(gateId,bodyId,what){
+    var g=document.getElementById(gateId),b=document.getElementById(bodyId); if(!g||!b)return;
+    if(isPartner()){ g.style.display='none'; g.innerHTML=''; b.style.display=''; }
+    else { g.style.display=''; g.innerHTML=gateHtml(what); b.style.display='none'; }
+  }
+  function render(){
+    var pc=document.getElementById('partnerCard'); if(pc)pc.innerHTML=partnerCardHtml();
+    setGate('suggGate','suggBody','suggerire un business');
+    setGate('refGate','refBody','inserire i tuoi link ref');
+    var pb=document.getElementById('profBadge'); if(pb){ pb.textContent=isPartner()?'Partner':'Membro'; pb.className='badge '+(isPartner()?'green':'amber'); }
+    var ki=document.getElementById('kpiIscritti'); if(ki)ki.textContent=activeDirects;
+    var dn=document.getElementById('direttiN'); if(dn)dn.textContent=activeDirects;
+    app.querySelectorAll('.demoInvite').forEach(function(b){ b.onclick=function(){ if(activeDirects<99)activeDirects++; if(activeDirects>=SOGLIA)everPartner=true; render(); }; });
+    app.querySelectorAll('.goWallet').forEach(function(b){ b.onclick=function(){ goWallet(); }; });
+  }
+  render();
+})();
+</script>
+
+<script src="identikit.js?v=10"></script>
+<script>
+/* ===== LIVE: Telegram + directory reale (design del prototipo intatto) ===== */
+(function(){
   var API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
   var tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
   var initData = (tg && tg.initData) || "";
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 
-  try { var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user; if (u && u.first_name) document.getElementById("avatar").textContent = u.first_name.trim().slice(0,1).toUpperCase(); } catch(e){}
-
-  // nav -> pagine reali con cache-bust
-  document.querySelectorAll('.nav a[data-acc]').forEach(function(a){ a.href = "account.html?_=" + Date.now() + a.getAttribute("data-acc"); });
-
-  var SERVIZI = [], view = "evidenza", search = "";
-
-  function band(v){
-    if(v>=80) return {c:"var(--acc)",bg:"rgba(37,195,102,.14)"};
-    if(v>=60) return {c:"#3fd07f",bg:"rgba(37,195,102,.10)"};
-    if(v>=40) return {c:"var(--amber)",bg:"rgba(230,178,76,.14)"};
-    return {c:"var(--mut)",bg:"rgba(129,138,156,.14)"};
-  }
-  function isNew(s){ try { return (Date.now() - new Date(s.created_at).getTime()) < 7*24*3600*1000; } catch(e){ return false; } }
-  function openBiz(id){ location.href = "lista.html?_=" + Date.now() + "#biz-" + id; }
-
-  function render(){
-    var el = document.getElementById("list");
-    var arr = SERVIZI.slice();
-    if(search){ var q = search.toLowerCase(); arr = arr.filter(function(s){ return (s.nome||"").toLowerCase().indexOf(q)>=0 || (s.descrizione||"").toLowerCase().indexOf(q)>=0; }); }
-    var params = window.userParams;
-    arr = arr.map(function(s){ return { s:s, pct: (typeof computeCompat==="function") ? computeCompat(params, s) : null }; });
-    if(view === "perte"){ arr.sort(function(a,b){ return (b.pct||0)-(a.pct||0); }); }
-    else { arr.sort(function(a,b){ return (b.s.voti||0)-(a.s.voti||0) || (String(a.s.created_at) < String(b.s.created_at) ? 1 : -1); }); }
-    if(!arr.length){ el.innerHTML = '<div class="empty">' + (SERVIZI.length ? "Nessun business trovato." : "Ancora nessun business in lista.<br>Aggiungilo dall\'Admin.") + '</div>'; return; }
-    el.innerHTML = arr.map(function(o){
-      var s = o.s, pct = o.pct, b = pct != null ? band(pct) : null;
-      var pill = pct != null ? '<span class="pill" style="color:'+b.c+';background:'+b.bg+'">'+pct+'%</span>'
-                             : '<div class="up"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg><span class="n">'+(s.voti||0)+'</span></div>';
-      var nuovo = isNew(s) ? '<span class="badge new">Nuovo</span>' : "";
-      return '<div class="frow" onclick="openBiz('+s.id+')"><div class="fbody"><div class="fnm">'+esc(s.nome)+nuovo+'</div><div class="fds">'+esc(s.descrizione||"")+'</div></div>'+pill+'</div>';
-    }).join("");
-  }
-
-  document.querySelectorAll(".seg button").forEach(function(b){ b.addEventListener("click", function(){
-    document.querySelectorAll(".seg button").forEach(function(x){ x.classList.toggle("on", x===b); });
-    view = b.getAttribute("data-view"); render();
-  }); });
-  document.getElementById("search").addEventListener("input", function(e){ search = e.target.value.trim(); render(); });
-
-  (async function load(){
-    try {
-      var res = await fetch(API_URL + "/business-list", { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" });
-      var data = await res.json();
-      SERVIZI = [];
-      (data.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ SERVIZI.push(s); }); });
-      var d = new Date();
-      document.getElementById("agg").textContent = "Agg. " + d.toLocaleDateString("it-IT") + " · " + d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
-      try {
-        var meRes = await fetch(API_URL + "/me", { headers: initData ? { "x-telegram-init-data": initData } : {} });
-        var me = await meRes.json();
-        if (me && me.sondaggio && typeof computeIdentikit === "function") window.userParams = computeIdentikit(me.sondaggio).params;
-      } catch(e){}
-      render();
-    } catch(e){
-      document.getElementById("list").innerHTML = '<div class="empty">Errore di caricamento. Riprova.</div>';
+  // Personalizza avatar (home) + nome (profilo) dall'utente Telegram
+  try {
+    var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if (u && u.first_name) {
+      var ini = u.first_name.trim().slice(0,1).toUpperCase();
+      var hdr = document.querySelector('.scr[data-s="home"] .hdr');
+      if (hdr && hdr.lastElementChild) hdr.lastElementChild.textContent = ini;
+      var pb = document.getElementById('profBadge');
+      if (pb && pb.previousElementSibling) pb.previousElementSibling.textContent = (u.first_name + (u.last_name ? (' ' + u.last_name) : '')).trim();
     }
-  })();
+  } catch(e){}
+
+  function rowHtml(s){
+    return '<div class="frow">'
+      + '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div>'
+      + '<div class="fds">' + esc(s.descrizione || '') + '</div></div>'
+      + '<div class="up"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg>'
+      + '<span class="n" style="color:var(--dim)">' + (s.voti||0) + '</span></div></div>';
+  }
+
+  fetch(API_URL + "/business-list", { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var arr = [];
+      (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ arr.push(s); }); });
+      var host = document.getElementById('listaReale');
+      var perte = document.getElementById('perteFeed');
+      if (!arr.length) {
+        if (perte) perte.innerHTML = '';   // lascia il messaggio "Lista svuotata" del prototipo su In evidenza
+        return;
+      }
+      arr.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
+      var html = arr.map(rowHtml).join('');
+      if (host) host.innerHTML = html;
+      if (perte) perte.innerHTML = html; // finche' l'identikit reale non e' collegato, stesso ordine per voti
+    })
+    .catch(function(){});
+})();
 </script>
 </body>
 </html>
