@@ -766,7 +766,7 @@
   });
   setSvc('incorso');
   var h=location.hash.replace('#','');
-  if(h){app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===h);});}
+  if(h&&/^[a-z]+$/.test(h)&&app.querySelector('.scr[data-s="'+h+'"]')){app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===h);});}
 })();
 </script>
 
@@ -931,7 +931,7 @@
 </script>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=11"></script>
+<script src="identikit.js?v=12"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
