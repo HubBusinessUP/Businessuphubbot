@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Cashly</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#1b1f28;--s0:#222732;--s1:#2a3040;--s2:#333a4b;--s3:#414a5d;
@@ -180,6 +183,46 @@
   .fab{width:46px;height:46px;border-radius:4px;background:var(--acc);color:var(--on);
     display:flex;align-items:center;justify-content:center;margin-bottom:2px}
 </style>
+<style>
+/* ===== Cashly brand restyle ===== */
+:root{
+  --bg:#161419; --s0:#1f1b25; --s1:#272231; --s2:#332c40; --s3:#41394f;
+  --line:#312a3c; --line2:#473e57;
+  --tx:#f6f3f9; --dim:#b4abc0; --mut:#867d95;
+  --acc:#25cf6e; --acc-d:#17ab58; --on:#04210f;
+  --amber:#ffb43d; --blue:#4aa8ff; --purple:#b57bff; --coral:#ff6a5a; --teal:#28d3c2; --pink:#ff6bcb;
+  --display:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:'Sora',ui-monospace,'SF Mono',Menlo,monospace;
+  --grad:linear-gradient(120deg,#25cf6e 0%,#1ac6a3 100%);
+}
+body{background:#0f0d12}
+.app{background:var(--bg)}
+/* angoli morbidi ovunque (anche inline border-radius:4px) */
+[style*="border-radius:4px"]{border-radius:11px !important}
+.card,.feed,.stats{border-radius:16px}
+.dav,.flogo,.iconbtn,.seg button,.search,.fdd,.field,.minibtn,.act,.mvi,.vote,.metachip,.statesel button{border-radius:12px}
+.chip,.pill,.badge,.cbadge,.tag,.live{border-radius:999px}
+/* profondita' */
+.card,.feed,.stats{box-shadow:0 12px 34px -20px rgba(0,0,0,.75)}
+.hdr{background:linear-gradient(180deg,var(--s0),rgba(31,27,37,.9));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+/* wordmark + label: via display, meno mono-terminale */
+.logo{font-family:var(--display);font-weight:800;letter-spacing:-.02em}
+.eyebrow,.sectitle,.seccount,.stat .l,.navb .lb,.feedhd,.live{font-family:var(--display)}
+.eyebrow{letter-spacing:.1em}
+/* numeri stat colorati (dove non forzati inline) */
+.stats .stat:nth-child(1) .n{color:var(--acc)}
+.stats .stat:nth-child(2) .n{color:var(--amber)}
+.stats .stat:nth-child(3) .n{color:var(--coral)}
+/* CTA verdi -> gradiente brand */
+button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{background:var(--grad) !important;border:none !important}
+.badge.green{background:var(--grad)}
+/* toggle/pulse restano verdi pieni (leggibilita') */
+.toggle{background:var(--acc)}
+/* categoria dropdown: accento */
+.fdd.set{border-color:var(--line2)}
+/* seg attivo brand */
+.seg button.on{background:rgba(37,207,110,.15);border-color:rgba(37,207,110,.6);color:var(--acc)}
+</style>
 </head>
 <body>
 
@@ -190,7 +233,7 @@
     <section class="scr on" data-s="home">
       <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr;padding:14px 18px">
         <button style="justify-self:start;background:none;border:none;color:var(--dim);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3M9 4.6a1.6 1.6 0 0 1-1.8.3M15 19.4a1.6 1.6 0 0 1 1.8-.3M4.6 15a1.6 1.6 0 0 1-.3 1.8M19.4 9a1.6 1.6 0 0 1 .3-1.8"/></svg></button>
-        <div style="justify-self:center;font-family:var(--sans);font-size:22px;font-weight:800;letter-spacing:-.02em">Cash<span style="color:var(--acc)">ly</span></div>
+        <div style="justify-self:center;font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.02em">Cash<span style="color:var(--acc)">ly</span></div>
         <div style="justify-self:end;width:34px;height:34px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:14px">A</div>
       </div>
 
@@ -931,7 +974,7 @@
 </script>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=12"></script>
+<script src="identikit.js?v=13"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
