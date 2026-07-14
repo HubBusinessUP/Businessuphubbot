@@ -71,12 +71,19 @@ async function storeTelegramFile(telegramId: number, fileId: string): Promise<st
 
 // Scarica una foto da URL (quella dell'initData dell'utente stesso) e la mette sul nostro storage.
 // Serve quando il bot NON puo' vedere la foto dell'utente (privacy) ma l'utente apre la Mini App.
+// ATTENZIONE: se l'utente ha la foto non pubblica, Telegram serve un SEGNAPOSTO (SVG ~600 byte con
+// le iniziali su gradiente): non e' una foto, quindi lo scartiamo e lasciamo la nostra iniziale.
 async function storePhotoFromUrl(telegramId: number, photoUrl: string): Promise<string | null> {
   try {
-    const bin = await fetch(photoUrl)
+    const bin = await fetch(photoUrl, { redirect: "follow" })
     if (!bin.ok) return null
     const ct = bin.headers.get("content-type") || "image/jpeg"
-    return await uploadAvatar(telegramId, new Uint8Array(await bin.arrayBuffer()), ct)
+    const bytes = new Uint8Array(await bin.arrayBuffer())
+    if (ct.includes("svg") || bytes.length < 2000) {
+      console.log("foto: segnaposto Telegram, scartato", telegramId, ct, bytes.length)
+      return null
+    }
+    return await uploadAvatar(telegramId, bytes, ct)
   } catch (e) {
     console.error("storePhotoFromUrl failed", telegramId, e)
     return null
@@ -896,7 +903,8 @@ async function apiAffiliazione(telegramId: number) {
   for (const i of (invitati ?? [])) {
     if (fotoRefreshed >= 15) break
     if (fotoStale((i as any).foto_updated_at)) {
-      (i as any).foto_url = await refreshPhoto((i as any).telegram_id)
+      const u = await refreshPhoto((i as any).telegram_id)
+      if (u) (i as any).foto_url = u   // se il bot non la vede, teniamo quella gia' salvata (non azzerare)
       fotoRefreshed++
     }
   }
