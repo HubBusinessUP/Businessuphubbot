@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cashly — Saturn Adulto</title>
+<title>Cashly — Prototipo navigabile (Saturn Adulto)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -65,12 +65,21 @@
     display:flex;flex-direction:column;
   }
 
+  /* ---------- SCHERMATE: una per volta, ognuna scrolla da sola ---------- */
+  .screen{display:none}
+  .screen.on{
+    display:flex;flex-direction:column;
+    flex:1;min-height:0;
+  }
+
   .scroll{
     flex:1;
+    min-height:0;
     padding:14px 18px 108px;
     overflow-y:auto;
     overflow-x:hidden;
     scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
   }
   .scroll::-webkit-scrollbar{display:none}
 
@@ -92,6 +101,7 @@
     background:linear-gradient(140deg,var(--ring-a),var(--ring-b));
     display:grid;place-items:center;
     box-shadow:0 6px 18px rgba(139,92,246,.35);
+    flex:0 0 auto;
   }
   .avatar-ring > span{
     width:100%;height:100%;border-radius:999px;
@@ -143,7 +153,8 @@
     padding:8px 14px;border-radius:6px;
     background:var(--blue);color:#fff;
     font-size:12.5px;font-weight:800;
-    border:none;
+    font-family:inherit;
+    border:none;cursor:pointer;
     box-shadow:0 6px 16px rgba(59,130,246,.35);
   }
 
@@ -166,6 +177,8 @@
     backdrop-filter:blur(14px);
     box-shadow:0 10px 30px rgba(8,10,35,.30);
   }
+  .card.tap{cursor:pointer}
+  .card.tap:active{background:var(--glass-hi);border-color:var(--stroke-hi)}
   .card-top{display:flex;align-items:center;gap:12px}
   .glyph{
     flex:0 0 46px;height:46px;border-radius:10px;
@@ -287,7 +300,7 @@
     line-height:1.5;margin:16px 6px 0;
   }
 
-  /* ---------- BOTTOM NAV ---------- */
+  /* ---------- BOTTOM NAV (sempre visibile, fuori dalle schermate) ---------- */
   .nav{
     position:absolute;left:12px;right:12px;bottom:14px;
     height:70px;
@@ -298,6 +311,7 @@
     -webkit-backdrop-filter:blur(22px);
     box-shadow:0 -6px 30px rgba(8,10,35,.45);
     display:flex;align-items:center;
+    z-index:5;
   }
   .nav a{
     flex:1;
@@ -305,6 +319,7 @@
     text-decoration:none;
     color:var(--ink-dim);
     font-size:11px;font-weight:700;letter-spacing:.1px;
+    cursor:pointer;
   }
   .nav svg{width:23px;height:23px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
   .nav a.on{color:var(--blue)}
@@ -324,220 +339,1151 @@
     width:6px;height:6px;border-radius:999px;background:var(--ring-a);
     box-shadow:0 0 0 2px rgba(46,42,107,.9);
   }
+
+  /* ==================================================================== */
+  /* SCHEDA BUSINESS                                                      */
+  /* ==================================================================== */
+
+  /* freccia indietro — squadrata 6px come i chip */
+  .back{
+    flex:0 0 auto;
+    width:36px;height:36px;border-radius:6px;
+    background:var(--glass);
+    border:1px solid var(--stroke);
+    display:grid;place-items:center;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+  }
+  .back svg{
+    width:19px;height:19px;
+    stroke:var(--ink-soft);stroke-width:1.9;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+
+  /* blocco rischio: ambra, coerente con .bars.med */
+  .card.warn{
+    background:rgba(240,180,41,.06);
+    border-color:rgba(240,180,41,.20);
+  }
+  .warn-head{
+    display:flex;align-items:center;gap:9px;
+    margin-bottom:11px;
+  }
+  .warn-ic{
+    flex:0 0 30px;height:30px;border-radius:6px;
+    background:rgba(240,180,41,.12);
+    border:1px solid rgba(240,180,41,.24);
+    display:grid;place-items:center;
+  }
+  .warn-ic svg{
+    width:16px;height:16px;
+    stroke:#F0B429;stroke-width:1.8;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .warn-head b{font-size:13.5px;font-weight:800;color:#F5C563}
+
+  .prose{
+    font-size:13px;line-height:1.55;color:var(--ink-soft);font-weight:600;
+  }
+  .prose + .prose{margin-top:10px}
+  .prose b{color:var(--ink);font-weight:800}
+
+  /* tutorial della SCHEDA (scoped: qui .step usa .step-n / .step-txt) */
+  .screen[data-s="scheda"] .steps{list-style:none}
+  .screen[data-s="scheda"] .step{
+    display:flex;gap:12px;
+    padding:12px 0;
+  }
+  .screen[data-s="scheda"] .step + .step{border-top:1px solid rgba(255,255,255,.055)}
+  .screen[data-s="scheda"] .step:first-child{padding-top:2px}
+  .screen[data-s="scheda"] .step:last-child{padding-bottom:2px}
+
+  .step-n{
+    flex:0 0 26px;height:26px;border-radius:6px;
+    display:grid;place-items:center;
+    font-size:12.5px;font-weight:800;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--stroke);
+    color:var(--ink-mute);
+    margin-top:1px;
+  }
+  .screen[data-s="scheda"] .step.now .step-n{
+    background:var(--blue);
+    border-color:transparent;
+    color:#fff;
+    box-shadow:0 6px 16px rgba(59,130,246,.32);
+  }
+
+  .step-txt{flex:1;min-width:0}
+  .step-txt b{
+    display:block;font-size:13.5px;font-weight:800;color:var(--ink-soft);
+    line-height:1.25;
+  }
+  .screen[data-s="scheda"] .step.now .step-txt b{color:var(--ink)}
+  .step-txt small{
+    display:block;font-size:12px;font-weight:600;color:var(--ink-mute);
+    line-height:1.45;margin-top:3px;
+  }
+  .step-flag{
+    display:inline-block;margin-top:8px;
+    padding:4px 9px;border-radius:6px;
+    font-size:10.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;
+    color:#BFD5FF;
+    background:rgba(79,141,255,.14);
+    border:1px solid rgba(79,141,255,.35);
+  }
+
+  /* risorse */
+  .res{
+    display:flex;align-items:center;gap:11px;
+    padding:12px 16px;
+    text-decoration:none;
+  }
+  .res + .res{border-top:1px solid rgba(255,255,255,.055)}
+  .res-ic{
+    flex:0 0 34px;height:34px;border-radius:6px;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--stroke-hi);
+    display:grid;place-items:center;
+  }
+  .res-ic svg{
+    width:17px;height:17px;
+    stroke:var(--ink-soft);stroke-width:1.7;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .res-txt{flex:1;min-width:0}
+  .res-txt b{display:block;font-size:13.5px;font-weight:800;color:var(--ink)}
+  .res-txt small{
+    display:block;font-size:11.5px;font-weight:600;color:var(--ink-mute);
+    line-height:1.4;margin-top:2px;
+  }
+  .res-go{
+    flex:0 0 auto;width:16px;height:16px;
+    stroke:var(--ink-dim);stroke-width:2;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+
+  /* ==================================================================== */
+  /* PERCORSO                                                             */
+  /* ==================================================================== */
+
+  /* avanzamento (squadrato, niente gamification) */
+  .prog{margin-top:14px}
+  .prog-line{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:7px;
+  }
+  .prog-line b{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.1px}
+  .prog-line span{font-size:12px;font-weight:700;color:var(--ink-mute)}
+  .track{
+    height:6px;border-radius:2px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.06);
+    overflow:hidden;
+  }
+  .track i{
+    display:block;height:100%;border-radius:2px;
+    background:linear-gradient(90deg,#5A94FF,#3B82F6);
+    box-shadow:0 0 12px rgba(79,141,255,.45);
+  }
+
+  /* elenco passi del PERCORSO (scoped: qui .step usa .mk / .t) */
+  .screen[data-s="percorso"] .steps{
+    margin-top:14px;
+    border-radius:var(--r-inner);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.07);
+    padding:2px 0;
+    overflow:hidden;
+  }
+  .screen[data-s="percorso"] .step{
+    display:flex;align-items:flex-start;gap:10px;padding:10px 13px;
+  }
+  .screen[data-s="percorso"] .step + .step{border-top:1px solid rgba(255,255,255,.055)}
+
+  .step .mk{
+    flex:0 0 20px;height:20px;border-radius:6px;
+    display:grid;place-items:center;
+    font-size:11px;font-weight:800;line-height:1;
+    margin-top:1px;
+  }
+  .step .mk svg{
+    width:12px;height:12px;stroke-width:2.6;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .step .t{flex:1;min-width:0;font-size:13px;font-weight:700;line-height:1.4}
+
+  /* fatto */
+  .step.done .mk{
+    background:rgba(79,141,255,.14);
+    border:1px solid rgba(79,141,255,.30);
+  }
+  .step.done .mk svg{stroke:#8FB8FF}
+  .step.done .t{color:var(--ink-mute)}
+
+  /* in corso — evidenziato, barra a sinistra squadrata */
+  .screen[data-s="percorso"] .step.now{
+    background:rgba(79,141,255,.10);
+    box-shadow:inset 2px 0 0 var(--blue);
+  }
+  .step.now .mk{
+    background:var(--blue);color:#fff;
+    border:1px solid rgba(255,255,255,.22);
+    box-shadow:0 4px 12px rgba(59,130,246,.35);
+  }
+  .screen[data-s="percorso"] .step.now .t{color:#fff;font-weight:800}
+  .step .flag{
+    display:block;margin-top:3px;
+    font-size:11px;font-weight:800;letter-spacing:.2px;
+    color:#93B4FF;
+  }
+
+  /* ancora da fare — spento */
+  .step.todo .mk{
+    background:rgba(255,255,255,.045);
+    border:1px solid var(--stroke);
+    color:var(--ink-dim);
+  }
+  .step.todo .t{color:var(--ink-dim);font-weight:600}
+
+  /* riga dati sotto i passi */
+  .meta-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:12px;padding:9px 13px;
+    border-radius:var(--r-inner);
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .meta-row .k{font-size:12.5px;font-weight:700;color:var(--ink-mute)}
+
+  /* ==================================================================== */
+  /* PROFILO — solo token già definiti, squadratura 8/6/10                */
+  /* ==================================================================== */
+
+  /* foto reale sopra le iniziali di riserva */
+  .avatar-ring > span{position:relative;overflow:hidden}
+  .avatar-ring > span .pfp{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    border-radius:999px;
+  }
+
+  /* pill di stato */
+  .pill.partner{color:#fff}
+  .pill.partner .dot{background:var(--ring-a);box-shadow:0 0 0 3px rgba(232,121,249,.18)}
+
+  /* etichetta di blocco dentro la card */
+  .lbl-k{
+    font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--ink-dim);margin-bottom:9px;
+  }
+
+  /* separatore interno */
+  .hr{height:1px;background:rgba(255,255,255,.07);margin:16px 0}
+
+  /* riga di vetro con un URL */
+  .linkrow{
+    display:flex;align-items:center;gap:9px;
+    padding:10px 10px 10px 12px;
+    border-radius:var(--r-inner);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.07);
+  }
+  .linkrow .lk{
+    flex:0 0 16px;width:16px;height:16px;
+    stroke:var(--ink-dim);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  }
+  .linkrow .url{
+    flex:1;min-width:0;
+    font-size:12.5px;font-weight:700;color:var(--ink-soft);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  /* bottoncino 6px */
+  .mini{
+    flex:0 0 auto;
+    padding:7px 12px;border-radius:6px;
+    background:rgba(255,255,255,.07);
+    border:1px solid var(--stroke-hi);
+    color:var(--ink-soft);
+    font-family:inherit;font-size:12px;font-weight:800;
+    cursor:pointer;
+  }
+  .mini.solid{
+    background:rgba(79,141,255,.16);
+    border-color:rgba(79,141,255,.35);
+    color:#BFD5FF;
+  }
+
+  /* progresso verso Partner */
+  .prog-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}
+  .prog-top b{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .prog-n{font-size:12.5px;font-weight:800;color:var(--blue)}
+  .pbar{
+    height:6px;border-radius:6px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.06);
+    overflow:hidden;
+  }
+  .pbar i{
+    display:block;height:100%;border-radius:6px;
+    background:linear-gradient(90deg,var(--blue),var(--ring-b));
+  }
+  .prog-note{
+    display:block;
+    font-size:11.5px;font-weight:600;color:var(--ink-dim);
+    line-height:1.45;margin-top:9px;
+  }
+
+  /* la rete */
+  .peers{
+    border-radius:var(--r-inner);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.07);
+  }
+  .peer{display:flex;align-items:center;gap:11px;padding:10px 11px}
+  .peer + .peer{border-top:1px solid rgba(255,255,255,.055)}
+  /* iniziale: resta un CERCHIO perché è l'avatar di una persona, non un business */
+  .peer .ini{
+    flex:0 0 34px;height:34px;border-radius:999px;
+    display:grid;place-items:center;
+    background:linear-gradient(180deg,#3A3780,#232459);
+    border:1px solid var(--stroke-hi);
+    font-size:13.5px;font-weight:800;color:#D9D4FB;
+  }
+  .who{flex:1;min-width:0}
+  .who b{display:block;font-size:13.5px;font-weight:800;line-height:1.2}
+  .who small{
+    display:block;font-size:11.5px;font-weight:600;color:var(--ink-mute);
+    margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  /* link ref */
+  .reflist{
+    border-radius:var(--r-inner);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.07);
+  }
+  .refitem{display:flex;align-items:center;gap:11px;padding:11px}
+  .refitem + .refitem{border-top:1px solid rgba(255,255,255,.055)}
+  /* icona business = QUADRATO arrotondato 10px, versione piccola del .glyph */
+  .glyph.sm{flex:0 0 36px;height:36px}
+  .glyph.sm svg{width:17px;height:17px}
+  .who small.none{color:var(--ink-dim)}
+
+  /* righe account */
+  .rows{
+    border-radius:var(--r-card);
+    background:var(--glass);
+    border:1px solid var(--stroke);
+    backdrop-filter:blur(14px);
+    box-shadow:0 10px 30px rgba(8,10,35,.30);
+    overflow:hidden;
+  }
+  .row{
+    display:flex;align-items:center;gap:12px;
+    padding:14px;
+    text-decoration:none;color:var(--ink);
+  }
+  .row + .row{border-top:1px solid rgba(255,255,255,.06)}
+  .row .ric{
+    flex:0 0 34px;height:34px;border-radius:6px;
+    display:grid;place-items:center;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--stroke-hi);
+  }
+  .row .ric svg{
+    width:17px;height:17px;
+    stroke:var(--ink-soft);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  }
+  .row .chev{flex:0 0 auto;display:grid;place-items:center}
+  .row .chev svg{
+    width:16px;height:16px;
+    stroke:var(--ink-dim);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  }
 </style>
 </head>
 <body>
 <div class="phone">
 
-  <div class="scroll">
+  <!-- ============ SCHERMATA: CATALOGO ============ -->
+  <section class="screen on" data-s="catalogo">
+    <div class="scroll">
 
-    <!-- HEADER -->
-    <div class="topbar">
-      <div class="hello">
-        <div class="eyebrow">Buonasera, Antonio</div>
-        <h1>Il catalogo Cashly</h1>
-      </div>
-      <div class="avatar-ring"><span>AN</span></div>
-    </div>
-
-    <!-- PILL: contatori onesti, lo zero si mostra -->
-    <div class="pills">
-      <div class="pill"><i class="dot"></i><span class="num">2</span>&nbsp;business verificati</div>
-      <div class="pill zero"><i class="dot"></i><span class="num">0</span>&nbsp;attivi da te</div>
-    </div>
-
-    <!-- RIPRENDI / PRIMO PASSO -->
-    <div class="resume">
-      <div class="ic">
-        <svg viewBox="0 0 24 24" width="19" height="19" stroke="#DCE6FF" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v4M12 17v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M3 12h4M17 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>
-        </svg>
-      </div>
-      <div class="txt">
-        <b>Inizia da qui</b>
-        <small>3 minuti per capire quale fa per te</small>
-      </div>
-      <button class="go">Apri</button>
-    </div>
-
-    <!-- SEZIONE DIRECTORY -->
-    <div class="sec-head">
-      <h2>Disponibili ora</h2>
-      <div class="count">2 di 2</div>
-    </div>
-
-    <!-- BUSINESS 1 -->
-    <div class="card">
-      <div class="card-top">
-        <div class="glyph"><span>
-          <svg viewBox="0 0 24 24">
-            <path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/>
-            <path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/>
-            <path d="M4 12.5h16" opacity=".35"/>
-          </svg>
-        </span></div>
-        <div class="card-title">
-          <h3>Broker VS Broker · Swap</h3>
-          <p>Arbitraggio di swap · Operativo</p>
+      <!-- HEADER -->
+      <div class="topbar">
+        <div class="hello">
+          <div class="eyebrow">Buonasera, Antonio</div>
+          <h1>Il catalogo Cashly</h1>
         </div>
-        <div class="tag live">Attivo</div>
+        <div class="avatar-ring"><span>AN</span></div>
       </div>
 
-      <p class="desc">
-        Apri due posizioni opposte su due broker diversi: il movimento del mercato si annulla
-        e ogni notte incassi la differenza di swap.
+      <!-- PILL: contatori onesti, lo zero si mostra -->
+      <div class="pills">
+        <div class="pill"><i class="dot"></i><span class="num">2</span>&nbsp;business verificati</div>
+        <div class="pill zero"><i class="dot"></i><span class="num">0</span>&nbsp;attivi da te</div>
+      </div>
+
+      <!-- RIPRENDI / PRIMO PASSO -->
+      <div class="resume">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" width="19" height="19" stroke="#DCE6FF" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v4M12 17v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M3 12h4M17 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>
+          </svg>
+        </div>
+        <div class="txt">
+          <b>Inizia da qui</b>
+          <small>3 minuti per capire quale fa per te</small>
+        </div>
+        <button class="go">Apri</button>
+      </div>
+
+      <!-- SEZIONE DIRECTORY -->
+      <div class="sec-head">
+        <h2>Disponibili ora</h2>
+        <div class="count">2 di 2</div>
+      </div>
+
+      <!-- BUSINESS 1 -->
+      <div class="card tap" data-go="scheda">
+        <div class="card-top">
+          <div class="glyph"><span>
+            <svg viewBox="0 0 24 24">
+              <path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/>
+              <path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/>
+              <path d="M4 12.5h16" opacity=".35"/>
+            </svg>
+          </span></div>
+          <div class="card-title">
+            <h3>Broker VS Broker · Swap</h3>
+            <p>Arbitraggio di swap · Operativo</p>
+          </div>
+          <div class="tag live">Attivo</div>
+        </div>
+
+        <p class="desc">
+          Apri due posizioni opposte su due broker diversi: il movimento del mercato si annulla
+          e ogni notte incassi la differenza di swap.
+        </p>
+
+        <div class="facts">
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/></svg>
+              Capitale necessario
+            </div>
+            <div class="v">da 2.000 €</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6.2a2.8 2.8 0 010 5.6H9.4a2.8 2.8 0 000 5.6H16"/></svg>
+              Costo di avvio
+            </div>
+            <div class="v">50 USDT</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+              Costi fissi
+            </div>
+            <div class="v soft">~15 €/mese di VPS</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><path d="M12 3l8.5 15H3.5L12 3z"/><path d="M12 9.5v4M12 16h.01"/></svg>
+              Rischio
+            </div>
+            <div class="risk med">
+              <span class="bars med"><i></i><i></i><i></i></span>
+              <span class="lbl">Medio · esecuzione</span>
+            </div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 12h5"/></svg>
+              Quanto tieni
+            </div>
+            <div class="v">30 %</div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn btn-primary">Vedi il tutorial</button>
+          <button class="btn btn-ghost">Dettagli</button>
+        </div>
+      </div>
+
+      <!-- BUSINESS 2 -->
+      <div class="card tap" data-go="scheda">
+        <div class="card-top">
+          <div class="glyph"><span>
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3.2l7 3v5c0 4.1-2.9 7.5-7 9.6-4.1-2.1-7-5.5-7-9.6v-5l7-3z"/>
+              <path d="M9.2 12.2l2 2 3.6-3.9"/>
+            </svg>
+          </span></div>
+          <div class="card-title">
+            <h3>Edgefunds</h3>
+            <p>Conto gestito · Passivo</p>
+          </div>
+          <div class="tag live">Attivo</div>
+        </div>
+
+        <p class="desc">
+          Il conto resta intestato a te e il capitale non lascia mai le tue mani:
+          a operare è un gestore terzo, tu autorizzi e monitori.
+        </p>
+
+        <div class="facts">
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/></svg>
+              Capitale necessario
+            </div>
+            <div class="v soft">Su richiesta</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6.2a2.8 2.8 0 010 5.6H9.4a2.8 2.8 0 000 5.6H16"/></svg>
+              Costo di avvio
+            </div>
+            <div class="v">Nessuno</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><path d="M17 9.5h4M19 7.5v4"/></svg>
+              Chi opera
+            </div>
+            <div class="v soft">Gestore terzo</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><path d="M12 3l8.5 15H3.5L12 3z"/><path d="M12 9.5v4M12 16h.01"/></svg>
+              Rischio
+            </div>
+            <div class="risk low">
+              <span class="bars low"><i></i><i></i><i></i></span>
+              <span class="lbl">Basso · operativo</span>
+            </div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 12h5"/></svg>
+              Quanto tieni
+            </div>
+            <div class="v soft">Definito nel contratto</div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn btn-primary">Vedi il tutorial</button>
+          <button class="btn btn-ghost">Dettagli</button>
+        </div>
+      </div>
+
+      <!-- IN ARRIVO — l'affordance tratteggiata regge il vuoto -->
+      <div class="sec-head" style="margin-top:20px">
+        <h2>In arrivo</h2>
+        <div class="count">in verifica</div>
+      </div>
+
+      <div class="dashed">
+        <div class="plus">+</div>
+        <b>Il terzo business è in verifica</b>
+        <small>Ogni metodo entra nel catalogo solo dopo che l'abbiamo<br>provato con capitale reale. Nessuna fretta.</small>
+        <button class="notify">Avvisami quando esce</button>
+      </div>
+
+      <p class="footnote">
+        Cashly non promette guadagni. Ogni business ha un rischio: leggi i dati<br>
+        prima di attivarlo e usa solo capitale che puoi permetterti di impiegare.
       </p>
 
-      <div class="facts">
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/></svg>
-            Capitale necessario
-          </div>
-          <div class="v">da 2.000 €</div>
+    </div>
+  </section>
+
+  <!-- ============ SCHERMATA: SCHEDA BUSINESS ============ -->
+  <section class="screen" data-s="scheda">
+    <div class="scroll">
+
+      <!-- TOPBAR: indietro + contesto -->
+      <div class="topbar">
+        <button class="back" aria-label="Torna al catalogo" data-go="catalogo">
+          <svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+        </button>
+        <div class="hello" style="flex:1;min-width:0;margin-left:12px">
+          <div class="eyebrow">Scheda business</div>
+          <h1 style="font-size:19px">Broker VS Broker</h1>
         </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6.2a2.8 2.8 0 010 5.6H9.4a2.8 2.8 0 000 5.6H16"/></svg>
-            Costo di avvio
+        <div class="avatar-ring"><span>AN</span></div>
+      </div>
+
+      <!-- INTESTAZIONE -->
+      <div class="card">
+        <div class="card-top">
+          <div class="glyph"><span>
+            <svg viewBox="0 0 24 24">
+              <path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/>
+              <path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/>
+              <path d="M4 12.5h16" opacity=".35"/>
+            </svg>
+          </span></div>
+          <div class="card-title">
+            <h3>Broker VS Broker · Swap</h3>
+            <p>Arbitraggio di swap · Operativo</p>
           </div>
-          <div class="v">50 USDT</div>
+          <div class="tag live">Attivo</div>
         </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
-            Costi fissi
+
+        <p class="desc">
+          Apri due posizioni opposte sulla stessa coppia, ma su due broker diversi.
+          Se il prezzo sale guadagni su uno e perdi sull'altro: il movimento del mercato
+          si annulla. Quello che resta è la differenza di swap, l'interesse che i due broker
+          applicano ogni notte alle posizioni lasciate aperte. Quella differenza è il tuo margine.
+        </p>
+
+        <div class="facts">
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/></svg>
+              Capitale necessario
+            </div>
+            <div class="v">da 2.000 €</div>
           </div>
-          <div class="v soft">~15 €/mese di VPS</div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6.2a2.8 2.8 0 010 5.6H9.4a2.8 2.8 0 000 5.6H16"/></svg>
+              Costo di avvio
+            </div>
+            <div class="v">50 USDT</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+              Costi fissi
+            </div>
+            <div class="v soft">~15 €/mese di VPS</div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><path d="M12 3l8.5 15H3.5L12 3z"/><path d="M12 9.5v4M12 16h.01"/></svg>
+              Rischio
+            </div>
+            <div class="risk med">
+              <span class="bars med"><i></i><i></i><i></i></span>
+              <span class="lbl">Medio · esecuzione</span>
+            </div>
+          </div>
+          <div class="fact">
+            <div class="k">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 12h5"/></svg>
+              Quanto tieni
+            </div>
+            <div class="v">30 %</div>
+          </div>
         </div>
-        <div class="fact">
-          <div class="k">
+      </div>
+
+      <!-- CHE RISCHIO CORRI DAVVERO -->
+      <div class="sec-head" style="margin-top:20px">
+        <h2>Che rischio corri davvero</h2>
+      </div>
+
+      <div class="card warn">
+        <div class="warn-head">
+          <span class="warn-ic">
             <svg viewBox="0 0 24 24"><path d="M12 3l8.5 15H3.5L12 3z"/><path d="M12 9.5v4M12 16h.01"/></svg>
-            Rischio
+          </span>
+          <b>Rischio medio · di esecuzione</b>
+        </div>
+        <p class="prose">
+          Il mercato non è il tuo problema: le due posizioni si compensano. Il problema è
+          <b>eseguire</b>. Se apri le due gambe con qualche secondo di scarto, o se un broker
+          ti riempie a un prezzo peggiore di quello richiesto (slippage), parti già in perdita
+          e devi recuperarla con gli swap delle notti successive.
+        </p>
+        <p class="prose">
+          Poi c'è il <b>margine</b>: se il prezzo si muove molto, il conto in perdita brucia margine
+          mentre l'altro accumula profitto non ancora prelevabile. Se non riequilibri in tempo,
+          un broker può chiuderti la posizione in stop out — e a quel punto resti scoperto da un lato,
+          esposto al mercato per davvero. Va monitorato, non è un "imposta e dimentica".
+        </p>
+        <p class="prose">
+          Infine il broker può <b>cambiare lo swap</b> senza preavviso: il margine che rendeva
+          conveniente l'operazione può sparire da un giorno all'altro e ti tocca chiudere.
+          Non è una perdita drammatica, ma il lavoro fatto fino a lì può azzerarsi.
+        </p>
+      </div>
+
+      <!-- TUTORIAL -->
+      <div class="sec-head" style="margin-top:22px">
+        <h2>Il tutorial</h2>
+        <div class="count">0 di 6 completati</div>
+      </div>
+
+      <div class="card">
+        <ol class="steps">
+
+          <li class="step now">
+            <span class="step-n">1</span>
+            <div class="step-txt">
+              <b>Apri i due conti broker</b>
+              <small>Ti servono due broker con swap opposti sulla stessa coppia. Nel tutorial trovi quali usiamo e perché.</small>
+              <span class="step-flag">Inizia da qui</span>
+            </div>
+          </li>
+
+          <li class="step">
+            <span class="step-n">2</span>
+            <div class="step-txt">
+              <b>Verifica la differenza di swap</b>
+              <small>Controlli i valori reali sui due conti prima di mettere un euro. Se la differenza non regge i costi, non si parte.</small>
+            </div>
+          </li>
+
+          <li class="step">
+            <span class="step-n">3</span>
+            <div class="step-txt">
+              <b>Deposita e dividi il capitale</b>
+              <small>Il capitale va spezzato tra i due conti, non tutto su uno. Qui vedi come calcolare le due metà.</small>
+            </div>
+          </li>
+
+          <li class="step">
+            <span class="step-n">4</span>
+            <div class="step-txt">
+              <b>Configura il VPS</b>
+              <small>Il VPS tiene i terminali sempre accesi e riduce lo scarto di esecuzione tra le due gambe. È il costo fisso da ~15 €/mese.</small>
+            </div>
+          </li>
+
+          <li class="step">
+            <span class="step-n">5</span>
+            <div class="step-txt">
+              <b>Apri le due posizioni opposte</b>
+              <small>Stesso lotto, stessa coppia, direzioni contrarie. Il momento più delicato: qui si decide se parti in pari o già sotto.</small>
+            </div>
+          </li>
+
+          <li class="step">
+            <span class="step-n">6</span>
+            <div class="step-txt">
+              <b>Monitora margine e riequilibra</b>
+              <small>Controllo periodico, spostamento fondi quando serve, e le regole per chiudere tutto se lo swap cambia.</small>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+
+      <!-- RISORSE -->
+      <div class="sec-head" style="margin-top:22px">
+        <h2>Risorse</h2>
+      </div>
+
+      <div class="card" style="padding:6px 0">
+        <a class="res" href="#">
+          <span class="res-ic">
+            <svg viewBox="0 0 24 24"><path d="M21 5L3 11.5l5.5 2L20 6.5l-8.5 9v4.5l3-3.5"/></svg>
+          </span>
+          <span class="res-txt">
+            <b>Canale Telegram ufficiale</b>
+            <small>Aggiornamenti sugli swap e avvisi quando conviene chiudere</small>
+          </span>
+          <svg class="res-go" viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>
+        </a>
+        <a class="res" href="#">
+          <span class="res-ic">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5V9.5z"/></svg>
+          </span>
+          <span class="res-txt">
+            <b>Video guida completa</b>
+            <small>Schermo condiviso: apertura conti, VPS e le due posizioni</small>
+          </span>
+          <svg class="res-go" viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>
+        </a>
+      </div>
+
+      <!-- CTA -->
+      <div class="card-actions" style="margin-top:20px">
+        <button class="btn btn-primary" data-go="percorso">Inizia il tutorial</button>
+        <button class="btn btn-ghost" aria-label="Salva">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+            <path d="M6.5 4h11v16l-5.5-4-5.5 4V4z"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="footnote">
+        Non è un guadagno garantito e non è un investimento: è un'operatività che devi seguire.<br>
+        Leggi i dati, fai i tuoi conti e usa solo capitale che puoi permetterti di impiegare.
+      </p>
+
+    </div>
+  </section>
+
+  <!-- ============ SCHERMATA: PERCORSO ============ -->
+  <section class="screen" data-s="percorso">
+    <div class="scroll">
+
+      <!-- HEADER -->
+      <div class="topbar">
+        <div class="hello">
+          <div class="eyebrow">Antonio · @caliblackk</div>
+          <h1>Il tuo percorso</h1>
+        </div>
+        <div class="avatar-ring"><span>AN</span></div>
+      </div>
+
+      <!-- RIGA DI STATO — sobria, lo zero si mostra -->
+      <div class="pills">
+        <div class="pill"><i class="dot"></i><span class="num">1</span>&nbsp;business in corso</div>
+        <div class="pill zero"><i class="dot"></i><span class="num">0</span>&nbsp;completati</div>
+      </div>
+
+      <!-- SEZIONE: BUSINESS ATTIVATI -->
+      <div class="sec-head">
+        <h2>Business attivati</h2>
+        <div class="count">1 di 2</div>
+      </div>
+
+      <!-- CARD IN CORSO -->
+      <div class="card">
+        <div class="card-top">
+          <div class="glyph"><span>
+            <svg viewBox="0 0 24 24">
+              <path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/>
+              <path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/>
+              <path d="M4 12.5h16" opacity=".35"/>
+            </svg>
+          </span></div>
+          <div class="card-title">
+            <h3>Broker VS Broker · Swap</h3>
+            <p>Tutorial in 6 passi · iniziato</p>
           </div>
+          <div class="tag live">In corso</div>
+        </div>
+
+        <!-- AVANZAMENTO -->
+        <div class="prog">
+          <div class="prog-line">
+            <b>Passo 3 di 6</b>
+            <span>2 passi completati</span>
+          </div>
+          <div class="track"><i style="width:33%"></i></div>
+        </div>
+
+        <!-- ELENCO PASSI -->
+        <div class="steps">
+
+          <div class="step done">
+            <span class="mk">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+            </span>
+            <div class="t">Verifica gli swap della coppia sui due broker</div>
+          </div>
+
+          <div class="step done">
+            <span class="mk">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+            </span>
+            <div class="t">Apri i due conti e completa la verifica identità</div>
+          </div>
+
+          <div class="step now">
+            <span class="mk">3</span>
+            <div class="t">
+              Deposita il capitale (da 2.000 €) e attiva il VPS
+              <span class="flag">Sei qui</span>
+            </div>
+          </div>
+
+          <div class="step todo">
+            <span class="mk">4</span>
+            <div class="t">Apri le due posizioni opposte, stesso volume</div>
+          </div>
+
+          <div class="step todo">
+            <span class="mk">5</span>
+            <div class="t">Controlla margine e swap una volta al giorno</div>
+          </div>
+
+          <div class="step todo">
+            <span class="mk">6</span>
+            <div class="t">Chiudi le posizioni e rendiconta la differenza</div>
+          </div>
+
+        </div>
+
+        <!-- PROMEMORIA DATI, NON PROMESSE -->
+        <div class="meta-row">
+          <div class="k">Rischio del metodo</div>
           <div class="risk med">
             <span class="bars med"><i></i><i></i><i></i></span>
             <span class="lbl">Medio · esecuzione</span>
           </div>
         </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 12h5"/></svg>
-            Quanto tieni
-          </div>
-          <div class="v">30 %</div>
+
+        <div class="card-actions">
+          <button class="btn btn-primary" data-go="scheda">Riprendi dal passo 3</button>
+          <button class="btn btn-ghost" data-go="scheda">Dati</button>
         </div>
       </div>
 
-      <div class="card-actions">
-        <button class="btn btn-primary">Vedi il tutorial</button>
-        <button class="btn btn-ghost">Dettagli</button>
-      </div>
-    </div>
-
-    <!-- BUSINESS 2 -->
-    <div class="card">
-      <div class="card-top">
-        <div class="glyph"><span>
-          <svg viewBox="0 0 24 24">
-            <path d="M12 3.2l7 3v5c0 4.1-2.9 7.5-7 9.6-4.1-2.1-7-5.5-7-9.6v-5l7-3z"/>
-            <path d="M9.2 12.2l2 2 3.6-3.9"/>
-          </svg>
-        </span></div>
-        <div class="card-title">
-          <h3>Edgefunds</h3>
-          <p>Conto gestito · Passivo</p>
-        </div>
-        <div class="tag live">Attivo</div>
+      <!-- ALTRI BUSINESS — il vuoto detto com'è -->
+      <div class="sec-head" style="margin-top:20px">
+        <h2>Altri business</h2>
+        <div class="count">0 attivi</div>
       </div>
 
-      <p class="desc">
-        Il conto resta intestato a te e il capitale non lascia mai le tue mani:
-        a operare è un gestore terzo, tu autorizzi e monitori.
+      <div class="dashed">
+        <div class="plus">+</div>
+        <b>Non hai altri business attivi</b>
+        <small>Edgefunds è nel Catalogo, con i suoi dati e il suo rischio.<br>Leggili con calma, poi decidi se attivarlo.</small>
+        <button class="notify" data-go="catalogo">Guarda il Catalogo</button>
+      </div>
+
+      <p class="footnote">
+        Il percorso resta dov'è: puoi fermarti a un passo e riprendere quando vuoi.<br>
+        Nessuna scadenza, nessun punteggio. Un passo vale solo se l'hai capito.
       </p>
 
-      <div class="facts">
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/></svg>
-            Capitale necessario
-          </div>
-          <div class="v soft">Su richiesta</div>
+    </div>
+  </section>
+
+  <!-- ============ SCHERMATA: PROFILO ============ -->
+  <section class="screen" data-s="profilo">
+    <div class="scroll">
+
+      <!-- ══════════ 1. INTESTAZIONE UTENTE ══════════ -->
+      <div class="topbar" style="padding-bottom:14px">
+        <div class="hello">
+          <div class="eyebrow">Il tuo profilo</div>
+          <h1>Antonio</h1>
         </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6.2a2.8 2.8 0 010 5.6H9.4a2.8 2.8 0 000 5.6H16"/></svg>
-            Costo di avvio
-          </div>
-          <div class="v">Nessuno</div>
-        </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><path d="M17 9.5h4M19 7.5v4"/></svg>
-            Chi opera
-          </div>
-          <div class="v soft">Gestore terzo</div>
-        </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><path d="M12 3l8.5 15H3.5L12 3z"/><path d="M12 9.5v4M12 16h.01"/></svg>
-            Rischio
-          </div>
-          <div class="risk low">
-            <span class="bars low"><i></i><i></i><i></i></span>
-            <span class="lbl">Basso · operativo</span>
-          </div>
-        </div>
-        <div class="fact">
-          <div class="k">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 12h5"/></svg>
-            Quanto tieni
-          </div>
-          <div class="v soft">Definito nel contratto</div>
+        <!-- unico cerchio con anello a gradiente: l'utente. Foto reale (Telegram pubblica). -->
+        <div class="avatar-ring">
+          <span>
+            AN
+            <img class="pfp" src="https://t.me/i/userpic/320/caliblackk.jpg" alt="" onerror="this.remove()">
+          </span>
         </div>
       </div>
 
-      <div class="card-actions">
-        <button class="btn btn-primary">Vedi il tutorial</button>
-        <button class="btn btn-ghost">Dettagli</button>
+      <div class="pills" style="margin-bottom:20px">
+        <div class="pill partner"><i class="dot"></i>Partner</div>
+        <div class="pill">@caliblackk</div>
       </div>
+
+      <!-- ══════════ 2. AFFILIAZIONE ══════════ -->
+      <div class="sec-head">
+        <h2>Affiliazione</h2>
+        <div class="count">3 iscritti</div>
+      </div>
+
+      <div class="card">
+        <!-- il link di invito -->
+        <div class="lbl-k">Il tuo link di invito</div>
+        <div class="linkrow">
+          <svg class="lk" viewBox="0 0 24 24"><path d="M10 13.5a3.5 3.5 0 005 0l3-3a3.5 3.5 0 00-5-5l-1 1"/><path d="M14 10.5a3.5 3.5 0 00-5 0l-3 3a3.5 3.5 0 005 5l1-1"/></svg>
+          <span class="url">t.me/cashlyhub_bot?start=caliblackk</span>
+          <button class="mini">Copia</button>
+        </div>
+        <div class="card-actions" style="margin-top:10px">
+          <button class="btn btn-primary">Invita</button>
+          <button class="btn btn-ghost">QR</button>
+        </div>
+
+        <!-- progresso verso Partner -->
+        <div class="hr"></div>
+        <div class="prog-top">
+          <b>3 su 3 iscritti attivi — sei Partner</b>
+          <span class="prog-n">3/3</span>
+        </div>
+        <div class="pbar"><i style="width:100%"></i></div>
+        <small class="prog-note">Restano attivi finché usano almeno un business del catalogo. Se scendi sotto 3, i link ref tornano bloccati.</small>
+
+        <!-- la rete -->
+        <div class="hr"></div>
+        <div class="lbl-k">La tua rete</div>
+        <div class="peers">
+          <div class="peer">
+            <span class="ini">C</span>
+            <div class="who">
+              <b>Cristian</b>
+              <small>@Legalpowerr · attivo</small>
+            </div>
+            <button class="mini">Scrivigli</button>
+          </div>
+          <div class="peer">
+            <span class="ini">S</span>
+            <div class="who">
+              <b>Simon</b>
+              <small>@RAMBACCI · attivo</small>
+            </div>
+            <button class="mini">Scrivigli</button>
+          </div>
+          <div class="peer">
+            <span class="ini">F</span>
+            <div class="who">
+              <b>Francesco</b>
+              <small>@Francescobond87 · attivo</small>
+            </div>
+            <button class="mini">Scrivigli</button>
+          </div>
+        </div>
+        <small class="prog-note">L'iniziale compare quando la foto profilo Telegram è privata.</small>
+      </div>
+
+      <!-- ══════════ 3. I MIEI LINK REF ══════════ -->
+      <div class="sec-head" style="margin-top:20px">
+        <h2>I miei link ref</h2>
+        <div class="count">0 di 2 applicati</div>
+      </div>
+
+      <div class="card">
+        <p class="desc" style="margin-top:0">
+          Da Partner puoi sostituire il link di ogni business con il tuo:
+          chi apre il tutorial dalla tua pagina si iscrive sotto di te.
+        </p>
+
+        <div class="reflist">
+          <div class="refitem">
+            <div class="glyph sm"><span>
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/>
+                <path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/>
+                <path d="M4 12.5h16" opacity=".35"/>
+              </svg>
+            </span></div>
+            <div class="who">
+              <b>Broker VS Broker · Swap</b>
+              <small class="none">Nessun link applicato</small>
+            </div>
+            <button class="mini solid">Applica</button>
+          </div>
+
+          <div class="refitem">
+            <div class="glyph sm"><span>
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3.2l7 3v5c0 4.1-2.9 7.5-7 9.6-4.1-2.1-7-5.5-7-9.6v-5l7-3z"/>
+                <path d="M9.2 12.2l2 2 3.6-3.9"/>
+              </svg>
+            </span></div>
+            <div class="who">
+              <b>Edgefunds</b>
+              <small class="none">Nessun link applicato</small>
+            </div>
+            <button class="mini solid">Applica</button>
+          </div>
+        </div>
+      </div>
+
+      <!--
+        STATO ALTERNATIVO — se NON fosse Partner, al posto della .card qui sopra
+        comparirebbe questo blocco tratteggiato di sblocco:
+
+        <div class="dashed">
+          <div class="plus">+</div>
+          <b>I link ref si sbloccano da Partner</b>
+          <small>Ti servono 3 iscritti attivi. Al momento ne hai 1.<br>Nessuna scorciatoia: il catalogo resta lo stesso.</small>
+          <button class="notify">Come si diventa Partner</button>
+        </div>
+      -->
+
+      <!-- ══════════ 4. LA MIA PAGINA PUBBLICA ══════════ -->
+      <div class="sec-head" style="margin-top:20px">
+        <h2>La mia pagina pubblica</h2>
+        <div class="count">online</div>
+      </div>
+
+      <div class="card">
+        <p class="desc" style="margin-top:0">
+          La vetrina che mostri a chi inviti: i due business, i dati veri e i tuoi link.
+          Funziona anche fuori da Telegram.
+        </p>
+        <div class="linkrow">
+          <svg class="lk" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.2 2.3 3.3 5.2 3.3 8.5S14.2 18.2 12 20.5c-2.2-2.3-3.3-5.2-3.3-8.5S9.8 5.8 12 3.5z"/></svg>
+          <span class="url">hub.cashlypro.com/u.html?c=caliblackk</span>
+          <button class="mini">Copia</button>
+        </div>
+        <div class="card-actions" style="margin-top:10px">
+          <button class="btn btn-primary">Apri / modifica</button>
+          <button class="btn btn-ghost">Condividi</button>
+        </div>
+      </div>
+
+      <!-- ══════════ 5-6-7. IDENTIKIT · DATI · IMPOSTAZIONI ══════════ -->
+      <div class="sec-head" style="margin-top:20px">
+        <h2>Il tuo account</h2>
+      </div>
+
+      <div class="rows">
+        <a class="row" href="#">
+          <span class="ric">
+            <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z"/></svg>
+          </span>
+          <span class="who">
+            <b>Identikit</b>
+            <small>Il tuo profilo di compatibilità — rifallo</small>
+          </span>
+          <span class="chev">
+            <svg viewBox="0 0 24 24"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg>
+          </span>
+        </a>
+
+        <a class="row" href="#">
+          <span class="ric">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 19.5c.9-3.4 3.7-5.2 7-5.2s6.1 1.8 7 5.2"/></svg>
+          </span>
+          <span class="who">
+            <b>Dati personali</b>
+            <small>Nome, email, Telegram collegato</small>
+          </span>
+          <span class="chev">
+            <svg viewBox="0 0 24 24"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg>
+          </span>
+        </a>
+
+        <a class="row" href="#">
+          <span class="ric">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M4.2 7.5l1.9 1.1M17.9 15.4l1.9 1.1M4.2 16.5l1.9-1.1M17.9 8.6l1.9-1.1"/></svg>
+          </span>
+          <span class="who">
+            <b>Impostazioni</b>
+            <small>Notifiche, lingua, privacy</small>
+          </span>
+          <span class="chev">
+            <svg viewBox="0 0 24 24"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg>
+          </span>
+        </a>
+      </div>
+
+      <p class="footnote">
+        Cashly non promette guadagni. Essere Partner non aumenta i tuoi rendimenti:<br>
+        cambia solo chi riceve il ref di chi entra dalla tua pagina.
+      </p>
+
     </div>
+  </section>
 
-    <!-- IN ARRIVO — l'affordance tratteggiata regge il vuoto -->
-    <div class="sec-head" style="margin-top:20px">
-      <h2>In arrivo</h2>
-      <div class="count">in verifica</div>
-    </div>
-
-    <div class="dashed">
-      <div class="plus">+</div>
-      <b>Il terzo business è in verifica</b>
-      <small>Ogni metodo entra nel catalogo solo dopo che l'abbiamo<br>provato con capitale reale. Nessuna fretta.</small>
-      <button class="notify">Avvisami quando esce</button>
-    </div>
-
-    <p class="footnote">
-      Cashly non promette guadagni. Ogni business ha un rischio: leggi i dati<br>
-      prima di attivarlo e usa solo capitale che puoi permetterti di impiegare.
-    </p>
-
-  </div>
-
-  <!-- BOTTOM NAV — 3 VOCI -->
+  <!-- ============ BOTTOM NAV — 3 VOCI, SEMPRE VISIBILE ============ -->
   <nav class="nav">
-    <a href="#" class="on">
+    <a href="#" class="on" data-nav="catalogo">
       <span class="bubble">
         <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2.2"/></svg>
       </span>
       Catalogo
     </a>
-    <a href="#" class="badge">
+    <a href="#" class="badge" data-nav="percorso">
       <span class="bubble">
         <svg viewBox="0 0 24 24"><path d="M4.5 6.5h9M4.5 12h9M4.5 17.5h6"/><path d="M16.5 15.5l2 2 3.5-4"/></svg>
       </span>
       Percorso
     </a>
-    <a href="#">
+    <a href="#" data-nav="profilo">
       <span class="bubble">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.5c.9-3.6 3.8-5.5 7.2-5.5s6.3 1.9 7.2 5.5"/></svg>
       </span>
@@ -546,5 +1492,52 @@
   </nav>
 
 </div>
+
+<script>
+(function(){
+  var screens = document.querySelectorAll('.screen');
+  var navs    = document.querySelectorAll('.nav a');
+
+  /* Nella Scheda la voce di nav evidenziata resta "Catalogo" */
+  var NAV_OF = { catalogo:'catalogo', scheda:'catalogo', percorso:'percorso', profilo:'profilo' };
+
+  function go(name){
+    var found = false;
+    screens.forEach(function(s){
+      var on = s.getAttribute('data-s') === name;
+      s.classList.toggle('on', on);
+      if(on){
+        found = true;
+        var sc = s.querySelector('.scroll');
+        if(sc) sc.scrollTop = 0;           /* ogni cambio riparte dall'alto */
+      }
+    });
+    if(!found) return;
+
+    var active = NAV_OF[name] || name;
+    navs.forEach(function(a){
+      a.classList.toggle('on', a.getAttribute('data-nav') === active);
+    });
+  }
+
+  /* bottom nav */
+  navs.forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      go(a.getAttribute('data-nav'));
+    });
+  });
+
+  /* qualunque elemento con data-go naviga (card del catalogo, freccia indietro, CTA) */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-go]');
+    if(!t) return;
+    e.preventDefault();
+    go(t.getAttribute('data-go'));
+  });
+
+  go('catalogo');
+})();
+</script>
 </body>
 </html>
