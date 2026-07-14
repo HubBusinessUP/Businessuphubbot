@@ -253,17 +253,17 @@
       <!-- Panoramica KPI -->
       <div class="stats" style="margin-top:12px">
         <div class="stat"><div class="n" id="kpiIscritti">2</div><div class="l">Iscritti</div></div>
-        <div class="stat"><div class="n">4</div><div class="l">Click</div></div>
-        <div class="stat"><div class="n" style="color:var(--acc)">0</div><div class="l">Clienti</div></div>
+        <div class="stat"><div class="n" id="kpiClick">4</div><div class="l">Click</div></div>
+        <div class="stat"><div class="n" id="kpiClienti" style="color:var(--acc)">0</div><div class="l">Clienti</div></div>
       </div>
       <div class="row" style="gap:10px;padding:10px 18px 0">
         <div class="row" data-goto="home" style="flex:1;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:11px 13px;cursor:pointer">
           <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--amber);stroke:var(--amber)"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>
-          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Salvati</div></div>
+          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1" id="kpiSalvati">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Salvati</div></div>
         </div>
         <div class="row" style="flex:1;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:11px 13px">
           <svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:var(--acc)"><path d="M12 5 3 18h18L12 5Z"/></svg>
-          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Voti dati</div></div>
+          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1" id="kpiVoti">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Voti dati</div></div>
         </div>
       </div>
 
@@ -272,9 +272,9 @@
         <div class="eyebrow">Il tuo link invito</div>
         <div class="row" style="gap:10px;margin-top:10px">
           <div class="row" style="flex:1;min-width:0;gap:10px;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:11px 13px">
-            <div style="font-size:12px;color:var(--blue);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/r?c=uhifxl26</div>
+            <div id="inviteLinkText" style="font-size:12px;color:var(--blue);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/r?c=uhifxl26</div>
           </div>
-          <button style="background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:0 16px;height:44px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Invita</button>
+          <button id="inviteBtn" style="background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:0 16px;height:44px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Invita</button>
         </div>
       </div>
 
@@ -287,27 +287,27 @@
           <div style="font-size:10.5px;color:var(--mut);margin-top:2px">contano per Partner e payout</div>
         </div>
         <div style="flex:1;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:12px 13px">
-          <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--acc)">47</div>
+          <div id="reteTotale" style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--acc)">47</div>
           <div class="eyebrow" style="margin-top:4px">Rete totale</div>
           <div style="font-size:10.5px;color:var(--mut);margin-top:2px">tutti i livelli sotto di te</div>
         </div>
       </div>
 
       <!-- hook: nuovo iscritto -->
-      <div class="row" style="gap:10px;margin:12px 18px 0;background:rgba(37,195,102,.1);border:1px solid rgba(37,195,102,.3);border-radius:4px;padding:11px 13px">
+      <div id="hookNuovo" class="row" style="gap:10px;margin:12px 18px 0;background:rgba(37,195,102,.1);border:1px solid rgba(37,195,102,.3);border-radius:4px;padding:11px 13px">
         <span style="width:8px;height:8px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
         <div style="flex:1;font-size:12.5px"><b>Simon</b> si è appena iscritto alla tua rete</div>
         <span style="font-family:var(--mono);font-size:10px;color:var(--mut)">2h fa</span>
       </div>
 
       <!-- hook: iscritto uscito -->
-      <div class="row" style="gap:10px;margin:8px 18px 0;background:rgba(226,87,74,.1);border:1px solid rgba(226,87,74,.3);border-radius:4px;padding:11px 13px">
+      <div id="hookUscito" class="row" style="gap:10px;margin:8px 18px 0;background:rgba(226,87,74,.1);border:1px solid rgba(226,87,74,.3);border-radius:4px;padding:11px 13px">
         <span style="width:8px;height:8px;border-radius:50%;background:var(--coral);flex-shrink:0"></span>
         <div style="flex:1;font-size:12.5px"><b>Luca</b> ha lasciato la tua rete</div>
         <a href="https://t.me/luca" target="_blank" style="font-size:11.5px;font-weight:700;color:var(--coral);text-decoration:none;white-space:nowrap">Scrivigli →</a>
       </div>
 
-      <div class="list" style="padding-top:10px;padding-bottom:10px">
+      <div class="list" id="reteList" style="padding-top:10px;padding-bottom:10px">
         <div class="dir" data-goto="iscritto" style="cursor:pointer">
           <div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">C</div>
           <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Cristian</span><span class="cbadge mid">ISCRITTO</span></div><div class="dds">@Legalpowerr · ha 5 iscritti · 1 business</div></div>
@@ -332,16 +332,16 @@
         <div class="iconbtn"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3"/></svg></div>
       </div>
       <div class="row" style="gap:14px;padding:20px 18px 0">
-        <div style="width:66px;height:66px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:26px;font-weight:700;flex-shrink:0">A</div>
+        <div style="width:66px;height:66px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:26px;font-weight:700;flex-shrink:0" id="profAvatar">A</div>
         <div style="flex:1;min-width:0">
-          <div class="row" style="gap:8px"><span style="font-size:18px;font-weight:700;letter-spacing:-.02em">Antony</span><span class="badge green" id="profBadge">Partner</span></div>
-          <div style="font-size:12.5px;color:var(--dim);margin-top:4px">@anto · Membro Cashly</div>
+          <div class="row" style="gap:8px"><span id="profName" style="font-size:18px;font-weight:700;letter-spacing:-.02em">Antony</span><span class="badge green" id="profBadge">Partner</span></div>
+          <div id="profHandle" style="font-size:12.5px;color:var(--dim);margin-top:4px">@anto · Membro Cashly</div>
         </div>
       </div>
       <div class="stats" style="margin-top:18px">
-        <div class="stat"><div class="n">0</div><div class="l">Attivi</div></div>
-        <div class="stat" data-goto="home" style="cursor:pointer"><div class="n" style="color:var(--amber)">1</div><div class="l">Salvati</div></div>
-        <div class="stat"><div class="n" style="color:var(--acc)">1</div><div class="l">Voti</div></div>
+        <div class="stat"><div class="n" id="profAttivi">0</div><div class="l">Attivi</div></div>
+        <div class="stat" data-goto="home" style="cursor:pointer"><div class="n" id="profSalvati" style="color:var(--amber)">1</div><div class="l">Salvati</div></div>
+        <div class="stat"><div class="n" id="profVoti" style="color:var(--acc)">1</div><div class="l">Voti</div></div>
       </div>
       <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Account</div></div>
       <div class="list" style="padding-top:0">
@@ -428,7 +428,7 @@
       <div class="card" style="margin-top:14px">
         <div class="row" style="gap:13px">
           <div style="width:50px;height:50px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:20px;font-weight:700;flex-shrink:0">A</div>
-          <div style="flex:1;min-width:0"><div class="eyebrow">Il tuo hub pubblico</div><div style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/u/uhifxl26</div></div>
+          <div style="flex:1;min-width:0"><div class="eyebrow">Il tuo hub pubblico</div><div id="hubUrl" style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/u/uhifxl26</div></div>
         </div>
         <div class="row" style="gap:10px;margin-top:13px">
           <button data-goto="pagina" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Apri / modifica</button>
@@ -438,8 +438,8 @@
 
       <!-- il tuo lavoro in numeri -->
       <div class="stats" style="margin-top:12px;grid-template-columns:1fr 1fr">
-        <div class="stat"><div class="n">0</div><div class="l">Link ref</div></div>
-        <div class="stat"><div class="n">2</div><div class="l">Rete</div></div>
+        <div class="stat"><div class="n" id="hubLinkRef">0</div><div class="l">Link ref</div></div>
+        <div class="stat"><div class="n" id="hubRete">2</div><div class="l">Rete</div></div>
       </div>
 
       <!-- strumenti -->
@@ -468,7 +468,7 @@
         <div class="dir" data-goto="wallet" style="cursor:pointer">
           <div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/></svg></div>
           <div style="flex:1;min-width:0"><div class="dnm">La tua rete</div></div>
-          <span style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">2 iscritti</span>
+          <span id="hubReteIscritti" style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">2 iscritti</span>
         </div>
         <div class="dir" data-goto="suggerisci" style="cursor:pointer">
           <div class="dav" style="background:rgba(232,179,76,.15);color:var(--amber)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/></svg></div>
@@ -874,7 +874,7 @@
 /* ===== Logica Partner: invita 3 -> sblocca Suggerisci + Link ref ===== */
 (function(){
   var app=document.querySelector('.app'), bodyEl=app.querySelector('.body');
-  var SOGLIA=3, activeDirects=2, everPartner=false, contributed=false, hasRef=false; // demo: 2/3 attivi, non ancora Partner
+  var SOGLIA=3, activeDirects=0, everPartner=false, contributed=false, hasRef=false; // demo: 2/3 attivi, non ancora Partner
   // Partner se: 3 diretti ATTIVI, oppure (già stato Partner E ha contribuito o ha ref link attivi) -> retention
   function isPartner(){ return activeDirects>=SOGLIA || (everPartner && (contributed||hasRef)); }
 
@@ -925,32 +925,40 @@
     app.querySelectorAll('.demoInvite').forEach(function(b){ b.onclick=function(){ if(activeDirects<99)activeDirects++; if(activeDirects>=SOGLIA)everPartner=true; render(); }; });
     app.querySelectorAll('.goWallet').forEach(function(b){ b.onclick=function(){ goWallet(); }; });
   }
+  window.__setPartner=function(active,partner){ activeDirects=(active||0); everPartner=!!partner||activeDirects>=SOGLIA; render(); };
   render();
 })();
 </script>
 
-<script src="identikit.js?v=10"></script>
+<style>.demoInvite{display:none!important}</style>
+<script src="identikit.js?v=11"></script>
 <script>
-/* ===== LIVE: Telegram + directory reale (design del prototipo intatto) ===== */
+/* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
   var API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
   var tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
   var initData = (tg && tg.initData) || "";
+  var HDRS = initData ? { "x-telegram-init-data": initData } : {};
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+  function setTxt(id, v){ var el=document.getElementById(id); if(el!=null && v!=null) el.textContent=v; }
+  function ini(s){ return String(s||"?").trim().slice(0,1).toUpperCase(); }
 
-  // Personalizza avatar (home) + nome (profilo) dall'utente Telegram
+  // ---- avatar + nome da Telegram ----
   try {
     var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
     if (u && u.first_name) {
-      var ini = u.first_name.trim().slice(0,1).toUpperCase();
+      var full = (u.first_name + (u.last_name ? (' ' + u.last_name) : '')).trim();
+      var i0 = ini(u.first_name);
       var hdr = document.querySelector('.scr[data-s="home"] .hdr');
-      if (hdr && hdr.lastElementChild) hdr.lastElementChild.textContent = ini;
-      var pb = document.getElementById('profBadge');
-      if (pb && pb.previousElementSibling) pb.previousElementSibling.textContent = (u.first_name + (u.last_name ? (' ' + u.last_name) : '')).trim();
+      if (hdr && hdr.lastElementChild) hdr.lastElementChild.textContent = i0;
+      setTxt('profAvatar', i0);
+      setTxt('profName', full);
+      if (u.username) setTxt('profHandle', '@' + u.username + ' · Membro Cashly');
     }
   } catch(e){}
 
+  // ---- HOME: directory reale ----
   function rowHtml(s){
     return '<div class="frow">'
       + '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div>'
@@ -958,22 +966,98 @@
       + '<div class="up"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg>'
       + '<span class="n" style="color:var(--dim)">' + (s.voti||0) + '</span></div></div>';
   }
-
-  fetch(API_URL + "/business-list", { headers: initData ? { "x-telegram-init-data": initData } : {}, cache: "no-store" })
+  fetch(API_URL + "/business-list", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
     .then(function(d){
       var arr = [];
       (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ arr.push(s); }); });
       var host = document.getElementById('listaReale');
       var perte = document.getElementById('perteFeed');
-      if (!arr.length) {
-        if (perte) perte.innerHTML = '';   // lascia il messaggio "Lista svuotata" del prototipo su In evidenza
-        return;
-      }
+      if (!arr.length) { if (perte) perte.innerHTML = ''; return; }
       arr.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
       var html = arr.map(rowHtml).join('');
       if (host) host.innerHTML = html;
-      if (perte) perte.innerHTML = html; // finche' l'identikit reale non e' collegato, stesso ordine per voti
+      if (perte) perte.innerHTML = html;
+    })
+    .catch(function(){});
+
+  // ---- ME: profilo (business attivi) ----
+  fetch(API_URL + "/me", { headers: HDRS, cache: "no-store" })
+    .then(function(r){ return r.json(); })
+    .then(function(me){
+      if (!me) return;
+      var attivi = (me.prodotti_attivi || []).length;
+      setTxt('profAttivi', attivi);
+      if (me.lead) {
+        var nm = (me.lead.nome || '') + (me.lead.cognome ? (' ' + me.lead.cognome) : '');
+        nm = nm.trim();
+        if (nm) { setTxt('profName', nm); setTxt('profAvatar', ini(nm)); }
+      }
+    })
+    .catch(function(){});
+
+  // ---- AFFILIAZIONE + HUB + Partner ----
+  function membroRow(m){
+    var badge = m.is_cliente
+      ? '<span class="cbadge mid">CLIENTE</span>'
+      : (m.stato_label ? '<span class="cbadge">' + esc(m.stato_label) + '</span>' : '');
+    var sub = (m.username ? ('@' + m.username) : 'profilo da completare')
+      + (m.servizi_count ? (' · ' + m.servizi_count + ' business') : '');
+    var scriv = m.username
+      ? '<a href="https://t.me/' + esc(m.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
+      : '<svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>';
+    return '<div class="dir">'
+      + '<div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">' + esc(ini(m.nome)) + '</div>'
+      + '<div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">' + esc(m.nome) + '</span>' + badge + '</div><div class="dds">' + esc(sub) + '</div></div>'
+      + scriv + '</div>';
+  }
+
+  fetch(API_URL + "/affiliazione", { headers: HDRS, cache: "no-store" })
+    .then(function(r){ return r.json(); })
+    .then(function(a){
+      if (!a || a.error) return;
+      var st = a.stats || {}, rete = a.rete || {}, membri = rete.membri || [];
+      var iscritti = (st.iscritti != null ? st.iscritti : membri.length);
+
+      // stato Partner reale -> pilota la card, i gate Suggerisci/Link, il badge profilo, #kpiIscritti, #direttiN
+      if (window.__setPartner) window.__setPartner(iscritti, !!a.is_partner);
+
+      setTxt('kpiClick', st.click != null ? st.click : 0);
+      setTxt('kpiClienti', st.clienti != null ? st.clienti : 0);
+      setTxt('reteTotale', rete.invitati_count != null ? rete.invitati_count : iscritti);
+      // salvati/voti: nessun endpoint dedicato -> 0 onesto
+      setTxt('kpiSalvati', 0); setTxt('kpiVoti', 0);
+      setTxt('profSalvati', 0); setTxt('profVoti', 0);
+
+      // link invito reale
+      if (a.ref_link) {
+        var disp = a.ref_link.replace(/^https?:\/\//, '');
+        setTxt('inviteLinkText', disp);
+        var ib = document.getElementById('inviteBtn');
+        if (ib) ib.onclick = function(){
+          var share = 'https://t.me/share/url?url=' + encodeURIComponent(a.ref_link) + '&text=' + encodeURIComponent('Entra in Cashly, la directory del business online');
+          if (tg && tg.openTelegramLink) tg.openTelegramLink(share);
+          else window.open(share, '_blank');
+        };
+      }
+
+      // HUB
+      if (a.ref_code) setTxt('hubUrl', 'hub.cashlypro.com/u.html?c=' + a.ref_code);
+      setTxt('hubRete', iscritti);
+      setTxt('hubReteIscritti', iscritti + ' iscritti');
+      setTxt('hubLinkRef', (a.miei_reflink || []).length);
+
+      // nascondi i due banner demo (evento specifico)
+      var hn = document.getElementById('hookNuovo'); if (hn) hn.style.display = 'none';
+      var hu = document.getElementById('hookUscito'); if (hu) hu.style.display = 'none';
+
+      // rete reale
+      var rl = document.getElementById('reteList');
+      if (rl) {
+        rl.innerHTML = membri.length
+          ? membri.map(membroRow).join('')
+          : '<div style="padding:24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Ancora nessun iscritto nella tua rete.<br>Condividi il tuo link invito per iniziare.</div>';
+      }
     })
     .catch(function(){});
 })();
