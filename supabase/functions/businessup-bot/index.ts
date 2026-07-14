@@ -47,33 +47,72 @@ function fotoStale(fotoUpdatedAt: string | null | undefined): boolean {
   return Date.now() - new Date(fotoUpdatedAt).getTime() > 12 * 3600 * 1000
 }
 
-// Prende la foto profilo Telegram dell'utente via Bot API, la carica sul nostro storage pubblico
-// (URL stabile che NON scade, a differenza di quelli t.me) e aggiorna leads.foto_url + foto_updated_at.
-// Best-effort: qualsiasi errore -> ritorna null senza bloccare.
+// Carica i byte di un avatar sul nostro storage pubblico e salva l'URL (stabile, non scade).
+async function uploadAvatar(telegramId: number, bytes: Uint8Array, contentType: string): Promise<string | null> {
+  const path = `${telegramId}.jpg`
+  const up = await supabase.storage.from("avatars").upload(path, bytes, { contentType, upsert: true })
+  if (up.error) { console.error("avatar upload failed:", telegramId, up.error.message); return null }
+  const pub = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl
+  const url = `${pub}?v=${Date.now()}`               // cache-buster: cambia ad ogni refresh
+  await supabase.from("leads").update({ foto_url: url, foto_updated_at: new Date().toISOString() }).eq("telegram_id", telegramId)
+  return url
+}
+
+// Scarica un file Telegram (per file_id) e lo mette sul nostro storage.
+async function storeTelegramFile(telegramId: number, fileId: string): Promise<string | null> {
+  const rf = await fetch(`${TG_API}/getFile?file_id=${fileId}`)
+  const jf = await rf.json()
+  if (!jf.ok || !jf.result?.file_path) return null
+  const bin = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${jf.result.file_path}`)
+  if (!bin.ok) return null
+  const ct = bin.headers.get("content-type") || "image/jpeg"
+  return await uploadAvatar(telegramId, new Uint8Array(await bin.arrayBuffer()), ct)
+}
+
+// Scarica una foto da URL (quella dell'initData dell'utente stesso) e la mette sul nostro storage.
+// Serve quando il bot NON puo' vedere la foto dell'utente (privacy) ma l'utente apre la Mini App.
+async function storePhotoFromUrl(telegramId: number, photoUrl: string): Promise<string | null> {
+  try {
+    const bin = await fetch(photoUrl)
+    if (!bin.ok) return null
+    const ct = bin.headers.get("content-type") || "image/jpeg"
+    return await uploadAvatar(telegramId, new Uint8Array(await bin.arrayBuffer()), ct)
+  } catch (e) {
+    console.error("storePhotoFromUrl failed", telegramId, e)
+    return null
+  }
+}
+
+// Prende la foto profilo Telegram dell'utente via Bot API e la salva sul nostro storage.
+// 1) getUserProfilePhotos  2) fallback getChat (a volte disponibile quando la 1 e' bloccata dalla privacy)
+// Best-effort: qualsiasi errore -> null senza bloccare.
 async function refreshPhoto(telegramId: number): Promise<string | null> {
   try {
+    let fileId: string | null = null
+
     const r1 = await fetch(`${TG_API}/getUserProfilePhotos?user_id=${telegramId}&limit=1`)
     const j1 = await r1.json()
-    if (!j1.ok || !j1.result || j1.result.total_count === 0 || !j1.result.photos?.length) {
-      await supabase.from("leads").update({ foto_url: null, foto_updated_at: new Date().toISOString() }).eq("telegram_id", telegramId)
+    if (j1.ok && j1.result?.total_count > 0 && j1.result.photos?.length) {
+      const sizes = j1.result.photos[0]               // varie risoluzioni della stessa foto
+      fileId = sizes[sizes.length - 1]?.file_id ?? null   // la piu' grande
+    } else {
+      console.log("foto: getUserProfilePhotos vuoto", telegramId, JSON.stringify(j1).slice(0, 160))
+    }
+
+    // Fallback: foto della chat privata col bot.
+    if (!fileId) {
+      const r2 = await fetch(`${TG_API}/getChat?chat_id=${telegramId}`)
+      const j2 = await r2.json()
+      const p = j2?.result?.photo
+      if (j2.ok && p) fileId = p.big_file_id || p.small_file_id || null
+      else console.log("foto: getChat senza foto", telegramId, JSON.stringify(j2).slice(0, 160))
+    }
+
+    if (!fileId) {
+      await supabase.from("leads").update({ foto_updated_at: new Date().toISOString() }).eq("telegram_id", telegramId)
       return null
     }
-    const sizes = j1.result.photos[0]                 // varie risoluzioni della stessa foto
-    const fileId = sizes[sizes.length - 1]?.file_id   // la piu' grande
-    if (!fileId) return null
-    const r2 = await fetch(`${TG_API}/getFile?file_id=${fileId}`)
-    const j2 = await r2.json()
-    if (!j2.ok || !j2.result?.file_path) return null
-    const bin = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${j2.result.file_path}`)
-    if (!bin.ok) return null
-    const bytes = new Uint8Array(await bin.arrayBuffer())
-    const path = `${telegramId}.jpg`
-    const up = await supabase.storage.from("avatars").upload(path, bytes, { contentType: "image/jpeg", upsert: true })
-    if (up.error) { console.error("avatar upload failed:", up.error.message); return null }
-    const pub = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl
-    const url = `${pub}?v=${Date.now()}`              // cache-buster: cambia ad ogni refresh
-    await supabase.from("leads").update({ foto_url: url, foto_updated_at: new Date().toISOString() }).eq("telegram_id", telegramId)
-    return url
+    return await storeTelegramFile(telegramId, fileId)
   } catch (e) {
     console.error("refreshPhoto failed", telegramId, e)
     return null
@@ -645,9 +684,15 @@ async function apiMe(telegramId: number, tgUser?: any) {
     }).eq("telegram_id", telegramId)
   }
   const { data: lead } = await supabase.from("leads").select("*").eq("telegram_id", telegramId).maybeSingle()
-  // Foto profilo dell'utente: presa dall'API bot e salvata sul nostro storage (URL stabile), al massimo ogni 12h.
+  // Foto profilo: dall'API bot -> nostro storage (URL stabile), al massimo ogni 12h.
+  // Se il bot NON puo' vederla (privacy del contatto), ripieghiamo sulla foto dell'initData
+  // dell'utente stesso: e' sempre disponibile a lui e la salviamo in modo permanente.
   if (lead && fotoStale((lead as any).foto_updated_at)) {
-    (lead as any).foto_url = await refreshPhoto(telegramId)
+    let f = await refreshPhoto(telegramId)
+    if (!f && tgUser?.id === telegramId && tgUser.photo_url) {
+      f = await storePhotoFromUrl(telegramId, tgUser.photo_url)
+    }
+    if (f) (lead as any).foto_url = f
   }
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
