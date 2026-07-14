@@ -430,7 +430,7 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
 
       <div class="card" style="margin-top:10px">
         <div class="row" style="gap:14px">
-          <div style="width:56px;height:56px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:22px;font-weight:700;flex-shrink:0">A</div>
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:22px;font-weight:700;flex-shrink:0" id="paginaAvatar">A</div>
           <button class="minibtn">Cambia foto</button>
         </div>
         <div class="field"><div class="k">Nome</div><div class="v">Antonio</div></div>
@@ -470,7 +470,7 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
       <!-- hero: la tua pagina pubblica -->
       <div class="card" style="margin-top:14px">
         <div class="row" style="gap:13px">
-          <div style="width:50px;height:50px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:20px;font-weight:700;flex-shrink:0">A</div>
+          <div style="width:50px;height:50px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:20px;font-weight:700;flex-shrink:0" id="hubAvatar">A</div>
           <div style="flex:1;min-width:0"><div class="eyebrow">Il tuo hub pubblico</div><div id="hubUrl" style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/u/uhifxl26</div></div>
         </div>
         <div class="row" style="gap:10px;margin-top:13px">
@@ -974,7 +974,7 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
 </script>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=13"></script>
+<script src="identikit.js?v=14"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -986,6 +986,9 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
   function setTxt(id, v){ var el=document.getElementById(id); if(el!=null && v!=null) el.textContent=v; }
   function ini(s){ return String(s||"?").trim().slice(0,1).toUpperCase(); }
+  function setAvatar(el, foto){ if(!el || !foto) return; var im=new Image(); im.onload=function(){ el.style.backgroundImage='url("'+foto+'")'; el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.style.backgroundRepeat='no-repeat'; el.textContent=''; }; im.src=foto; }
+  function setAvatarById(id, foto){ setAvatar(document.getElementById(id), foto); }
+  function homeAvatarEl(){ var h=document.querySelector('.scr[data-s="home"] .hdr'); return h && h.lastElementChild; }
 
   // ---- avatar + nome da Telegram ----
   try {
@@ -998,6 +1001,13 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
       setTxt('profAvatar', i0);
       setTxt('profName', full);
       if (u.username) setTxt('profHandle', '@' + u.username + ' · Membro Cashly');
+      // foto profilo Telegram dell'utente corrente (se fornita nell'initData)
+      if (u.photo_url) {
+        setAvatar(homeAvatarEl(), u.photo_url);
+        setAvatarById('profAvatar', u.photo_url);
+        setAvatarById('hubAvatar', u.photo_url);
+        setAvatarById('paginaAvatar', u.photo_url);
+      }
     }
   } catch(e){}
 
@@ -1035,6 +1045,14 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
         var nm = (me.lead.nome || '') + (me.lead.cognome ? (' ' + me.lead.cognome) : '');
         nm = nm.trim();
         if (nm) { setTxt('profName', nm); setTxt('profAvatar', ini(nm)); }
+        // foto profilo salvata lato server (piu' affidabile dell'initData)
+        var foto = me.lead.foto_url;
+        if (foto) {
+          setAvatar(homeAvatarEl(), foto);
+          setAvatarById('profAvatar', foto);
+          setAvatarById('hubAvatar', foto);
+          setAvatarById('paginaAvatar', foto);
+        }
       }
     })
     .catch(function(){});
@@ -1049,8 +1067,12 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
     var scriv = m.username
       ? '<a href="https://t.me/' + esc(m.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
       : '<svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>';
+    var av = '<div style="position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">'
+      + esc(ini(m.nome))
+      + (m.foto_url ? '<img src="' + m.foto_url + '" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '')
+      + '</div>';
     return '<div class="dir">'
-      + '<div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">' + esc(ini(m.nome)) + '</div>'
+      + av
       + '<div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">' + esc(m.nome) + '</span>' + badge + '</div><div class="dds">' + esc(sub) + '</div></div>'
       + scriv + '</div>';
   }
