@@ -41,6 +41,45 @@ async function sendMessage(chatId: number, text: string, markup?: any, parseMode
   })
 }
 
+// La foto va rinfrescata se non l'abbiamo mai presa o se e' piu' vecchia di 12h.
+function fotoStale(fotoUpdatedAt: string | null | undefined): boolean {
+  if (!fotoUpdatedAt) return true
+  return Date.now() - new Date(fotoUpdatedAt).getTime() > 12 * 3600 * 1000
+}
+
+// Prende la foto profilo Telegram dell'utente via Bot API, la carica sul nostro storage pubblico
+// (URL stabile che NON scade, a differenza di quelli t.me) e aggiorna leads.foto_url + foto_updated_at.
+// Best-effort: qualsiasi errore -> ritorna null senza bloccare.
+async function refreshPhoto(telegramId: number): Promise<string | null> {
+  try {
+    const r1 = await fetch(`${TG_API}/getUserProfilePhotos?user_id=${telegramId}&limit=1`)
+    const j1 = await r1.json()
+    if (!j1.ok || !j1.result || j1.result.total_count === 0 || !j1.result.photos?.length) {
+      await supabase.from("leads").update({ foto_url: null, foto_updated_at: new Date().toISOString() }).eq("telegram_id", telegramId)
+      return null
+    }
+    const sizes = j1.result.photos[0]                 // varie risoluzioni della stessa foto
+    const fileId = sizes[sizes.length - 1]?.file_id   // la piu' grande
+    if (!fileId) return null
+    const r2 = await fetch(`${TG_API}/getFile?file_id=${fileId}`)
+    const j2 = await r2.json()
+    if (!j2.ok || !j2.result?.file_path) return null
+    const bin = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${j2.result.file_path}`)
+    if (!bin.ok) return null
+    const bytes = new Uint8Array(await bin.arrayBuffer())
+    const path = `${telegramId}.jpg`
+    const up = await supabase.storage.from("avatars").upload(path, bytes, { contentType: "image/jpeg", upsert: true })
+    if (up.error) { console.error("avatar upload failed:", up.error.message); return null }
+    const pub = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl
+    const url = `${pub}?v=${Date.now()}`              // cache-buster: cambia ad ogni refresh
+    await supabase.from("leads").update({ foto_url: url, foto_updated_at: new Date().toISOString() }).eq("telegram_id", telegramId)
+    return url
+  } catch (e) {
+    console.error("refreshPhoto failed", telegramId, e)
+    return null
+  }
+}
+
 // Escape per testo inserito in messaggi Telegram con parse_mode HTML.
 function htmlEsc(s: unknown): string {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -603,10 +642,13 @@ async function apiMe(telegramId: number, tgUser?: any) {
   if (tgUser?.id === telegramId) {
     await supabase.from("leads").update({
       username: tgUser.username ?? null,
-      foto_url: tgUser.photo_url ?? null,
     }).eq("telegram_id", telegramId)
   }
   const { data: lead } = await supabase.from("leads").select("*").eq("telegram_id", telegramId).maybeSingle()
+  // Foto profilo dell'utente: presa dall'API bot e salvata sul nostro storage (URL stabile), al massimo ogni 12h.
+  if (lead && fotoStale((lead as any).foto_updated_at)) {
+    (lead as any).foto_url = await refreshPhoto(telegramId)
+  }
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
 
@@ -803,7 +845,16 @@ function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolea
 
 async function apiAffiliazione(telegramId: number) {
   const { data: lead } = await supabase.from("leads").select("is_cliente, is_partner, partner_richiesto, ref_clicks").eq("telegram_id", telegramId).maybeSingle()
-  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, foto_updated_at, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  // Rinfresca le foto profilo dei membri dall'API bot -> storage (URL stabile), max ogni 12h, con un tetto per non rallentare troppo.
+  let fotoRefreshed = 0
+  for (const i of (invitati ?? [])) {
+    if (fotoRefreshed >= 15) break
+    if (fotoStale((i as any).foto_updated_at)) {
+      (i as any).foto_url = await refreshPhoto((i as any).telegram_id)
+      fotoRefreshed++
+    }
+  }
   const { data: mieiLink } = await supabase.from("affiliate_link").select("*").eq("telegram_id", telegramId)
   const { data: pagamenti } = await supabase.from("pagamenti").select("importo").eq("telegram_id", telegramId)
   const guadagni = (pagamenti ?? []).reduce((s: number, p: any) => s + Number(p.importo || 0), 0)
