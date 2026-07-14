@@ -184,44 +184,57 @@
     display:flex;align-items:center;justify-content:center;margin-bottom:2px}
 </style>
 <style>
-/* ===== Cashly brand restyle ===== */
+/* ===== Cashly — look Product Hunt ===== */
 :root{
-  --bg:#161419; --s0:#1f1b25; --s1:#272231; --s2:#332c40; --s3:#41394f;
-  --line:#312a3c; --line2:#473e57;
-  --tx:#f6f3f9; --dim:#b4abc0; --mut:#867d95;
-  --acc:#25cf6e; --acc-d:#17ab58; --on:#04210f;
-  --amber:#ffb43d; --blue:#4aa8ff; --purple:#b57bff; --coral:#ff6a5a; --teal:#28d3c2; --pink:#ff6bcb;
+  --bg:#14161B; --s0:#181B21; --s1:#1E212A; --s2:#252A35; --s3:#323846;
+  --line:#252932; --line2:#2E3440;
+  --tx:#FFFFFF; --dim:#A8AEB9; --mut:#767D8A;
+  --acc:#25CF6E; --acc-d:#1BB65D; --on:#04210F;
+  --amber:#FFB43D; --blue:#4A8CFF; --purple:#A77BFF; --coral:#FF6154; --teal:#2AD3C2;
   --display:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-  --mono:'Sora',ui-monospace,'SF Mono',Menlo,monospace;
-  --grad:linear-gradient(120deg,#25cf6e 0%,#1ac6a3 100%);
+  --mono:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; /* via il mono-terminale */
 }
-body{background:#0f0d12}
+body{background:#0F1115}
 .app{background:var(--bg)}
-/* angoli morbidi ovunque (anche inline border-radius:4px) */
-[style*="border-radius:4px"]{border-radius:11px !important}
-.card,.feed,.stats{border-radius:16px}
-.dav,.flogo,.iconbtn,.seg button,.search,.fdd,.field,.minibtn,.act,.mvi,.vote,.metachip,.statesel button{border-radius:12px}
+
+/* forme: pill tonde, card 16px, thumb 12px (come PH) */
+[style*="border-radius:4px"]{border-radius:12px !important}
+.card,.feed,.stats{background:var(--s1);border:1px solid var(--line);border-radius:16px;box-shadow:none}
+.dav,.flogo,.iconbtn,.search,.fdd,.field,.minibtn,.act,.mvi,.vote,.metachip,.statesel button{border-radius:12px}
 .chip,.pill,.badge,.cbadge,.tag,.live{border-radius:999px}
-/* profondita' */
-.card,.feed,.stats{box-shadow:0 12px 34px -20px rgba(0,0,0,.75)}
-.hdr{background:linear-gradient(180deg,var(--s0),rgba(31,27,37,.9));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-/* wordmark + label: via display, meno mono-terminale */
+
+/* header pulito, senza bordo (PH) */
+.hdr{background:var(--bg);border-bottom:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 .logo{font-family:var(--display);font-weight:800;letter-spacing:-.02em}
-.eyebrow,.sectitle,.seccount,.stat .l,.navb .lb,.feedhd,.live{font-family:var(--display)}
-.eyebrow{letter-spacing:.1em}
-/* numeri stat colorati (dove non forzati inline) */
-.stats .stat:nth-child(1) .n{color:var(--acc)}
-.stats .stat:nth-child(2) .n{color:var(--amber)}
-.stats .stat:nth-child(3) .n{color:var(--coral)}
-/* CTA verdi -> gradiente brand */
-button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{background:var(--grad) !important;border:none !important}
-.badge.green{background:var(--grad)}
-/* toggle/pulse restano verdi pieni (leggibilita') */
-.toggle{background:var(--acc)}
-/* categoria dropdown: accento */
-.fdd.set{border-color:var(--line2)}
-/* seg attivo brand */
-.seg button.on{background:rgba(37,207,110,.15);border-color:rgba(37,207,110,.6);color:var(--acc)}
+
+/* SEGMENTED: attivo BIANCO con testo scuro, inattivo pill scura — la firma di PH */
+.seg{gap:10px;padding:16px 18px 4px}
+.seg button{height:44px;border-radius:999px;background:var(--s2);border:1px solid transparent;color:var(--tx);font-size:14px;font-weight:600}
+.seg button.on{background:#FFFFFF;border-color:#FFFFFF;color:#14161B;font-weight:700}
+.seg button.on svg{color:#14161B;stroke:#14161B}
+
+/* testi: niente mono/uppercase da terminale */
+.eyebrow{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:none;color:var(--mut)}
+.sectitle,.feedhd{font-family:var(--sans);font-weight:700;letter-spacing:-.02em}
+.seccount,.stat .l{font-family:var(--sans);text-transform:none;letter-spacing:0}
+.stat .n,.up .n{font-family:var(--sans);color:var(--tx)}
+.live{font-family:var(--sans);letter-spacing:.04em}
+
+/* righe lista: upvote a destra bianco (PH) */
+.fnm{font-size:15.5px;font-weight:700}
+.fds{color:var(--dim)}
+.up .n{font-weight:700;font-size:14px}
+.up svg{stroke:var(--tx) !important}
+
+/* bottom nav: attivo BIANCO, inattivo grigio, label normali */
+.nav{background:var(--s0);border-top:1px solid var(--line)}
+.navb{color:var(--mut)}
+.navb.on{color:#FFFFFF}
+.navb .lb{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none}
+
+/* search/dropdown */
+.search,.fdd{background:var(--s1);border-color:var(--line)}
+.fdd.set{color:var(--tx);border-color:var(--line2)}
 </style>
 </head>
 <body>
@@ -974,7 +987,7 @@ button[style*="background:var(--acc)"], a[style*="background:var(--acc)"]{backgr
 </script>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=14"></script>
+<script src="identikit.js?v=15"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
