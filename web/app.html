@@ -201,7 +201,7 @@
 
       <div class="seg" style="padding-top:16px">
         <button class="on" data-view="evidenza"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>In evidenza</button>
-        <button data-view="perte"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Per te</button>
+        <button data-view="perte"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>Salvati</button>
       </div>
 
       <div class="row" style="gap:10px;margin:14px 18px 0">
@@ -209,7 +209,7 @@
           <svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
           <span>Cerca un business</span>
         </div>
-        <button aria-label="Salvati" style="width:38px;height:38px;flex-shrink:0;background:var(--s1);border:1px solid var(--line2);border-radius:4px;color:var(--amber);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg></button>
+        
       </div>
 
 
@@ -224,8 +224,8 @@
       </div>
 
       <div class="feed hide" data-view="perte">
-        <div class="feedhd">Compatibili con te</div>
-        <div class="feedsub" id="pertesub">Completa l'identikit per ordinare i business in base al tuo profilo.</div>
+        <div class="feedhd">I tuoi salvati</div>
+        <div class="feedsub" id="pertesub">I business che salvi con la stella restano qui.</div>
         <div id="perteFeed"></div>
       </div>
 
@@ -845,7 +845,7 @@
     setTimeout(function(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); },220);
   }
   function finish(){
-    renderPerte(ans);
+    void 0;
     scr('home');
     app.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-go')==='home');});
     var home=app.querySelector('.scr[data-s="home"]');
@@ -857,7 +857,7 @@
   }
   if(back) back.onclick=function(){ if(cur>0){cur--;render();} else scr('profile'); };
   app.querySelectorAll('[data-goto="identikit"]').forEach(function(el){ el.addEventListener('click',function(){ ans={};cur=0;render(); }); });
-  if(Q){ render(); renderPerte(null); }
+  if(Q){ render(); void 0; }
   if(/demo=perte/.test(location.search)){ ans={settore:'trading',capitale:'b',spesa:'s50',rischio:'regole',esperienza:'basi'}; finish(); }
 })();
 </script>
@@ -999,7 +999,7 @@ body{background:#0F1115}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=18"></script>
+<script src="identikit.js?v=19"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1036,26 +1036,52 @@ body{background:#0F1115}
     }
   } catch(e){}
 
-  // ---- HOME: directory reale ----
+  // ---- HOME: directory reale + salva (preferiti) ----
+  var ALLBIZ = [], SAVED = {};
+  function starSvg(on){
+    return on
+      ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--amber);stroke:var(--amber);stroke-width:1.4;stroke-linejoin:round"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>'
+      : '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linejoin:round"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>';
+  }
   function rowHtml(s){
     return '<div class="frow">'
       + '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div>'
       + '<div class="fds">' + esc(s.descrizione || '') + '</div></div>'
-      + '<div class="up"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg>'
-      + '<span class="n" style="color:var(--dim)">' + (s.voti||0) + '</span></div></div>';
+      + '<button class="savebtn" data-id="' + s.id + '" aria-label="Salva" style="background:none;border:none;cursor:pointer;padding:6px;margin:-6px;flex-shrink:0;line-height:0">' + starSvg(!!SAVED[s.id]) + '</button>'
+      + '</div>';
   }
+  function renderFeeds(){
+    var host = document.getElementById('listaReale');
+    var perte = document.getElementById('perteFeed');
+    if (host) host.innerHTML = ALLBIZ.length
+      ? ALLBIZ.map(rowHtml).join('')
+      : '<div style="padding:34px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
+    if (perte) {
+      var salv = ALLBIZ.filter(function(s){ return SAVED[s.id]; });
+      perte.innerHTML = salv.length
+        ? salv.map(rowHtml).join('')
+        : '<div style="padding:30px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6">Nessun business salvato.<br>Tocca la stella su un business per salvarlo.</div>';
+    }
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest && e.target.closest('.savebtn');
+    if (!b) return;
+    e.stopPropagation();
+    var id = parseInt(b.getAttribute('data-id'));
+    if (!id) return;
+    SAVED[id] = !SAVED[id];
+    if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+    renderFeeds();
+    fetch(API_URL + "/preferito", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, HDRS), body: JSON.stringify({ servizio_id: id }) }).catch(function(){});
+  });
   fetch(API_URL + "/business-list", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      var arr = [];
-      (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ arr.push(s); }); });
-      var host = document.getElementById('listaReale');
-      var perte = document.getElementById('perteFeed');
-      if (!arr.length) { if (perte) perte.innerHTML = ''; return; }
-      arr.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
-      var html = arr.map(rowHtml).join('');
-      if (host) host.innerHTML = html;
-      if (perte) perte.innerHTML = html;
+      ALLBIZ = [];
+      (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ ALLBIZ.push(s); }); });
+      ALLBIZ.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
+      (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
+      renderFeeds();
     })
     .catch(function(){});
 
