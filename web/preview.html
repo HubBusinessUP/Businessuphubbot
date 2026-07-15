@@ -1249,6 +1249,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   (function(){
     if (localStorage.getItem('cashly_onb') === '1') return;
     var SLIDES = [
+      { splash:true, slogan:'la directory del business online' },
       { statement:'Il tuo <b>hub</b> sempre a portata di mano.' },
       { statement:'Cerca nella directory il business che ti farà <b>cambiare vita</b>.' },
       { statement:'Invita e guadagna costruendo la tua <b>community definitiva</b>.', final:true }
@@ -1262,16 +1263,18 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     function render(){
       var s=SLIDES[i], last=!!s.final, dots='';
       for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .25s;width:'+(k===i?'24px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
+      var brandTop = s.splash ? '<div></div>'
+        : '<div class="onb-brand" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>';
+      var center = s.splash
+        ? '<div class="onb-stmt" style="display:flex;flex-direction:column;align-items:center"><div style="font-family:var(--display);font-size:56px;font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div><div style="font-size:14px;color:var(--dim);letter-spacing:.01em;margin-top:14px">'+s.slogan+'</div></div>'
+        : '<div class="onb-stmt" style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.26;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>';
       ov.innerHTML =
         '<div class="onb-glow"></div>'
         + '<div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column">'
-        +   '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 0">'
-        +     '<div class="onb-brand" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
+        +   '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 0">' + brandTop
         +     '<button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 8px">Salta</button>'
         +   '</div>'
-        +   '<div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 30px">'
-        +     '<div class="onb-stmt" style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.26;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>'
-        +   '</div>'
+        +   '<div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 30px">' + center + '</div>'
         +   '<div class="onb-dots" style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
         +   '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" class="onb-cta" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">'+(last?'Apri il tuo HUB':'Avanti')+'</button></div>'
         + '</div>';
