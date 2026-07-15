@@ -1011,7 +1011,7 @@ body{background:#0F1115;font-family:var(--sans);-webkit-font-smoothing:antialias
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=24"></script>
+<script src="identikit.js?v=25"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1232,6 +1232,53 @@ body{background:#0F1115;font-family:var(--sans);-webkit-font-smoothing:antialias
     });
     var sb=document.getElementById('shareBtn');
     if(sb) sb.addEventListener('click', function(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } sheet.style.display='block'; });
+  })();
+
+  // ===== ONBOARDING a slide (solo alla prima apertura) =====
+  (function(){
+    if (localStorage.getItem('cashly_onb') === '1') return;
+    var G = '<svg viewBox="0 0 24 24" style="width:44px;height:44px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>';
+    var T = '<svg viewBox="0 0 24 24" style="width:46px;height:46px;fill:none;stroke:currentColor;stroke-width:1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>';
+    var S = '<svg viewBox="0 0 24 24" style="width:44px;height:44px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;stroke-linecap:round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="M9 12l2 2 4-4"/></svg>';
+    var R = '<svg viewBox="0 0 24 24" style="width:44px;height:44px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;stroke-linecap:round"><path d="M5 15c-1 1-1.4 4-1.4 4s3-.4 4-1.4c.6-.6.6-1.9 0-2.6-.6-.6-2-.6-2.6 0Z"/><path d="M9 12.5C12 6 16 4 20 4c0 4-2 8-8.5 11L9 12.5Z"/><circle cx="15" cy="9" r="1.6"/></svg>';
+    var SLIDES = [
+      { ic:G, t:'Benvenuto in Cashly', d:'La directory dei business online. Solo metodi che proviamo con soldi veri prima di pubblicarli.' },
+      { ic:T, t:'Scegli e avvia', d:'Sfoglia i business, scegli quello adatto a te e segui il tutorial passo passo per attivarlo.' },
+      { ic:S, t:'Zero fumo', d:'Niente promesse di guadagno. Vedi capitale, costi e rischi reali, prima di iniziare.' },
+      { ic:R, t:'Da dove parti?', d:'Crea subito il tuo profilo per proposte su misura, oppure sfoglia la directory.', final:true }
+    ];
+    var i = 0;
+    var ov = document.createElement('div');
+    ov.id='cashlyOnb'; ov.style.cssText='position:fixed;inset:0;z-index:250;background:var(--bg);max-width:460px;margin:0 auto;display:flex;flex-direction:column';
+    document.body.appendChild(ov);
+    function done(choice){
+      localStorage.setItem('cashly_onb','1');
+      try{ fetch(API_URL+'/onboarding',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},HDRS),body:JSON.stringify({choice:choice})}).catch(function(){}); }catch(e){}
+      ov.remove();
+      if(choice==='profilo'){ var b=document.querySelector('.nav button[data-go="profile"]'); if(b) b.click(); }
+    }
+    function render(){
+      var s=SLIDES[i], last=!!s.final, dots='';
+      for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .2s;width:'+(k===i?'22px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
+      var footer = last
+        ? '<button id="onbProfilo" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;cursor:pointer">Crea il mio profilo</button><button id="onbEsplora" style="width:100%;margin-top:10px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer">Esplora la directory</button>'
+        : '<button id="onbNext" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;cursor:pointer">Avanti</button>';
+      ov.innerHTML =
+        '<div style="display:flex;justify-content:flex-end;padding:14px 16px"><button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Salta</button></div>'
+        + '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 28px">'
+        +   '<div style="width:94px;height:94px;border-radius:24px;background:rgba(37,207,110,.12);border:1px solid rgba(37,207,110,.25);display:flex;align-items:center;justify-content:center;color:var(--acc);margin-bottom:26px">'+s.ic+'</div>'
+        +   '<div style="font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.15">'+s.t+'</div>'
+        +   '<div style="font-size:15px;color:var(--dim);line-height:1.55;margin-top:12px;max-width:330px">'+s.d+'</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
+        + '<div style="padding:0 20px calc(24px + env(safe-area-inset-bottom))">'+footer+'</div>';
+      function hap(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } }
+      var nx=document.getElementById('onbNext'); if(nx) nx.onclick=function(){ i++; hap(); render(); };
+      var sk=document.getElementById('onbSkip'); if(sk) sk.onclick=function(){ done('esplora'); };
+      var op=document.getElementById('onbProfilo'); if(op) op.onclick=function(){ hap(); done('profilo'); };
+      var oe=document.getElementById('onbEsplora'); if(oe) oe.onclick=function(){ hap(); done('esplora'); };
+    }
+    render();
   })();
 
 })();

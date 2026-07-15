@@ -370,7 +370,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
-  const btn = { inline_keyboard: [[{ text: "🚀 Apri Cashly e crea il mio hub", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
+  const btn = { inline_keyboard: [[{ text: "🚀 Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
 
   // Video di presentazione (se impostato dall'admin con /presentazione): appare sopra al benvenuto.
   const { data: vid } = await supabase.from("config").select("valore").eq("chiave", "welcome_video").maybeSingle()
@@ -381,13 +381,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     await sendVideo(
       chatId,
       welcomeVideo,
-      `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
-      `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n` +
-      `Guarda la presentazione qui sopra 👆, poi:\n\n` +
-      `1️⃣ Apri l'app col pulsante qui sotto\n` +
-      `2️⃣ Completa il profilo in 2 minuti e crea il tuo hub\n` +
-      `3️⃣ Esplora i business e crea la tua rete 💸\n\n` +
-      `Tocca <b>Apri Cashly</b> 👇`,
+      `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
+      `Benvenuto in <b>Cashly</b>. Guarda la presentazione qui sopra 👆, poi apri l'app col pulsante. 👇`,
       btn,
       "HTML",
     )
@@ -396,14 +391,9 @@ async function handleStart(chatId: number, from: any, payload?: string) {
 
   await sendMessage(
     chatId,
-    `Ciao ${nomeBenvenuto || "e benvenuto"}! 👋\n\n` +
-    `Benvenuto in <b>Cashly</b> — la directory del Business Online. 🚀\n\n` +
-    `<b>CREA IL TUO HUB PER IL BUSINESS ONLINE</b>\n\n` +
-    `<b>Inizia in 3 passi</b>\n` +
-    `1️⃣ Apri l'app qui sotto\n` +
-    `2️⃣ Completa il profilo in 2 minuti\n` +
-    `3️⃣ Trova il business che fa per te 💸\n\n` +
-    `Tocca <b>Apri Cashly</b> 👇`,
+    `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
+    `Benvenuto in <b>Cashly</b> — la directory dei business online.\n\n` +
+    `Apri l'app qui sotto: ti guida passo passo, senza fumo. 👇`,
     btn,
     "HTML",
   )
