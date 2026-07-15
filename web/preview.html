@@ -1238,9 +1238,9 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   (function(){
     if (localStorage.getItem('cashly_onb') === '1') return;
     var SLIDES = [
-      { eyebrow:'Benvenuto in', wordmark:true, body:'Il tuo posto per il business online. Uno spazio <b>tuo</b>, sempre a portata.' },
-      { title:'Business controllati', body:'Basta cercare nei gruppi e rischiare le fregature. Qui ogni business è <b>verificato</b> prima di entrare.' },
-      { title:'Chi inviti, resta tuo', body:'Non fai un favore a noi: le persone che porti restano <b>legate a te, a vita</b>.', final:true }
+      { eyebrow:'Benvenuto in', wordmark:true, body:'Il tuo hub sempre a portata di mano.' },
+      { statement:'Cerca nella directory il business che ti farà <b>cambiare vita</b>.' },
+      { statement:'Invita e guadagna costruendo la tua <b>community definitiva</b>.', final:true }
     ];
     var i=0;
     var ov=document.createElement('div');
@@ -1251,15 +1251,14 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     function render(){
       var s=SLIDES[i], last=!!s.final, dots='';
       for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .2s;width:'+(k===i?'22px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
-      var head = s.wordmark
-        ? '<div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)">'+s.eyebrow+'</div><div style="font-family:var(--display);font-size:50px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:9px;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
-        : '<div style="font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.12;color:var(--tx);max-width:300px">'+s.title+'</div>';
+      var mid = s.wordmark
+        ? '<div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)">'+s.eyebrow+'</div>'
+          + '<div style="font-family:var(--display);font-size:50px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:9px;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
+          + '<div style="font-size:16px;color:var(--dim);line-height:1.6;margin-top:20px;max-width:300px">'+s.body+'</div>'
+        : '<div style="font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.25;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>';
       ov.innerHTML =
         '<div style="display:flex;justify-content:flex-end;padding:14px 16px"><button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Salta</button></div>'
-        + '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px">'
-        +   head
-        +   '<div style="font-size:16px;color:var(--dim);line-height:1.62;margin-top:'+(s.wordmark?'20':'14')+'px;max-width:320px">'+s.body.replace(/<b>/g,'<b style="color:var(--tx)">')+'</div>'
-        + '</div>'
+        + '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px">' + mid + '</div>'
         + '<div style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
         + '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">'+(last?'Apri il tuo HUB':'Avanti')+'</button></div>';
       document.getElementById('onbGo').onclick=function(){ hap(); if(last){ done(); } else { i++; render(); } };
