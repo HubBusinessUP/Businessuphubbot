@@ -1234,23 +1234,38 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     if(sb) sb.addEventListener('click', function(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } sheet.style.display='block'; });
   })();
 
-  // ===== ONBOARDING / benvenuto (solo alla prima apertura) — SLIDE 1 (hero) =====
+  // ===== ONBOARDING a slide (solo alla prima apertura) =====
   (function(){
     if (localStorage.getItem('cashly_onb') === '1') return;
-    var ov = document.createElement('div');
-    ov.id='cashlyOnb'; ov.style.cssText='position:fixed;inset:0;z-index:250;background:radial-gradient(120% 70% at 50% 0%, #1a2b22 0%, var(--bg) 55%);color:var(--tx);max-width:460px;margin:0 auto;display:flex;flex-direction:column';
-    ov.innerHTML =
-      '<div style="display:flex;justify-content:flex-end;padding:14px 16px"><button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Salta</button></div>'
-      + '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px">'
-      +   '<div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)">Benvenuto in</div>'
-      +   '<div style="font-family:var(--display);font-size:50px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:9px;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
-      +   '<div style="font-size:16px;color:var(--dim);line-height:1.62;margin-top:20px;max-width:320px">Un unico posto per <b style="color:var(--tx)">cercare</b>, <b style="color:var(--tx)">avviare</b> e <b style="color:var(--tx)">condividere</b> il business della tua vita — e far crescere la tua rete.</div>'
-      + '</div>'
-      + '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">Apri il tuo HUB</button></div>';
+    var SLIDES = [
+      { eyebrow:'Benvenuto in', wordmark:true, body:'Il tuo posto per il business online. Uno spazio <b>tuo</b>, sempre a portata.' },
+      { title:'Business controllati', body:'Basta cercare nei gruppi e rischiare le fregature. Qui ogni business è <b>verificato</b> prima di entrare.' },
+      { title:'Chi inviti, resta tuo', body:'Non fai un favore a noi: le persone che porti restano <b>legate a te, a vita</b>.', final:true }
+    ];
+    var i=0;
+    var ov=document.createElement('div');
+    ov.id='cashlyOnb'; ov.style.cssText='position:fixed;inset:0;z-index:250;background:radial-gradient(120% 60% at 50% 0%, #1a2b22 0%, var(--bg) 55%);color:var(--tx);max-width:460px;margin:0 auto;display:flex;flex-direction:column';
     document.body.appendChild(ov);
     function done(){ localStorage.setItem('cashly_onb','1'); try{ fetch(API_URL+'/onboarding',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},HDRS),body:JSON.stringify({choice:'esplora'})}).catch(function(){}); }catch(e){} ov.remove(); }
-    document.getElementById('onbGo').onclick=function(){ if(tg&&tg.HapticFeedback){try{tg.HapticFeedback.impactOccurred('medium');}catch(x){}} done(); };
-    document.getElementById('onbSkip').onclick=function(){ done(); };
+    function hap(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } }
+    function render(){
+      var s=SLIDES[i], last=!!s.final, dots='';
+      for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .2s;width:'+(k===i?'22px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
+      var head = s.wordmark
+        ? '<div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)">'+s.eyebrow+'</div><div style="font-family:var(--display);font-size:50px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:9px;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
+        : '<div style="font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.12;color:var(--tx);max-width:300px">'+s.title+'</div>';
+      ov.innerHTML =
+        '<div style="display:flex;justify-content:flex-end;padding:14px 16px"><button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Salta</button></div>'
+        + '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px">'
+        +   head
+        +   '<div style="font-size:16px;color:var(--dim);line-height:1.62;margin-top:'+(s.wordmark?'20':'14')+'px;max-width:320px">'+s.body.replace(/<b>/g,'<b style="color:var(--tx)">')+'</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
+        + '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">'+(last?'Apri il tuo HUB':'Avanti')+'</button></div>';
+      document.getElementById('onbGo').onclick=function(){ hap(); if(last){ done(); } else { i++; render(); } };
+      document.getElementById('onbSkip').onclick=function(){ done(); };
+    }
+    render();
   })();
 
 })();
