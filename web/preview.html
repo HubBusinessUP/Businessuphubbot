@@ -1008,6 +1008,17 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .search{height:38px;padding:0 12px}
 .search span{font-size:13.5px}
 .search .ico{width:17px;height:17px}
+/* onboarding: animazioni + glow di sfondo coerente */
+#cashlyOnb{overflow:hidden}
+.onb-glow{position:absolute;top:42%;left:50%;width:620px;height:520px;transform:translate(-50%,-50%);background:radial-gradient(closest-side, rgba(37,207,110,.30), rgba(37,207,110,.06) 54%, transparent 72%);pointer-events:none;animation:onbGlow 7s ease-in-out infinite}
+.onb-stmt{animation:onbUp .55s cubic-bezier(.2,.7,.2,1) both}
+.onb-brand{animation:onbUp .5s ease both}
+.onb-dots{animation:onbUp .5s .06s ease both}
+.onb-cta{animation:onbUp .5s .1s ease both, onbPulse 2.6s 1s ease-in-out infinite}
+@keyframes onbUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes onbGlow{0%,100%{opacity:.6;transform:translate(-50%,-53%) scale(1)}50%{opacity:1;transform:translate(-50%,-46%) scale(1.13)}}
+@keyframes onbPulse{0%,100%{box-shadow:0 6px 20px -8px rgba(37,207,110,.5)}50%{box-shadow:0 12px 32px -4px rgba(37,207,110,.72)}}
+@media (prefers-reduced-motion:reduce){.onb-glow,.onb-stmt,.onb-brand,.onb-dots,.onb-cta{animation:none}}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
@@ -1238,29 +1249,32 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   (function(){
     if (localStorage.getItem('cashly_onb') === '1') return;
     var SLIDES = [
-      { eyebrow:'Benvenuto in', wordmark:true, body:'Il tuo hub sempre a portata di mano.' },
+      { statement:'Il tuo <b>hub</b> sempre a portata di mano.' },
       { statement:'Cerca nella directory il business che ti farà <b>cambiare vita</b>.' },
       { statement:'Invita e guadagna costruendo la tua <b>community definitiva</b>.', final:true }
     ];
     var i=0;
     var ov=document.createElement('div');
-    ov.id='cashlyOnb'; ov.style.cssText='position:fixed;inset:0;z-index:250;background:radial-gradient(120% 60% at 50% 0%, #1a2b22 0%, var(--bg) 55%);color:var(--tx);max-width:460px;margin:0 auto;display:flex;flex-direction:column';
+    ov.id='cashlyOnb'; ov.style.cssText='position:fixed;inset:0;z-index:250;background:var(--bg);color:var(--tx);max-width:460px;margin:0 auto;display:flex;flex-direction:column';
     document.body.appendChild(ov);
     function done(){ localStorage.setItem('cashly_onb','1'); try{ fetch(API_URL+'/onboarding',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},HDRS),body:JSON.stringify({choice:'esplora'})}).catch(function(){}); }catch(e){} ov.remove(); }
     function hap(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } }
     function render(){
       var s=SLIDES[i], last=!!s.final, dots='';
-      for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .2s;width:'+(k===i?'22px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
-      var mid = s.wordmark
-        ? '<div style="font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)">'+s.eyebrow+'</div>'
-          + '<div style="font-family:var(--display);font-size:50px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:9px;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
-          + '<div style="font-size:16px;color:var(--dim);line-height:1.6;margin-top:20px;max-width:300px">'+s.body+'</div>'
-        : '<div style="font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.25;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>';
+      for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .25s;width:'+(k===i?'24px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
       ov.innerHTML =
-        '<div style="display:flex;justify-content:flex-end;padding:14px 16px"><button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 10px">Salta</button></div>'
-        + '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px">' + mid + '</div>'
-        + '<div style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
-        + '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">'+(last?'Apri il tuo HUB':'Avanti')+'</button></div>';
+        '<div class="onb-glow"></div>'
+        + '<div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column">'
+        +   '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 0">'
+        +     '<div class="onb-brand" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>'
+        +     '<button id="onbSkip" style="background:none;border:none;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;padding:6px 8px">Salta</button>'
+        +   '</div>'
+        +   '<div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 30px">'
+        +     '<div class="onb-stmt" style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.26;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>'
+        +   '</div>'
+        +   '<div class="onb-dots" style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
+        +   '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" class="onb-cta" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">'+(last?'Apri il tuo HUB':'Avanti')+'</button></div>'
+        + '</div>';
       document.getElementById('onbGo').onclick=function(){ hap(); if(last){ done(); } else { i++; render(); } };
       document.getElementById('onbSkip').onclick=function(){ done(); };
     }
