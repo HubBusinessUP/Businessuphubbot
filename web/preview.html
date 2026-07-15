@@ -1017,7 +1017,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .onb-cta{animation:onbUp .5s .1s ease both, onbPulse 2.6s 1s ease-in-out infinite}
 @keyframes onbUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes onbGlow{0%,100%{opacity:.6;transform:translate(-50%,-53%) scale(1)}50%{opacity:1;transform:translate(-50%,-46%) scale(1.13)}}
-@keyframes onbPulse{0%,100%{box-shadow:0 6px 20px -8px rgba(37,207,110,.5)}50%{box-shadow:0 12px 32px -4px rgba(37,207,110,.72)}}
+@keyframes onbPulse{0%,100%{box-shadow:0 8px 22px -6px rgba(37,207,110,.55);transform:scale(1)}50%{box-shadow:0 16px 44px -4px rgba(37,207,110,.9);transform:scale(1.02)}}
 @media (prefers-reduced-motion:reduce){.onb-glow,.onb-stmt,.onb-brand,.onb-dots,.onb-cta{animation:none}}
 </style>
 
@@ -1276,7 +1276,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
         +   '</div>'
         +   '<div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 30px">' + center + '</div>'
         +   '<div class="onb-dots" style="display:flex;gap:6px;justify-content:center;padding:6px 0 22px">'+dots+'</div>'
-        +   '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" class="onb-cta" style="width:100%;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer">'+(last?'Apri il tuo HUB':'Avanti')+'</button></div>'
+        +   '<div style="padding:0 20px calc(26px + env(safe-area-inset-bottom))"><button id="onbGo" class="onb-cta" style="width:100%;background:linear-gradient(135deg,#2fe37b 0%,#16b25e 100%);color:#fff;border:none;border-radius:13px;padding:17px;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;gap:8px">'+(last?'Apri il tuo HUB':'Avanti')+'<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></div>'
         + '</div>';
       document.getElementById('onbGo').onclick=function(){ hap(); if(last){ done(); } else { i++; render(); } };
       document.getElementById('onbSkip').onclick=function(){ done(); };
