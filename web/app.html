@@ -236,7 +236,7 @@
       </div>
 
       <div class="feed" data-view="evidenza">
-        <div id="listaReale" style="padding:34px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6">Lista svuotata.<br>In attesa del primo prodotto reale.</div>
+        <div id="listaReale"></div>
       </div>
 
       <div class="feed hide" data-view="perte">
@@ -742,6 +742,16 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cbadge.out{background:rgba(226,87,74,.14);color:#e2574a;border-color:rgba(226,87,74,.32)}
 @media (prefers-reduced-motion:reduce){.aff-glow{animation:none}}
 
+/* ===== BANDIERA A SINISTRA (Antonio: "testo bandiera a sx allineato") =====
+   Misurato prima del fix: marchio/saluto/ricerca/categoria a 18px, riquadro banner a 18,
+   ma il riquadro della lista a 14 e il titolo del prodotto a 57 -> fuori squadra da tutto.
+   Ora: ogni RIQUADRO a 18px dal bordo, ogni TESTO dentro i riquadri a 36px. Una bandiera sola. */
+.feed{margin:16px 18px 0}
+.feedhd,.feedsub{padding-left:18px;padding-right:18px}
+#listaReale,#perteFeed{padding:0;text-align:left}
+.frow,.dir{padding-left:18px;padding-right:18px;text-align:left}
+.fnm,.fds,.dnm,.dds{text-align:left}
+
 /* ===== PESI (Antonio: "font troppo bold") =====
    Il prototipo mette font-weight:800 inline su quasi tutto: titoli, numeri, bottoni, etichette.
    Quando TUTTO e' extrabold non risalta piu' niente e l'app urla. Inter poi ha un 800 piu'
@@ -780,7 +790,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=35"></script>
+<script src="identikit.js?v=36"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
