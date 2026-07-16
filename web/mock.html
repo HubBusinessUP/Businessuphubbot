@@ -4,97 +4,86 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0A0A0B">
+<meta name="theme-color" content="#0F1013">
 <title>Cashly — mock directory</title>
 </head>
 <body>
 
 <style>
 :root{
-  /* Nero vero, non il grigio-bluastro da mockup. Le piattaforme di trading sono nere. */
-  --bg:#0A0A0B; --pan:#101012; --pan2:#161619;
-  --line:#1F1F23; --line2:#2A2A30;
-  --tx:#F2F2F3; --dim:#9A9AA2; --mut:#6A6A73;
-  --up:#22C55E; --down:#EF4444; --wait:#8A8A93;
+  --bg:#0F1013; --pan:#16171B;
+  --line:#232429;
+  --tx:#F5F5F6; --dim:#9C9DA6; --mut:#6E6F79;
+  --acc:#25CF6E;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
 body{margin:0;background:#000;color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-.wrap{max-width:460px;margin:0 auto;background:var(--bg);min-height:100vh}
+.wrap{max-width:460px;margin:0 auto;background:var(--bg);min-height:100vh;padding-bottom:20px}
 
 .tg{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;
   background:#17212B;border-bottom:1px solid #0e1620;color:#8a99a8;font-size:13px}
 .tg .t{color:#fff;font-weight:600;font-size:15px}
 .tgnota{font-size:10px;color:#5b6b7c}
 
-.hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;
-  border-bottom:1px solid var(--line)}
-.salu{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 4px}
+.salu{font-size:16px;font-weight:600;letter-spacing:-.01em}
 .salu span{color:var(--mut);font-weight:400}
-.hdricons{display:flex;gap:14px;color:var(--mut)}
+.hdricons{display:flex;gap:16px;color:var(--mut)}
 
-.search{display:flex;align-items:center;gap:9px;padding:12px 16px;color:var(--mut);font-size:14px;
-  border-bottom:1px solid var(--line)}
+.search{display:flex;align-items:center;gap:9px;padding:11px 14px;margin:14px 20px 0;
+  background:var(--pan);color:var(--mut);font-size:14px;border-radius:10px}
 
-/* Tab: come le schede di una piattaforma, non pillole */
-.cats{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.cats{display:flex;gap:20px;overflow-x:auto;padding:16px 20px 0;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
-.cat{flex-shrink:0;padding:12px 16px;font-size:13.5px;font-weight:500;color:var(--mut);white-space:nowrap;
-  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
-.cat.on{color:var(--tx);font-weight:600;border-bottom-color:var(--up)}
+.cat{flex-shrink:0;padding-bottom:9px;font-size:14px;font-weight:500;color:var(--mut);white-space:nowrap;
+  cursor:pointer;border-bottom:2px solid transparent}
+.cat.on{color:var(--tx);font-weight:600;border-bottom-color:var(--tx)}
+.catline{height:1px;background:var(--line);margin:0 20px}
 
-/* Intestazione di gruppo: sentence case, niente maiuscole spaziate */
-.grp{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px;
-  background:var(--pan);border-bottom:1px solid var(--line)}
-.grpn{font-size:13px;font-weight:600;color:var(--dim)}
-.grpc{font-family:var(--mono);font-size:11px;color:var(--mut)}
+.grp{font-size:13px;font-weight:600;color:var(--mut);padding:24px 20px 4px}
 
-/* Riga servizio: densa, da terminale. Il ticker in mono, come un simbolo. */
-.tool{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:12px;
-  padding:15px 16px;border-bottom:1px solid var(--line);cursor:pointer}
-.tool:active{background:var(--pan2)}
-.tico{width:18px;height:18px;color:var(--mut)}
-.tnm{min-width:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
-.tsub{font-family:var(--mono);font-size:10.5px;color:var(--mut);margin-top:3px;letter-spacing:.02em}
-.stato{font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.stato.live{color:var(--up)}
-.stato.wait{color:var(--wait)}
-.dot{width:6px;height:6px;border-radius:50%;position:relative;flex-shrink:0}
-.stato.live .dot{background:var(--up)}
-.stato.live .dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--up);
-  animation:p 1.6s ease-out infinite}
-.stato.wait .dot{background:var(--wait);opacity:.6}
-@keyframes p{0%{transform:scale(1);opacity:.8}70%{transform:scale(3.2);opacity:0}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.stato.live .dot::after{animation:none}}
-.arw{width:14px;height:14px;color:var(--mut);opacity:.6}
+/* Riga come Product Hunt: NESSUN riquadro, nessun bordo, nessuno sfondo.
+   Il colore lo mette il LOGO del prodotto, non la grafica dell'interfaccia. */
+.tool{display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer}
+.tool:active{background:var(--pan)}
+.logo{width:48px;height:48px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:20px;font-weight:700;color:#fff}
+.body{flex:1;min-width:0}
+.nm{font-size:15.5px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:7px}
+.tag{font-size:13.5px;color:var(--dim);line-height:1.4;margin-top:2px}
+.tag.manca{color:#7a4a4a;font-style:italic}
+.meta{font-size:11.5px;color:var(--mut);margin-top:5px}
+.live{color:var(--acc);font-weight:600}
+.up{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  width:44px;height:44px;border-radius:12px;background:var(--pan);color:var(--dim)}
+.up.on{background:var(--acc);color:#04210F}
+.upn{font-size:13px;font-weight:700}
 
 .nav{display:flex;justify-content:space-around;align-items:flex-end;border-top:1px solid var(--line);
-  padding:10px 6px;margin-top:auto;background:var(--pan)}
-.nb{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mut);font-size:10.5px;font-weight:500}
+  padding:11px 6px 8px;margin-top:26px}
+.nb{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mut);font-size:11px;font-weight:500}
 .nb.on{color:var(--tx);font-weight:600}
 
-.note{padding:20px 16px 36px;color:var(--mut);font-size:12.5px;line-height:1.7;border-top:1px solid var(--line);margin-top:30px}
+.note{padding:20px;color:var(--mut);font-size:12.5px;line-height:1.7;border-top:1px solid var(--line);margin-top:24px}
 .note b{color:var(--dim)}
 .note p{margin:0 0 11px}
 </style>
 
 <div class="wrap">
 
-  <div class="tg">
-    <span>&lsaquo;</span><span class="t">Cashly</span><span class="tgnota">&larr; lo scrive Telegram</span>
-  </div>
+  <div class="tg"><span>&lsaquo;</span><span class="t">Cashly</span><span class="tgnota">&larr; lo scrive Telegram</span></div>
 
   <header class="hdr">
     <div class="salu"><span>Buonasera,</span> Antony</div>
     <div class="hdricons">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
     </div>
   </header>
 
   <div class="search">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     Cerca un business
   </div>
 
@@ -103,52 +92,52 @@ body{margin:0;background:#000;color:var(--tx);font-family:var(--sans);-webkit-fo
     <div class="cat">Broker VS Broker</div>
     <div class="cat">Prop VS Broker</div>
   </nav>
+  <div class="catline"></div>
 
-  <div class="grp"><span class="grpn">Broker VS Broker</span><span class="grpc">1</span></div>
+  <div class="grp">Broker VS Broker</div>
 
   <div class="tool">
-    <svg class="tico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/><path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/></svg>
-    <div>
-      <div class="tnm">Broker VS Broker</div>
-      <div class="tsub">ciclica</div>
+    <div class="logo" style="background:#2B3A67">B</div>
+    <div class="body">
+      <div class="nm">Broker VS Broker</div>
+      <div class="tag">Hedging tra due Broker Partner sfruttando il Bonus Tradabile a ogni Ciclo.</div>
+      <div class="meta">Ciclica &middot; in arrivo</div>
     </div>
-    <div class="stato wait"><span class="dot"></span>in arrivo</div>
-    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="up"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg><span class="upn">0</span></div>
   </div>
 
-  <div class="grp"><span class="grpn">Prop VS Broker</span><span class="grpc">2</span></div>
+  <div class="grp">Prop VS Broker</div>
 
   <div class="tool">
-    <svg class="tico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 20V9M12 20V4M18 20v-7"/></svg>
-    <div>
-      <div class="tnm">Edgefunds</div>
-      <div class="tsub">&mdash;</div>
+    <div class="logo" style="background:#1F4D3D">E</div>
+    <div class="body">
+      <div class="nm">Edgefunds</div>
+      <div class="tag manca">&larr; manca il tagline: una riga che dica cosa fa</div>
+      <div class="meta">in arrivo</div>
     </div>
-    <div class="stato wait"><span class="dot"></span>in arrivo</div>
-    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="up"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg><span class="upn">0</span></div>
   </div>
 
   <div class="tool">
-    <svg class="tico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg>
-    <div>
-      <div class="tnm">Matrix</div>
-      <div class="tsub">&mdash;</div>
+    <div class="logo" style="background:#4A2B52">M</div>
+    <div class="body">
+      <div class="nm">Matrix</div>
+      <div class="tag manca">&larr; manca il tagline: una riga che dica cosa fa</div>
+      <div class="meta"><span class="live">attivo</span></div>
     </div>
-    <div class="stato live"><span class="dot"></span>attivo</div>
-    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="up on"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg><span class="upn">1</span></div>
   </div>
 
   <div class="nav">
-    <div class="nb on"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>HUB</div>
-    <div class="nb"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg>Affiliazione</div>
-    <div class="nb"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profilo</div>
+    <div class="nb on"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>HUB</div>
+    <div class="nb"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg>Affiliazione</div>
+    <div class="nb"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profilo</div>
   </div>
 
   <div class="note">
-    <p><b>Ho tolto i tic da interfaccia-AI</b> che avevo messo io: le etichette maiuscole con le lettere larghe, il grigio-bluastro da mockup, il verde acido come unico colore, le note che spiegano il design.</p>
-    <p><b>E sono partito dal tuo mondo.</b> Nero vero, come le piattaforme di trading. Lo stato scritto in chiaro accanto al pallino, in mono, come un ticker. Il verde &egrave; quello del <em>long</em>, non un accento di brand: nel trading il verde significa gi&agrave; qualcosa, e chi guarda lo sa senza legenda.</p>
-    <p><b>Matrix &egrave; finto attivo</b> per farti vedere la differenza: &egrave; l&rsquo;unica riga che si muove.</p>
-    <p style="color:#4d4d55">Mock su dati veri. Non &egrave; live.</p>
+    <p><b>Misurato su Product Hunt vero, non a memoria:</b> logo 48&times;48 raggio 8, righe <b>senza bordo e senza sfondo</b>, upvote pieno raggio 12 a destra.</p>
+    <p><b>Il segreto e' che l'interfaccia non ha colore: ce l'hanno i prodotti.</b> Per questo sembra pulita e viva insieme. Io avevo tolto logo e tagline per fare minimal, ed e' venuto Excel.</p>
+    <p><b>I quadrati colorati sono segnaposto</b> in attesa dei tuoi logo. Il tagline di Broker VS Broker &egrave; la tua descrizione accorciata; per gli altri due manca.</p>
   </div>
 </div>
 
