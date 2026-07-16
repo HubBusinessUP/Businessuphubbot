@@ -891,7 +891,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .fnm{font-size:20px;font-weight:700;letter-spacing:-.025em;line-height:1.2}
 
 
-/* Disattiva: presente ma non invitante — non deve competere con le azioni vere */
+/* Rimuovi: toglie dalla lista di Cashly, NON tocca il servizio del fornitore (e' di terzi) — non deve competere con le azioni vere */
 .disatt{flex-shrink:0;background:var(--s1);border:1px solid var(--line2);color:var(--dim);border-radius:8px;
   padding:8px 13px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer}
 .disatt:active{transform:scale(.96)}
@@ -927,7 +927,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=44"></script>
+<script src="identikit.js?v=45"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1235,13 +1235,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return;
     }
 
-    // Disattiva un business dal Profilo: torna riattivabile da capo.
+    // Toglie il business dalla lista in Cashly. Il servizio del fornitore non lo tocca nessuno:
+    // e' di terzi, fuori da Cashly. Per questo il tasto dice "Rimuovi" e non "Disattiva".
     var off = t.closest('.disatt');
     if (off) {
       e.stopPropagation();
       var oid = parseInt(off.getAttribute('data-off'));
       if (!oid || off.disabled) return;
-      off.disabled = true; off.textContent = 'Disattivo...';
+      off.disabled = true; off.textContent = 'Rimuovo...';
       fetch(API_URL + '/disattiva', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: oid }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
@@ -1259,7 +1260,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           }
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
-        .catch(function(){ off.disabled = false; off.textContent = 'Disattiva'; });
+        .catch(function(){ off.disabled = false; off.textContent = 'Rimuovi'; });
       return;
     }
 
@@ -1510,7 +1511,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             +   '<div class="dds">' + (b.tutorial_completato ? 'Tutorial completato' : 'Tutorial da finire')
             +     (b.attivato_il ? (' &middot; dal ' + esc(dataIt(b.attivato_il))) : '') + '</div>'
             + '</div>'
-            + '<button class="disatt" data-off="' + b.servizio_id + '">Disattiva</button>'
+            + '<button class="disatt" data-off="' + b.servizio_id + '">Rimuovi</button>'
             + '</div>';
         }).join('');
       }
