@@ -205,6 +205,17 @@
 
 
 
+      <div style="padding:14px 18px 0">
+        <div class="aff-hero">
+          <div class="aff-glow"></div>
+          <div style="position:relative;z-index:1">
+            <div style="font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.28;color:var(--tx)">Cerca il business che ti farà <span style="color:var(--acc)">cambiare vita</span></div>
+            <div style="font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px">Selezionati a mano, uno per uno. Le truffe restano fuori.</div>
+            <div id="homeCount" style="display:none;align-items:center;gap:7px;margin-top:15px;font-size:12px;font-weight:700;color:var(--acc);background:rgba(37,207,110,.12);border:1px solid rgba(37,207,110,.3);border-radius:999px;padding:6px 12px;width:fit-content"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="seg" style="padding-top:16px">
         <button class="on" data-view="evidenza"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>In evidenza</button>
         <button data-view="perte"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>Salvati</button>
@@ -708,7 +719,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=30"></script>
+<script src="identikit.js?v=31"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -795,6 +806,14 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       ALLBIZ.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
       renderFeeds();
+      // Il banner mostra il numero VERO di business in directory. A zero resta nascosto:
+      // "0 business verificati" e' peggio che non dire niente.
+      var hc = document.getElementById('homeCount');
+      if (hc && ALLBIZ.length) {
+        hc.style.display = 'inline-flex';
+        hc.innerHTML = '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:var(--acc);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"/></svg>'
+          + ALLBIZ.length + (ALLBIZ.length === 1 ? ' business verificato' : ' business verificati');
+      }
     })
     .catch(function(){});
 
