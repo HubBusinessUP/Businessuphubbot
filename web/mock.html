@@ -11,106 +11,104 @@
 
 <style>
 :root{
-  /* Palette dell'app (build 45). Tolti i gradienti: il verde ora e' piatto. */
   --bg:#14161B; --s0:#181B21; --s1:#1E212A; --s2:#252A35;
   --line:#252932; --line2:#2E3440;
   --tx:#FFFFFF; --dim:#A8AEB9; --mut:#767D8A;
-  --acc:#25CF6E; --amber:#FFB43D;
+  --acc:#25CF6E;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#0F1115;color:var(--tx);font-family:var(--sans);font-weight:400;
-  -webkit-font-smoothing:antialiased}
+body{margin:0;background:#0F1115;color:var(--tx);font-family:var(--sans);font-weight:400;-webkit-font-smoothing:antialiased}
 .wrap{max-width:460px;margin:0 auto;background:var(--bg);min-height:100vh}
 
-/* NIENTE ARROTONDAMENTI: nessun border-radius in tutta la pagina, tranne i pallini
-   di stato (quelli sono cerchi per definizione, non angoli smussati). */
-.hdr{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line2);
-  padding:16px 18px 13px;display:flex;flex-direction:column;gap:11px}
-.hdrtop{display:flex;align-items:center;justify-content:space-between}
-.brand{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1}
-.hdricons{display:flex;gap:9px}
-.ic{width:38px;height:38px;background:var(--s1);border:1px solid var(--line2);
-  display:flex;align-items:center;justify-content:center;color:var(--tx)}
-.av{width:38px;height:38px;background:var(--s2);border:1px solid var(--line2);
-  display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:15px}
-.salu{line-height:1.15}
-.salu .c{font-size:14px;color:var(--dim);font-weight:600}
-.salu .n{font-size:20px;font-weight:700;letter-spacing:-.02em}
+/* Finta barra di Telegram: e' li' che il nome "Cashly" c'e' gia'.
+   Serve solo a far vedere il doppione che stiamo togliendo. */
+.tg{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;
+  background:#17212B;border-bottom:1px solid #0e1620;color:#8a99a8;font-size:13px}
+.tg .t{color:#fff;font-weight:600;font-size:15px}
+.tgnota{font-size:10px;color:#5b6b7c;letter-spacing:.04em}
 
-.search{display:flex;align-items:center;gap:9px;background:var(--s1);border:1px solid var(--line2);
+/* Header nostro: niente wordmark. Telegram lo scrive gia' sopra. */
+.hdr{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line2);
+  padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.salu{line-height:1.2;min-width:0}
+.salu .c{font-size:13px;color:var(--mut)}
+.salu .n{font-size:18px;font-weight:700;letter-spacing:-.02em;display:block}
+.hdricons{display:flex;gap:9px;flex-shrink:0}
+.ic{width:36px;height:36px;background:transparent;border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.av{width:36px;height:36px;background:var(--s2);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;color:var(--dim);font-weight:700;font-size:14px}
+
+.search{display:flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--line2);
   padding:12px 14px;margin:16px 18px 0;color:var(--mut);font-size:14px}
 
-.cats{display:flex;gap:0;overflow-x:auto;margin:14px 18px 0;border:1px solid var(--line2);scrollbar-width:none}
+.cats{display:flex;overflow-x:auto;margin:12px 18px 0;border-bottom:1px solid var(--line2);scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
-.cat{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;
-  padding:10px 12px;font-size:12.5px;font-weight:600;color:var(--dim);white-space:nowrap;cursor:pointer}
-.cat + .cat{border-left:1px solid var(--line2)}
-.cat.on{background:var(--s2);color:var(--tx);font-weight:700}
-.cat b{font-size:10.5px;opacity:.6;font-variant-numeric:tabular-nums}
+.cat{flex-shrink:0;padding:10px 14px;font-size:13px;font-weight:600;color:var(--mut);white-space:nowrap;
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.cat.on{color:var(--tx);border-bottom-color:var(--tx)}
 
-.macro{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);
+.sect{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);
   padding:26px 18px 0}
-.sect{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
-  padding:16px 18px 0;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.sectn{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums;letter-spacing:0}
 
-/* OGNI SERVIZIO E' UN BLOCCO SUO: separati dallo spazio, non da una riga in una lista */
-.tool{display:flex;align-items:center;gap:14px;margin:10px 18px 0;padding:16px 14px;
-  background:var(--s0);border:1px solid var(--line2);cursor:pointer}
-.tool:hover{background:var(--s1)}
-.tico{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  border:1px solid var(--line2);background:var(--bg);color:var(--dim)}
-.tnm{flex:1;min-width:0;font-size:15.5px;font-weight:700;letter-spacing:-.015em}
-
-/* Pallino di stato: pulsa se attivo, fermo e spento se no. */
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;position:relative}
+/* Ogni servizio: una riga, separata dallo spazio. Niente riquadro, niente sfondo. */
+.tool{display:flex;align-items:center;gap:13px;margin:0 18px;padding:18px 0;
+  border-bottom:1px solid var(--line);cursor:pointer}
+.tico{width:20px;height:20px;flex-shrink:0;color:var(--mut)}
+.tnm{flex:1;min-width:0;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;position:relative}
 .dot.on{background:var(--acc)}
 .dot.on::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--acc);
   animation:pulse 1.8s ease-out infinite}
-.dot.off{background:var(--mut);opacity:.5}
+.dot.off{background:var(--mut);opacity:.45}
 @keyframes pulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(3);opacity:0}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.dot.on::after{animation:none}}
+.arw{width:15px;height:15px;flex-shrink:0;color:var(--mut);opacity:.7}
 
-.arw{width:16px;height:16px;flex-shrink:0;color:var(--mut)}
+.legenda{display:flex;gap:16px;padding:16px 18px 0;font-size:11px;color:var(--mut)}
+.legenda div{display:flex;align-items:center;gap:6px}
 
 .nav{display:flex;justify-content:space-around;align-items:flex-end;border-top:1px solid var(--line2);
-  background:var(--s0);padding:9px 6px;margin-top:30px}
+  padding:9px 6px;margin-top:34px}
 .nb{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mut);font-size:11px;font-weight:600}
 .nb.on{color:var(--tx);font-weight:700}
 
-.legenda{display:flex;gap:18px;padding:18px 18px 0;font-size:11.5px;color:var(--mut)}
-.legenda div{display:flex;align-items:center;gap:7px}
-
-.note{border-top:1px solid var(--line2);margin-top:26px;padding:22px 18px 40px;color:var(--mut);
-  font-size:12.5px;line-height:1.7}
-.note h3{margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--dim)}
+.note{border-top:1px solid var(--line2);margin-top:26px;padding:22px 18px 40px;color:var(--mut);font-size:12.5px;line-height:1.7}
+.note h3{margin:0 0 12px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 .note b{color:var(--dim)}
 .note ul{margin:0;padding-left:16px}
 .note li{margin-bottom:9px}
 </style>
 
 <div class="wrap">
+
+  <div class="tg">
+    <span>&lsaquo;</span>
+    <span class="t">Cashly</span>
+    <span class="tgnota">&larr; lo scrive Telegram</span>
+  </div>
+
   <header class="hdr">
-    <div class="hdrtop">
-      <div class="brand">Cash<span style="color:var(--acc)">ly</span></div>
-      <div class="hdricons">
-        <div class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></div>
-        <div class="av">A</div>
-      </div>
+    <div class="salu">
+      <span class="c">Buonasera,</span>
+      <span class="n">Antony</span>
     </div>
-    <div class="salu"><span class="c">Buonasera,</span> <span class="n">Antony</span></div>
+    <div class="hdricons">
+      <div class="ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></div>
+      <div class="av">A</div>
+    </div>
   </header>
 
   <div class="search">
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     Cerca un business
   </div>
 
   <nav class="cats" aria-label="Categorie">
-    <div class="cat on">Tutti <b>3</b></div>
-    <div class="cat">Broker VS Broker <b>1</b></div>
-    <div class="cat">Prop VS Broker <b>2</b></div>
+    <div class="cat on">Tutti</div>
+    <div class="cat">Broker VS Broker</div>
+    <div class="cat">Prop VS Broker</div>
   </nav>
 
   <div class="legenda">
@@ -118,49 +116,44 @@ body{margin:0;background:#0F1115;color:var(--tx);font-family:var(--sans);font-we
     <div><span class="dot off"></span> in arrivo</div>
   </div>
 
-  <div class="macro">Trading Matematico</div>
-
-  <div class="sect"><span>Broker VS Broker</span><span class="sectn">1</span></div>
-
+  <div class="sect">Broker VS Broker</div>
   <div class="tool">
-    <div class="tico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/><path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/></svg></div>
+    <svg class="tico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7M4 7l2.5-2.5M4 7l2.5 2.5"/><path d="M20 17h-7M20 17l-2.5-2.5M20 17l-2.5 2.5"/></svg>
     <div class="tnm">Broker VS Broker</div>
     <span class="dot off"></span>
-    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
   </div>
 
-  <div class="sect"><span>Prop VS Broker</span><span class="sectn">2</span></div>
-
+  <div class="sect">Prop VS Broker</div>
   <div class="tool">
-    <div class="tico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 20V9M12 20V4M18 20v-7"/></svg></div>
+    <svg class="tico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 20V9M12 20V4M18 20v-7"/></svg>
     <div class="tnm">Edgefunds</div>
     <span class="dot off"></span>
-    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
   </div>
-
   <div class="tool">
-    <div class="tico"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></div>
+    <svg class="tico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg>
     <div class="tnm">Matrix</div>
     <span class="dot off"></span>
-    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
   </div>
 
   <div class="nav">
-    <div class="nb on"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>HUB</div>
-    <div class="nb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg>Affiliazione</div>
-    <div class="nb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profilo</div>
+    <div class="nb on"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>HUB</div>
+    <div class="nb"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg>Affiliazione</div>
+    <div class="nb"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profilo</div>
   </div>
 
   <div class="note">
-    <h3>Com&rsquo;&egrave; fatta</h3>
+    <h3>Cosa ho tolto</h3>
     <ul>
-      <li><b>Zero angoli arrotondati</b> e <b>zero gradienti</b>: il verde ora &egrave; piatto. L&rsquo;unico cerchio &egrave; il pallino di stato, che cerchio lo &egrave; per forza.</li>
-      <li><b>Ogni servizio &egrave; un blocco separato</b>, staccato dallo spazio: non pi&ugrave; righe dentro un&rsquo;unica lista.</li>
-      <li><b>Solo il titolo</b>, la sua icona, il pallino e la freccia. Niente descrizione.</li>
-      <li><b>Il pallino pulsa</b> solo quando il servizio &egrave; attivo. I tuoi tre sono in pausa, quindi sono tutti spenti e fermi: quando ne attivi uno, &egrave; l&rsquo;unica cosa che si muove nella pagina, e la vedi subito.</li>
+      <li><b>Il logo Cashly dall&rsquo;header.</b> Hai ragione: Telegram scrive gi&agrave; &ldquo;Cashly&rdquo; nella sua barra (quella finta qui sopra). Lo dicevamo due volte. Io non potevo vederlo: provo sempre nel browser, dove quella barra non esiste.</li>
+      <li><b>I riquadri sotto i servizi.</b> Ora sono righe separate da una linea sottile: niente sfondo, niente bordo attorno.</li>
+      <li><b>I riquadri attorno alle icone</b> e attorno alla ricerca. Le icone sono nude e pi&ugrave; sottili.</li>
+      <li><b>Le pillole delle categorie</b> &rarr; ora sono etichette con una sottolineatura su quella scelta.</li>
     </ul>
-    <p style="margin:14px 0 0"><b>Una cosa da decidere:</b> il pallino dice attivo/in arrivo, ma non dice <em>cosa</em> sia il servizio. Uno legge &ldquo;Matrix&rdquo; e non lo sa finch&eacute; non apre. &Egrave; il prezzo del solo-titolo: paghi in chiarezza quello che guadagni in pulizia.</p>
-    <p style="margin:12px 0 0">Mock su dati veri (3 business, 2 categorie). Non &egrave; live.</p>
+    <p style="margin:14px 0 0">Restano cinque cose per riga: icona, titolo, pallino, freccia, linea. Meno di cos&igrave; si tolgono informazioni, non grafica.</p>
+    <p style="margin:12px 0 0">Mock su dati veri. Non &egrave; live.</p>
   </div>
 </div>
 
