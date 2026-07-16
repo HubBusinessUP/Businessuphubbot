@@ -392,8 +392,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   await sendMessage(
     chatId,
     `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
-    `Benvenuto in <b>Cashly</b> — la directory dei business online.\n\n` +
-    `Apri il tuo HUB 👇`,
+    `Benvenuto in <b>Cashly</b> — la directory dei business online.`,
     btn,
     "HTML",
   )
