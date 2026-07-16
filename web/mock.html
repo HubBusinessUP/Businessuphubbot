@@ -11,7 +11,7 @@
 
 <style>
 :root{
-  --bg:#0F1013; --pan:#16171B;
+  --bg:#0F1013; --pan:#16171B; --pan2:#1D1E23;
   --line:#212228;
   --tx:#F5F5F6; --dim:#9C9DA6; --mut:#6E6F79;
   --acc:#25CF6E;
@@ -34,30 +34,44 @@ body{margin:0;background:#000;color:var(--tx);font-family:var(--sans);-webkit-fo
 .search{display:flex;align-items:center;gap:9px;padding:11px 14px;margin:14px 20px 0;
   background:var(--pan);color:var(--mut);font-size:14px;border-radius:10px}
 
-.cats{display:flex;gap:20px;overflow-x:auto;padding:16px 20px 0;scrollbar-width:none}
-.cats::-webkit-scrollbar{display:none}
-.cat{flex-shrink:0;padding-bottom:9px;font-size:14px;font-weight:500;color:var(--mut);white-space:nowrap;
-  cursor:pointer;border-bottom:2px solid transparent}
-.cat.on{color:var(--tx);font-weight:600;border-bottom-color:var(--tx)}
-.catline{height:1px;background:var(--line);margin:0 20px}
+/* CATEGORIE A DUE LIVELLI: prima la macro, poi le sue sotto-categorie.
+   La riga sotto cambia in base alla macro scelta. */
+.macros{display:flex;gap:18px;overflow-x:auto;padding:18px 20px 0;scrollbar-width:none}
+.macros::-webkit-scrollbar{display:none}
+.macro{flex-shrink:0;padding-bottom:10px;font-size:15px;font-weight:600;color:var(--mut);white-space:nowrap;
+  cursor:pointer;border-bottom:2px solid transparent;letter-spacing:-.01em}
+.macro.on{color:var(--tx);border-bottom-color:var(--tx)}
+.macroline{height:1px;background:var(--line);margin:0 20px}
 
-.grp{font-size:12.5px;font-weight:600;color:var(--mut);padding:28px 20px 0}
+.subs{display:flex;gap:8px;overflow-x:auto;padding:12px 20px 0;scrollbar-width:none}
+.subs::-webkit-scrollbar{display:none}
+.sub{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--pan);border-radius:8px;
+  padding:7px 12px;font-size:13px;font-weight:500;color:var(--dim);white-space:nowrap;cursor:pointer}
+.sub.on{background:var(--pan2);color:var(--tx);font-weight:600}
+.sub b{font-size:11px;color:var(--mut);font-weight:600}
+.sub.on b{color:var(--dim)}
 
-/* SOLO TESTO, ben separati: a dividere e' lo SPAZIO, non una griglia di linee.
-   Senza il logo che fa da ancora, il nome deve reggere la riga da solo -> piu' grande. */
-.tool{display:flex;align-items:flex-start;gap:16px;padding:22px 20px;cursor:pointer}
+.grp{font-size:12.5px;font-weight:600;color:var(--mut);padding:26px 20px 0}
+
+/* SOLO TITOLO. Ogni tool separato dallo spazio. */
+.tool{display:flex;align-items:center;gap:16px;padding:20px;cursor:pointer}
 .tool + .tool{border-top:1px solid var(--line)}
 .tool:active{background:var(--pan)}
 .body{flex:1;min-width:0}
 .nm{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
-.tag{font-size:14px;color:var(--dim);line-height:1.5;margin-top:7px}
-.tag.manca{color:#7a4a4a;font-style:italic}
-.meta{font-size:12px;color:var(--mut);margin-top:10px}
-.live{color:var(--acc);font-weight:600}
+.meta{font-size:12px;color:var(--mut);margin-top:7px;display:flex;align-items:center;gap:7px}
+.dot{width:6px;height:6px;border-radius:50%;position:relative;flex-shrink:0;background:var(--mut);opacity:.6}
+.meta.live{color:var(--acc)}
+.meta.live .dot{background:var(--acc);opacity:1}
+.meta.live .dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--acc);
+  animation:p 1.8s ease-out infinite}
+@keyframes p{0%{transform:scale(1);opacity:.8}70%{transform:scale(3.2);opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.meta.live .dot::after{animation:none}}
 .up{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-  width:46px;height:46px;border-radius:12px;background:var(--pan);color:var(--dim);margin-top:2px}
+  width:46px;height:46px;border-radius:12px;background:var(--pan);color:var(--dim)}
 .up.on{background:var(--acc);color:#04210F}
 .upn{font-size:13px;font-weight:700}
+.arw{width:16px;height:16px;flex-shrink:0;color:var(--mut);opacity:.6}
 
 .nav{display:flex;justify-content:space-around;align-items:flex-end;border-top:1px solid var(--line);
   padding:11px 6px 8px;margin-top:30px}
@@ -86,22 +100,28 @@ body{margin:0;background:#000;color:var(--tx);font-family:var(--sans);-webkit-fo
     Cerca un business
   </div>
 
-  <nav class="cats">
-    <div class="cat on">Tutti</div>
-    <div class="cat">Broker VS Broker</div>
-    <div class="cat">Prop VS Broker</div>
+  <nav class="macros">
+    <div class="macro on">Trading Matematico</div>
+    <div class="macro">Bonus</div>
+    <div class="macro">Crypto</div>
   </nav>
-  <div class="catline"></div>
+  <div class="macroline"></div>
+
+  <nav class="subs">
+    <div class="sub on">Tutte <b>3</b></div>
+    <div class="sub">Broker VS Broker <b>1</b></div>
+    <div class="sub">Prop VS Broker <b>2</b></div>
+  </nav>
 
   <div class="grp">Broker VS Broker</div>
 
   <div class="tool">
     <div class="body">
       <div class="nm">Broker VS Broker</div>
-      <div class="tag">Hedging tra due Broker Partner sfruttando il Bonus Tradabile a ogni Ciclo.</div>
-      <div class="meta">Ciclica &middot; in arrivo</div>
+      <div class="meta"><span class="dot"></span>in arrivo</div>
     </div>
     <div class="up"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg><span class="upn">0</span></div>
+    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
   </div>
 
   <div class="grp">Prop VS Broker</div>
@@ -109,19 +129,19 @@ body{margin:0;background:#000;color:var(--tx);font-family:var(--sans);-webkit-fo
   <div class="tool">
     <div class="body">
       <div class="nm">Edgefunds</div>
-      <div class="tag manca">&larr; manca la riga che dice cosa fa</div>
-      <div class="meta">in arrivo</div>
+      <div class="meta"><span class="dot"></span>in arrivo</div>
     </div>
     <div class="up"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg><span class="upn">0</span></div>
+    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
   </div>
 
   <div class="tool">
     <div class="body">
       <div class="nm">Matrix</div>
-      <div class="tag manca">&larr; manca la riga che dice cosa fa</div>
-      <div class="meta"><span class="live">attivo</span></div>
+      <div class="meta live"><span class="dot"></span>attivo</div>
     </div>
     <div class="up on"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg><span class="upn">1</span></div>
+    <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
   </div>
 
   <div class="nav">
@@ -131,9 +151,9 @@ body{margin:0;background:#000;color:var(--tx);font-family:var(--sans);-webkit-fo
   </div>
 
   <div class="note">
-    <p><b>Niente loghi, solo testo.</b> Senza l&rsquo;icona che fa da ancora il nome deve reggere da solo: l&rsquo;ho portato a 18px, e ogni tool ha molta pi&ugrave; aria attorno.</p>
-    <p><b>A separare &egrave; lo spazio, non le linee.</b> Era quello l&rsquo;errore di prima: righe strette con dei filetti = tabella.</p>
-    <p><b>Il tagline &egrave; ancora piu' importante ora</b> che non c&rsquo;&egrave; il logo: senza, restano tre nomi in croce. Edgefunds e Matrix ce l&rsquo;hanno in rosso perch&eacute; manca.</p>
+    <p><b>Solo il titolo</b>, come hai chiesto. Sotto resta lo stato col pallino: pulsa solo se attivo.</p>
+    <p><b>Categorie a due livelli.</b> Sopra la macro (Trading Matematico), sotto le sue sotto-categorie col numero. Cambi macro e la riga sotto cambia con lei.</p>
+    <p><b>Bonus e Crypto sono finte</b>, servono a farti vedere come si comporta la riga delle macro con pi&ugrave; di una. Oggi ne hai una sola vera.</p>
   </div>
 </div>
 
