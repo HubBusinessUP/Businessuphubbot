@@ -830,7 +830,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=38"></script>
+<script src="identikit.js?v=39"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -971,8 +971,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       out += '<div class="vuoto" style="padding:18px 0">Attivato. Il tutorial non e ancora stato scritto.</div>';
     } else {
       out += '<button class="cta-attiva" data-attiva="' + s.id + '">Attiva servizio</button>';
+      // NB: qui NON esiste un link del prodotto. I link (broker, prop, strumenti) stanno
+      // dentro i singoli step del tutorial: link_principale resta vuoto per scelta.
       if (steps.length) out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
-      else if (!d.ref_link) out += '<div class="ssrc">Il link di questo business non e ancora impostato.</div>';
+      else out += '<div class="ssrc">Il tutorial non e ancora stato scritto.</div>';
     }
 
     if (d.ref_link && d.ref_fonte === 'sponsor') out += '<div class="ssrc">Il link e di chi ti ha invitato.</div>';
