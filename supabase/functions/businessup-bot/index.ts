@@ -2447,6 +2447,43 @@ serve(async (req) => {
       if (sub === "admin/macro-categorie/save" && req.method === "POST") return await apiAdminMacroCategorieSave(await req.json())
       if (sub === "admin/macro-categorie/delete" && req.method === "POST") return await apiAdminMacroCategorieDelete(await req.json())
 
+      // Chi si e' prenotato per un servizio non ancora attivo, servizio per servizio.
+      // Sta QUI dentro perche' la guardia admin (x-admin-key) copre tutto il blocco:
+      // fuori sarebbe un endpoint aperto che espone nomi e telegram_id di tutti.
+      if (sub === "admin/waitlist" && req.method === "GET") {
+      const { data: righe } = await supabase.from("waitlist")
+        .select("servizio_id, telegram_id, created_at, avvisato_at")
+        .order("created_at", { ascending: false })
+      const ids = [...new Set((righe ?? []).map((r: any) => r.telegram_id))]
+      const { data: persone } = ids.length
+        ? await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url").in("telegram_id", ids)
+        : { data: [] }
+      const pMap: Record<number, any> = {}
+      for (const p of persone ?? []) pMap[(p as any).telegram_id] = p
+      const svIds = [...new Set((righe ?? []).map((r: any) => r.servizio_id))]
+      const { data: svs } = svIds.length
+        ? await supabase.from("servizi").select("id, nome, stato").in("id", svIds)
+        : { data: [] }
+      const sMap: Record<number, any> = {}
+      for (const sv of svs ?? []) sMap[(sv as any).id] = sv
+      return json({
+        lista: (righe ?? []).map((r: any) => {
+          const p = pMap[r.telegram_id]
+          return {
+            servizio_id: r.servizio_id,
+            servizio_nome: sMap[r.servizio_id]?.nome ?? `ID ${r.servizio_id}`,
+            servizio_stato: sMap[r.servizio_id]?.stato ?? "?",
+            telegram_id: r.telegram_id,
+            nome: [p?.nome, p?.cognome].filter(Boolean).join(" ") || p?.username || `ID ${r.telegram_id}`,
+            username: p?.username || "",
+            foto_url: p?.foto_url || "",
+            in_lista_dal: r.created_at,
+            avvisato: !!r.avvisato_at,
+          }
+        }),
+      })
+      }
+
       if (sub === "admin/categorie" && req.method === "GET") return await apiAdminCategorieList()
       if (sub === "admin/categorie/save" && req.method === "POST") return await apiAdminCategorieSave(await req.json())
       if (sub === "admin/categorie/delete" && req.method === "POST") return await apiAdminCategorieDelete(await req.json())
