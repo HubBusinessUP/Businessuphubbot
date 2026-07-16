@@ -298,6 +298,43 @@
       <div style="height:16px"></div>
     </section>
 
+    <!-- ===================== PROFILO ===================== -->
+    <section class="scr" data-s="profilo">
+      <div class="hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 13px">
+        <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Profilo</div>
+      </div>
+
+      <!-- Identita' -->
+      <div style="display:flex;align-items:center;gap:14px;padding:4px 18px 0">
+        <div id="pfAvatar" style="width:72px;height:72px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:800;font-size:28px;flex-shrink:0">A</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span id="pfNome" style="font-size:20px;font-weight:800;letter-spacing:-.02em">&nbsp;</span>
+            <span id="pfBadge" class="cbadge">Membro</span>
+          </div>
+          <div id="pfUser" style="font-size:13px;color:var(--dim);margin-top:3px">&nbsp;</div>
+        </div>
+      </div>
+
+      <!-- Numeri -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 18px 0">
+        <div class="aff-kpi"><div class="n" id="pfRete" style="color:var(--acc)">0</div><div class="l">Rete</div><div class="h">persone sotto di te</div></div>
+        <div class="aff-kpi"><div class="n" id="pfBiz">0</div><div class="l">Business attivi</div><div class="h">che hai avviato</div></div>
+      </div>
+
+      <!-- Dati Telegram -->
+      <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">I tuoi dati</div></div>
+      <div class="list" id="pfDati" style="padding-top:6px;padding-bottom:8px"></div>
+
+      <!-- Chi lo ha invitato: la relazione a vita, in chiaro -->
+      <div id="pfSponsorWrap" style="display:none">
+        <div class="sechd" style="padding:18px 18px 4px"><div class="eyebrow">Chi ti ha invitato</div></div>
+        <div class="list" id="pfSponsor" style="padding-top:6px;padding-bottom:8px"></div>
+      </div>
+
+      <div style="height:16px"></div>
+    </section>
+
   </div>
 
   <!-- ===================== NAV ===================== -->
@@ -306,7 +343,7 @@
     <button class="navb" data-go="wallet"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg><span class="lb">Affiliazione</span></button>
     
     
-    
+    <button class="navb" data-go="profilo"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="lb">Profilo</span></button>
   </div>
 </div>
 
@@ -672,7 +709,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=27"></script>
+<script src="identikit.js?v=28"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -763,24 +800,77 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     .catch(function(){});
 
   // ---- ME: profilo (business attivi) ----
+  // ---- PROFILO ----
+  function dataIt(iso){
+    if (!iso) return '';
+    var d = new Date(iso.indexOf('Z') < 0 && iso.indexOf('+') < 0 ? iso + 'Z' : iso);
+    if (isNaN(d.getTime())) return '';
+    var M = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    return d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function rigaDato(label, valore){
+    return '<div class="dir" style="align-items:center">'
+      + '<div style="flex:1;min-width:0"><div class="dds" style="margin:0">' + esc(label) + '</div>'
+      + '<div class="dnm" style="font-size:14px;margin-top:2px;word-break:break-all">' + esc(valore) + '</div></div></div>';
+  }
+
   fetch(API_URL + "/me", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
     .then(function(me){
       if (!me) return;
-      var attivi = (me.prodotti_attivi || []).length;
-      setTxt('profAttivi', attivi);
-      if (me.lead) {
-        var nm = (me.lead.nome || '') + (me.lead.cognome ? (' ' + me.lead.cognome) : '');
-        nm = nm.trim();
-        if (nm) { setTxt('profName', nm); setTxt('profAvatar', ini(nm)); setTxt('homeName', firstName(nm)); }
-        // foto profilo salvata lato server (piu' affidabile dell'initData)
-        var foto = me.lead.foto_url;
-        if (foto) {
-          setAvatar(homeAvatarEl(), foto);
-          setAvatarById('profAvatar', foto);
-          setAvatarById('hubAvatar', foto);
-          setAvatarById('paginaAvatar', foto);
-        }
+      var u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+      var L = me.lead || {};
+
+      var nm = ((L.nome || u.first_name || '') + (L.cognome ? (' ' + L.cognome) : (u.last_name ? (' ' + u.last_name) : ''))).trim();
+      if (nm) { setTxt('homeName', firstName(nm)); setTxt('pfNome', nm); setTxt('pfAvatar', ini(nm)); }
+
+      var foto = L.foto_url;
+      if (foto) { setAvatar(homeAvatarEl(), foto); setAvatarById('pfAvatar', foto); }
+
+      // Badge: il Partner vive nel backend (soglia diretti attivi) -> qui e' l'unico posto dove si vede.
+      var bd = document.getElementById('pfBadge');
+      if (bd) {
+        if (me.is_partner) { bd.textContent = 'Partner'; bd.className = 'cbadge mid'; }
+        else if (L.is_cliente) { bd.textContent = 'Cliente'; bd.className = 'cbadge mid'; }
+        else { bd.textContent = 'Membro'; bd.className = 'cbadge'; }
+      }
+
+      var uname = L.username || u.username || '';
+      setTxt('pfUser', uname ? ('@' + uname) : 'senza username Telegram');
+
+      setTxt('pfRete', me.rete_count != null ? me.rete_count : 0);
+      setTxt('pfBiz', (me.prodotti_attivi || []).length);
+
+      // Solo dati che abbiamo davvero: niente campi inventati.
+      var dd = document.getElementById('pfDati');
+      if (dd) {
+        var righe = '';
+        if (nm) righe += rigaDato('Nome', nm);
+        righe += rigaDato('Username', uname ? ('@' + uname) : 'non impostato su Telegram');
+        if (u.id || L.telegram_id) righe += rigaDato('ID Telegram', String(u.id || L.telegram_id));
+        if (u.is_premium) righe += rigaDato('Telegram Premium', 'attivo');
+        if (u.language_code) righe += rigaDato('Lingua', String(u.language_code).toUpperCase());
+        var dal = dataIt(L.created_at);
+        if (dal) righe += rigaDato('Su Cashly dal', dal);
+        dd.innerHTML = righe;
+      }
+
+      // Chi ti ha invitato: e' la relazione che resta a vita, va mostrata in chiaro.
+      var sp = me.sponsor, wrap = document.getElementById('pfSponsorWrap'), box = document.getElementById('pfSponsor');
+      if (sp && wrap && box) {
+        wrap.style.display = '';
+        var spAv = '<div style="position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">'
+          + esc(ini(sp.nome))
+          + (sp.foto_url ? '<img src="' + sp.foto_url + '" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '')
+          + '</div>';
+        var spScriv = sp.username
+          ? '<a href="https://t.me/' + esc(sp.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
+          : '';
+        box.innerHTML = '<div class="dir">' + spAv
+          + '<div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">' + esc(sp.nome) + '</span>'
+          + (sp.is_founder ? '<span class="cbadge mid">FONDATORE</span>' : '') + '</div>'
+          + '<div class="dds">' + (sp.username ? ('@' + esc(sp.username)) : 'senza username') + '</div></div>'
+          + spScriv + '</div>';
       }
     })
     .catch(function(){});
@@ -834,17 +924,11 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       setTxt('kpiDiretti', iscritti);
       setTxt('reteTotale', rete.totale_count != null ? rete.totale_count : iscritti);
 
-      // link invito reale
+      // link invito reale. Il tasto Invita apre il menu di condivisione (vedi CONDIVIDI piu' sotto):
+      // NON aprire direttamente Telegram, Antonio vuole poter condividere ovunque.
       if (a.ref_link) {
         REF_LINK = a.ref_link;
-        var disp = a.ref_link.replace(/^https?:\/\//, '');
-        setTxt('inviteLinkText', disp);
-        var ib = document.getElementById('inviteBtn');
-        if (ib) ib.onclick = function(){
-          var share = 'https://t.me/share/url?url=' + encodeURIComponent(a.ref_link) + '&text=' + encodeURIComponent('Entra in Cashly, la directory del business online');
-          if (tg && tg.openTelegramLink) tg.openTelegramLink(share);
-          else window.open(share, '_blank');
-        };
+        setTxt('inviteLinkText', a.ref_link.replace(/^https?:\/\//, ''));
       }
 
       // rete reale
@@ -869,6 +953,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     var iTg='<svg viewBox="0 0 32 32" style="width:30px;height:30px;fill:#fff"><path d="M28.7 5.4 4.2 14.9c-1.2.5-1.2 2 0 2.4l6.2 1.9 2.4 7.5c.3.9 1 1 1.6.4l3.4-3.2 6.4 4.7c.8.6 1.9.1 2.1-.9l4-19c.3-1.2-.7-2-1.6-1.3ZM12.2 18.8l11.7-7.4c.4-.2.8.3.5.6l-9.5 8.9-.4 4.2-.9-6.3Z"/></svg>';
     var iX='<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#fff"><path d="M17.5 3h3l-6.6 7.6L21.7 21h-6l-4.7-6.1L5.6 21h-3l7-8L2 3h6.1l4.3 5.6L17.5 3Zm-1 16.1h1.7L7.6 4.8H5.8l10.7 14.3Z"/></svg>';
     var iCp='<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:none;stroke:#052210;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+    var iFb='<svg viewBox="0 0 32 32" style="width:30px;height:30px;fill:#fff"><path d="M29 16c0-7.2-5.8-13-13-13S3 8.8 3 16c0 6.5 4.8 11.9 11 12.9v-9.1h-3.3V16H14v-2.9c0-3.3 1.9-5.1 4.9-5.1 1.4 0 2.9.3 2.9.3v3.2h-1.6c-1.6 0-2.1 1-2.1 2v2.5h3.6l-.6 3.8h-3v9.1c6.2-1 11-6.4 11-12.9Z"/></svg>';
+    var iMl='<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3 7 9 6 9-6"/></svg>';
+    var iSm='<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.3A8 8 0 0 1 13 4a8 8 0 0 1 8 8Z"/></svg>';
+    var iMr='<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:var(--tx);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
     var sheet=document.createElement('div');
     sheet.id='cashlyShare'; sheet.style.cssText='position:fixed;inset:0;z-index:150;display:none';
     sheet.innerHTML='<div data-sh="close" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
@@ -876,10 +964,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       +'<div style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px"></div>'
       +'<div style="font-weight:800;font-size:16px">Invita su Cashly</div>'
       +'<div style="font-size:12.5px;color:var(--dim);margin:3px 0 16px">Chi entra dal tuo link resta nella tua rete.</div>'
-      +'<div style="display:flex;justify-content:space-around;gap:6px">'
-      + tile('wa','WhatsApp','#25D366',iWa) + tile('tg','Telegram','#29A9EB',iTg) + tile('x','X','#000',iX) + tile('cp','Copia link','var(--acc)',iCp)
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 6px">'
+      + tile('wa','WhatsApp','#25D366',iWa) + tile('tg','Telegram','#29A9EB',iTg) + tile('x','X','#000',iX) + tile('fb','Facebook','#1877F2',iFb)
+      + tile('ml','Email','#6E7A8A',iMl) + tile('sm','SMS','#3FB950',iSm) + tile('native','Altre app','var(--s2)',iMr) + tile('cp','Copia link','var(--acc)',iCp)
       +'</div>'
-      +'<button data-sh="native" style="width:100%;margin-top:16px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Altre app…</button>'
       +'</div>';
     document.body.appendChild(sheet);
     sheet.addEventListener('click', function(e){
@@ -889,12 +977,23 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       if(k==='wa'){ extOpen('https://wa.me/?text='+encodeURIComponent(TXT+' '+link)); }
       else if(k==='tg'){ tgOpen('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent(TXT)); }
       else if(k==='x'){ extOpen('https://twitter.com/intent/tweet?text='+encodeURIComponent(TXT)+'&url='+encodeURIComponent(link)); }
+      else if(k==='fb'){ extOpen('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(link)); }
+      else if(k==='ml'){ extOpen('mailto:?subject='+encodeURIComponent('Entra in Cashly')+'&body='+encodeURIComponent(TXT+' '+link)); }
+      else if(k==='sm'){ extOpen('sms:?&body='+encodeURIComponent(TXT+' '+link)); }
       else if(k==='cp'){ try{ navigator.clipboard.writeText(link); }catch(e){} toast('Link copiato'); }
-      else if(k==='native'){ if(navigator.share){ navigator.share({title:'Cashly', text:TXT, url:link}).catch(function(){}); } else { extOpen('https://wa.me/?text='+encodeURIComponent(TXT+' '+link)); } }
+      else if(k==='native'){ if(navigator.share){ navigator.share({title:'Cashly', text:TXT, url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(link); }catch(e){} toast('Link copiato'); } }
       sheet.style.display='none';
     });
+    function openSheet(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } sheet.style.display='block'; }
     var sb=document.getElementById('shareBtn');
-    if(sb) sb.addEventListener('click', function(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } sheet.style.display='block'; });
+    if(sb) sb.addEventListener('click', openSheet);
+    // Il tasto "Invita" dell'Affiliazione apre lo STESSO menu: dentro Telegram navigator.share
+    // proporrebbe solo Telegram, quindi servono i link diretti per ogni app.
+    var ivb=document.getElementById('inviteBtn');
+    if(ivb) ivb.addEventListener('click', openSheet);
+    // Anche il riquadro col link copia al tocco.
+    var ilt=document.getElementById('inviteLinkText');
+    if(ilt) ilt.addEventListener('click', function(){ try{ navigator.clipboard.writeText(REF_LINK); }catch(e){} toast('Link copiato'); });
   })();
 
   // ===== ONBOARDING a slide (solo alla prima apertura) =====
