@@ -370,7 +370,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
-  const btn = { inline_keyboard: [[{ text: "🚀 Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
+  const btn = { inline_keyboard: [[{ text: "🚀 Apri il tuo HUB", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
 
   // Video di presentazione (se impostato dall'admin con /presentazione): appare sopra al benvenuto.
   const { data: vid } = await supabase.from("config").select("valore").eq("chiave", "welcome_video").maybeSingle()
@@ -393,7 +393,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     chatId,
     `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
     `Benvenuto in <b>Cashly</b> — la directory dei business online.\n\n` +
-    `Apri l'app qui sotto: ti guida passo passo, senza fumo. 👇`,
+    `Apri il tuo HUB 👇`,
     btn,
     "HTML",
   )
