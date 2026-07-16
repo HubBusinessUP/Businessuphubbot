@@ -7,7 +7,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#1b1f28;--s0:#222732;--s1:#2a3040;--s2:#333a4b;--s3:#414a5d;
@@ -189,7 +189,7 @@
 <div class="app">
   <div class="hdr" style="display:flex;flex-direction:column;align-items:stretch;gap:11px;padding:16px 18px 13px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Cash<span style="color:var(--acc)">ly</span></div>
+          <div class="brandmark" style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Cash<span style="color:var(--acc)">ly</span></div>
           <div style="display:flex;align-items:center;gap:9px">
             <button id="shareBtn" aria-label="Condividi" style="width:38px;height:38px;flex-shrink:0;background:var(--s1);border:1px solid var(--line2);border-radius:10px;color:var(--tx);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
             <div id="homeAvatar" data-goto="wallet" style="width:38px;height:38px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:15px;flex-shrink:0;cursor:pointer">A</div>
@@ -637,9 +637,11 @@
   --tx:#FFFFFF; --dim:#A8AEB9; --mut:#767D8A;
   --acc:#25CF6E; --acc-d:#1BB65D; --on:#04210F;
   --amber:#FFB43D; --blue:#4A8CFF; --purple:#A77BFF; --coral:#FF6154; --teal:#2AD3C2;
-  --sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  /* Interfaccia in Inter. Il marchio resta Manrope: --display lo usa SOLO il wordmark
+     (header + splash onboarding), quindi le due facce non si mescolano mai nel testo. */
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
   --display:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-  --mono:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
 }
 /* ===== Tipografia: Manrope, resa nitida su schermo scuro ===== */
 body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;letter-spacing:-.006em}
@@ -740,6 +742,21 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cbadge.out{background:rgba(226,87,74,.14);color:#e2574a;border-color:rgba(226,87,74,.32)}
 @media (prefers-reduced-motion:reduce){.aff-glow{animation:none}}
 
+/* ===== PESI (Antonio: "font troppo bold") =====
+   Il prototipo mette font-weight:800 inline su quasi tutto: titoli, numeri, bottoni, etichette.
+   Quando TUTTO e' extrabold non risalta piu' niente e l'app urla. Inter poi ha un 800 piu'
+   pieno di Manrope alla stessa misura, quindi peggiorerebbe.
+   Regola: titoli a 700, testo a 400. L'unica cosa che resta a 800 e' il marchio (.brandmark).
+   Servono !important e i selettori [style*=] perche' i pesi sono inline nel prototipo. */
+[style*="font-weight:800"]:not(.brandmark){font-weight:700!important}
+.dnm,.fnm,.nm,.st{font-weight:700;letter-spacing:-.015em}
+.dds,.fds,.ds,.sd{font-weight:400;letter-spacing:0}
+.eyebrow,.sechd .eyebrow{font-weight:700;letter-spacing:.09em}
+/* Scendendo di peso il testo si sfilaccia se resta stretto com'era a 800:
+   peso e spaziatura vanno mossi insieme. */
+[style*="letter-spacing:-.03em"]:not(.brandmark){letter-spacing:-.02em!important}
+.brandmark{font-weight:800!important}
+
 /* ===== PROPONI UN BUSINESS: tasto + ===== */
 /* absolute dentro .app (che e' position:relative e non scrolla: scrolla la .body):
    cosi' resta ancorato alla colonna dell'app anche su schermo largo, non al viewport. */
@@ -763,7 +780,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=34"></script>
+<script src="identikit.js?v=35"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1298,9 +1315,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var s=SLIDES[i], last=!!s.final, dots='';
       for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .25s;width:'+(k===i?'24px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
       var brandTop = s.splash ? '<div></div>'
-        : '<div class="onb-brand" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>';
+        : '<div class="onb-brand brandmark" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>';
       var center = s.splash
-        ? '<div class="onb-stmt" style="display:flex;flex-direction:column;align-items:center"><div style="font-family:var(--display);font-size:56px;font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div><div style="font-size:14px;color:var(--dim);letter-spacing:.01em;margin-top:14px">'+s.slogan+'</div></div>'
+        ? '<div class="onb-stmt" style="display:flex;flex-direction:column;align-items:center"><div class="brandmark" style="font-family:var(--display);font-size:56px;font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div><div style="font-size:14px;color:var(--dim);letter-spacing:.01em;margin-top:14px">'+s.slogan+'</div></div>'
         : '<div class="onb-stmt" style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.26;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>';
       ov.innerHTML =
         '<div class="onb-glow"></div>'
