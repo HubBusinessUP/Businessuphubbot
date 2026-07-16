@@ -1220,8 +1220,9 @@ async function notificaAttivazioneCompletata(telegramId: number, servizioId: num
 
 // Candidatura moderata: tutti i campi obbligatori, utenti bloccati esclusi, ref link accettato solo da profili verificati.
 async function apiSuggerisci(telegramId: number, body: any) {
+  // Proporre un business e' aperto a TUTTI (scelta di Antonio): la directory deve crescere e
+  // la selezione la fa comunque l'admin approvando. Resta il blocco per chi abusa (sugg_bloccato).
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato, sugg_bloccato, is_partner").eq("telegram_id", telegramId).maybeSingle()
-  if (!lead?.is_partner) return json({ error: "non_partner" }, 403)
   if (lead?.sugg_bloccato) return json({ error: "funzione_bloccata" }, 403)
 
   const nome = String(body?.nome || "").trim()
