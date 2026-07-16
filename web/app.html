@@ -196,7 +196,7 @@
           <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Cash<span style="color:var(--acc)">ly</span></div>
           <div style="display:flex;align-items:center;gap:9px">
             <button id="shareBtn" aria-label="Condividi" style="width:38px;height:38px;flex-shrink:0;background:var(--s1);border:1px solid var(--line2);border-radius:10px;color:var(--tx);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
-            <div id="homeAvatar" data-goto="profile" style="width:38px;height:38px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:15px;flex-shrink:0;cursor:pointer">A</div>
+            <div id="homeAvatar" data-goto="wallet" style="width:38px;height:38px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:15px;flex-shrink:0;cursor:pointer">A</div>
           </div>
         </div>
         <div style="line-height:1.15"><span id="homeGreet" style="font-size:14px;color:var(--dim);font-weight:600">Ciao,</span> <span id="homeName" style="font-size:20px;font-weight:800;letter-spacing:-.02em"></span></div>
@@ -237,429 +237,64 @@
       <div style="height:14px"></div>
     </section>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <!-- ===================== AFFILIAZIONE ===================== -->
     <section class="scr" data-s="wallet">
-      <div class="hdr"><div class="logo" style="font-size:19px">Affiliazione</div>
-        <div class="iconbtn"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
-      </div>
-      <div style="height:18px"></div>
-
-      <!-- Stato Partner + progresso -->
-      <div class="card" id="partnerCard"></div>
-
-      <!-- Panoramica KPI -->
-      <div class="stats" style="margin-top:12px">
-        <div class="stat"><div class="n" id="kpiIscritti">2</div><div class="l">Iscritti</div></div>
-        <div class="stat"><div class="n" id="kpiClick">4</div><div class="l">Click</div></div>
-        <div class="stat"><div class="n" id="kpiClienti" style="color:var(--acc)">0</div><div class="l">Clienti</div></div>
-      </div>
-      <div class="row" style="gap:10px;padding:10px 18px 0">
-        <div class="row" data-goto="home" style="flex:1;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:11px 13px;cursor:pointer">
-          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--amber);stroke:var(--amber)"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>
-          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1" id="kpiSalvati">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Salvati</div></div>
-        </div>
-        <div class="row" style="flex:1;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:4px;padding:11px 13px">
-          <svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:var(--acc)"><path d="M12 5 3 18h18L12 5Z"/></svg>
-          <div style="flex:1"><div style="font-size:15px;font-weight:700;line-height:1" id="kpiVoti">1</div><div style="font-size:11px;color:var(--mut);margin-top:2px">Voti dati</div></div>
-        </div>
+      <div class="hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 13px">
+        <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">La tua <span style="color:var(--acc)">rete</span></div>
       </div>
 
-      <!-- Link invito -->
-      <div class="card" style="margin-top:12px">
-        <div class="eyebrow">Il tuo link invito</div>
-        <div class="row" style="gap:10px;margin-top:10px">
-          <div class="row" style="flex:1;min-width:0;gap:10px;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:11px 13px">
-            <div id="inviteLinkText" style="font-size:12px;color:var(--blue);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/r?c=uhifxl26</div>
+      <!-- HERO: il link personale + la promessa -->
+      <div style="padding:2px 18px 0">
+        <div class="aff-hero">
+          <div class="aff-glow"></div>
+          <div style="position:relative;z-index:1">
+            <div style="font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.28;color:var(--tx)">Costruisci la tua <span style="color:var(--acc)">community definitiva</span></div>
+            <div style="font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px">Chi entra con il tuo link resta legato a te. Per sempre, anche se cambi business.</div>
+            <div style="display:flex;align-items:center;gap:9px;margin-top:17px">
+              <div style="flex:1;min-width:0;display:flex;align-items:center;height:46px;padding:0 13px;background:var(--bg);border:1px solid var(--line2);border-radius:11px">
+                <div id="inviteLinkText" style="font-family:var(--mono);font-size:12px;color:var(--acc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">t.me/cashlyhub_bot</div>
+              </div>
+              <button id="inviteBtn" class="aff-cta">Invita<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+            </div>
           </div>
-          <button id="inviteBtn" style="background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:0 16px;height:44px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Invita</button>
         </div>
       </div>
 
-      <!-- La tua rete -->
-      <div class="sechd" style="padding-bottom:8px"><div class="eyebrow">La tua rete</div></div>
-      <div class="row" style="gap:10px;padding:0 18px">
-        <div style="flex:1;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:12px 13px">
-          <div style="font-family:var(--mono);font-size:22px;font-weight:700" id="direttiN">2</div>
-          <div class="eyebrow" style="margin-top:4px">Diretti attivi</div>
-          <div style="font-size:10.5px;color:var(--mut);margin-top:2px">contano per Partner e payout</div>
+      <!-- KPI -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px 0">
+        <div class="aff-kpi">
+          <div class="n" id="kpiDiretti">0</div>
+          <div class="l">Iscritti</div>
+          <div class="h">invitati da te</div>
         </div>
-        <div style="flex:1;background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:12px 13px">
-          <div id="reteTotale" style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--acc)">47</div>
-          <div class="eyebrow" style="margin-top:4px">Rete totale</div>
-          <div style="font-size:10.5px;color:var(--mut);margin-top:2px">tutti i livelli sotto di te</div>
-        </div>
-      </div>
-
-      <!-- hook: nuovo iscritto -->
-      <div id="hookNuovo" class="row" style="gap:10px;margin:12px 18px 0;background:rgba(37,195,102,.1);border:1px solid rgba(37,195,102,.3);border-radius:4px;padding:11px 13px">
-        <span style="width:8px;height:8px;border-radius:50%;background:var(--acc);flex-shrink:0"></span>
-        <div style="flex:1;font-size:12.5px"><b>Simon</b> si è appena iscritto alla tua rete</div>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--mut)">2h fa</span>
-      </div>
-
-      <!-- hook: iscritto uscito -->
-      <div id="hookUscito" class="row" style="gap:10px;margin:8px 18px 0;background:rgba(226,87,74,.1);border:1px solid rgba(226,87,74,.3);border-radius:4px;padding:11px 13px">
-        <span style="width:8px;height:8px;border-radius:50%;background:var(--coral);flex-shrink:0"></span>
-        <div style="flex:1;font-size:12.5px"><b>Luca</b> ha lasciato la tua rete</div>
-        <a href="https://t.me/luca" target="_blank" style="font-size:11.5px;font-weight:700;color:var(--coral);text-decoration:none;white-space:nowrap">Scrivigli →</a>
-      </div>
-
-      <div class="list" id="reteList" style="padding-top:10px;padding-bottom:10px">
-        <div class="dir" data-goto="iscritto" style="cursor:pointer">
-          <div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">C</div>
-          <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Cristian</span><span class="cbadge mid">ISCRITTO</span></div><div class="dds">@Legalpowerr · ha 5 iscritti · 1 business</div></div>
-          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
-        </div>
-        <div class="dir" data-goto="iscritto" style="cursor:pointer">
-          <div style="width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--purple);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">S</div>
-          <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Simon</span><span class="cbadge">NUOVO</span></div><div class="dds">@RAMBACCI · profilo da completare</div></div>
-          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
-        </div>
-        <div class="dir" style="opacity:.7">
-          <div style="width:46px;height:46px;border-radius:50%;background:#2c323e;color:var(--mut);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">L</div>
-          <div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">Luca</span><span class="cbadge" style="background:rgba(226,87,74,.18);color:var(--coral)">USCITO</span></div><div class="dds">Ha bloccato il bot · non conta per Partner</div></div>
-          <a href="https://t.me/luca" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== PROFILO ===================== -->
-    <section class="scr" data-s="profile">
-      <div class="hdr"><div class="logo" style="font-size:18px">Profilo</div>
-        <div class="iconbtn"><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8M4.6 9a1.6 1.6 0 0 0-.3-1.8M15 4.6a1.6 1.6 0 0 0-1.8-.3M9 19.4a1.6 1.6 0 0 0 1.8.3"/></svg></div>
-      </div>
-      <div class="row" style="gap:14px;padding:20px 18px 0">
-        <div style="width:66px;height:66px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:26px;font-weight:700;flex-shrink:0" id="profAvatar">A</div>
-        <div style="flex:1;min-width:0">
-          <div class="row" style="gap:8px"><span id="profName" style="font-size:18px;font-weight:700;letter-spacing:-.02em">Antony</span><span class="badge green" id="profBadge">Partner</span></div>
-          <div id="profHandle" style="font-size:12.5px;color:var(--dim);margin-top:4px">@anto · Membro Cashly</div>
-        </div>
-      </div>
-      <div class="stats" style="margin-top:18px">
-        <div class="stat"><div class="n" id="profAttivi">0</div><div class="l">Attivi</div></div>
-        <div class="stat" data-goto="home" style="cursor:pointer"><div class="n" id="profSalvati" style="color:var(--amber)">1</div><div class="l">Salvati</div></div>
-        <div class="stat"><div class="n" id="profVoti" style="color:var(--acc)">1</div><div class="l">Voti</div></div>
-      </div>
-      <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Account</div></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir" data-goto="identikit" style="cursor:pointer"><div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></div><div style="flex:1"><div class="dnm">Il mio identikit</div><div class="dds">Crea, vedi o modifica il tuo profilo di compatibilità.</div></div><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg></div>
-        <div class="dir"><div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div style="flex:1"><div class="dnm">Dati personali</div><div class="dds">Nome, telefono e dettagli del profilo.</div></div><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg></div>
-      </div>
-      <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Business attivi</div></div>
-      <div style="padding:26px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Nessun business attivo.<br>Esplora la lista e attiva il tuo primo servizio.</div>
-      <div style="height:14px"></div>
-    </section>
-
-    <!-- ===================== I MIEI LINK REF ===================== -->
-    <section class="scr" data-s="reflink">
-      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
-        <button data-goto="vetrina" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
-        <div class="logo" style="justify-self:center;font-size:18px">Link ref</div>
-        <div></div>
-      </div>
-      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Applica i tuoi referral: la tua rete vedrà <b style="color:var(--dim)">questi link</b> al posto di quelli di default.</div>
-
-      <div id="refGate" class="hide" style="padding:14px 18px 0"></div>
-      <div id="refBody">
-      <div class="list rl-list" style="padding-top:12px">
-        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--acc)">S</div><div style="flex:1;min-width:0"><div class="dnm">Broker VS Broker · Swap</div><div class="rl-empty">Nessun ref applicato</div></div><button class="minibtn add">＋ Applica</button></div>
-        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--amber)">B</div><div style="flex:1;min-width:0"><div class="dnm">Broker VS Broker · Bonus</div><div class="rl-empty">Nessun ref applicato</div></div><button class="minibtn add">＋ Applica</button></div>
-        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--blue)">E</div><div style="flex:1;min-width:0"><div class="dnm">Edgefunds</div><div class="rl-empty">Nessun ref applicato</div></div><button class="minibtn add">＋ Applica</button></div>
-      </div>
-
-      <!-- Click per link -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Click sui tuoi ref</div><span class="seccount">0 totali</span></div>
-      <div style="padding:24px 24px 22px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Ancora nessun click.<br>Applica un ref e condividi la lista per iniziare.</div>
-      </div>
-    </section>
-
-    <!-- ===================== LA MIA PAGINA ===================== -->
-    <section class="scr" data-s="pagina">
-      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
-        <button data-goto="vetrina" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
-        <div class="logo" style="justify-self:center;font-size:18px">La mia pagina</div>
-        <div></div>
-      </div>
-      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Personalizza il tuo hub pubblico. L'anteprima si aggiorna qui sotto.</div>
-
-      <div class="card" style="margin-top:10px">
-        <div class="row" style="gap:14px">
-          <div style="width:56px;height:56px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:22px;font-weight:700;flex-shrink:0" id="paginaAvatar">A</div>
-          <button class="minibtn">Cambia foto</button>
-        </div>
-        <div class="field"><div class="k">Nome</div><div class="v">Antonio</div></div>
-        <div class="field"><div class="k">Handle</div><div class="v" style="color:var(--blue);font-family:var(--mono)">@anto</div></div>
-        <div class="field"><div class="k">Bio</div><div class="v">Ti aiuto a costruire rendite online, passo dopo passo.</div></div>
-      </div>
-
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Link in vetrina</div></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--tx)">R</div><div style="flex:1;min-width:0"><div class="dnm">Revolut</div></div><div class="toggle"><i></i></div></div>
-        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--amber)">T</div><div style="flex:1;min-width:0"><div class="dnm">Trading Matematico</div></div><div class="toggle"><i></i></div></div>
-        <div class="dir"><div class="dav" style="background:#9fe870;color:#163300">W</div><div style="flex:1;min-width:0"><div class="dnm">Wise</div></div><div class="toggle off"><i></i></div></div>
-      </div>
-
-      <div class="sechd" style="padding-bottom:6px"><div class="eyebrow">Anteprima</div><span class="seccount" style="color:var(--acc)">● Live</span></div>
-      <div style="margin:0 14px;background:var(--s0);border:1px solid var(--line);border-radius:5px;padding:24px 20px;text-align:center">
-        <div style="width:72px;height:72px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:28px;font-weight:700;margin:0 auto">A</div>
-        <div style="font-size:17px;font-weight:700;margin-top:12px">Antonio</div>
-        <div style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:2px">@anto</div>
-        <div style="font-size:13px;color:var(--dim);margin-top:8px;line-height:1.45">Ti aiuto a costruire rendite online, passo dopo passo.</div>
-        <a class="pvbtn">Broker VS Broker · Swap</a>
-        <a class="pvbtn">Entra nell'hub Cashly</a>
-        <div style="font-size:10.5px;color:var(--mut);margin-top:16px">⚡ Powered by Cashly</div>
-      </div>
-
-      <button style="display:block;margin:16px 14px 4px;width:calc(100% - 28px);background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer">Salva e pubblica</button>
-      <div style="height:14px"></div>
-    </section>
-
-    <!-- ===================== VETRINA (strumenti Partner) ===================== -->
-    <section class="scr" data-s="vetrina">
-      <div class="hdr"><div class="logo" style="font-size:19px">Hub</div>
-        <span class="badge green">Partner ✓</span>
-      </div>
-      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Il centro del tuo lavoro: la tua pagina, i tuoi link, la tua rete e i tuoi guadagni — tutto in un posto.</div>
-
-      <!-- hero: la tua pagina pubblica -->
-      <div class="card" style="margin-top:14px">
-        <div class="row" style="gap:13px">
-          <div style="width:50px;height:50px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:20px;font-weight:700;flex-shrink:0" id="hubAvatar">A</div>
-          <div style="flex:1;min-width:0"><div class="eyebrow">Il tuo hub pubblico</div><div id="hubUrl" style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">hub.cashlypro.com/u/uhifxl26</div></div>
-        </div>
-        <div class="row" style="gap:10px;margin-top:13px">
-          <button data-goto="pagina" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Apri / modifica</button>
-          <button class="row" style="display:flex;align-items:center;justify-content:center;gap:7px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:0 16px;height:44px;font-size:13.5px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3M8 7l4-4 4 4M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg>Condividi</button>
+        <div class="aff-kpi">
+          <div class="n" id="reteTotale" style="color:var(--acc)">0</div>
+          <div class="l">Rete totale</div>
+          <div class="h">tutti i livelli sotto di te</div>
         </div>
       </div>
 
-      <!-- il tuo lavoro in numeri -->
-      <div class="stats" style="margin-top:12px;grid-template-columns:1fr 1fr">
-        <div class="stat"><div class="n" id="hubLinkRef">0</div><div class="l">Link ref</div></div>
-        <div class="stat"><div class="n" id="hubRete">2</div><div class="l">Rete</div></div>
-      </div>
-
-      <!-- strumenti -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Costruisci</div></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir" data-goto="pagina" style="cursor:pointer">
-          <div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></div>
-          <div style="flex:1;min-width:0"><div class="dnm">La tua pagina</div><div class="dds">Foto, bio e tutti i tuoi link in un'unica pagina.</div></div>
-          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
-        </div>
-        <div class="dir" data-goto="reflink" style="cursor:pointer">
-          <div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:21px;height:21px"><path d="M9 15l6-6M10 6l1-1a4 4 0 0 1 6 6l-1 1M14 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg></div>
-          <div style="flex:1;min-width:0"><div class="fnm" style="font-size:15px">I tuoi link ref <span class="cbadge" style="background:rgba(155,110,240,.18);color:var(--purple)">ESCLUSIVA</span></div><div class="dds">La tua rete vede la stessa directory con i <b style="color:var(--tx)">tuoi link</b>.</div></div>
-          <svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>
-        </div>
-      </div>
-
-      <!-- riepilogo del lavoro -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Il tuo lavoro</div></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir" data-goto="reflink" style="cursor:pointer">
-          <div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 15l6-6"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg></div>
-          <div style="flex:1;min-width:0"><div class="dnm">Business con il tuo ref</div></div>
-          <span style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">0 attivi</span>
-        </div>
-        <div class="dir" data-goto="wallet" style="cursor:pointer">
-          <div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/></svg></div>
-          <div style="flex:1;min-width:0"><div class="dnm">La tua rete</div></div>
-          <span id="hubReteIscritti" style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">2 iscritti</span>
-        </div>
-        <div class="dir" data-goto="suggerisci" style="cursor:pointer">
-          <div class="dav" style="background:rgba(232,179,76,.15);color:var(--amber)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/></svg></div>
-          <div style="flex:1;min-width:0"><div class="dnm">Business che hai suggerito</div></div>
-          <span style="font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums">0 proposti</span>
-        </div>
-      </div>
-      <div style="height:16px"></div>
-    </section>
-
-    <!-- ===================== SUGGERISCI ===================== -->
-    <section class="scr" data-s="suggerisci">
-      <div class="hdr"><div class="logo" style="font-size:19px">Suggerisci</div>
-        <span class="badge amber">moderato</span>
-      </div>
-      <div class="feedsub" style="padding:16px 18px 2px;margin:0">Proponi un servizio o un prodotto per la directory. Lo valutiamo prima di pubblicarlo.</div>
-
-      <div id="suggGate" class="hide" style="padding:14px 18px 0"></div>
-      <div id="suggBody">
-      <div class="seg" style="padding:16px 18px 0">
-        <button class="on">Servizio</button>
-        <button>Prodotto</button>
-      </div>
-
-      <div style="padding:12px 18px 0">
-        <div class="field"><div class="k">Nome *</div><div class="v" style="color:var(--mut)">Es. Broker VS Broker · Swap</div></div>
-        <div class="field"><div class="k">Link *</div><div class="v" style="color:var(--mut)">https://…</div></div>
-        <div class="fdd" style="margin-top:8px"><span>Categoria</span><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--mut)"><path d="m6 9 6 6 6-6"/></svg></div>
-        <div class="field"><div class="k">Cos'è (descrizione)</div><div class="v" style="color:var(--mut);line-height:1.5">Spiega in breve di cosa si tratta…</div></div>
-
-        <div class="sechd" style="padding:16px 0 2px"><div class="eyebrow">Requisiti e costi</div></div>
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1;margin-top:0"><div class="k">Budget</div><div class="v" style="color:var(--mut)">€ …</div></div>
-          <div class="field" style="flex:1;margin-top:0"><div class="k">Profit split</div><div class="v" style="color:var(--mut)">… %</div></div>
-        </div>
-        <div class="field"><div class="k">Costi fissi mensili</div><div class="v" style="color:var(--mut)">€ … (o nessuno)</div></div>
-        <div class="row" style="gap:8px;margin-top:10px">
-          <span class="chip">Rischio basso</span>
-          <span class="chip on">Rischio medio</span>
-          <span class="chip">Rischio alto</span>
-        </div>
-        <div class="field"><div class="k">Tipo di rischio</div><div class="v" style="color:var(--mut);line-height:1.5">Che rischio comporta…</div></div>
-
-        <div class="sechd" style="padding:16px 0 2px"><div class="eyebrow">Media (facoltativo)</div></div>
-        <div class="field"><div class="k">Video YouTube</div><div class="v" style="color:var(--mut)">https://youtu.be/…</div></div>
-        <div class="row" style="gap:10px;margin-top:8px;background:var(--s1);border:1px dashed var(--line2);border-radius:4px;padding:14px;cursor:pointer">
-          <svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px;color:var(--mut)"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-          <span style="font-size:13px;color:var(--mut)">Aggiungi una foto</span>
-        </div>
-
-        <div style="font-size:11.5px;color:var(--mut);margin-top:14px;line-height:1.5">Verrà pubblicato solo dopo approvazione. Niente spam, MLM o link truffa.</div>
-        <button style="width:100%;margin-top:14px;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer">Invia suggerimento</button>
-      </div>
-      </div>
-      <div style="height:14px"></div>
-    </section>
-
-    <!-- ===================== SCHEDA SERVIZIO ===================== -->
-    <section class="scr" data-s="servizio">
-      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
-        <button data-goto="home" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
-        <div class="logo" style="justify-self:center;font-size:16px">Scheda servizio</div>
-        <div></div>
-      </div>
-
-      <!-- intestazione -->
-      <div class="row" style="gap:15px;padding:16px 18px 0">
-        <div class="flogo" style="background:var(--s2);color:var(--acc);width:60px;height:60px;font-size:24px">S</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.2">Broker VS Broker · Swap</div>
-          <div class="row" style="gap:8px;margin-top:6px"><span id="svcBadge" class="badge amber">In corso · 2/4</span><span style="font-size:12px;color:var(--mut)">Trading Matematico</span></div>
-        </div>
-      </div>
-
-      <!-- voto (unico) + salva + condividi -->
-      <div class="row" style="gap:8px;padding:16px 18px 0">
-        <button class="actbtn" id="schedaVota"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg><span class="vtxt">Vota · 0</span></button>
-        <button class="actbtn" id="schedaSalva"><svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg><span class="stxt">Salva</span></button>
-        <button class="actbtn" id="schedaShare"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3M8 7l4-4 4 4M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg><span>Condividi</span></button>
-      </div>
-
-      <!-- panoramica AI -->
-      <div class="sechd" style="padding-bottom:4px"><div class="eyebrow">Panoramica</div></div>
-      <div style="padding:0 18px;font-size:14px;color:var(--dim);line-height:1.6">La strategia <b style="color:var(--tx)">Broker vs Broker</b> apre due posizioni opposte su due broker diversi: il mercato resta coperto (hedge) e ogni notte incassi la <b style="color:var(--tx)">differenza di swap</b> tra i due. Rendita costante, poco tempo di gestione, ma richiede due conti e un capitale adeguato.</div>
-
-      <!-- economics / requisiti -->
-      <div class="sechd" style="padding-bottom:0"><div class="eyebrow">Requisiti e costi</div></div>
-      <div style="padding:0 18px 6px">
-        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Budget richiesto</span><span style="font-size:13.5px;font-weight:600">da € 2.000</span></div>
-        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Costo attivazione</span><span style="font-size:13.5px;font-weight:600">50 USDT una tantum</span></div>
-        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Costi fissi mensili</span><span style="font-size:13.5px;font-weight:600">VPS · ~€ 15/mese</span></div>
-        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Profit split (tieni)</span><span style="font-size:13.5px;font-weight:700;color:var(--acc)">30%</span></div>
-        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Affiliazione</span><span style="font-size:13.5px;font-weight:600;color:var(--acc)">Sì</span></div>
-        <div class="inforow"><span style="font-size:13px;color:var(--mut)">Rischio</span><span class="badge amber">MEDIO</span></div>
-      </div>
-      <div style="margin:6px 18px 0;font-size:12.5px;color:var(--dim);line-height:1.55"><b style="color:var(--tx)">Tipo di rischio:</b> di esecuzione — slippage o ritardo nell'apertura delle due posizioni; margine da tenere monitorato.</div>
-
-      <!-- tutorial -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Tutorial</div><span class="seccount" id="tutCount">2 di 4 completati</span></div>
-      <div class="list" style="padding-top:0">
-        <div class="step" id="tstep0"><div class="stepn">1</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Registra il primo broker</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Apri il conto e completa la verifica.</div><a class="steplink">Apri Broker A →</a></div></div>
-        <div class="step" id="tstep1"><div class="stepn">2</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Registra il secondo broker</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Stesso procedimento sul secondo broker.</div><a class="steplink">Apri Broker B →</a></div></div>
-        <div class="step" id="tstep2"><div class="stepn">3</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Apri le posizioni opposte</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Compra su A e vendi su B con lo <b style="color:var(--tx)">stesso volume</b>.</div><div class="row" style="gap:8px;margin-top:9px"><a class="steplink" style="margin-top:0">Guida configurazione →</a><button id="stepFatto" style="background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer">Fatto ✓</button></div></div></div>
-        <div class="step" id="tstep3"><div class="stepn">4</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Segna come completato</div><div style="font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5">Fatto! Monitora lo swap ogni notte.</div></div></div>
-      </div>
-
-      <!-- risorse -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">Risorse</div></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir"><div class="dav" style="background:rgba(90,169,240,.15);color:var(--blue)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><path d="m22 2-7 20-4-9-9-4Z"/></svg></div><div style="flex:1"><div class="dnm" style="font-size:14px">Canale Telegram ufficiale</div></div><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;color:var(--mut)"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-        <div class="dir"><div class="dav" style="background:rgba(226,87,74,.15);color:var(--coral)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/></svg></div><div style="flex:1"><div class="dnm" style="font-size:14px">Video guida completa</div></div><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;color:var(--mut)"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-      </div>
-
-      <!-- CTA finale (cambia con lo stato) -->
-      <button id="svcCta" style="display:block;margin:18px 14px 6px;width:calc(100% - 28px);background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:16px;font-size:15px;font-weight:700;cursor:pointer">Riprendi dallo step 3</button>
-      <div id="svcNote" style="padding:0 20px;font-size:11.5px;color:var(--mut);text-align:center;line-height:1.5">Riprendi da dove ti sei fermato.</div>
-      <div style="height:16px"></div>
-    </section>
-
-    <!-- ===================== IDENTIKIT ===================== -->
-    <section class="scr" data-s="identikit">
-      <style>
-        .idk-bar{height:4px;border-radius:2px;background:var(--s2);overflow:hidden;margin:6px 18px 0}
-        .idk-bar i{display:block;height:100%;background:var(--acc);width:20%;transition:width .35s ease}
-        .idk-q{padding:22px 20px 20px}
-        .idk-kick{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
-        .idk-title{font-size:23px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
-        .idk-help{font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px}
-        .idk-opts{display:flex;flex-direction:column;gap:9px;margin-top:24px}
-        .idk-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--s1);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:15px;font-size:15px;font-weight:600;cursor:pointer;transition:transform .08s,border-color .15s,background .15s}
-        .idk-opt:active{transform:scale(.985)}
-        .idk-opt .rad{width:18px;height:18px;border-radius:50%;border:2px solid var(--line2);flex-shrink:0;position:relative}
-        .idk-opt.on{border-color:var(--acc);background:rgba(37,207,110,.12)}
-        .idk-opt.on .rad{border-color:var(--acc)}
-        .idk-opt.on .rad::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--acc)}
-        .pt-pill{font-family:var(--mono);font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;padding:4px 9px;border-radius:999px;flex-shrink:0}
-        .pt-bar{height:3px;border-radius:2px;background:var(--s2);margin-top:7px;overflow:hidden}
-        .pt-bar i{display:block;height:100%;border-radius:2px}
-      </style>
-      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
-        <button id="idkBack" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
-        <div class="logo" style="justify-self:center;font-size:16px">Il tuo identikit</div>
-        <div id="idkStep" style="justify-self:end;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--mut)">1 / 5</div>
-      </div>
-      <div class="idk-bar"><i id="idkBar"></i></div>
-      <div class="idk-q" id="idkQ"></div>
-    </section>
-
-    <!-- ===================== DETTAGLIO ISCRITTO ===================== -->
-    <section class="scr" data-s="iscritto">
-      <div class="hdr" style="display:grid;grid-template-columns:1fr auto 1fr">
-        <button data-goto="wallet" style="justify-self:start;background:none;border:none;color:var(--tx);cursor:pointer;padding:4px"><svg class="ico" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="m15 6-6 6 6 6"/></svg></button>
-        <div class="logo" style="justify-self:center;font-size:16px">Iscritto</div>
-        <div></div>
-      </div>
-
-      <!-- profilo -->
-      <div class="row" style="gap:14px;padding:20px 18px 0">
-        <div style="width:60px;height:60px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:23px;flex-shrink:0">C</div>
-        <div style="flex:1;min-width:0">
-          <div class="row" style="gap:8px"><span style="font-size:18px;font-weight:700">Cristian</span><span class="cbadge mid">ISCRITTO</span></div>
-          <div style="font-size:12.5px;color:var(--blue);font-family:var(--mono);margin-top:3px">@Legalpowerr</div>
-          <div style="font-size:11.5px;color:var(--mut);margin-top:2px">Nella tua rete dal 10 lug</div>
-        </div>
-      </div>
-
-      <!-- stats iscritto -->
-      <div class="stats" style="margin-top:16px">
-        <div class="stat"><div class="n">1</div><div class="l">Business</div></div>
-        <div class="stat"><div class="n" style="color:var(--acc)">5</div><div class="l">Suoi iscritti</div></div>
-        <div class="stat"><div class="n">3g</div><div class="l">Attivo da</div></div>
-      </div>
-
-      <!-- messaggio (via Telegram) -->
-      <div class="sechd" style="padding-bottom:6px"><div class="eyebrow">Scrivigli</div><span class="seccount">via Telegram</span></div>
-      <div class="card">
-        <div class="field" style="margin-top:0;cursor:text"><div class="v" style="color:var(--mut);line-height:1.5">Scrivi un messaggio a Cristian…</div></div>
-        <div class="row" style="gap:10px;margin-top:10px">
-          <button style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:4px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Invia ora</button>
-          <button class="row" style="display:flex;align-items:center;justify-content:center;gap:7px;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:4px;padding:0 16px;height:44px;font-size:13.5px;font-weight:700;cursor:pointer"><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>Programma</button>
-        </div>
-      </div>
-
-      <!-- i suoi business attivi -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">I suoi business attivi</div><span class="seccount">1</span></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir"><div class="dav" style="background:var(--s2);color:var(--acc)">S</div><div style="flex:1;min-width:0"><div class="dnm">Broker VS Broker · Swap</div><div class="dds">Attivato · tutorial completato</div></div><svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--acc)"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
-      </div>
-
-      <!-- la sua rete -->
-      <div class="sechd" style="padding-bottom:2px"><div class="eyebrow">La sua rete</div></div>
-      <div class="list" style="padding-top:0">
-        <div class="dir"><div class="dav" style="background:rgba(37,195,102,.15);color:var(--acc)"><svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/></svg></div><div style="flex:1;min-width:0"><div class="dnm">Ha portato 5 iscritti</div><div class="dds">Fanno parte della tua rete totale.</div></div></div>
-      </div>
+      <!-- Lista iscritti -->
+      <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">I tuoi iscritti</div></div>
+      <div class="list" id="reteList" style="padding-top:6px;padding-bottom:8px"></div>
       <div style="height:16px"></div>
     </section>
 
@@ -669,9 +304,9 @@
   <div class="nav">
     <button class="navb on" data-go="home"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span class="lb">Home</span></button>
     <button class="navb" data-go="wallet"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg><span class="lb">Affiliazione</span></button>
-    <button class="navb" data-go="suggerisci"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><rect x="3" y="3" width="18" height="18" rx="6"/><path d="M12 8v8M8 12h8"/></svg><span class="lb">Suggerisci</span></button>
-    <button class="navb" data-go="vetrina"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><path d="M4 9h16l-1-4H5zM5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M9 20v-6h6v6"/></svg><span class="lb">Hub</span></button>
-    <button class="navb" data-go="profile"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="lb">Profilo</span></button>
+    
+    
+    
   </div>
 </div>
 
@@ -707,7 +342,9 @@
   });
   // sub-screen navigation (perk rows, back buttons)
   function showScreen(name){
+    if(!app.querySelector('.scr[data-s="'+name+'"]')) return;
     app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===name);});
+    app.querySelectorAll('.nav button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-go')===name);});
     body.scrollTop=0;
   }
   app.querySelectorAll('[data-goto]').forEach(function(el){
@@ -1019,10 +656,23 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 @keyframes onbGlow{0%,100%{opacity:.6;transform:translate(-50%,-53%) scale(1)}50%{opacity:1;transform:translate(-50%,-46%) scale(1.13)}}
 @keyframes onbPulse{0%,100%{box-shadow:0 8px 22px -6px rgba(37,207,110,.55);transform:scale(1)}50%{box-shadow:0 16px 44px -4px rgba(37,207,110,.9);transform:scale(1.02)}}
 @media (prefers-reduced-motion:reduce){.onb-glow,.onb-stmt,.onb-brand,.onb-dots,.onb-cta{animation:none}}
+
+/* ===== AFFILIAZIONE: hero link personale + KPI ===== */
+.aff-hero{position:relative;overflow:hidden;border:1px solid var(--line2);border-radius:16px;background:var(--s0);padding:20px 18px}
+.aff-glow{position:absolute;top:-30%;left:-10%;width:340px;height:280px;background:radial-gradient(closest-side, rgba(37,207,110,.30), rgba(37,207,110,.05) 60%, transparent 75%);pointer-events:none;animation:affGlow 8s ease-in-out infinite}
+@keyframes affGlow{0%,100%{opacity:.7;transform:translate(0,0) scale(1)}50%{opacity:1;transform:translate(18px,10px) scale(1.12)}}
+.aff-cta{display:flex;align-items:center;justify-content:center;gap:7px;height:46px;padding:0 17px;flex-shrink:0;background:linear-gradient(135deg,#2fe37b 0%,#16b25e 100%);color:#fff;border:none;border-radius:11px;font-size:14.5px;font-weight:800;letter-spacing:-.01em;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.22);box-shadow:0 6px 18px -6px rgba(37,207,110,.65)}
+.aff-cta:active{transform:scale(.97)}
+.aff-kpi{background:var(--s0);border:1px solid var(--line);border-radius:13px;padding:14px 14px 12px}
+.aff-kpi .n{font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--tx)}
+.aff-kpi .l{font-size:12.5px;font-weight:700;color:var(--tx);margin-top:7px}
+.aff-kpi .h{font-size:11px;color:var(--mut);margin-top:2px;line-height:1.3}
+.cbadge.out{background:rgba(226,87,74,.14);color:#e2574a;border-color:rgba(226,87,74,.32)}
+@media (prefers-reduced-motion:reduce){.aff-glow{animation:none}}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=26"></script>
+<script src="identikit.js?v=27"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1135,23 +785,41 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     })
     .catch(function(){});
 
-  // ---- AFFILIAZIONE + HUB + Partner ----
+  // ---- AFFILIAZIONE ----
+  // Da quando sta nella rete. Telegram non da' "ultimo accesso", quindi mostriamo l'ingresso.
+  function daQuando(iso){
+    if (!iso) return '';
+    var d = new Date(iso.indexOf('Z') < 0 && iso.indexOf('+') < 0 ? iso + 'Z' : iso);
+    if (isNaN(d.getTime())) return '';
+    var gg = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (gg <= 0) return 'entrato oggi';
+    if (gg === 1) return 'entrato ieri';
+    if (gg < 30) return 'da ' + gg + ' giorni';
+    var mm = Math.floor(gg / 30);
+    return 'da ' + mm + (mm === 1 ? ' mese' : ' mesi');
+  }
   function membroRow(m){
-    var badge = m.is_cliente
-      ? '<span class="cbadge mid">CLIENTE</span>'
-      : (m.stato_label ? '<span class="cbadge">' + esc(m.stato_label) + '</span>' : '');
-    var sub = (m.username ? ('@' + m.username) : 'profilo da completare')
-      + (m.servizi_count ? (' · ' + m.servizi_count + ' business') : '');
+    var badge = m.uscito
+      ? '<span class="cbadge out">USCITO</span>'
+      : (m.is_cliente
+          ? '<span class="cbadge mid">CLIENTE</span>'
+          : (m.stato_label ? '<span class="cbadge">' + esc(m.stato_label) + '</span>' : ''));
+    var nomeFull = (m.nome || '') + (m.cognome ? (' ' + m.cognome) : '');
+    var bits = [];
+    bits.push(m.username ? ('@' + m.username) : 'senza username');
+    var dq = daQuando(m.iscritto_il); if (dq) bits.push(dq);
+    if (m.servizi_count) bits.push(m.servizi_count + ' business');
+    var sub = bits.join(' · ');
     var scriv = m.username
       ? '<a href="https://t.me/' + esc(m.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
       : '<svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>';
-    var av = '<div style="position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">'
+    var av = '<div style="position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0' + (m.uscito ? ';opacity:.5' : '') + '">'
       + esc(ini(m.nome))
       + (m.foto_url ? '<img src="' + m.foto_url + '" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '')
       + '</div>';
     return '<div class="dir">'
       + av
-      + '<div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">' + esc(m.nome) + '</span>' + badge + '</div><div class="dds">' + esc(sub) + '</div></div>'
+      + '<div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">' + esc(nomeFull) + '</span>' + badge + '</div><div class="dds">' + esc(sub) + '</div></div>'
       + scriv + '</div>';
   }
 
@@ -1162,15 +830,9 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       var st = a.stats || {}, rete = a.rete || {}, membri = rete.membri || [];
       var iscritti = (st.iscritti != null ? st.iscritti : membri.length);
 
-      // stato Partner reale -> pilota la card, i gate Suggerisci/Link, il badge profilo, #kpiIscritti, #direttiN
-      if (window.__setPartner) window.__setPartner(iscritti, !!a.is_partner);
-
-      setTxt('kpiClick', st.click != null ? st.click : 0);
-      setTxt('kpiClienti', st.clienti != null ? st.clienti : 0);
-      setTxt('reteTotale', rete.invitati_count != null ? rete.invitati_count : iscritti);
-      // salvati/voti: nessun endpoint dedicato -> 0 onesto
-      setTxt('kpiSalvati', 0); setTxt('kpiVoti', 0);
-      setTxt('profSalvati', 0); setTxt('profVoti', 0);
+      // I due KPI: diretti invitati da me, e rete completa a ogni livello (RPC ricorsiva lato DB).
+      setTxt('kpiDiretti', iscritti);
+      setTxt('reteTotale', rete.totale_count != null ? rete.totale_count : iscritti);
 
       // link invito reale
       if (a.ref_link) {
@@ -1185,22 +847,12 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
         };
       }
 
-      // HUB
-      if (a.ref_code) setTxt('hubUrl', 'hub.cashlypro.com/u.html?c=' + a.ref_code);
-      setTxt('hubRete', iscritti);
-      setTxt('hubReteIscritti', iscritti + ' iscritti');
-      setTxt('hubLinkRef', (a.miei_reflink || []).length);
-
-      // nascondi i due banner demo (evento specifico)
-      var hn = document.getElementById('hookNuovo'); if (hn) hn.style.display = 'none';
-      var hu = document.getElementById('hookUscito'); if (hu) hu.style.display = 'none';
-
       // rete reale
       var rl = document.getElementById('reteList');
       if (rl) {
         rl.innerHTML = membri.length
           ? membri.map(membroRow).join('')
-          : '<div style="padding:24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Ancora nessun iscritto nella tua rete.<br>Condividi il tuo link invito per iniziare.</div>';
+          : '<div style="padding:24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Ancora nessuno nella tua rete.<br>Condividi il tuo link per iniziare.</div>';
       }
     })
     .catch(function(){});
