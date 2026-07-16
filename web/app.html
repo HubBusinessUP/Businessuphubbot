@@ -277,7 +277,7 @@
           <div class="aff-glow"></div>
           <div style="position:relative;z-index:1">
             <div style="font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.28;color:var(--tx)">Costruisci la tua <span style="color:var(--acc)">community definitiva</span></div>
-            <div style="font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px">Chi entra con il tuo link resta legato a te. Per sempre, anche se cambi business.</div>
+            <div style="font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px">Chi entra con il tuo link resta legato a te. Per sempre.</div>
             <div style="display:flex;align-items:center;gap:9px;margin-top:17px">
               <div style="flex:1;min-width:0;display:flex;align-items:center;height:46px;padding:0 13px;background:var(--bg);border:1px solid var(--line2);border-radius:11px">
                 <div id="inviteLinkText" style="font-family:var(--mono);font-size:12px;color:var(--acc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">t.me/cashlyhub_bot</div>
@@ -328,9 +328,33 @@
         <div class="aff-kpi"><div class="n" id="pfBiz">0</div><div class="l">Business attivi</div><div class="h">che hai avviato</div></div>
       </div>
 
-      <!-- Dati Telegram -->
-      <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">I tuoi dati</div></div>
+      <!-- Anagrafica: modificabile dall'utente -->
+      <div class="sechd" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:22px 18px 4px">
+        <div class="eyebrow">I tuoi dati</div>
+        <button id="pfEdit" style="background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Modifica</button>
+      </div>
       <div class="list" id="pfDati" style="padding-top:6px;padding-bottom:8px"></div>
+
+      <!-- novalidate: senza, type=email/tel fanno scattare il popup nativo del browser, che
+           blocca il submit e rende irraggiungibili i nostri messaggi (e dentro la webview di
+           Telegram e' pure incoerente). La validazione la facciamo noi, una sola volta. -->
+      <form id="pfForm" novalidate style="display:none;padding:6px 18px 4px">
+        <label class="pf-l" for="fNome">Nome</label>
+        <input class="pf-i" id="fNome" type="text" autocomplete="given-name" maxlength="80" placeholder="Il tuo nome">
+        <label class="pf-l" for="fCognome">Cognome</label>
+        <input class="pf-i" id="fCognome" type="text" autocomplete="family-name" maxlength="80" placeholder="Il tuo cognome">
+        <label class="pf-l" for="fEmail">Email</label>
+        <input class="pf-i" id="fEmail" type="email" inputmode="email" autocomplete="email" maxlength="160" placeholder="nome@esempio.it">
+        <label class="pf-l" for="fTelefono">Telefono</label>
+        <input class="pf-i" id="fTelefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="40" placeholder="+39 333 1234567">
+        <label class="pf-l" for="fCitta">Citta</label>
+        <input class="pf-i" id="fCitta" type="text" autocomplete="address-level2" maxlength="80" placeholder="Dove vivi">
+        <div id="pfErr" style="display:none;font-size:12.5px;font-weight:600;color:#e2574a;margin-top:10px"></div>
+        <div style="display:flex;gap:9px;margin-top:16px">
+          <button type="button" id="pfAnnulla" style="flex:1;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Annulla</button>
+          <button type="submit" id="pfSalva" class="aff-cta" style="flex:1;height:auto;padding:13px">Salva</button>
+        </div>
+      </form>
 
       <!-- Chi lo ha invitato: la relazione a vita, in chiaro -->
       <div id="pfSponsorWrap" style="display:none">
@@ -716,10 +740,19 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .aff-kpi .h{font-size:11px;color:var(--mut);margin-top:2px;line-height:1.3}
 .cbadge.out{background:rgba(226,87,74,.14);color:#e2574a;border-color:rgba(226,87,74,.32)}
 @media (prefers-reduced-motion:reduce){.aff-glow{animation:none}}
+
+/* ===== PROFILO: form anagrafica ===== */
+.pf-l{display:block;font-size:11.5px;font-weight:700;color:var(--mut);letter-spacing:.02em;margin:14px 0 6px}
+.pf-l:first-child{margin-top:2px}
+.pf-i{width:100%;box-sizing:border-box;background:var(--s0);border:1px solid var(--line2);border-radius:11px;padding:13px;color:var(--tx);font-family:var(--sans);font-size:15px;font-weight:600;outline:none}
+.pf-i::placeholder{color:var(--mut);font-weight:500}
+.pf-i:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(37,207,110,.16)}
+.pf-i.err{border-color:#e2574a}
+#pfSalva[disabled]{opacity:.6;cursor:default}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=31"></script>
+<script src="identikit.js?v=32"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -826,11 +859,97 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     var M = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
     return d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear();
   }
-  function rigaDato(label, valore){
+  function rigaDato(label, valore, vuoto){
     return '<div class="dir" style="align-items:center">'
       + '<div style="flex:1;min-width:0"><div class="dds" style="margin:0">' + esc(label) + '</div>'
-      + '<div class="dnm" style="font-size:14px;margin-top:2px;word-break:break-all">' + esc(valore) + '</div></div></div>';
+      + '<div class="dnm" style="font-size:14px;margin-top:2px;word-break:break-all'
+      + (vuoto ? ';color:var(--mut);font-weight:500' : '') + '">' + esc(valore) + '</div></div></div>';
   }
+
+  // Anagrafica dell'utente (modificabile) tenuta separata dai dati Telegram (sola lettura).
+  var ANAG = { nome:'', cognome:'', email:'', telefono:'', citta:'' };
+  var TG_RO = null;   // ultimi dati Telegram visti, per ridisegnare dopo un salvataggio
+
+  function renderDati(L, u, uname){
+    TG_RO = { L: L, u: u, uname: uname };
+    var dd = document.getElementById('pfDati');
+    if (!dd) return;
+    var righe = '';
+    var nomeCompleto = (ANAG.nome + (ANAG.cognome ? (' ' + ANAG.cognome) : '')).trim();
+    righe += rigaDato('Nome', nomeCompleto || 'da completare', !nomeCompleto);
+    righe += rigaDato('Email', ANAG.email || 'da completare', !ANAG.email);
+    righe += rigaDato('Telefono', ANAG.telefono || 'da completare', !ANAG.telefono);
+    righe += rigaDato('Citta', ANAG.citta || 'da completare', !ANAG.citta);
+    // Da qui in giu' e' Telegram: non lo puo' cambiare l'utente, e non lo fingiamo.
+    righe += rigaDato('Username', uname ? ('@' + uname) : 'non impostato su Telegram', !uname);
+    if (u.id || L.telegram_id) righe += rigaDato('ID Telegram', String(u.id || L.telegram_id));
+    if (u.is_premium || L.is_premium) righe += rigaDato('Telegram Premium', 'attivo');
+    var lng = u.language_code || L.lingua;
+    if (lng) righe += rigaDato('Lingua', String(lng).toUpperCase());
+    if (L.tg_bio) righe += rigaDato('Bio Telegram', L.tg_bio);
+    var dal = dataIt(L.created_at);
+    if (dal) righe += rigaDato('Su Cashly dal', dal);
+    dd.innerHTML = righe;
+  }
+
+  // ---- ANAGRAFICA MODIFICABILE ----
+  (function(){
+    var form = document.getElementById('pfForm'), lista = document.getElementById('pfDati'),
+        btnEdit = document.getElementById('pfEdit'), btnAnnulla = document.getElementById('pfAnnulla'),
+        btnSalva = document.getElementById('pfSalva'), err = document.getElementById('pfErr');
+    if (!form || !btnEdit) return;
+    var F = { nome:'fNome', cognome:'fCognome', email:'fEmail', telefono:'fTelefono', citta:'fCitta' };
+    function campo(k){ return document.getElementById(F[k]); }
+    function mostraErrore(msg, k){
+      err.textContent = msg; err.style.display = 'block';
+      Object.keys(F).forEach(function(x){ campo(x).classList.toggle('err', x === k); });
+      if (k) campo(k).focus();
+    }
+    function apri(){
+      Object.keys(F).forEach(function(k){ campo(k).value = ANAG[k] || ''; campo(k).classList.remove('err'); });
+      err.style.display = 'none';
+      lista.style.display = 'none'; form.style.display = 'block'; btnEdit.style.display = 'none';
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+    }
+    function chiudi(){
+      form.style.display = 'none'; lista.style.display = ''; btnEdit.style.display = '';
+    }
+    btnEdit.addEventListener('click', apri);
+    btnAnnulla.addEventListener('click', chiudi);
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var v = {};
+      Object.keys(F).forEach(function(k){ v[k] = campo(k).value.trim(); });
+      if (!v.nome) return mostraErrore('Il nome serve: lo vede chi ti ha invitato.', 'nome');
+      if (v.email && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.email)) return mostraErrore('Questa email non sembra giusta.', 'email');
+      if (v.telefono && !/^[0-9+()\s.\-]{6,}$/.test(v.telefono)) return mostraErrore('Questo numero non sembra giusto.', 'telefono');
+
+      err.style.display = 'none';
+      btnSalva.disabled = true; btnSalva.textContent = 'Salvo...';
+      fetch(API_URL + '/anagrafica', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
+        body: JSON.stringify(v)
+      })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok || !res.j || res.j.error) throw new Error((res.j && res.j.error) || 'errore');
+        ANAG = v;
+        // ridisegna subito con i dati nuovi: niente reload, niente attese
+        if (TG_RO) {
+          var nm = (v.nome + (v.cognome ? (' ' + v.cognome) : '')).trim();
+          setTxt('pfNome', nm); setTxt('homeName', firstName(nm));
+          if (!TG_RO.L.foto_url) setTxt('pfAvatar', ini(nm));
+          renderDati(TG_RO.L, TG_RO.u, TG_RO.uname);
+        }
+        chiudi();
+        if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
+      })
+      .catch(function(){ mostraErrore('Non sono riuscito a salvare. Riprova.'); })
+      .then(function(){ btnSalva.disabled = false; btnSalva.textContent = 'Salva'; });
+    });
+  })();
 
   fetch(API_URL + "/me", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
@@ -860,20 +979,15 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       setTxt('pfBiz', (me.prodotti_attivi || []).length);
 
       // Solo dati che abbiamo davvero: niente campi inventati.
-      var dd = document.getElementById('pfDati');
-      if (dd) {
-        var righe = '';
-        if (nm) righe += rigaDato('Nome', nm);
-        righe += rigaDato('Username', uname ? ('@' + uname) : 'non impostato su Telegram');
-        if (u.id || L.telegram_id) righe += rigaDato('ID Telegram', String(u.id || L.telegram_id));
-        if (u.is_premium || L.is_premium) righe += rigaDato('Telegram Premium', 'attivo');
-        var lng = u.language_code || L.lingua;
-        if (lng) righe += rigaDato('Lingua', String(lng).toUpperCase());
-        if (L.tg_bio) righe += rigaDato('Bio Telegram', L.tg_bio);
-        var dal = dataIt(L.created_at);
-        if (dal) righe += rigaDato('Su Cashly dal', dal);
-        dd.innerHTML = righe;
-      }
+      // ANAG = la parte che l'utente puo' correggere; il resto arriva da Telegram ed e' in sola lettura.
+      ANAG = {
+        nome: (me.sondaggio && me.sondaggio.nome) || L.nome || '',
+        cognome: (me.sondaggio && me.sondaggio.cognome) || L.cognome || '',
+        email: (me.sondaggio && me.sondaggio.email) || '',
+        telefono: (me.sondaggio && me.sondaggio.telefono) || '',
+        citta: (me.sondaggio && me.sondaggio.citta) || ''
+      };
+      renderDati(L, u, uname);
 
       // Chi ti ha invitato: e' la relazione che resta a vita, va mostrata in chiaro.
       var sp = me.sponsor, wrap = document.getElementById('pfSponsorWrap'), box = document.getElementById('pfSponsor');

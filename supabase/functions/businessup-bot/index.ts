@@ -115,9 +115,12 @@ async function refreshPhoto(telegramId: number): Promise<string | null> {
       const c = j2?.ok ? j2.result : null
       if (c) {
         if (!fileId && c.photo) fileId = c.photo.big_file_id || c.photo.small_file_id || null
+        // Se l'utente ha scritto la sua anagrafica nel Profilo, il suo nome vince su Telegram.
+        const { data: cur } = await supabase.from("leads").select("anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
+        const manuale = (cur as any)?.anagrafica_manuale === true
         const patch: Record<string, unknown> = {}
-        if (c.first_name) patch.nome = String(c.first_name).slice(0, 120)
-        if (c.last_name) patch.cognome = String(c.last_name).slice(0, 120)
+        if (!manuale && c.first_name) patch.nome = String(c.first_name).slice(0, 120)
+        if (!manuale && c.last_name) patch.cognome = String(c.last_name).slice(0, 120)
         if (c.username) patch.username = String(c.username).slice(0, 60)
         // bio: c'è solo se l'utente l'ha scritta e la privacy la espone
         patch.tg_bio = c.bio ? String(c.bio).slice(0, 300) : null
@@ -353,15 +356,17 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   // Chi entra senza link viene assegnato al Sistema (Founder): il legame sponsor è a vita e non cambia mai.
   if (!refBy && from.id !== ADMIN_ID) refBy = ADMIN_ID
 
-  const { data: existing } = await supabase.from("leads").select("referred_by, start_count").eq("telegram_id", from.id).maybeSingle()
+  const { data: existing } = await supabase.from("leads").select("referred_by, start_count, anagrafica_manuale").eq("telegram_id", from.id).maybeSingle()
+  // Chi si e' scritto nome/cognome a mano nel Profilo non se li vede sovrascrivere da /start.
+  const anagraficaManuale = (existing as any)?.anagrafica_manuale === true
 
   await supabase.from("leads").upsert({
     telegram_id: from.id,
     username: from.username ?? null,
-    nome: from.first_name ?? null,
+    nome: anagraficaManuale ? undefined : (from.first_name ?? null),
     // Dati che l'update di Telegram porta con sé: cognome, lingua e Premium NON sono
     // recuperabili in altro modo per i membri della rete (getChat non li espone).
-    cognome: from.last_name ?? undefined,
+    cognome: anagraficaManuale ? undefined : (from.last_name ?? undefined),
     lingua: from.language_code ?? undefined,
     is_premium: from.is_premium ?? undefined,
     bot_started: true,
@@ -773,6 +778,49 @@ async function apiMe(telegramId: number, tgUser?: any) {
   }
 
   return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
+}
+
+// Anagrafica modificabile dal Profilo. Volutamente SEPARATA da /sondaggio: quella marca
+// sondaggio_completato e scrive un evento, cose che non devono accadere solo perche'
+// l'utente corregge il proprio numero di telefono.
+async function apiAnagrafica(telegramId: number, body: any) {
+  const clean = (v: unknown, max: number) => {
+    const s = String(v ?? "").trim()
+    return s ? s.slice(0, max) : null
+  }
+  const nome = clean(body?.nome, 80)
+  const cognome = clean(body?.cognome, 80)
+  const email = clean(body?.email, 160)
+  const telefono = clean(body?.telefono, 40)
+  const citta = clean(body?.citta, 80)
+
+  if (!nome) return json({ error: "nome_richiesto" }, 400)
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return json({ error: "email_non_valida" }, 400)
+  if (telefono && !/^[0-9+()\s.\-]{6,}$/.test(telefono)) return json({ error: "telefono_non_valido" }, 400)
+
+  const row = { telegram_id: telegramId, nome, cognome, email, telefono, citta }
+  const { data: ex } = await supabase.from("sondaggio_risposte").select("id").eq("telegram_id", telegramId).maybeSingle()
+  const saved = ex
+    ? await supabase.from("sondaggio_risposte").update(row).eq("id", ex.id)
+    : await supabase.from("sondaggio_risposte").insert(row)
+  if (saved.error) {
+    console.error("anagrafica save failed:", saved.error)
+    return json({ error: "save_failed", detail: saved.error.message }, 500)
+  }
+
+  // Il nome sul lead e' quello che vede lo sponsor nella sua rete: tienilo allineato.
+  // anagrafica_manuale blinda la scelta dell'utente contro /start e il refresh getChat.
+  const lu = await supabase.from("leads").update({
+    nome,
+    cognome,
+    anagrafica_manuale: true,
+  }).eq("telegram_id", telegramId)
+  if (lu.error) {
+    console.error("anagrafica leads update failed:", lu.error)
+    return json({ error: "save_failed", detail: lu.error.message }, 500)
+  }
+
+  return json({ ok: true, anagrafica: row })
 }
 
 async function apiSondaggioSave(telegramId: number, body: any) {
@@ -2164,6 +2212,12 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiSondaggioSave(tid, await req.json())
+    }
+
+    if (sub === "anagrafica" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiAnagrafica(tid, await req.json())
     }
 
     if (sub === "onboarding" && req.method === "POST") {
