@@ -830,7 +830,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=37"></script>
+<script src="identikit.js?v=38"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -886,8 +886,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var votato = !!VOTED[s.id];
     return '<div class="fitem" data-item="' + s.id + '">'
       + '<div class="frow" data-open="' + s.id + '">'
-      +   '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div>'
-      +   '<div class="fds">' + esc(s.descrizione || '') + '</div></div>'
+      // Riga chiusa: SOLO il titolo (Antonio). La descrizione si legge aprendo la scheda,
+      // dove fa da panoramica: dirla due volte non aggiunge niente.
+      +   '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div></div>'
       +   '<button class="votebtn' + (votato ? ' on' : '') + '" data-vote="' + s.id + '" aria-label="Vota">'
       +     voteSvg() + '<span class="vn">' + (s.voti || 0) + '</span></button>'
       +   '<button class="savebtn" data-id="' + s.id + '" aria-label="Salva">' + saveSvg(!!SAVED[s.id]) + '</button>'
