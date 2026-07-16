@@ -834,6 +834,43 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .ssrc{font-size:11px;color:var(--mut);text-align:center;margin-top:9px;line-height:1.4}
 .vuoto{padding:30px 18px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6}
 
+
+/* Utenti Cashly attivi: blocco a parte, viola. Gli altri dati li dichiara il fornitore,
+   questo lo misuriamo noi: non deve sembrare la stessa cosa. */
+.hubbox{display:flex;align-items:center;gap:13px;margin-top:18px;padding:14px;
+  border:1px solid rgba(155,110,240,.3);background:rgba(155,110,240,.07);border-radius:12px}
+.hubi{width:38px;height:38px;border-radius:11px;background:rgba(155,110,240,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hubn{font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--purple)}
+.hubt{font-size:12px;color:var(--dim);line-height:1.45;margin-top:4px}
+
+/* Lista d'attesa */
+.wl{display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:13px;border-radius:11px;
+  border:1px solid rgba(255,180,61,.3);background:rgba(255,180,61,.07);font-size:12.5px;color:var(--dim);line-height:1.5}
+.wl b{color:var(--tx);font-weight:700}
+.wl.on{border-color:rgba(37,207,110,.32);background:rgba(37,207,110,.07)}
+
+/* Disclaimer: sopra il bottone, perche' va accettato PRIMA di attivare */
+.disc{margin-top:18px;padding:14px;border:1px solid var(--line2);border-radius:12px;background:var(--s0);
+  font-size:11.5px;color:var(--mut);line-height:1.6}
+.disc b{color:var(--dim);font-weight:700}
+.acc{display:flex;align-items:flex-start;gap:11px;margin-top:13px;padding-top:13px;border-top:1px solid var(--line2);cursor:pointer}
+.acc .box{width:22px;height:22px;border-radius:7px;border:1.8px solid var(--line2);background:var(--bg);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;transition:.15s}
+.acc.on .box{background:var(--acc);border-color:var(--acc)}
+.acc .box svg{width:13px;height:13px;opacity:0;transition:.15s}
+.acc.on .box svg{opacity:1}
+.acct{font-size:13px;color:var(--tx);font-weight:600;line-height:1.45}
+.cta-attiva[disabled]{background:var(--s2)!important;color:var(--mut)!important;box-shadow:none!important;cursor:not-allowed;text-shadow:none}
+
+/* riga dato: icona colorata + valore grosso */
+.sr{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line2)}
+.si{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sk{flex:1;min-width:0;font-size:13.5px;color:var(--dim);font-weight:500}
+.sv{font-size:16px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.sv small{display:block;font-size:11px;font-weight:400;color:var(--mut);letter-spacing:0;margin-top:1px}
+.spanor{font-size:15px;line-height:1.55;color:#D7DBE2;letter-spacing:-.005em;padding:2px 0 4px}
+.fnm{font-size:20px;font-weight:700;letter-spacing:-.025em;line-height:1.2}
+
 /* ===== PROPONI UN BUSINESS: tasto + ===== */
 /* absolute dentro .app (che e' position:relative e non scrolla: scrolla la .body):
    cosi' resta ancorato alla colonna dell'app anche su schermo largo, non al viewport. */
@@ -857,7 +894,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=41"></script>
+<script src="identikit.js?v=42"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -966,6 +1003,26 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   var RISCHIO = { 1:'Molto basso', 2:'Basso', 3:'Medio', 4:'Alto', 5:'Molto alto' };
 
+  var ICO = {
+    budget:  ['255,180,61',  'var(--amber)',  '<path d="M16 8a5 5 0 1 0 0 8M4 10h8M4 14h8"/>'],
+    ciclo:   ['90,169,240',  'var(--blue)',   '<path d="M20 11a8 8 0 0 0-13.7-5.7L3 8.5M4 13a8 8 0 0 0 13.7 5.7L21 15.5"/><path d="M3 4v4.5h4.5M21 20v-4.5h-4.5"/>'],
+    calend:  ['90,169,240',  'var(--blue)',   '<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'],
+    scudo:   ['37,207,110',  'var(--acc)',    '<path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9.5-4.8-1.2-8-5-8-9.5V6z"/>']
+  };
+  function srow(icona, label, valore, sotto, colore){
+    var i = ICO[icona];
+    return '<div class="sr">'
+      + '<div class="si" style="background:rgba(' + i[0] + ',.14)">'
+      +   '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:' + i[1] + ';stroke-width:2;stroke-linecap:round;stroke-linejoin:round">' + i[2] + '</svg>'
+      + '</div>'
+      + '<div class="sk">' + esc(label) + '</div>'
+      + '<div class="sv"' + (colore ? ' style="color:' + colore + '"' : '') + '>' + esc(valore)
+      +   (sotto ? '<small>' + esc(sotto) + '</small>' : '') + '</div>'
+      + '</div>';
+  }
+  // Il colore e' un giudizio, non decorazione: verde ok, ambra attenzione, rosso no.
+  var RISCHIO = { 1:['Molto basso','var(--acc)'], 2:['Basso','var(--acc)'], 3:['Medio','var(--amber)'], 4:['Alto','#E2574A'], 5:['Molto alto','#E2574A'] };
+
   function schedaHtml(d){
     var s = d.servizio || {};
     var out = '';
@@ -973,50 +1030,83 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var panor = s.panoramica || s.descrizione || '';
     if (panor) out += '<div class="spanor">' + esc(panor) + '</div>';
 
-    var costi = ''
-      + riga('Per partire', euro(s.costo_attivazione) || (s.budget_minimo ? euro(s.budget_minimo) : ''))
-      + riga('Costi fissi', s.costi_fissi_mensili ? (euro(s.costi_fissi_mensili) + ' al mese') : '')
-      + riga('Prezzo', s.prezzo)
-      + riga('Note sui costi', s.costi);
-    if (costi) out += '<div class="seyeb">Costi</div><div class="sbox">' + costi + '</div>';
+    // I 4 dati decisi con Antonio. Le righe senza valore non si disegnano.
+    var righe = '';
+    var budget = s.budget_minimo ? ('da ' + s.budget_minimo + ' EUR') : (s.costo_attivazione ? ('da ' + s.costo_attivazione + ' EUR') : '');
+    if (budget) righe += srow('budget', 'Budget', budget, '', '');
+    if (s.longevita) righe += srow('ciclo', 'Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
+    if (s.attivo_da) {
+      var anni = (new Date().getFullYear()) - Number(s.attivo_da);
+      righe += srow('calend', 'Attivo da', String(s.attivo_da), anni > 0 ? (anni + (anni === 1 ? ' anno' : ' anni')) : '', '');
+    }
+    var r = RISCHIO[s.rischio_livello];
+    if (r) righe += srow('scudo', 'Rischio', r[0], '', r[1]);
+    out += righe;
 
-    var car = ''
-      + riga('Tempo richiesto', s.tempo_stimato)
-      + riga('Difficolta', s.difficolta)
-      + riga('Rischio', RISCHIO[s.rischio_livello] || '')
-      + riga('Serve esperienza', s.esperienza_richiesta ? (s.esperienza_richiesta + '/5') : '')
-      + riga('Requisiti', s.requisiti);
-    if (car) out += '<div class="seyeb">Caratteristiche</div><div class="sbox">' + car + '</div>';
+    if (!panor && !righe) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
 
-    if (!panor && !costi && !car) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
+    // Utenti attivi: blocco a parte. Gli altri dati li dichiara il fornitore, questo lo contiamo noi.
+    // A zero resta nascosto: "0 utenti attivi" e' peggio del silenzio.
+    if (d.utenti_attivi) {
+      out += '<div class="hubbox">'
+        + '<div class="hubi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:var(--purple);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg></div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div class="hubn">' + d.utenti_attivi + (d.utenti_attivi === 1 ? ' utente Cashly attivo' : ' utenti Cashly attivi') + '</div>'
+        +   '<div class="hubt">Non ce lo dice il fornitore: lo contiamo noi.</div>'
+        + '</div></div>';
+    }
 
-    // Il tutorial compare DOPO l'attivazione: prima c'e' la CTA.
     var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
     var attivo = !!d.gia_interessato;
     var fatto = (d.step_progress && d.step_progress.ultimo_step) || 0;
 
-    if (attivo && steps.length) {
-      out += '<div class="seyeb">Come si attiva &mdash; ' + steps.length + (steps.length === 1 ? ' passo' : ' passi') + '</div>';
-      out += steps.map(function(st, i){
-        var done = i < fatto;
-        return '<div class="sstep' + (done ? ' done' : '') + '">'
-          + '<div class="sn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
-          + '<div style="flex:1;min-width:0">'
-          +   '<div class="st">' + esc(st.titolo || ('Passo ' + (i + 1))) + '</div>'
-          +   (st.testo ? '<div class="sd">' + esc(st.testo) + '</div>' : '')
-          +   (st.link_url ? '<a class="slink" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(st.link_label || 'Apri') + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
-          + '</div></div>';
-      }).join('');
-    } else if (attivo && !steps.length) {
-      out += '<div class="vuoto" style="padding:18px 0">Attivato. Il tutorial non e ancora stato scritto.</div>';
-    } else {
-      out += '<button class="cta-attiva" data-attiva="' + s.id + '">Attiva servizio</button>';
-      // NB: qui NON esiste un link del prodotto. I link (broker, prop, strumenti) stanno
-      // dentro i singoli step del tutorial: link_principale resta vuoto per scelta.
-      if (steps.length) out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
-      else out += '<div class="ssrc">Il tutorial non e ancora stato scritto.</div>';
+    // 1) gia' attivato -> il tutorial
+    if (attivo) {
+      if (steps.length) {
+        out += '<div class="seyeb">Come si attiva &mdash; ' + steps.length + (steps.length === 1 ? ' passo' : ' passi') + '</div>';
+        out += steps.map(function(st, i){
+          var done = i < fatto;
+          return '<div class="sstep' + (done ? ' done' : '') + '">'
+            + '<div class="sn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
+            + '<div style="flex:1;min-width:0">'
+            +   '<div class="st">' + esc(st.titolo || ('Passo ' + (i + 1))) + '</div>'
+            +   (st.testo ? '<div class="sd">' + esc(st.testo) + '</div>' : '')
+            +   (st.link_url ? '<a class="slink" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(st.link_label || 'Apri') + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
+            + '</div></div>';
+        }).join('');
+      } else {
+        out += '<div class="vuoto" style="padding:18px 0">Attivato. Il tutorial non e ancora stato scritto.</div>';
+      }
+      return out;
     }
 
+    // 2) servizio non ancora attivo -> lista d'attesa, non attivazione
+    if (!d.attivo) {
+      if (d.in_waitlist) {
+        out += '<div class="wl on">'
+          + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--acc);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>'
+          + '<div><b>Sei in lista.</b> Quando parte te lo scrive il bot.</div></div>';
+      } else {
+        out += '<div class="wl">'
+          + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+          + '<div><b>Non e ancora attivo.</b> Lascia che ti avvisi: quando parte ti arriva un messaggio dal bot.</div></div>';
+        out += '<button class="cta-attiva" data-wait="' + s.id + '">Avvisami quando parte</button>';
+        if (d.waitlist_count) out += '<div class="ssrc">' + d.waitlist_count + (d.waitlist_count === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>';
+      }
+      return out;
+    }
+
+    // 3) attivo -> disclaimer da accettare, POI il bottone
+    out += '<div class="disc">'
+      + '<b>Servizio di terzi.</b> Non e gestito, controllato ne garantito da Cashly: Cashly lo segnala e basta. Attivandolo entri in rapporto diretto con il fornitore e ne accetti termini e condizioni.<br><br>'
+      + '<b>Link di affiliazione.</b> Se attivi da qui, Cashly riceve una commissione dal fornitore. Per te non cambia nulla: non paghi di piu.<br><br>'
+      + '<b>Rischio.</b> Operare sui mercati puo farti perdere il capitale, anche tutto. Nessun rendimento e promesso ne garantito. I risultati passati non dicono niente su quelli futuri. Non e consulenza finanziaria: valuta tu, e se non sei sicuro chiedi a un consulente abilitato.'
+      + '<div class="acc" data-acc="' + s.id + '">'
+      +   '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
+      +   '<div class="acct">Ho letto e accetto: e un servizio di terzi, Cashly prende una commissione e posso perdere il capitale.</div>'
+      + '</div></div>';
+    out += '<button class="cta-attiva" data-attiva="' + s.id + '" disabled>Attiva servizio</button>';
+    if (steps.length) out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
     if (d.ref_link && d.ref_fonte === 'sponsor') out += '<div class="ssrc">Il link e di chi ti ha invitato.</div>';
     return out;
   }
@@ -1074,13 +1164,45 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return;
     }
 
-    var a = t.closest('.cta-attiva');
+    // spunta del disclaimer: accende il bottone
+    var ac = t.closest('.acc');
+    if (ac) {
+      e.stopPropagation();
+      var on = ac.classList.toggle('on');
+      var btnA = ac.closest('.fdrop').querySelector('.cta-attiva[data-attiva]');
+      if (btnA) btnA.disabled = !on;
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      return;
+    }
+
+    // lista d'attesa per i servizi non ancora attivi
+    var w = t.closest('.cta-attiva[data-wait]');
+    if (w) {
+      e.stopPropagation();
+      var wid = parseInt(w.getAttribute('data-wait'));
+      if (!wid) return;
+      w.disabled = true; w.textContent = 'Un attimo...';
+      fetch(API_URL + '/waitlist', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: wid }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || d.error) throw new Error('ko');
+          if (SCHEDE[wid]) { SCHEDE[wid].in_waitlist = true; SCHEDE[wid].waitlist_count = d.waitlist_count; }
+          var drop = document.querySelector('[data-drop="' + wid + '"]');
+          if (drop && SCHEDE[wid]) drop.innerHTML = schedaHtml(SCHEDE[wid]);
+          if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
+        })
+        .catch(function(){ w.disabled = false; w.textContent = 'Avvisami quando parte'; });
+      return;
+    }
+
+    var a = t.closest('.cta-attiva[data-attiva]');
     if (a) {
       e.stopPropagation();
+      if (a.disabled) return;
       var aid = parseInt(a.getAttribute('data-attiva'));
       if (!aid) return;
       a.disabled = true; a.textContent = 'Attivo...';
-      fetch(API_URL + '/attiva', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: aid }) })
+      fetch(API_URL + '/attiva', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: aid, disclaimer_accettato: true }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
           if (!d || d.error) throw new Error('ko');

@@ -924,6 +924,51 @@ async function apiVota(telegramId: number, body: any) {
   return json({ ok: true, votato: !existing, voti: count ?? 0 })
 }
 
+// Lista d'attesa: per i servizi non ancora attivi, al posto di "Attiva" c'e' "Avvisami".
+// Quando l'admin lo mette attivo, parte il messaggio del bot a chi si e' iscritto qui.
+async function apiWaitlist(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id) || 0
+  if (!servizioId) return json({ error: "servizio_id_richiesto" }, 400)
+
+  const { data: sv } = await supabase.from("servizi").select("id, nome, stato").eq("id", servizioId).maybeSingle()
+  if (!sv) return json({ error: "not_found" }, 404)
+  if (sv.stato === "attivo") return json({ error: "gia_attivo" }, 409)
+
+  const { error } = await supabase.from("waitlist")
+    .upsert({ telegram_id: telegramId, servizio_id: servizioId }, { onConflict: "telegram_id,servizio_id" })
+  if (error) {
+    console.error("waitlist upsert failed:", error)
+    return json({ error: "save_failed", detail: error.message }, 500)
+  }
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "waitlist", dettaglio: sv.nome })
+
+  const { count } = await supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
+  return json({ ok: true, in_lista: true, waitlist_count: count ?? 0 })
+}
+
+// Avvisa chi aspettava: chiamata quando un servizio passa ad attivo.
+// avvisato_at evita il doppio invio se lo stato viene toccato piu' volte.
+async function avvisaWaitlist(servizioId: number, nomeServizio: string) {
+  const { data: attesa } = await supabase.from("waitlist")
+    .select("telegram_id").eq("servizio_id", servizioId).is("avvisato_at", null)
+  if (!attesa?.length) return 0
+
+  const btn = { inline_keyboard: [[{ text: "🚀 Aprilo su Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
+  let inviati = 0
+  for (const w of attesa) {
+    try {
+      await sendMessage((w as any).telegram_id,
+        `🔔 <b>${nomeServizio}</b> è attivo.\n\nMi avevi chiesto di avvisarti: ora puoi partire.`, btn, "HTML")
+      inviati++
+    } catch (e) {
+      console.error("waitlist notify failed", (w as any).telegram_id, e)
+    }
+  }
+  await supabase.from("waitlist").update({ avvisato_at: new Date().toISOString() })
+    .eq("servizio_id", servizioId).is("avvisato_at", null)
+  return inviati
+}
+
 async function apiServizio(telegramId: number, servizioId: number) {
   const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
   if (!servizio) return json({ error: "not_found" }, 404)
@@ -932,9 +977,25 @@ async function apiServizio(telegramId: number, servizioId: number) {
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: progress } = await supabase.from("tutorial_progress").select("ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refInfo = await resolveRefLinkConFonte(telegramId, servizioId)
+
+  // Servizio non ancora attivo -> lista d'attesa al posto dell'attivazione.
+  const attivo = servizio.stato === "attivo"
+  const { data: inAttesa } = await supabase.from("waitlist").select("id")
+    .eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const { count: attesaCount } = await supabase.from("waitlist")
+    .select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
+
+  // Utenti Cashly attivi su questo servizio: dato NOSTRO, non dichiarato dal fornitore.
+  const { count: attiviCount } = await supabase.from("lead_servizi")
+    .select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
+
   return json({
     servizio,
+    attivo,
     gia_interessato: !!interesse,
+    in_waitlist: !!inAttesa,
+    waitlist_count: attesaCount ?? 0,
+    utenti_attivi: attiviCount ?? 0,
     ref_link: refInfo.link,
     ref_fonte: refInfo.fonte,
     sondaggio_completato: !!lead?.sondaggio_completato,
@@ -1167,11 +1228,26 @@ async function apiPaginaPubblica(code: string) {
 }
 
 async function apiAttiva(telegramId: number, body: any) {
-  const { data: lead } = await supabase.from("leads").select("sondaggio_completato").eq("telegram_id", telegramId).maybeSingle()
-  if (!lead?.sondaggio_completato) return json({ error: "anagrafica_richiesta" }, 403)
+  // Il gate chiede i dati, non il sondaggio: da quando l'anagrafica si compila dal Profilo
+  // (anagrafica_manuale), guardare solo sondaggio_completato bloccava chi li aveva gia' dati.
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
+  if (!lead?.sondaggio_completato && !lead?.anagrafica_manuale) return json({ error: "anagrafica_richiesta" }, 403)
 
   const { servizio_id } = body
-  await supabase.from("lead_servizi").insert({ telegram_id: telegramId, servizio_id, stato: "interessato" })
+
+  // Non si attiva un servizio non ancora attivo: per quelli c'e' la lista d'attesa.
+  const { data: sv0 } = await supabase.from("servizi").select("stato, disclaimer_ver").eq("id", servizio_id).maybeSingle()
+  if (!sv0) return json({ error: "not_found" }, 404)
+  if (sv0.stato !== "attivo") return json({ error: "non_attivo" }, 409)
+
+  // Il disclaimer deve lasciare traccia: chi, quando, quale versione. Senza, non copre da niente.
+  if (!body?.disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
+
+  await supabase.from("lead_servizi").insert({
+    telegram_id: telegramId, servizio_id, stato: "interessato",
+    disclaimer_accettato_at: new Date().toISOString(),
+    disclaimer_ver: sv0.disclaimer_ver ?? 1,
+  })
   await supabase.from("leads").update({ is_cliente: true }).eq("telegram_id", telegramId)
   const refInfo = await resolveRefLinkConFonte(telegramId, servizio_id)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_attivato", dettaglio: `servizio:${servizio_id}` })
@@ -1386,12 +1462,19 @@ async function apiAdminServiziList() {
 }
 
 async function apiAdminServiziSave(body: any) {
-  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse } = body
+  const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse, longevita, attivo_da } = body
   const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
-    budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null, risorse: risorse ?? [] }
+    budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null, risorse: risorse ?? [],
+    longevita: longevita || null, attivo_da: attivo_da || null }
   if (id) {
+    // Leggi lo stato PRIMA di scrivere: il passaggio a "attivo" e' cio' che fa partire
+    // le notifiche a chi era in lista d'attesa.
+    const { data: prima } = await supabase.from("servizi").select("stato, nome").eq("id", id).maybeSingle()
     const { error } = await supabase.from("servizi").update(row).eq("id", id)
     if (error) return json({ error: error.message }, 500)
+    if (prima && prima.stato !== "attivo" && stato === "attivo") {
+      avvisaWaitlist(id, nome || prima.nome).catch((e) => console.error("avvisaWaitlist:", e))
+    }
   } else {
     const { error } = await supabase.from("servizi").insert(row)
     if (error) return json({ error: error.message }, 500)
@@ -2213,6 +2296,12 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiSondaggioSave(tid, await req.json())
+    }
+
+    if (sub === "waitlist" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiWaitlist(tid, await req.json())
     }
 
     if (sub === "anagrafica" && req.method === "POST") {
