@@ -187,11 +187,7 @@
 <body>
 
 <div class="app">
-  <div class="body">
-
-    <!-- ===================== HOME ===================== -->
-    <section class="scr on" data-s="home">
-      <div class="hdr" style="display:flex;flex-direction:column;align-items:stretch;gap:11px;padding:16px 18px 13px">
+  <div class="hdr" style="display:flex;flex-direction:column;align-items:stretch;gap:11px;padding:16px 18px 13px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Cash<span style="color:var(--acc)">ly</span></div>
           <div style="display:flex;align-items:center;gap:9px">
@@ -201,6 +197,11 @@
         </div>
         <div style="line-height:1.15"><span id="homeGreet" style="font-size:14px;color:var(--dim);font-weight:600">Ciao,</span> <span id="homeName" style="font-size:20px;font-weight:800;letter-spacing:-.02em"></span></div>
       </div>
+  <div class="body">
+
+    <!-- ===================== HOME ===================== -->
+    <section class="scr on" data-s="home">
+      
 
 
 
@@ -257,12 +258,10 @@
 
     <!-- ===================== AFFILIAZIONE ===================== -->
     <section class="scr" data-s="wallet">
-      <div class="hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 13px">
-        <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">La tua <span style="color:var(--acc)">rete</span></div>
-      </div>
+      <!-- niente header di sezione: quello della Home e' persistente, sopra la .body -->
 
       <!-- HERO: il link personale + la promessa -->
-      <div style="padding:2px 18px 0">
+      <div style="padding:14px 18px 0">
         <div class="aff-hero">
           <div class="aff-glow"></div>
           <div style="position:relative;z-index:1">
@@ -300,12 +299,8 @@
 
     <!-- ===================== PROFILO ===================== -->
     <section class="scr" data-s="profilo">
-      <div class="hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 13px">
-        <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Profilo</div>
-      </div>
-
       <!-- Identita' -->
-      <div style="display:flex;align-items:center;gap:14px;padding:4px 18px 0">
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 18px 0">
         <div id="pfAvatar" style="width:72px;height:72px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:800;font-size:28px;flex-shrink:0">A</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -709,7 +704,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=28"></script>
+<script src="identikit.js?v=29"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -848,8 +843,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
         if (nm) righe += rigaDato('Nome', nm);
         righe += rigaDato('Username', uname ? ('@' + uname) : 'non impostato su Telegram');
         if (u.id || L.telegram_id) righe += rigaDato('ID Telegram', String(u.id || L.telegram_id));
-        if (u.is_premium) righe += rigaDato('Telegram Premium', 'attivo');
-        if (u.language_code) righe += rigaDato('Lingua', String(u.language_code).toUpperCase());
+        if (u.is_premium || L.is_premium) righe += rigaDato('Telegram Premium', 'attivo');
+        var lng = u.language_code || L.lingua;
+        if (lng) righe += rigaDato('Lingua', String(lng).toUpperCase());
+        if (L.tg_bio) righe += rigaDato('Bio Telegram', L.tg_bio);
         var dal = dataIt(L.created_at);
         if (dal) righe += rigaDato('Su Cashly dal', dal);
         dd.innerHTML = righe;
@@ -888,18 +885,25 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
     var mm = Math.floor(gg / 30);
     return 'da ' + mm + (mm === 1 ? ' mese' : ' mesi');
   }
+  var STELLA = '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--amber);vertical-align:-1px" title="Telegram Premium"><path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L12 15.4 6.9 18.2l1.2-5.6L4 8.8l5.6-.6z"/></svg>';
   function membroRow(m){
     var badge = m.uscito
       ? '<span class="cbadge out">USCITO</span>'
       : (m.is_cliente
           ? '<span class="cbadge mid">CLIENTE</span>'
           : (m.stato_label ? '<span class="cbadge">' + esc(m.stato_label) + '</span>' : ''));
-    var nomeFull = (m.nome || '') + (m.cognome ? (' ' + m.cognome) : '');
+    var nomeFull = ((m.nome || '') + (m.cognome ? (' ' + m.cognome) : '')).trim();
+    // Riga 2: tutto cio' che Telegram ci da' davvero (niente campi inventati).
     var bits = [];
     bits.push(m.username ? ('@' + m.username) : 'senza username');
+    if (m.lingua) bits.push(String(m.lingua).toUpperCase());
     var dq = daQuando(m.iscritto_il); if (dq) bits.push(dq);
     if (m.servizi_count) bits.push(m.servizi_count + ' business');
     var sub = bits.join(' · ');
+    // Riga 3: la bio Telegram, se l'utente l'ha scritta e la privacy la espone.
+    var bio = m.tg_bio
+      ? '<div class="dds" style="margin-top:4px;color:var(--mut);font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc(m.tg_bio) + '</div>'
+      : '';
     var scriv = m.username
       ? '<a href="https://t.me/' + esc(m.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
       : '<svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>';
@@ -907,9 +911,13 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       + esc(ini(m.nome))
       + (m.foto_url ? '<img src="' + m.foto_url + '" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '')
       + '</div>';
-    return '<div class="dir">'
+    return '<div class="dir" style="align-items:flex-start">'
       + av
-      + '<div style="flex:1;min-width:0"><div class="row" style="gap:7px"><span class="dnm">' + esc(nomeFull) + '</span>' + badge + '</div><div class="dds">' + esc(sub) + '</div></div>'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div class="row" style="gap:6px;flex-wrap:wrap"><span class="dnm">' + esc(nomeFull) + '</span>'
+      +   (m.is_premium ? STELLA : '') + badge + '</div>'
+      +   '<div class="dds">' + esc(sub) + '</div>' + bio
+      + '</div>'
       + scriv + '</div>';
   }
 

@@ -106,13 +106,27 @@ async function refreshPhoto(telegramId: number): Promise<string | null> {
       console.log("foto: getUserProfilePhotos vuoto", telegramId, JSON.stringify(j1).slice(0, 160))
     }
 
-    // Fallback: foto della chat privata col bot.
-    if (!fileId) {
+    // getChat serve come fallback per la foto, ma restituisce anche nome/cognome/username/bio:
+    // finché non lo leggevamo, buttavamo via dati che Telegram ci dà gratis. Lo chiamiamo
+    // SEMPRE (non solo quando manca la foto) così i profili della rete restano aggiornati.
+    try {
       const r2 = await fetch(`${TG_API}/getChat?chat_id=${telegramId}`)
       const j2 = await r2.json()
-      const p = j2?.result?.photo
-      if (j2.ok && p) fileId = p.big_file_id || p.small_file_id || null
-      else console.log("foto: getChat senza foto", telegramId, JSON.stringify(j2).slice(0, 160))
+      const c = j2?.ok ? j2.result : null
+      if (c) {
+        if (!fileId && c.photo) fileId = c.photo.big_file_id || c.photo.small_file_id || null
+        const patch: Record<string, unknown> = {}
+        if (c.first_name) patch.nome = String(c.first_name).slice(0, 120)
+        if (c.last_name) patch.cognome = String(c.last_name).slice(0, 120)
+        if (c.username) patch.username = String(c.username).slice(0, 60)
+        // bio: c'è solo se l'utente l'ha scritta e la privacy la espone
+        patch.tg_bio = c.bio ? String(c.bio).slice(0, 300) : null
+        if (Object.keys(patch).length) {
+          await supabase.from("leads").update(patch).eq("telegram_id", telegramId)
+        }
+      }
+    } catch (e) {
+      console.error("getChat profilo failed", telegramId, e)
     }
 
     if (!fileId) {
@@ -345,6 +359,11 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     telegram_id: from.id,
     username: from.username ?? null,
     nome: from.first_name ?? null,
+    // Dati che l'update di Telegram porta con sé: cognome, lingua e Premium NON sono
+    // recuperabili in altro modo per i membri della rete (getChat non li espone).
+    cognome: from.last_name ?? undefined,
+    lingua: from.language_code ?? undefined,
+    is_premium: from.is_premium ?? undefined,
     bot_started: true,
     attivo: true,
     bloccato_at: null,
@@ -886,7 +905,7 @@ function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolea
 
 async function apiAffiliazione(telegramId: number) {
   const { data: lead } = await supabase.from("leads").select("is_cliente, is_partner, partner_richiesto, ref_clicks").eq("telegram_id", telegramId).maybeSingle()
-  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url, foto_updated_at, sondaggio_completato, is_cliente, created_at, attivo, bloccato_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url, foto_updated_at, sondaggio_completato, is_cliente, created_at, attivo, bloccato_at, tg_bio, lingua, is_premium").eq("referred_by", telegramId).order("created_at", { ascending: false })
   // Rete completa a ogni profondita' (non solo i diretti): funzione ricorsiva businessup.rete_totale.
   const { data: reteTot } = await supabase.rpc("rete_totale", { root_id: telegramId })
   // Rinfresca le foto profilo dei membri dall'API bot -> storage (URL stabile), max ogni 12h, con un tetto per non rallentare troppo.
@@ -931,6 +950,10 @@ async function apiAffiliazione(telegramId: number) {
     business_approvati: approvatiCount[i.telegram_id] ?? 0,
     iscritto_il: i.created_at || null,
     uscito: i.attivo === false,
+    // Dati Telegram: bio da getChat; lingua/premium solo per chi ha fatto /start dopo il 16/07/26.
+    tg_bio: i.tg_bio || "",
+    lingua: i.lingua || "",
+    is_premium: i.is_premium === true,
   }))
 
   const { data: servizi } = await supabase.from("servizi").select("id, nome").order("nome")
