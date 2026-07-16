@@ -924,6 +924,28 @@ async function apiVota(telegramId: number, body: any) {
   return json({ ok: true, votato: !existing, voti: count ?? 0 })
 }
 
+// Disattiva un servizio: l'utente torna a poterlo riattivare da capo.
+// Non tocchiamo tutorial_progress: se lo riattiva, riprende da dove era.
+async function apiDisattiva(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id) || 0
+  if (!servizioId) return json({ error: "servizio_id_richiesto" }, 400)
+
+  const { error } = await supabase.from("lead_servizi")
+    .delete().eq("telegram_id", telegramId).eq("servizio_id", servizioId)
+  if (error) {
+    console.error("disattiva failed:", error)
+    return json({ error: "save_failed", detail: error.message }, 500)
+  }
+  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_disattivato", dettaglio: `servizio:${servizioId}` })
+
+  // is_cliente resta vero solo se ha ancora almeno un servizio attivo.
+  const { count } = await supabase.from("lead_servizi")
+    .select("id", { count: "exact", head: true }).eq("telegram_id", telegramId)
+  if (!count) await supabase.from("leads").update({ is_cliente: false }).eq("telegram_id", telegramId)
+
+  return json({ ok: true, attivi_rimasti: count ?? 0 })
+}
+
 // Lista d'attesa: per i servizi non ancora attivi, al posto di "Attiva" c'e' "Avvisami".
 // Quando l'admin lo mette attivo, parte il messaggio del bot a chi si e' iscritto qui.
 async function apiWaitlist(telegramId: number, body: any) {
@@ -2302,6 +2324,12 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiWaitlist(tid, await req.json())
+    }
+
+    if (sub === "disattiva" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiDisattiva(tid, await req.json())
     }
 
     if (sub === "anagrafica" && req.method === "POST") {
