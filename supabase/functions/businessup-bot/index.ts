@@ -886,7 +886,9 @@ function membroStatoLabel(i: { is_cliente: boolean; sondaggio_completato: boolea
 
 async function apiAffiliazione(telegramId: number) {
   const { data: lead } = await supabase.from("leads").select("is_cliente, is_partner, partner_richiesto, ref_clicks").eq("telegram_id", telegramId).maybeSingle()
-  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, foto_updated_at, sondaggio_completato, is_cliente, created_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  const { data: invitati } = await supabase.from("leads").select("telegram_id, nome, cognome, username, foto_url, foto_updated_at, sondaggio_completato, is_cliente, created_at, attivo, bloccato_at").eq("referred_by", telegramId).order("created_at", { ascending: false })
+  // Rete completa a ogni profondita' (non solo i diretti): funzione ricorsiva businessup.rete_totale.
+  const { data: reteTot } = await supabase.rpc("rete_totale", { root_id: telegramId })
   // Rinfresca le foto profilo dei membri dall'API bot -> storage (URL stabile), max ogni 12h, con un tetto per non rallentare troppo.
   let fotoRefreshed = 0
   for (const i of (invitati ?? [])) {
@@ -917,7 +919,9 @@ async function apiAffiliazione(telegramId: number) {
   for (const a of approvatiMembri ?? []) approvatiCount[(a as any).telegram_id] = (approvatiCount[(a as any).telegram_id] ?? 0) + 1
 
   const membri = (invitati ?? []).map((i: any) => ({
+    telegram_id: i.telegram_id,
     nome: i.nome || i.username || "Utente",
+    cognome: i.cognome || "",
     username: i.username || "",
     foto_url: i.foto_url || "",
     is_cliente: !!i.is_cliente,
@@ -925,6 +929,8 @@ async function apiAffiliazione(telegramId: number) {
     stato_label: membroStatoLabel(i),
     servizi_count: serviziCount[i.telegram_id] ?? 0,
     business_approvati: approvatiCount[i.telegram_id] ?? 0,
+    iscritto_il: i.created_at || null,
+    uscito: i.attivo === false,
   }))
 
   const { data: servizi } = await supabase.from("servizi").select("id, nome").order("nome")
@@ -947,6 +953,8 @@ async function apiAffiliazione(telegramId: number) {
     },
     rete: {
       invitati_count: membri.length,
+      // Rete completa: i diretti piu' tutti quelli invitati da loro, a ogni livello.
+      totale_count: typeof reteTot === "number" ? reteTot : membri.length,
       attivati_count: clientiCount,
       membri,
     },
