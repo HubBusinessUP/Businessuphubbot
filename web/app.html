@@ -767,6 +767,46 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 [style*="letter-spacing:-.03em"]:not(.brandmark){letter-spacing:-.02em!important}
 .brandmark{font-weight:800!important}
 
+/* ===== SCHEDA PRODOTTO A TENDINA ===== */
+.fitem + .fitem{border-top:1px solid var(--line)}
+.fitem.open{background:var(--s1)}
+.frow{align-items:center;gap:10px}
+.fchev{width:17px;height:17px;flex-shrink:0;color:var(--mut);transition:transform .2s}
+.fitem.open .fchev{transform:rotate(90deg)}
+.votebtn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;width:42px;padding:6px 0;
+  background:var(--s1);border:1px solid var(--line2);border-radius:9px;color:var(--dim);cursor:pointer}
+.fitem.open .votebtn{background:var(--s2)}
+.votebtn .vn{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--tx)}
+.votebtn.on{background:rgba(37,207,110,.12);border-color:rgba(37,207,110,.45);color:var(--acc)}
+.votebtn.on .vn{color:var(--acc)}
+.votebtn:active{transform:scale(.94)}
+.savebtn{background:none;border:none;cursor:pointer;padding:6px;flex-shrink:0;line-height:0}
+.fdrop{display:none;padding:2px 18px 18px}
+.fitem.open .fdrop{display:block}
+.spanor{font-size:13.5px;color:var(--dim);line-height:1.55}
+.seyeb{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:17px 0 7px}
+.sbox{border:1px solid var(--line2);border-radius:11px;overflow:hidden}
+.sr{display:flex;gap:12px;justify-content:space-between;align-items:baseline;padding:10px 12px}
+.sr + .sr{border-top:1px solid var(--line2)}
+.sk{font-size:12.5px;color:var(--mut);flex-shrink:0}
+.sv{font-size:13.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.sstep{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line2)}
+.sstep:first-of-type{border-top:none}
+.sn{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--s2);color:var(--dim);font-size:11px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.sstep.done .sn{background:var(--acc);color:#04210F}
+.st{font-size:14px;font-weight:700;letter-spacing:-.01em}
+.sd{font-size:12.5px;color:var(--mut);line-height:1.45;margin-top:3px}
+.slink{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:12px;font-weight:700;color:var(--acc);
+  background:rgba(37,207,110,.1);border:1px solid rgba(37,207,110,.28);border-radius:8px;padding:7px 11px;text-decoration:none}
+.cta-attiva{width:100%;margin-top:16px;background:linear-gradient(135deg,#2fe37b 0%,#16b25e 100%);color:#fff;border:none;
+  border-radius:12px;padding:14px;font-size:15px;font-weight:700;letter-spacing:-.01em;cursor:pointer;
+  text-shadow:0 1px 2px rgba(0,0,0,.22);box-shadow:0 8px 20px -8px rgba(37,207,110,.7)}
+.cta-attiva:active{transform:scale(.98)}
+.cta-attiva[disabled]{opacity:.6;cursor:default}
+.ssrc{font-size:11px;color:var(--mut);text-align:center;margin-top:9px;line-height:1.4}
+.vuoto{padding:30px 18px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6}
+
 /* ===== PROPONI UN BUSINESS: tasto + ===== */
 /* absolute dentro .app (che e' position:relative e non scrolla: scrolla la .body):
    cosi' resta ancorato alla colonna dell'app anche su schermo largo, non al viewport. */
@@ -790,7 +830,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=36"></script>
+<script src="identikit.js?v=37"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -832,17 +872,28 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   } catch(e){}
 
   // ---- HOME: directory reale + salva (preferiti) ----
-  var ALLBIZ = [], SAVED = {}, CATS = [];
-  function starSvg(on){
+  var ALLBIZ = [], SAVED = {}, CATS = [], VOTED = {};
+  // Salva = segnalibro (icona classica). La stella non c'e' piu' (Antonio).
+  function saveSvg(on){
     return on
-      ? '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--amber);stroke:var(--amber);stroke-width:1.4;stroke-linejoin:round"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>'
-      : '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linejoin:round"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>';
+      ? '<svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:var(--acc);stroke:var(--acc);stroke-width:1.6;stroke-linejoin:round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg>'
+      : '<svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linejoin:round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg>';
+  }
+  function voteSvg(){
+    return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14M6 11l6-6 6 6"/></svg>';
   }
   function rowHtml(s){
-    return '<div class="frow">'
-      + '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div>'
-      + '<div class="fds">' + esc(s.descrizione || '') + '</div></div>'
-      + '<button class="savebtn" data-id="' + s.id + '" aria-label="Salva" style="background:none;border:none;cursor:pointer;padding:6px;margin:-6px;flex-shrink:0;line-height:0">' + starSvg(!!SAVED[s.id]) + '</button>'
+    var votato = !!VOTED[s.id];
+    return '<div class="fitem" data-item="' + s.id + '">'
+      + '<div class="frow" data-open="' + s.id + '">'
+      +   '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div>'
+      +   '<div class="fds">' + esc(s.descrizione || '') + '</div></div>'
+      +   '<button class="votebtn' + (votato ? ' on' : '') + '" data-vote="' + s.id + '" aria-label="Vota">'
+      +     voteSvg() + '<span class="vn">' + (s.voti || 0) + '</span></button>'
+      +   '<button class="savebtn" data-id="' + s.id + '" aria-label="Salva">' + saveSvg(!!SAVED[s.id]) + '</button>'
+      +   '<svg class="fchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>'
+      + '</div>'
+      + '<div class="fdrop" data-drop="' + s.id + '"></div>'
       + '</div>';
   }
   function renderFeeds(){
@@ -850,25 +901,168 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var perte = document.getElementById('perteFeed');
     if (host) host.innerHTML = ALLBIZ.length
       ? ALLBIZ.map(rowHtml).join('')
-      : '<div style="padding:34px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
+      : '<div class="vuoto">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
     if (perte) {
       var salv = ALLBIZ.filter(function(s){ return SAVED[s.id]; });
       perte.innerHTML = salv.length
         ? salv.map(rowHtml).join('')
-        : '<div style="padding:30px 24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6">Nessun business salvato.<br>Tocca la stella su un business per salvarlo.</div>';
+        : '<div class="vuoto">Nessun business salvato.<br>Tocca il segnalibro su un business per salvarlo.</div>';
     }
   }
-  document.addEventListener('click', function(e){
-    var b = e.target && e.target.closest && e.target.closest('.savebtn');
-    if (!b) return;
-    e.stopPropagation();
-    var id = parseInt(b.getAttribute('data-id'));
-    if (!id) return;
-    SAVED[id] = !SAVED[id];
+
+  // ---- SCHEDA A TENDINA ----
+  // Panoramica, costi e step NON arrivano da /business-list: li chiediamo a /servizio
+  // solo quando la scheda si apre davvero, e li teniamo in cache.
+  var SCHEDE = {};
+  function riga(k, v){
+    if (v === null || v === undefined || v === '') return '';
+    return '<div class="sr"><div class="sk">' + esc(k) + '</div><div class="sv">' + esc(String(v)) + '</div></div>';
+  }
+  function euro(v){
+    if (v === null || v === undefined || v === '') return '';
+    var n = Number(v);
+    return isNaN(n) ? String(v) : (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)) + ' EUR';
+  }
+  var RISCHIO = { 1:'Molto basso', 2:'Basso', 3:'Medio', 4:'Alto', 5:'Molto alto' };
+
+  function schedaHtml(d){
+    var s = d.servizio || {};
+    var out = '';
+
+    var panor = s.panoramica || s.descrizione || '';
+    if (panor) out += '<div class="spanor">' + esc(panor) + '</div>';
+
+    var costi = ''
+      + riga('Per partire', euro(s.costo_attivazione) || (s.budget_minimo ? euro(s.budget_minimo) : ''))
+      + riga('Costi fissi', s.costi_fissi_mensili ? (euro(s.costi_fissi_mensili) + ' al mese') : '')
+      + riga('Prezzo', s.prezzo)
+      + riga('Note sui costi', s.costi);
+    if (costi) out += '<div class="seyeb">Costi</div><div class="sbox">' + costi + '</div>';
+
+    var car = ''
+      + riga('Tempo richiesto', s.tempo_stimato)
+      + riga('Difficolta', s.difficolta)
+      + riga('Rischio', RISCHIO[s.rischio_livello] || '')
+      + riga('Serve esperienza', s.esperienza_richiesta ? (s.esperienza_richiesta + '/5') : '')
+      + riga('Requisiti', s.requisiti);
+    if (car) out += '<div class="seyeb">Caratteristiche</div><div class="sbox">' + car + '</div>';
+
+    if (!panor && !costi && !car) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
+
+    // Il tutorial compare DOPO l'attivazione: prima c'e' la CTA.
+    var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
+    var attivo = !!d.gia_interessato;
+    var fatto = (d.step_progress && d.step_progress.ultimo_step) || 0;
+
+    if (attivo && steps.length) {
+      out += '<div class="seyeb">Come si attiva &mdash; ' + steps.length + (steps.length === 1 ? ' passo' : ' passi') + '</div>';
+      out += steps.map(function(st, i){
+        var done = i < fatto;
+        return '<div class="sstep' + (done ? ' done' : '') + '">'
+          + '<div class="sn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
+          + '<div style="flex:1;min-width:0">'
+          +   '<div class="st">' + esc(st.titolo || ('Passo ' + (i + 1))) + '</div>'
+          +   (st.testo ? '<div class="sd">' + esc(st.testo) + '</div>' : '')
+          +   (st.link_url ? '<a class="slink" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(st.link_label || 'Apri') + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
+          + '</div></div>';
+      }).join('');
+    } else if (attivo && !steps.length) {
+      out += '<div class="vuoto" style="padding:18px 0">Attivato. Il tutorial non e ancora stato scritto.</div>';
+    } else {
+      out += '<button class="cta-attiva" data-attiva="' + s.id + '">Attiva servizio</button>';
+      if (steps.length) out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
+      else if (!d.ref_link) out += '<div class="ssrc">Il link di questo business non e ancora impostato.</div>';
+    }
+
+    if (d.ref_link && d.ref_fonte === 'sponsor') out += '<div class="ssrc">Il link e di chi ti ha invitato.</div>';
+    return out;
+  }
+
+  function apriScheda(id){
+    var drop = document.querySelector('[data-drop="' + id + '"]');
+    var item = document.querySelector('[data-item="' + id + '"]');
+    if (!drop || !item) return;
+    var aperta = item.classList.toggle('open');
+    if (!aperta) return;
     if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
-    renderFeeds();
-    fetch(API_URL + "/preferito", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, HDRS), body: JSON.stringify({ servizio_id: id }) }).catch(function(){});
+    if (SCHEDE[id]) { drop.innerHTML = schedaHtml(SCHEDE[id]); return; }
+    drop.innerHTML = '<div class="vuoto" style="padding:18px 0">Carico...</div>';
+    fetch(API_URL + '/servizio?id=' + id, { headers: HDRS, cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d || d.error) throw new Error('ko');
+        SCHEDE[id] = d;
+        drop.innerHTML = schedaHtml(d);
+      })
+      .catch(function(){ drop.innerHTML = '<div class="vuoto" style="padding:18px 0">Non sono riuscito a caricare la scheda.</div>'; });
+  }
+
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if (!t || !t.closest) return;
+
+    var b = t.closest('.savebtn');
+    if (b) {
+      e.stopPropagation();
+      var id = parseInt(b.getAttribute('data-id'));
+      if (!id) return;
+      SAVED[id] = !SAVED[id];
+      b.innerHTML = saveSvg(!!SAVED[id]);
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      fetch(API_URL + '/preferito', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: id }) }).catch(function(){});
+      return;
+    }
+
+    var v = t.closest('.votebtn');
+    if (v) {
+      e.stopPropagation();
+      var vid = parseInt(v.getAttribute('data-vote'));
+      if (!vid) return;
+      var num = v.querySelector('.vn');
+      var era = !!VOTED[vid];
+      VOTED[vid] = !era;                       // ottimistico: il tocco deve rispondere subito
+      v.classList.toggle('on', !era);
+      num.textContent = Math.max(0, (parseInt(num.textContent) || 0) + (era ? -1 : 1));
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      fetch(API_URL + '/vota', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: vid }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (d && typeof d.voti === 'number') num.textContent = d.voti; })   // il vero conteggio e del server
+        .catch(function(){ VOTED[vid] = era; v.classList.toggle('on', era); num.textContent = Math.max(0, (parseInt(num.textContent) || 0) + (era ? 1 : -1)); });
+      return;
+    }
+
+    var a = t.closest('.cta-attiva');
+    if (a) {
+      e.stopPropagation();
+      var aid = parseInt(a.getAttribute('data-attiva'));
+      if (!aid) return;
+      a.disabled = true; a.textContent = 'Attivo...';
+      fetch(API_URL + '/attiva', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: aid }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || d.error) throw new Error('ko');
+          if (SCHEDE[aid]) SCHEDE[aid].gia_interessato = true;
+          var drop = document.querySelector('[data-drop="' + aid + '"]');
+          if (drop && SCHEDE[aid]) drop.innerHTML = schedaHtml(SCHEDE[aid]);   // ora appaiono gli step
+          if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
+        })
+        .catch(function(){ a.disabled = false; a.textContent = 'Attiva servizio'; });
+      return;
+    }
+
+    // link di uno step: aprilo FUORI, non dentro la webview di Telegram
+    var ext = t.closest('a[data-ext]');
+    if (ext) {
+      e.preventDefault();
+      var u = ext.getAttribute('href');
+      try { if (tg && tg.openLink) tg.openLink(u); else window.open(u, '_blank'); } catch(x){ window.open(u, '_blank'); }
+      return;
+    }
+
+    var r = t.closest('.frow');
+    if (r) apriScheda(parseInt(r.getAttribute('data-open')));
   });
+
   fetch(API_URL + "/business-list", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -878,6 +1072,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ ALLBIZ.push(s); }); });
       ALLBIZ.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
+      (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
       renderFeeds();
       // Il banner mostra il numero VERO di business in directory. A zero resta nascosto:
       // "0 business verificati" e' peggio che non dire niente.
