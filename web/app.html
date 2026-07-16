@@ -195,7 +195,7 @@
             <div id="homeAvatar" data-goto="wallet" style="width:38px;height:38px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:15px;flex-shrink:0;cursor:pointer">A</div>
           </div>
         </div>
-        <div style="line-height:1.15"><span id="homeGreet" style="font-size:14px;color:var(--dim);font-weight:600">Ciao,</span> <span id="homeName" style="font-size:20px;font-weight:800;letter-spacing:-.02em"></span></div>
+        <div id="homeSaluto" style="line-height:1.15"><span id="homeGreet" style="font-size:14px;color:var(--dim);font-weight:600">Ciao,</span> <span id="homeName" style="font-size:20px;font-weight:800;letter-spacing:-.02em"></span></div>
       </div>
   <div class="body">
 
@@ -642,7 +642,11 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .toggle i{background:#fff}
 
 /* header pulito, senza bordo (PH) */
-.hdr{background:var(--bg);border-bottom:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+/* Header persistente: stacco netto dal contenuto che ci scorre sotto (Antonio: "metti una separazione"). */
+.hdr{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:1px solid var(--line2);box-shadow:0 8px 18px -12px rgba(0,0,0,.9)}
+/* Il saluto "Buonasera, Antony" ha senso solo in Home: sulle altre schermate resta il solo brand. */
+#homeSaluto{transition:opacity .18s ease}
+.app:not(.on-home) #homeSaluto{display:none}
 .logo{font-family:var(--display);font-weight:800;letter-spacing:-.02em}
 
 /* SEGMENTED: attivo BIANCO con testo scuro, inattivo pill scura — la firma di PH */
@@ -704,7 +708,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=29"></script>
+<script src="identikit.js?v=30"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -948,6 +952,24 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
       }
     })
     .catch(function(){});
+
+  // ===== CHROME: marca su .app la schermata attiva =====
+  // Il saluto va mostrato solo in Home. La schermata cambia da PIU' punti (handler della nav,
+  // showScreen dei data-goto, scr() interna): invece di rincorrerli tutti, osservo il toggle
+  // della classe .on sulle .scr, cosi' vale per ogni percorso presente e futuro.
+  (function(){
+    var app = document.querySelector('.app');
+    if (!app) return;
+    function sync(){
+      var on = app.querySelector('.scr.on');
+      app.classList.toggle('on-home', !!on && on.getAttribute('data-s') === 'home');
+    }
+    try {
+      var mo = new MutationObserver(sync);
+      app.querySelectorAll('.scr').forEach(function(s){ mo.observe(s, { attributes:true, attributeFilter:['class'] }); });
+    } catch(e){}
+    sync();
+  })();
 
   // ===== CONDIVIDI: menu con link diretti per app (WhatsApp/Telegram/X/Copia) + share di sistema =====
   // NB: dentro Telegram navigator.share spesso propone solo Telegram, quindi diamo i link diretti.
