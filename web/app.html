@@ -206,11 +206,10 @@
 
 
       <div style="padding:14px 18px 0">
-        <div class="aff-hero">
+        <div class="aff-hero home-hero">
           <div class="aff-glow"></div>
           <div style="position:relative;z-index:1">
-            <div style="font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.28;color:var(--tx)">Cerca il business che ti farà <span style="color:var(--acc)">cambiare vita</span></div>
-            <div id="homeCount" style="display:none;align-items:center;gap:7px;margin-top:15px;font-size:12px;font-weight:700;color:var(--acc);background:rgba(37,207,110,.12);border:1px solid rgba(37,207,110,.3);border-radius:999px;padding:6px 12px;width:fit-content"></div>
+            <div class="hero-tit">Cerca il business che ti farà <span style="color:var(--acc)">cambiare vita</span></div>
           </div>
         </div>
       </div>
@@ -768,6 +767,13 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .brandmark{font-weight:800!important}
 
 
+/* Hero HUB: il BLOCCO e' centrato nel riquadro, il TESTO resta a bandiera a sinistra
+   (Antonio: "lo voglio centrato bandiera a sx"). Centrare anche il testo spezzerebbe
+   la bandiera costruita alla build 36. */
+.home-hero{display:flex;align-items:center;min-height:112px}
+.home-hero > div:not(.aff-glow){width:100%}
+.hero-tit{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.3;color:var(--tx);text-align:left;text-wrap:balance}
+
 /* Ricerca e filtro categoria, ora veri e non piu' decorativi */
 .search{gap:9px}
 #cerca{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);
@@ -851,7 +857,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=40"></script>
+<script src="identikit.js?v=41"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1112,14 +1118,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
       (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
       renderFeeds();
-      // Il banner mostra il numero VERO di business in directory. A zero resta nascosto:
-      // "0 business verificati" e' peggio che non dire niente.
-      var hc = document.getElementById('homeCount');
-      if (hc && ALLBIZ.length) {
-        hc.style.display = 'inline-flex';
-        hc.innerHTML = '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:var(--acc);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"/></svg>'
-          + ALLBIZ.length + (ALLBIZ.length === 1 ? ' business verificato' : ' business verificati');
-      }
     })
     .catch(function(){});
 
