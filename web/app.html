@@ -227,28 +227,23 @@
     </section>
 
     <!-- ===================== AFFILIAZIONE ===================== -->
+    <!-- Stessa impaginazione dell'HUB: niente hero, solo il link, i KPI e le card
+         della rete (i ref al posto dei servizi). -->
     <section class="scr" data-s="wallet">
-      <!-- niente header di sezione: quello della Home e' persistente, sopra la .body -->
 
-      <!-- HERO: il link personale + la promessa -->
-      <div style="padding:14px 18px 0">
-        <div class="aff-hero">
-          <div class="aff-glow"></div>
-          <div style="position:relative;z-index:1">
-            <div style="font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.28;color:var(--tx)">Costruisci la tua <span style="color:var(--acc)">community definitiva</span></div>
-            <div style="font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px">Chi entra con il tuo link resta legato a te. Per sempre.</div>
-            <div style="display:flex;align-items:center;gap:9px;margin-top:17px">
-              <div style="flex:1;min-width:0;display:flex;align-items:center;height:46px;padding:0 13px;background:var(--bg);border:1px solid var(--line2);border-radius:11px">
-                <div id="inviteLinkText" style="font-family:var(--mono);font-size:12px;color:var(--acc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">t.me/cashlyhub_bot</div>
-              </div>
-              <button id="inviteBtn" class="aff-cta">Invita<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
-            </div>
+      <!-- Link affiliazione: il riquadro col link + Invita (senza la promessa dell'hero) -->
+      <div style="padding:16px 16px 0">
+        <div class="eyebrow" style="padding:0 2px 8px">Il tuo link</div>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="flex:1;min-width:0;display:flex;align-items:center;height:46px;padding:0 13px;background:var(--s0);border:1px solid var(--line2);border-radius:11px">
+            <div id="inviteLinkText" style="font-family:var(--mono);font-size:12px;color:var(--acc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">t.me/cashlyhub_bot</div>
           </div>
+          <button id="inviteBtn" class="aff-cta">Invita<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
         </div>
       </div>
 
       <!-- KPI -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 16px 0">
         <div class="aff-kpi">
           <div class="n" id="kpiDiretti">0</div>
           <div class="l">Iscritti</div>
@@ -261,9 +256,9 @@
         </div>
       </div>
 
-      <!-- Lista iscritti -->
-      <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">I tuoi iscritti</div></div>
-      <div class="list" id="reteList" style="padding-top:6px;padding-bottom:8px"></div>
+      <!-- Rete: card come nell'HUB, un ref per card -->
+      <div class="grp">I tuoi iscritti</div>
+      <div id="reteList"></div>
       <div style="height:16px"></div>
     </section>
 
@@ -837,6 +832,14 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .fchev{width:16px;height:16px;flex-shrink:0;color:var(--mut);opacity:.6;transition:transform .2s}
 .fitem.open .fchev{transform:rotate(180deg)}
 .fdrop{padding:0 16px 16px}
+/* Card della rete (Affiliazione): stessa forma delle card directory, un ref per card */
+.mcard{display:flex;align-items:flex-start;gap:13px;margin:10px 16px 0;padding:15px 16px;
+  background:var(--s0);border:1px solid var(--line2);border-radius:12px}
+.mav{position:relative;overflow:hidden;width:44px;height:44px;border-radius:50%;background:var(--s2);color:var(--tx);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0}
+.mav.out{opacity:.5}
+.mnm{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.msub{font-size:12px;color:var(--mut);margin-top:4px}
 /* Condividi in fondo alla scheda, uguale allo stile dell'header */
 .sc-share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;
   background:var(--s1);border:1px solid var(--line2);border-radius:11px;padding:12px;color:var(--tx);
@@ -956,7 +959,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=48"></script>
+<script src="identikit.js?v=49"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1687,16 +1690,16 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var scriv = m.username
       ? '<a href="https://t.me/' + esc(m.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
       : '<svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>';
-    var av = '<div style="position:relative;overflow:hidden;width:46px;height:46px;border-radius:50%;background:var(--s2);color:var(--tx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0' + (m.uscito ? ';opacity:.5' : '') + '">'
+    var av = '<div class="mav' + (m.uscito ? ' out' : '') + '">'
       + esc(ini(m.nome))
       + (m.foto_url ? '<img src="' + m.foto_url + '" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '')
       + '</div>';
-    return '<div class="dir" style="align-items:flex-start">'
+    // Card come nell'HUB: un ref per card, avatar a sinistra, contatto a destra.
+    return '<div class="mcard">'
       + av
       + '<div style="flex:1;min-width:0">'
-      +   '<div class="row" style="gap:6px;flex-wrap:wrap"><span class="dnm">' + esc(nomeFull) + '</span>'
-      +   (m.is_premium ? STELLA : '') + badge + '</div>'
-      +   '<div class="dds">' + esc(sub) + '</div>' + bio
+      +   '<div class="mnm">' + esc(nomeFull) + (m.is_premium ? STELLA : '') + badge + '</div>'
+      +   '<div class="msub">' + esc(sub) + '</div>' + bio
       + '</div>'
       + scriv + '</div>';
   }
@@ -1724,7 +1727,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (rl) {
         rl.innerHTML = membri.length
           ? membri.map(membroRow).join('')
-          : '<div style="padding:24px;text-align:center;color:var(--mut);font-size:13px;line-height:1.5">Ancora nessuno nella tua rete.<br>Condividi il tuo link per iniziare.</div>';
+          : '<div class="vuoto">Ancora nessuno nella tua rete.<br>Condividi il tuo link per iniziare.</div>';
       }
     })
     .catch(function(){});
