@@ -832,14 +832,20 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .fchev{width:16px;height:16px;flex-shrink:0;color:var(--mut);opacity:.6;transition:transform .2s}
 .fitem.open .fchev{transform:rotate(180deg)}
 .fdrop{padding:0 16px 16px}
-/* Card della rete (Affiliazione): stessa forma delle card directory, un ref per card */
-.mcard{display:flex;align-items:flex-start;gap:13px;margin:10px 16px 0;padding:15px 16px;
+/* Card della rete (Affiliazione): niente foto, nome+@nick a sinistra, icone a destra */
+.mcard{display:flex;align-items:center;gap:12px;margin:10px 16px 0;padding:14px 16px;
   background:var(--s0);border:1px solid var(--line2);border-radius:12px}
-.mav{position:relative;overflow:hidden;width:44px;height:44px;border-radius:50%;background:var(--s2);color:var(--tx);
-  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0}
-.mav.out{opacity:.5}
 .mnm{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:15px;font-weight:600;letter-spacing:-.01em}
-.msub{font-size:12px;color:var(--mut);margin-top:4px}
+.mnk{font-size:12.5px;color:var(--mut);margin-top:3px;font-family:var(--mono)}
+.micons{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.mi{position:relative;width:36px;height:36px;border-radius:9px;background:var(--s1);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;color:var(--dim);cursor:pointer;text-decoration:none}
+.mi.off{opacity:.4;cursor:default}
+.mi.ind{cursor:default}
+.mib{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+  background:var(--acc);color:#04210F;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
+.mi.st-in{color:var(--acc);border-color:rgba(37,207,110,.35);background:rgba(37,207,110,.1)}
+.mi.st-out{color:#E2574A;border-color:rgba(226,87,74,.35);background:rgba(226,87,74,.1)}
 /* Condividi in fondo alla scheda, uguale allo stile dell'header */
 .sc-share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;
   background:var(--s1);border:1px solid var(--line2);border-radius:11px;padding:12px;color:var(--tx);
@@ -959,7 +965,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=49"></script>
+<script src="identikit.js?v=50"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1015,6 +1021,30 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function voteSvg(){
     return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14M6 11l6-6 6 6"/></svg>';
   }
+  // Fascia temporale di una data: piu' recente in alto. Serve sia ai business (created_at)
+  // sia ai ref (iscritto_il). Antonio: dividere per giorni/settimane/mesi/anni.
+  function bucketTempo(iso){
+    if (!iso) return { ord: 9, label: 'Senza data' };
+    var d = new Date(iso.indexOf('Z') < 0 && iso.indexOf('+') < 0 ? iso + 'Z' : iso);
+    if (isNaN(d.getTime())) return { ord: 9, label: 'Senza data' };
+    var gg = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (gg <= 0) return { ord: 0, label: 'Oggi' };
+    if (gg < 7)  return { ord: 1, label: 'Questa settimana' };
+    if (gg < 30) return { ord: 2, label: 'Questo mese' };
+    if (gg < 365) return { ord: 3, label: "Quest'anno" };
+    return { ord: 4, label: 'Oltre un anno' };
+  }
+  function raggruppaTempo(items, getIso, rowFn){
+    var buckets = {};
+    items.forEach(function(it){
+      var b = bucketTempo(getIso(it));
+      if (!buckets[b.ord]) buckets[b.ord] = { label: b.label, items: [] };
+      buckets[b.ord].items.push(it);
+    });
+    return Object.keys(buckets).sort(function(a,b){ return a - b; }).map(function(k){
+      return '<div class="grp">' + esc(buckets[k].label) + '</div>' + buckets[k].items.map(rowFn).join('');
+    }).join('');
+  }
   function rowHtml(s){
     var votato = !!VOTED[s.id];
     var attivo = s.stato === 'attivo';
@@ -1053,19 +1083,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         : '<div class="vuoto">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
       return;
     }
-    // Raggruppati per categoria, come una directory: la sezione dice dove sei.
-    var perCat = {};
-    lista.forEach(function(s){ (perCat[s.categoria_id] = perCat[s.categoria_id] || []).push(s); });
-    var out = '';
-    CATS.forEach(function(c){
-      var dentro = perCat[c.id];
-      if (!dentro || !dentro.length) return;
-      out += '<div class="grp">' + esc(c.nome) + '</div>' + dentro.map(rowHtml).join('');
-    });
-    // Business senza categoria: non farli sparire.
-    var orfani = lista.filter(function(s){ return !CATS.some(function(c){ return c.id === s.categoria_id; }); });
-    if (orfani.length) out += '<div class="grp">Altro</div>' + orfani.map(rowHtml).join('');
-    host.innerHTML = out;
+    // Raggruppati per FASCIA TEMPORALE (Antonio): la categoria resta la navigazione (tab).
+    host.innerHTML = raggruppaTempo(lista, function(s){ return s.created_at; }, rowHtml);
   }
 
   // ---- CATEGORIE A DUE LIVELLI ----
@@ -1669,40 +1688,34 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     return 'da ' + mm + (mm === 1 ? ' mese' : ' mesi');
   }
   var STELLA = '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--amber);vertical-align:-1px" title="Telegram Premium"><path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L12 15.4 6.9 18.2l1.2-5.6L4 8.8l5.6-.6z"/></svg>';
+  var IC_MSG = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M21 11.5a8 8 0 0 1-8.5 8 9 9 0 0 1-3.5-.7L3 20l1.3-3.9A8 8 0 1 1 21 11.5Z"/></svg>';
+  var IC_BIZ = '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+  var IC_IN  = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 11 2 2 4-4"/></svg>';
+  var IC_OUT = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5M22 8l-5 5"/></svg>';
   function membroRow(m){
-    var badge = m.uscito
-      ? '<span class="cbadge out">USCITO</span>'
-      : (m.is_cliente
-          ? '<span class="cbadge mid">CLIENTE</span>'
-          : (m.stato_label ? '<span class="cbadge">' + esc(m.stato_label) + '</span>' : ''));
-    var nomeFull = ((m.nome || '') + (m.cognome ? (' ' + m.cognome) : '')).trim();
-    // Riga 2: tutto cio' che Telegram ci da' davvero (niente campi inventati).
-    var bits = [];
-    bits.push(m.username ? ('@' + m.username) : 'senza username');
-    if (m.lingua) bits.push(String(m.lingua).toUpperCase());
-    var dq = daQuando(m.iscritto_il); if (dq) bits.push(dq);
-    if (m.servizi_count) bits.push(m.servizi_count + ' business');
-    var sub = bits.join(' · ');
-    // Riga 3: la bio Telegram, se l'utente l'ha scritta e la privacy la espone.
-    var bio = m.tg_bio
-      ? '<div class="dds" style="margin-top:4px;color:var(--mut);font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc(m.tg_bio) + '</div>'
-      : '';
-    var scriv = m.username
-      ? '<a href="https://t.me/' + esc(m.username) + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--tx);background:var(--s1);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;text-decoration:none;white-space:nowrap">Scrivigli</a>'
-      : '<svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--mut)"><path d="m9 6 6 6-6 6"/></svg>';
-    var av = '<div class="mav' + (m.uscito ? ' out' : '') + '">'
-      + esc(ini(m.nome))
-      + (m.foto_url ? '<img src="' + m.foto_url + '" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '')
-      + '</div>';
-    // Card come nell'HUB: un ref per card, avatar a sinistra, contatto a destra.
+    var nomeFull = ((m.nome || '') + (m.cognome ? (' ' + m.cognome) : '')).trim() || 'Utente';
+    var nick = m.username ? ('@' + m.username) : 'senza username';
+    // Messaggio: solo se ha username (senza, Telegram non lo raggiunge da qui).
+    var msg = m.username
+      ? '<a class="mi" href="https://t.me/' + esc(m.username) + '" target="_blank" aria-label="Messaggio">' + IC_MSG + '</a>'
+      : '<span class="mi off" aria-label="Nessun contatto">' + IC_MSG + '</span>';
+    // Servizi attivi: icona + numero (0 = spento).
+    var nsv = m.servizi_count || 0;
+    var biz = '<span class="mi ind' + (nsv ? '' : ' off') + '" aria-label="Servizi attivi">' + IC_BIZ
+      + (nsv ? '<b class="mib">' + nsv + '</b>' : '') + '</span>';
+    // Stato rete: dentro (verde) o uscito (rosso).
+    var stato = m.uscito
+      ? '<span class="mi st-out" aria-label="Uscito dalla rete">' + IC_OUT + '</span>'
+      : '<span class="mi st-in" aria-label="Nella tua rete">' + IC_IN + '</span>';
     return '<div class="mcard">'
-      + av
       + '<div style="flex:1;min-width:0">'
-      +   '<div class="mnm">' + esc(nomeFull) + (m.is_premium ? STELLA : '') + badge + '</div>'
-      +   '<div class="msub">' + esc(sub) + '</div>' + bio
+      +   '<div class="mnm">' + esc(nomeFull) + (m.is_premium ? STELLA : '') + '</div>'
+      +   '<div class="mnk">' + esc(nick) + '</div>'
       + '</div>'
-      + scriv + '</div>';
+      + '<div class="micons">' + msg + biz + stato + '</div>'
+      + '</div>';
   }
+
 
   fetch(API_URL + "/affiliazione", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
@@ -1726,7 +1739,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var rl = document.getElementById('reteList');
       if (rl) {
         rl.innerHTML = membri.length
-          ? membri.map(membroRow).join('')
+          ? raggruppaTempo(membri, function(m){ return m.iscritto_il; }, membroRow)
           : '<div class="vuoto">Ancora nessuno nella tua rete.<br>Condividi il tuo link per iniziare.</div>';
       }
     })
