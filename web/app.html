@@ -187,83 +187,46 @@
 <body>
 
 <div class="app">
-  <div class="hdr" style="display:flex;flex-direction:column;align-items:stretch;gap:11px;padding:16px 18px 13px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <div class="brandmark" style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1">Cash<span style="color:var(--acc)">ly</span></div>
-          <div style="display:flex;align-items:center;gap:9px">
-            <button id="shareBtn" aria-label="Condividi" style="width:38px;height:38px;flex-shrink:0;background:var(--s1);border:1px solid var(--line2);border-radius:10px;color:var(--tx);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
-            <div id="homeAvatar" data-goto="wallet" style="width:38px;height:38px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--acc);font-weight:700;font-size:15px;flex-shrink:0;cursor:pointer">A</div>
-          </div>
-        </div>
-        <div id="homeSaluto" style="line-height:1.15"><span id="homeGreet" style="font-size:14px;color:var(--dim);font-weight:600">Ciao,</span> <span id="homeName" style="font-size:20px;font-weight:800;letter-spacing:-.02em"></span></div>
-      </div>
+  <div class="hdr">
+    <div class="salu"><span id="homeGreet">Ciao,</span> <b id="homeName"></b></div>
+    <div class="hdricons">
+      <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+      <div id="homeAvatar" data-goto="profilo" aria-label="Profilo">A</div>
+    </div>
+  </div>
   <div class="body">
 
-    <!-- ===================== HOME ===================== -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- ===================== HUB ===================== -->
     <section class="scr on" data-s="home">
-      
-
-
-
-      <div style="padding:14px 18px 0">
-        <div class="aff-hero home-hero">
-          <div class="aff-glow"></div>
-          <div style="position:relative;z-index:1">
-            <div class="hero-tit">Cerca il business che ti farà <span style="color:var(--acc)">cambiare vita</span></div>
-          </div>
-        </div>
+      <div class="cerca">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="cerca" type="search" autocomplete="off" placeholder="Cerca un business">
       </div>
-
-      <div class="seg" style="padding-top:16px">
-        <button class="on" data-view="evidenza"><svg class="ico" viewBox="0 0 24 24" style="width:17px;height:17px;stroke-width:2.2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>In evidenza</button>
-        <button data-view="perte"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none"><path d="M12 4l2.3 5 5.7.5-4.3 3.7 1.3 5.5L12 18.8 6.7 21.7 8 16.2 3.7 12.5 9.4 12z"/></svg>Salvati</button>
-      </div>
-
-      <div class="row" style="gap:10px;margin:14px 18px 0">
-        <div class="search" style="flex:1;margin:0">
-          <svg class="ico" viewBox="0 0 24 24" style="width:19px;height:19px;color:var(--mut);flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="cerca" type="search" autocomplete="off" placeholder="Cerca un business">
-        </div>
-        
-      </div>
-
-
-
-      <!-- Categoria (dropdown) -->
-      <div style="padding:10px 18px 0">
-        <div class="fdd set" id="catBtn"><span>Categoria: <b id="catVal" style="color:var(--tx);font-weight:700">Tutte</b></span><svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--mut);flex-shrink:0"><path d="m6 9 6 6 6-6"/></svg></div>
-      </div>
-
-      <div class="feed" data-view="evidenza">
-        <div id="listaReale"></div>
-      </div>
-
-      <div class="feed hide" data-view="perte">
-        <div class="feedhd">I tuoi salvati</div>
-        <div class="feedsub" id="pertesub">I business che salvi con la stella restano qui.</div>
-        <div id="perteFeed"></div>
-      </div>
-
-      <div style="height:14px"></div>
+      <nav class="macros" id="macroTabs"></nav>
+      <div class="macroline"></div>
+      <nav class="subs" id="subTabs"></nav>
+      <div id="listaReale"></div>
     </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     <!-- ===================== AFFILIAZIONE ===================== -->
     <section class="scr" data-s="wallet">
@@ -813,6 +776,62 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cat-n{font-size:12px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
 .cat-opt.on .cat-n{color:var(--acc)}
 
+
+/* ===== HUB: header senza wordmark, categorie a due livelli, righe col solo titolo ===== */
+.hdr{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line2);
+  box-shadow:0 8px 18px -12px rgba(0,0,0,.9);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px}
+.hdr .salu{font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--mut);min-width:0}
+.hdr .salu b{color:var(--tx);font-weight:600}
+.hdricons{display:flex;align-items:center;gap:12px;flex-shrink:0}
+#shareBtn{background:none;border:none;padding:4px;color:var(--mut);cursor:pointer;line-height:0}
+#homeAvatar{width:34px;height:34px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);
+  background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;
+  color:var(--dim);font-weight:700;font-size:13px;cursor:pointer}
+.app:not(.on-home) .hdr .salu{visibility:hidden}
+
+.cerca{display:flex;align-items:center;gap:9px;margin:14px 20px 0;padding:11px 14px;
+  background:var(--s1);border-radius:10px;color:var(--mut)}
+#cerca{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);
+  font-family:var(--sans);font-size:14px;padding:0}
+#cerca::placeholder{color:var(--mut)}
+#cerca::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+
+.macros{display:flex;gap:18px;overflow-x:auto;padding:18px 20px 0;scrollbar-width:none}
+.macros::-webkit-scrollbar{display:none}
+.macro{flex-shrink:0;background:none;border:none;padding:0 0 10px;font-family:var(--sans);font-size:15px;
+  font-weight:600;color:var(--mut);white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;
+  letter-spacing:-.01em}
+.macro.on{color:var(--tx);border-bottom-color:var(--tx)}
+.macroline{height:1px;background:var(--line2);margin:0 20px}
+.subs{display:flex;gap:8px;overflow-x:auto;padding:12px 20px 0;scrollbar-width:none}
+.subs::-webkit-scrollbar{display:none}
+.sub{flex-shrink:0;background:var(--s1);border:none;border-radius:8px;padding:7px 12px;
+  font-family:var(--sans);font-size:13px;font-weight:500;color:var(--dim);white-space:nowrap;cursor:pointer}
+.sub.on{background:var(--s2);color:var(--tx);font-weight:600}
+.sub b{font-size:11px;color:var(--mut);font-weight:600}
+.sub.on b{color:var(--dim)}
+
+.grp{font-size:12.5px;font-weight:600;color:var(--mut);padding:26px 20px 0}
+
+/* Riga: SOLO titolo + stato. A separare e' lo spazio, non i filetti. */
+.fitem{margin:0}
+.fitem + .fitem{border-top:1px solid var(--line)}
+.frow{display:flex;align-items:center;gap:14px;padding:20px}
+.fbody{flex:1;min-width:0}
+.fnm{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.25;display:block}
+.fst{font-size:12px;color:var(--mut);margin-top:7px;display:flex;align-items:center;gap:7px}
+.pdot{width:6px;height:6px;border-radius:50%;position:relative;flex-shrink:0;background:var(--mut);opacity:.6}
+.fst.live{color:var(--acc)}
+.fst.live .pdot{background:var(--acc);opacity:1}
+.fst.live .pdot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--acc);
+  animation:pdotp 1.8s ease-out infinite}
+@keyframes pdotp{0%{transform:scale(1);opacity:.8}70%{transform:scale(3.2);opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.fst.live .pdot::after{animation:none}}
+.fchev{width:16px;height:16px;flex-shrink:0;color:var(--mut);opacity:.6;transition:transform .2s}
+.fitem.open .fchev{transform:rotate(180deg)}
+.fdrop{padding:0 20px 20px}
+
 /* ===== SCHEDA PRODOTTO A TENDINA ===== */
 .fitem + .fitem{border-top:1px solid var(--line)}
 .fitem.open{background:var(--s1)}
@@ -927,7 +946,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=45"></script>
+<script src="identikit.js?v=46"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -970,6 +989,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
   // ---- HOME: directory reale + salva (preferiti) ----
   var ALLBIZ = [], SAVED = {}, CATS = [], VOTED = {}, MACRO = [];
+  // Stato dei filtri della directory. PRIMA erano dichiarati nel vecchio blocco
+  // renderFeeds, che ho sostituito riscrivendo l'HUB: senza queste, FILTRO_Q era
+  // undefined e visibili() lanciava, ingoiato dal .catch -> lista vuota.
+  var FILTRO_Q = '', FILTRO_CAT = 0;
   // Salva = segnalibro (icona classica). La stella non c'e' piu' (Antonio).
   function saveSvg(on){
     return on
@@ -981,45 +1004,107 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   function rowHtml(s){
     var votato = !!VOTED[s.id];
+    var attivo = s.stato === 'attivo';
     return '<div class="fitem" data-item="' + s.id + '">'
       + '<div class="frow" data-open="' + s.id + '">'
-      // Riga chiusa: SOLO il titolo (Antonio). La descrizione si legge aprendo la scheda,
-      // dove fa da panoramica: dirla due volte non aggiunge niente.
-      +   '<div class="fbody"><div class="fnm">' + esc(s.nome) + '</div></div>'
+      +   '<div class="fbody">'
+      +     '<div class="fnm">' + esc(s.nome) + '</div>'
+      +     '<div class="fst' + (attivo ? ' live' : '') + '"><span class="pdot"></span>' + (attivo ? 'attivo' : 'in arrivo') + '</div>'
+      +   '</div>'
       +   '<button class="votebtn' + (votato ? ' on' : '') + '" data-vote="' + s.id + '" aria-label="Vota">'
       +     voteSvg() + '<span class="vn">' + (s.voti || 0) + '</span></button>'
       +   '<button class="savebtn" data-id="' + s.id + '" aria-label="Salva">' + saveSvg(!!SAVED[s.id]) + '</button>'
-      +   '<svg class="fchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>'
+      +   '<svg class="fchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>'
       + '</div>'
       + '<div class="fdrop" data-drop="' + s.id + '"></div>'
       + '</div>';
   }
-  // Filtri attivi: categoria scelta + testo cercato.
-  var FILTRO_CAT = 0, FILTRO_Q = '';
   function visibili(){
     var q = FILTRO_Q.trim().toLowerCase();
     return ALLBIZ.filter(function(s){
+      if (SOLO_SALVATI && !SAVED[s.id]) return false;
+      if (FILTRO_MACRO && !CATS.some(function(c){ return c.id === s.categoria_id && c.macro_categoria_id === FILTRO_MACRO; })) return false;
       if (FILTRO_CAT && s.categoria_id !== FILTRO_CAT) return false;
       if (!q) return true;
+      // la ricerca guarda anche la descrizione: non e' mostrata, ma serve a trovare
       return ((s.nome || '') + ' ' + (s.descrizione || '')).toLowerCase().indexOf(q) >= 0;
     });
   }
   function renderFeeds(){
     var host = document.getElementById('listaReale');
-    var perte = document.getElementById('perteFeed');
+    if (!host) return;
     var lista = visibili();
-    if (host) host.innerHTML = lista.length
-      ? lista.map(rowHtml).join('')
-      : (ALLBIZ.length
-          ? '<div class="vuoto">Nessun business con questi filtri.</div>'
-          : '<div class="vuoto">Lista svuotata.<br>In attesa del primo prodotto reale.</div>');
-    if (perte) {
-      var salv = ALLBIZ.filter(function(s){ return SAVED[s.id]; });
-      perte.innerHTML = salv.length
-        ? salv.map(rowHtml).join('')
-        : '<div class="vuoto">Nessun business salvato.<br>Tocca il segnalibro su un business per salvarlo.</div>';
+    if (!lista.length) {
+      host.innerHTML = ALLBIZ.length
+        ? '<div class="vuoto">Nessun business con questi filtri.</div>'
+        : '<div class="vuoto">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
+      return;
     }
+    // Raggruppati per categoria, come una directory: la sezione dice dove sei.
+    var perCat = {};
+    lista.forEach(function(s){ (perCat[s.categoria_id] = perCat[s.categoria_id] || []).push(s); });
+    var out = '';
+    CATS.forEach(function(c){
+      var dentro = perCat[c.id];
+      if (!dentro || !dentro.length) return;
+      out += '<div class="grp">' + esc(c.nome) + '</div>' + dentro.map(rowHtml).join('');
+    });
+    // Business senza categoria: non farli sparire.
+    var orfani = lista.filter(function(s){ return !CATS.some(function(c){ return c.id === s.categoria_id; }); });
+    if (orfani.length) out += '<div class="grp">Altro</div>' + orfani.map(rowHtml).join('');
+    host.innerHTML = out;
   }
+
+  // ---- CATEGORIE A DUE LIVELLI ----
+  var FILTRO_MACRO = 0, SOLO_SALVATI = false;
+  function disegnaTabs(){
+    var mt = document.getElementById('macroTabs'), st = document.getElementById('subTabs');
+    if (!mt || !st) return;
+    // Le macro senza categorie non si mostrano: sono rumore.
+    var macroVive = MACRO.filter(function(m){ return CATS.some(function(c){ return c.macro_categoria_id === m.id; }); });
+    var h = '<button class="macro' + (!FILTRO_MACRO && !SOLO_SALVATI ? ' on' : '') + '" data-macro="0">Tutti</button>';
+    macroVive.forEach(function(m){
+      h += '<button class="macro' + (FILTRO_MACRO === m.id && !SOLO_SALVATI ? ' on' : '') + '" data-macro="' + m.id + '">' + esc(m.nome) + '</button>';
+    });
+    var nSalv = Object.keys(SAVED).filter(function(k){ return SAVED[k]; }).length;
+    if (nSalv) h += '<button class="macro' + (SOLO_SALVATI ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
+    mt.innerHTML = h;
+
+    // Sotto-categorie: solo quelle della macro scelta.
+    var figlie = FILTRO_MACRO ? CATS.filter(function(c){ return c.macro_categoria_id === FILTRO_MACRO; }) : [];
+    if (!figlie.length || SOLO_SALVATI) { st.innerHTML = ''; st.style.display = 'none'; return; }
+    st.style.display = '';
+    var q = '<button class="sub' + (!FILTRO_CAT ? ' on' : '') + '" data-sub="0">Tutte <b>' + conta(0, FILTRO_MACRO) + '</b></button>';
+    figlie.forEach(function(c){
+      q += '<button class="sub' + (FILTRO_CAT === c.id ? ' on' : '') + '" data-sub="' + c.id + '">' + esc(c.nome) + ' <b>' + conta(c.id, 0) + '</b></button>';
+    });
+    st.innerHTML = q;
+  }
+  function conta(catId, macroId){
+    return ALLBIZ.filter(function(s){
+      if (catId) return s.categoria_id === catId;
+      if (macroId) return CATS.some(function(c){ return c.id === s.categoria_id && c.macro_categoria_id === macroId; });
+      return true;
+    }).length;
+  }
+  document.addEventListener('click', function(e){
+    var m = e.target.closest && e.target.closest('[data-macro]');
+    if (m) {
+      var v = m.getAttribute('data-macro');
+      SOLO_SALVATI = (v === 'salvati');
+      FILTRO_MACRO = SOLO_SALVATI ? 0 : (parseInt(v) || 0);
+      FILTRO_CAT = 0;                       // cambiando macro, la sotto scelta non ha piu' senso
+      disegnaTabs(); renderFeeds();
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
+      return;
+    }
+    var sb = e.target.closest && e.target.closest('[data-sub]');
+    if (sb) {
+      FILTRO_CAT = parseInt(sb.getAttribute('data-sub')) || 0;
+      disegnaTabs(); renderFeeds();
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
+    }
+  });
 
   // ---- SCHEDA A TENDINA ----
   // Panoramica, costi e step NON arrivano da /business-list: li chiediamo a /servizio
@@ -1213,6 +1298,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       SAVED[id] = !SAVED[id];
       b.innerHTML = saveSvg(!!SAVED[id]);
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      disegnaTabs();
+      if (SOLO_SALVATI) renderFeeds();
       fetch(API_URL + '/preferito', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: id }) }).catch(function(){});
       return;
     }
@@ -1355,6 +1442,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       ALLBIZ.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
       (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
+      disegnaTabs();
       renderFeeds();
     })
     .catch(function(){});
