@@ -188,11 +188,9 @@
 
 <div class="app">
   <div class="hdr">
+    <div id="homeAvatar" data-goto="profilo" aria-label="Vai al profilo">A</div>
     <div class="salu"><span id="homeGreet">Ciao,</span> <b id="homeName"></b></div>
-    <div class="hdricons">
-      <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
-      <div id="homeAvatar" data-goto="profilo" aria-label="Profilo">A</div>
-    </div>
+    <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
   </div>
   <div class="body">
 
@@ -777,17 +775,24 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cat-opt.on .cat-n{color:var(--acc)}
 
 
-/* ===== HUB: header senza wordmark, categorie a due livelli, righe col solo titolo ===== */
+/* ===== HUB: header ordinato da sx a dx -> avatar (profilo) | saluto | share ===== */
 .hdr{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line2);
   box-shadow:0 8px 18px -12px rgba(0,0,0,.9);
-  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px}
-.hdr .salu{font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--mut);min-width:0}
-.hdr .salu b{color:var(--tx);font-weight:600}
-.hdricons{display:flex;align-items:center;gap:12px;flex-shrink:0}
-#shareBtn{background:none;border:none;padding:4px;color:var(--mut);cursor:pointer;line-height:0}
-#homeAvatar{width:34px;height:34px;border-radius:50%;background:var(--s2);border:1px solid var(--line2);
+  display:flex;align-items:center;gap:12px;padding:14px 18px}
+/* Avatar a sinistra: e' la porta al Profilo, 40px per essere un bersaglio comodo */
+#homeAvatar{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--s2);border:1px solid var(--line2);
   background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;
-  color:var(--dim);font-weight:700;font-size:13px;cursor:pointer}
+  color:var(--acc);font-weight:700;font-size:15px;cursor:pointer}
+/* Saluto al centro: prende lo spazio libero, va a capo con eleganza */
+.hdr .salu{flex:1;min-width:0;line-height:1.2}
+.hdr .salu #homeGreet{display:block;font-size:12.5px;color:var(--mut);font-weight:500}
+.hdr .salu b{display:block;font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--tx);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Share a destra */
+#shareBtn{flex-shrink:0;width:38px;height:38px;background:var(--s1);border:1px solid var(--line2);border-radius:10px;
+  color:var(--tx);display:flex;align-items:center;justify-content:center;cursor:pointer}
+#shareBtn:active{transform:scale(.94)}
+/* Fuori dall'HUB il saluto sparisce ma NON collassa: l'avatar resta a sinistra */
 .app:not(.on-home) .hdr .salu{visibility:hidden}
 
 .cerca{display:flex;align-items:center;gap:9px;margin:14px 20px 0;padding:11px 14px;
@@ -946,7 +951,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=46"></script>
+<script src="identikit.js?v=47"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
