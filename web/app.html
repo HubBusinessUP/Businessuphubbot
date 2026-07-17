@@ -316,6 +316,12 @@
         <div class="list" id="pfBizList" style="padding-top:6px;padding-bottom:8px"></div>
       </div>
 
+      <!-- Prodotti in arrivo: le prenotazioni (waitlist), con la traccia del disclaimer accettato -->
+      <div id="pfArrivoWrap" style="display:none">
+        <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">In arrivo &mdash; sei in lista</div></div>
+        <div class="list" id="pfArrivoList" style="padding-top:6px;padding-bottom:8px"></div>
+      </div>
+
       <!-- Accesso Admin: compare SOLO se /me dice is_admin (lo decide il server, non il client) -->
       <div id="pfAdminWrap" style="display:none;padding:18px 18px 0">
         <a id="pfAdmin" href="admin/index.html" style="display:flex;align-items:center;gap:12px;padding:14px;
@@ -965,7 +971,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=50"></script>
+<script src="identikit.js?v=51"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1142,6 +1148,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Panoramica, costi e step NON arrivano da /business-list: li chiediamo a /servizio
   // solo quando la scheda si apre davvero, e li teniamo in cache.
   var SCHEDE = {};
+  // Rete di sicurezza: se una scheda arriva senza il disclaimer del server (cache vecchia),
+  // mostriamo comunque il testo corrente. La fonte di verita' resta il server.
+  var DISC_FALLBACK = {
+    attivazione: '<b>Servizio di terzi.</b> Cashly lo segnala: non lo gestisce ne garantisce e non e parte del contratto. Di ogni evento, conseguenza o risultato risponde il fornitore, di cui accetti termini e condizioni.<br><b>Rischio.</b> Puoi perdere il capitale; nessun rendimento garantito, non e consulenza finanziaria.<br><b>Affiliazione.</b> Cashly puo ricevere una commissione: per te non cambia nulla, non paghi di piu.',
+    waitlist: '<b>Prodotto in arrivo.</b> Ti avvisiamo quando parte. E un servizio di terzi che Cashly si limita a segnalare: di ogni evento e risultato rispondera il fornitore, non Cashly. La prenotazione non ti impegna a nulla.',
+    checkbox: 'Ho letto: servizio di terzi, di ogni conseguenza risponde il fornitore, non Cashly. Accetto rischi e condizioni.'
+  };
   function riga(k, v){
     if (v === null || v === undefined || v === '') return '';
     return '<div class="sr"><div class="sk">' + esc(k) + '</div><div class="sv">' + esc(String(v)) + '</div></div>';
@@ -1248,14 +1261,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return out;
     }
 
-    // 3) attivo -> disclaimer da accettare, POI il bottone
+    // 3) attivo -> disclaimer (testo UNICO del server, la stessa cosa che registriamo) da accettare, POI il bottone
+    var disc = d.disclaimer || {};
     out += '<div class="disc">'
-      + '<b>Servizio di terzi.</b> Non e gestito, controllato ne garantito da Cashly: Cashly lo segnala e basta. Attivandolo entri in rapporto diretto con il fornitore e ne accetti termini e condizioni.<br><br>'
-      + '<b>Link di affiliazione.</b> Se attivi da qui, Cashly riceve una commissione dal fornitore. Per te non cambia nulla: non paghi di piu.<br><br>'
-      + '<b>Rischio.</b> Operare sui mercati puo farti perdere il capitale, anche tutto. Nessun rendimento e promesso ne garantito. I risultati passati non dicono niente su quelli futuri. Non e consulenza finanziaria: valuta tu, e se non sei sicuro chiedi a un consulente abilitato.'
+      + (disc.attivazione || DISC_FALLBACK.attivazione)
       + '<div class="acc" data-acc="' + s.id + '">'
       +   '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
-      +   '<div class="acct">Ho letto e accetto: e un servizio di terzi, Cashly prende una commissione e posso perdere il capitale.</div>'
+      +   '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
       + '</div></div>';
     out += '<button class="cta-attiva" data-attiva="' + s.id + '" disabled>Attiva servizio</button>';
     if (steps.length) out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
@@ -1282,6 +1294,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var d = SCHEDE[id] || {};
     var nome = (d.servizio && d.servizio.nome) || 'questo servizio';
     var quanti = d.waitlist_count || 0;
+    var disc = d.disclaimer || DISC_FALLBACK;
     sh.innerHTML =
       '<div data-wlclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
       + '<div class="pr-card">'
@@ -1292,9 +1305,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +   '<div class="wlp"><span class="wlpi">2</span><div><b>Hai la priorita.</b> Chi e in lista entra prima di chi arriva dopo.</div></div>'
       +   '<div class="wlp"><span class="wlpi">3</span><div><b>Non stai comprando niente.</b> Nessun impegno, nessun pagamento: quando parte decidi tu se attivarlo davvero.</div></div>'
       +   (quanti ? '<div style="font-size:12px;color:var(--mut);margin-top:12px">' + quanti + (quanti === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>' : '')
-      +   '<div class="acc" id="wlAcc" style="border-top:1px solid var(--line2);margin-top:14px;padding-top:14px">'
-      +     '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
-      +     '<div class="acct">Ho capito: mi prenoto, mi avvisate quando parte, e non sto comprando nulla.</div>'
+      +   '<div class="disc" style="margin-top:14px">'
+      +     (disc.waitlist || DISC_FALLBACK.waitlist)
+      +     '<div class="acc" id="wlAcc">'
+      +       '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
+      +       '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
+      +     '</div>'
       +   '</div>'
       +   '<div style="display:flex;gap:9px;margin-top:14px">'
       +     '<button type="button" data-wlclose="1" style="flex:1;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Annulla</button>'
@@ -1418,7 +1434,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var wid = parseInt(wc.getAttribute('data-wait'));
       if (!wid) return;
       wc.disabled = true; wc.textContent = 'Un attimo...';
-      fetch(API_URL + '/waitlist', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: wid }) })
+      fetch(API_URL + '/waitlist', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: wid, disclaimer_accettato: true }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
           if (!d || d.error) throw new Error('ko');
@@ -1630,6 +1646,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
       // Business attivi, con Disattiva accanto: senza, uno che attiva per sbaglio resta
       // incastrato per sempre (la scheda gli mostra il tutorial e basta).
+      // Riga "condizioni accettate": la traccia del disclaimer che l'utente vede nel suo profilo.
+      function rigaAccettato(b){
+        if (!b.disclaimer_accettato_at) return '';
+        return '<div class="dds" style="margin-top:3px;color:var(--acc)">&#10003; Condizioni accettate il ' + esc(dataIt(b.disclaimer_accettato_at))
+          + (b.disclaimer_ver ? (' &middot; v.' + b.disclaimer_ver) : '') + '</div>';
+      }
+
       var biz = me.prodotti_attivi || [];
       var bw = document.getElementById('pfBizWrap'), bl = document.getElementById('pfBizList');
       if (bw && bl) {
@@ -1640,8 +1663,26 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             +   '<div class="dnm">' + esc(b.nome) + '</div>'
             +   '<div class="dds">' + (b.tutorial_completato ? 'Tutorial completato' : 'Tutorial da finire')
             +     (b.attivato_il ? (' &middot; dal ' + esc(dataIt(b.attivato_il))) : '') + '</div>'
+            +   rigaAccettato(b)
             + '</div>'
             + '<button class="disatt" data-off="' + b.servizio_id + '">Rimuovi</button>'
+            + '</div>';
+        }).join('');
+      }
+
+      // Prodotti in arrivo: le prenotazioni (waitlist), con la stessa traccia di consenso.
+      var arr = me.prodotti_in_arrivo || [];
+      var aw = document.getElementById('pfArrivoWrap'), al = document.getElementById('pfArrivoList');
+      if (aw && al) {
+        aw.style.display = arr.length ? '' : 'none';
+        al.innerHTML = arr.map(function(b){
+          return '<div class="dir" style="align-items:center">'
+            + '<div style="flex:1;min-width:0">'
+            +   '<div class="dnm">' + esc(b.nome) + '</div>'
+            +   '<div class="dds">In lista' + (b.prenotato_il ? (' &middot; dal ' + esc(dataIt(b.prenotato_il))) : '') + '</div>'
+            +   rigaAccettato(b)
+            + '</div>'
+            + '<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--amber);background:rgba(255,180,61,.1);border:1px solid rgba(255,180,61,.3);border-radius:99px;padding:5px 10px">In arrivo</span>'
             + '</div>';
         }).join('');
       }

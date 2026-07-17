@@ -10,6 +10,26 @@ const ADMIN_API_KEY = Deno.env.get("ADMIN_API_KEY") || ""
 const WEBAPP_URL = "https://hub.cashlypro.com"
 const BOT_USERNAME = "cashlyhub_bot"
 
+// Disclaimer legale: testo UNICO gestito dal server, cosi' cio' che l'utente vede e'
+// esattamente cio' che registriamo come prova. Alza DISCLAIMER_VER a ogni modifica del testo:
+// ogni accettazione conserva versione + testo esatto in businessup.disclaimer_accettazioni
+// (registro append-only) e nella riga del servizio/waitlist dell'utente.
+const DISCLAIMER_VER = 2
+const DISCLAIMER_ATTIVAZIONE =
+  "<b>Servizio di terzi.</b> Cashly lo segnala: non lo gestisce né garantisce e non è parte del contratto. Di ogni evento, conseguenza o risultato risponde il fornitore, di cui accetti termini e condizioni.<br><b>Rischio.</b> Puoi perdere il capitale; nessun rendimento garantito, non è consulenza finanziaria.<br><b>Affiliazione.</b> Cashly può ricevere una commissione: per te non cambia nulla, non paghi di più."
+const DISCLAIMER_WAITLIST =
+  "<b>Prodotto in arrivo.</b> Ti avvisiamo quando parte. È un servizio di terzi che Cashly si limita a segnalare: di ogni evento e risultato risponderà il fornitore, non Cashly. La prenotazione non ti impegna a nulla."
+const DISCLAIMER_CHECKBOX =
+  "Ho letto: servizio di terzi, di ogni conseguenza risponde il fornitore, non Cashly. Accetto rischi e condizioni."
+
+// Registra l'accettazione nel registro immodificabile: la prova legale (chi/quando/versione/testo).
+async function registraAccettazioneDisclaimer(telegramId: number, servizioId: number, contesto: "attivazione" | "waitlist", testo: string) {
+  const { error } = await supabase.from("disclaimer_accettazioni").insert({
+    telegram_id: telegramId, servizio_id: servizioId, contesto, versione: DISCLAIMER_VER, testo,
+  })
+  if (error) console.error("disclaimer log failed:", error)
+}
+
 const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`
 
 // Chiave con privilegi elevati (bypassa RLS): usa la nuova secret key sb_secret_... se
@@ -749,7 +769,7 @@ async function apiMe(telegramId: number, tgUser?: any) {
   }
 
   // Prodotti attivi dell'utente: i business che ha attivato, con il link che deve usare e lo stato del tutorial.
-  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, stato, created_at").eq("telegram_id", telegramId).order("created_at", { ascending: false })
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, stato, created_at, disclaimer_accettato_at, disclaimer_ver").eq("telegram_id", telegramId).order("created_at", { ascending: false })
   const attSvcIds = [...new Set((attivazioni ?? []).map((a: any) => a.servizio_id))]
   const { data: attServizi } = attSvcIds.length
     ? await supabase.from("servizi").select("id, nome, categoria_id").in("id", attSvcIds)
@@ -774,10 +794,34 @@ async function apiMe(telegramId: number, tgUser?: any) {
       ref_fonte: refInfo.fonte,
       tutorial_completato: !!prog?.completato,
       attivato_il: (a as any).created_at,
+      disclaimer_accettato_at: (a as any).disclaimer_accettato_at,
+      disclaimer_ver: (a as any).disclaimer_ver,
     })
   }
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
+  // Prodotti "in arrivo": quelli per cui l'utente si e' prenotato (waitlist) e che non sono ancora attivi.
+  // Con la data e la versione del disclaimer accettato: l'utente vede la sua traccia di consenso.
+  const { data: attese } = await supabase.from("waitlist").select("servizio_id, created_at, disclaimer_accettato_at, disclaimer_ver").eq("telegram_id", telegramId).order("created_at", { ascending: false })
+  const attesaIds = [...new Set((attese ?? []).map((a: any) => a.servizio_id))]
+  const { data: attesaServizi } = attesaIds.length
+    ? await supabase.from("servizi").select("id, nome, stato").in("id", attesaIds)
+    : { data: [] }
+  const attesaMap: Record<number, any> = {}
+  for (const s of attesaServizi ?? []) attesaMap[(s as any).id] = s
+  const prodottiInArrivo = []
+  for (const a of attese ?? []) {
+    const sv = attesaMap[(a as any).servizio_id]
+    if (!sv || sv.stato === "attivo") continue   // se e' gia' partito non e' piu' "in arrivo"
+    prodottiInArrivo.push({
+      servizio_id: sv.id,
+      nome: sv.nome,
+      prenotato_il: (a as any).created_at,
+      disclaimer_accettato_at: (a as any).disclaimer_accettato_at,
+      disclaimer_ver: (a as any).disclaimer_ver,
+    })
+  }
+
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, prodotti_in_arrivo: prodottiInArrivo, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
 }
 
 // Anagrafica modificabile dal Profilo. Volutamente SEPARATA da /sondaggio: quella marca
@@ -956,12 +1000,21 @@ async function apiWaitlist(telegramId: number, body: any) {
   if (!sv) return json({ error: "not_found" }, 404)
   if (sv.stato === "attivo") return json({ error: "gia_attivo" }, 409)
 
+  // Anche la prenotazione e' un consenso da tracciare: e' pur sempre un servizio di terzi.
+  if (!body?.disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
+
   const { error } = await supabase.from("waitlist")
-    .upsert({ telegram_id: telegramId, servizio_id: servizioId }, { onConflict: "telegram_id,servizio_id" })
+    .upsert({
+      telegram_id: telegramId, servizio_id: servizioId,
+      disclaimer_accettato_at: new Date().toISOString(),
+      disclaimer_ver: DISCLAIMER_VER,
+      disclaimer_testo: DISCLAIMER_WAITLIST,
+    }, { onConflict: "telegram_id,servizio_id" })
   if (error) {
     console.error("waitlist upsert failed:", error)
     return json({ error: "save_failed", detail: error.message }, 500)
   }
+  await registraAccettazioneDisclaimer(telegramId, servizioId, "waitlist", DISCLAIMER_WAITLIST)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "waitlist", dettaglio: sv.nome })
 
   const { count } = await supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
@@ -1024,6 +1077,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
     is_cliente: !!lead?.is_cliente,
     mio_link: mioLink || null,
     step_progress: { ultimo_step: progress?.ultimo_step ?? 0, completato: !!progress?.completato },
+    disclaimer: { ver: DISCLAIMER_VER, attivazione: DISCLAIMER_ATTIVAZIONE, waitlist: DISCLAIMER_WAITLIST, checkbox: DISCLAIMER_CHECKBOX },
   })
 }
 
@@ -1262,14 +1316,16 @@ async function apiAttiva(telegramId: number, body: any) {
   if (!sv0) return json({ error: "not_found" }, 404)
   if (sv0.stato !== "attivo") return json({ error: "non_attivo" }, 409)
 
-  // Il disclaimer deve lasciare traccia: chi, quando, quale versione. Senza, non copre da niente.
+  // Il disclaimer deve lasciare traccia: chi, quando, quale versione, quale testo. Senza, non copre da niente.
   if (!body?.disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
 
   await supabase.from("lead_servizi").insert({
     telegram_id: telegramId, servizio_id, stato: "interessato",
     disclaimer_accettato_at: new Date().toISOString(),
-    disclaimer_ver: sv0.disclaimer_ver ?? 1,
+    disclaimer_ver: DISCLAIMER_VER,
+    disclaimer_testo: DISCLAIMER_ATTIVAZIONE,
   })
+  await registraAccettazioneDisclaimer(telegramId, servizio_id, "attivazione", DISCLAIMER_ATTIVAZIONE)
   await supabase.from("leads").update({ is_cliente: true }).eq("telegram_id", telegramId)
   const refInfo = await resolveRefLinkConFonte(telegramId, servizio_id)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_attivato", dettaglio: `servizio:${servizio_id}` })
