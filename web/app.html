@@ -250,7 +250,7 @@
           <div class="h">invitati da te</div>
         </div>
         <div class="aff-kpi">
-          <div class="n" id="reteTotale" style="color:var(--acc)">0</div>
+          <div class="n" id="reteTotale" style="color:var(--sec)">0</div>
           <div class="l">Rete totale</div>
           <div class="h">tutti i livelli sotto di te</div>
         </div>
@@ -278,7 +278,7 @@
 
       <!-- Numeri -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 18px 0">
-        <div class="aff-kpi"><div class="n" id="pfRete" style="color:var(--acc)">0</div><div class="l">Rete</div><div class="h">persone sotto di te</div></div>
+        <div class="aff-kpi"><div class="n" id="pfRete" style="color:var(--sec)">0</div><div class="l">Rete</div><div class="h">persone sotto di te</div></div>
         <div class="aff-kpi"><div class="n" id="pfBiz">0</div><div class="l">Business attivi</div><div class="h">che hai avviato</div></div>
       </div>
 
@@ -612,9 +612,9 @@
 <style>
 /* ===== Cashly — look Product Hunt ===== */
 :root{
-  --bg:#14161B; --s0:#181B21; --s1:#1E212A; --s2:#252A35; --s3:#323846;
-  --line:#252932; --line2:#2E3440;
-  --tx:#FFFFFF; --dim:#A8AEB9; --mut:#767D8A;
+  --bg:#131418; --s0:#191B20; --s1:#1F2128; --s2:#272A32; --s3:#333743;
+  --line:#262932; --line2:#333845;
+  --tx:#F6F7F9; --dim:#AAB0BB; --mut:#7B828F;
   --acc:#25CF6E; --acc-d:#1BB65D; --on:#04210F;
   --amber:#FFB43D; --blue:#4A8CFF; --purple:#A77BFF; --coral:#FF6154; --teal:#2AD3C2;
   /* Interfaccia in Inter. Il marchio resta Manrope: --display lo usa SOLO il wordmark
@@ -851,7 +851,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .mib{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
   background:var(--acc);color:#04210F;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
 .mi.st-in{color:var(--acc);border-color:rgba(37,207,110,.35);background:rgba(37,207,110,.1)}
-.mi.st-out{color:#E2574A;border-color:rgba(226,87,74,.35);background:rgba(226,87,74,.1)}
+.mi.st-out{color:#E5484D;border-color:rgba(226,87,74,.35);background:rgba(226,87,74,.1)}
 /* Condividi in fondo alla scheda, uguale allo stile dell'header */
 .sc-share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;
   background:var(--s1);border:1px solid var(--line2);border-radius:11px;padding:12px;color:var(--tx);
@@ -968,10 +968,65 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .pf-i:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(37,207,110,.16)}
 .pf-i.err{border-color:#e2574a}
 #pfSalva[disabled]{opacity:.6;cursor:default}
+
+/* ===================================================================
+   COLORE PER SEZIONE — Antonio: "piu' viva, arancione tipo Product Hunt,
+   altri colori in base alle sezioni, bottoni tutto coordinato".
+   Una sola variabile --sec pilota tutto: la commuta data-sec su .app,
+   cosi' non esistono regole duplicate per schermata.
+   HUB = arancio (la schermata che si apre per prima, firma PH)
+   Affiliazione = verde (rete/crescita, resta il verde di brand)
+   Profilo = blu (area personale, freddo)
+   Il VIOLA resta fuori di proposito: e' la tinta che fa dire "stile AI".
+   =================================================================== */
+.app{--sec:var(--acc);--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
+.app[data-sec="home"]{--sec:#FF6B3D;--sec-soft:rgba(255,107,61,.13);--sec-line:rgba(255,107,61,.30);--sec-tint:#FFA98F;--sec-on:#2A0E04;--sec-deep:#E85A2E}
+.app[data-sec="wallet"]{--sec:#25CF6E;--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
+.app[data-sec="profilo"]{--sec:#5E8BFF;--sec-soft:rgba(94,139,255,.13);--sec-line:rgba(94,139,255,.30);--sec-tint:#9DB8FF;--sec-on:#04102E;--sec-deep:#4A75E8}
+
+/* Alone di sezione: l'UNICO gradiente ammesso, dietro al contenuto. Cambia tinta con la schermata. */
+.app::before{content:'';position:absolute;top:0;left:0;right:0;height:190px;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 100% at 50% 0%, var(--sec) 0%, transparent 70%);opacity:.08;transition:opacity .25s}
+.hdr{position:relative;z-index:2}
+.body{position:relative;z-index:1}
+
+/* Tab macro: la sottolineatura prende il colore della sezione (era bianca) */
+.macro.on{color:var(--tx);border-bottom-color:var(--sec)}
+/* Pill sotto-categoria attiva. Bordo trasparente anche da spenta: niente salto di 1px. */
+.sub{border:1px solid transparent}
+.sub.on{background:var(--sec-soft);border-color:var(--sec-line);color:var(--sec-tint);font-weight:600}
+.sub.on b{color:var(--sec-tint);opacity:.75}
+/* Intestazioni di gruppo (le fasce temporali): smettono di essere grigie */
+.grp{color:var(--sec-tint)}
+/* Bottom nav: UNA sola voce colorata, quella della sezione in cui sei (era bianca) */
+.navb.on{color:var(--sec)}
+.navb.on .ico{stroke:var(--sec)}
+
+/* CTA coordinate: fill piatto della sezione. Via i gradienti verdi e le ombre colorate,
+   che erano l'unico colore dell'app e la facevano sembrare monocroma. */
+.cta-attiva,.aff-cta,.fab,.onb-cta{background:var(--sec)!important;color:var(--sec-on)!important;
+  box-shadow:none!important;text-shadow:none!important;border-color:var(--sec)!important}
+.cta-attiva:active,.aff-cta:active,.fab:active,.onb-cta:active{background:var(--sec-deep)!important}
+.fab svg,.onb-cta svg{stroke:var(--sec-on)}
+.cta-attiva[disabled]{background:var(--s2)!important;color:var(--mut)!important;border-color:var(--line2)!important}
+#wlConferma[disabled]{background:var(--s2)!important;color:var(--mut)!important}
+
+/* Spunta del disclaimer coordinata alla sezione */
+.acc.on .box{background:var(--sec);border-color:var(--sec)}
+.acc.on .box svg{stroke:var(--sec-on)}
+
+/* Intestazioni di sezione ("I tuoi dati", "I tuoi business attivi"): prendono la tinta
+   della schermata, cosi' anche il Profilo si legge come una sezione a se' e non come grigio su grigio. */
+.eyebrow,.sechd .eyebrow{color:var(--sec-tint)}
+
+/* Il disclaimer ora e' quello CLASSICO (lungo): il testo scorre, la spunta resta sempre visibile. */
+.disctxt{max-height:230px;overflow-y:auto;padding-right:8px;-webkit-overflow-scrolling:touch}
+.disctxt::-webkit-scrollbar{width:3px}
+.disctxt::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=51"></script>
+<script src="identikit.js?v=52"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1032,13 +1087,20 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function bucketTempo(iso){
     if (!iso) return { ord: 9, label: 'Senza data' };
     var d = new Date(iso.indexOf('Z') < 0 && iso.indexOf('+') < 0 ? iso + 'Z' : iso);
-    if (isNaN(d.getTime())) return { ord: 9, label: 'Senza data' };
-    var gg = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (isNaN(d.getTime())) return { ord: 999, label: 'Senza data' };
+    // Differenza in GIORNI DI CALENDARIO, non in ore: una cosa di ieri sera deve dire
+    // "Ieri" anche stamattina (con le ore, 30 ore fa diventerebbe "2 giorni fa").
+    var ora = new Date();
+    var g0 = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate());
+    var g1 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var gg = Math.round((g0 - g1) / 86400000);
     if (gg <= 0) return { ord: 0, label: 'Oggi' };
-    if (gg < 7)  return { ord: 1, label: 'Questa settimana' };
-    if (gg < 30) return { ord: 2, label: 'Questo mese' };
-    if (gg < 365) return { ord: 3, label: "Quest'anno" };
-    return { ord: 4, label: 'Oltre un anno' };
+    if (gg === 1) return { ord: 1, label: 'Ieri' };
+    if (gg < 7)  return { ord: gg, label: gg + ' giorni fa' };
+    if (gg < 30) { var s = Math.floor(gg / 7);  return { ord: 10 + s, label: s === 1 ? 'Una settimana fa' : (s + ' settimane fa') }; }
+    if (gg < 365){ var m = Math.floor(gg / 30); return { ord: 20 + m, label: m === 1 ? 'Un mese fa'      : (m + ' mesi fa') }; }
+    var a = Math.floor(gg / 365);
+    return { ord: 100 + a, label: a === 1 ? 'Un anno fa' : (a + ' anni fa') };
   }
   function raggruppaTempo(items, getIso, rowFn){
     var buckets = {};
@@ -1151,9 +1213,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Rete di sicurezza: se una scheda arriva senza il disclaimer del server (cache vecchia),
   // mostriamo comunque il testo corrente. La fonte di verita' resta il server.
   var DISC_FALLBACK = {
-    attivazione: '<b>Servizio di terzi.</b> Cashly lo segnala: non lo gestisce ne garantisce e non e parte del contratto. Di ogni evento, conseguenza o risultato risponde il fornitore, di cui accetti termini e condizioni.<br><b>Rischio.</b> Puoi perdere il capitale; nessun rendimento garantito, non e consulenza finanziaria.<br><b>Affiliazione.</b> Cashly puo ricevere una commissione: per te non cambia nulla, non paghi di piu.',
-    waitlist: '<b>Prodotto in arrivo.</b> Ti avvisiamo quando parte. E un servizio di terzi che Cashly si limita a segnalare: di ogni evento e risultato rispondera il fornitore, non Cashly. La prenotazione non ti impegna a nulla.',
-    checkbox: 'Ho letto: servizio di terzi, di ogni conseguenza risponde il fornitore, non Cashly. Accetto rischi e condizioni.'
+    attivazione: "<b>Servizio erogato da terzi</b><br>Il servizio che stai per attivare è offerto e gestito da un fornitore esterno, autonomo e indipendente da Cashly. Cashly si limita a segnalarlo: non è parte del contratto, che si perfeziona unicamente tra te e il fornitore, e non interviene nella sua esecuzione.<br><br><b>Assenza di garanzie</b><br>Cashly non verifica né certifica il fornitore, le sue autorizzazioni o la sua solidità patrimoniale. Non garantisce qualità, continuità o disponibilità del servizio, né l'adempimento degli obblighi del fornitore, compresi accrediti, prelievi e rimborsi.<br><br><b>Responsabilità</b><br>Di ogni evento, conseguenza, disservizio o danno connesso al servizio risponde esclusivamente il fornitore. Attivi il servizio di tua iniziativa e sotto la tua esclusiva responsabilità. Nei limiti consentiti dalla legge, Cashly non risponde di ritardi, blocchi, mancati pagamenti, chiusure improvvise o perdite.<br><br><b>Rischio finanziario</b><br>L'operatività su servizi e strumenti finanziari comporta un rischio elevato, fino alla perdita totale del capitale impiegato. Nessun rendimento è garantito e i risultati passati non sono indicativi di quelli futuri.<br><br><b>Nessuna consulenza</b><br>I contenuti pubblicati hanno finalità meramente informativa e non costituiscono consulenza finanziaria, legale o fiscale, né sollecitazione all'investimento. Per valutazioni personali rivolgiti a un professionista abilitato.<br><br><b>Link di affiliazione</b><br>L'attivazione può avvenire tramite link di affiliazione e Cashly può percepire una commissione dal fornitore. Per te non cambia nulla: non paghi di più.<br><br><b>Termini del fornitore</b><br>Sei tenuto a leggere e accettare termini, condizioni e informative del fornitore, comprese eventuali restrizioni geografiche o di età, che regolano integralmente il rapporto.<br><br><b>Accettazione</b><br>Spuntando la casella dichiari di aver letto e compreso quanto sopra. L'accettazione viene registrata con identificativo utente, data, ora e versione del testo.",
+    waitlist: "<b>Prodotto non ancora attivo</b><br>Ti stai prenotando per un prodotto non ancora disponibile, offerto da un fornitore esterno indipendente da Cashly. La prenotazione non è un acquisto: nessun pagamento e nessun impegno.<br><br><b>Assenza di garanzie</b><br>Cashly non garantisce che il prodotto venga reso disponibile, né tempi, condizioni o caratteristiche definitive, che restano di competenza del fornitore.<br><br><b>Responsabilità</b><br>Al momento dell'eventuale attivazione, di ogni evento o conseguenza risponde esclusivamente il fornitore. Cashly si limita a segnalarlo e a raccogliere la prenotazione.<br><br><b>Informazioni e accettazione</b><br>I contenuti pubblicati hanno finalità informativa e non costituiscono consulenza finanziaria, legale o fiscale. Cashly può percepire una commissione dal fornitore, senza costi aggiuntivi per te. Prima dell'attivazione dovrai accettare i termini del fornitore. Spuntando la casella dichiari di aver letto e compreso quanto sopra; l'accettazione viene registrata.",
+    checkbox: "Ho letto e compreso: il servizio è di un fornitore terzo, che risponde di ogni conseguenza. Cashly si limita a segnalarlo e non garantisce nulla."
   };
   function riga(k, v){
     if (v === null || v === undefined || v === '') return '';
@@ -1184,7 +1246,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '</div>';
   }
   // Il colore e' un giudizio, non decorazione: verde ok, ambra attenzione, rosso no.
-  var RISCHIO = { 1:['Molto basso','var(--acc)'], 2:['Basso','var(--acc)'], 3:['Medio','var(--amber)'], 4:['Alto','#E2574A'], 5:['Molto alto','#E2574A'] };
+  var RISCHIO = { 1:['Molto basso','var(--acc)'], 2:['Basso','var(--acc)'], 3:['Medio','var(--amber)'], 4:['Alto','#E5484D'], 5:['Molto alto','#E5484D'] };
 
   // Lo share va SOTTO ogni scheda, qualunque sia il ramo (tutorial / waitlist / attiva):
   // il corpo ha return anticipati, quindi lo aggiungo con un wrapper invece che dentro ogni ramo.
@@ -1264,7 +1326,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // 3) attivo -> disclaimer (testo UNICO del server, la stessa cosa che registriamo) da accettare, POI il bottone
     var disc = d.disclaimer || {};
     out += '<div class="disc">'
-      + (disc.attivazione || DISC_FALLBACK.attivazione)
+      + '<div class="disctxt">' + (disc.attivazione || DISC_FALLBACK.attivazione) + '</div>'
       + '<div class="acc" data-acc="' + s.id + '">'
       +   '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
       +   '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
@@ -1306,7 +1368,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +   '<div class="wlp"><span class="wlpi">3</span><div><b>Non stai comprando niente.</b> Nessun impegno, nessun pagamento: quando parte decidi tu se attivarlo davvero.</div></div>'
       +   (quanti ? '<div style="font-size:12px;color:var(--mut);margin-top:12px">' + quanti + (quanti === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>' : '')
       +   '<div class="disc" style="margin-top:14px">'
-      +     (disc.waitlist || DISC_FALLBACK.waitlist)
+      +     '<div class="disctxt">' + (disc.waitlist || DISC_FALLBACK.waitlist) + '</div>'
       +     '<div class="acc" id="wlAcc">'
       +       '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
       +       '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
@@ -1973,7 +2035,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!app) return;
     function sync(){
       var on = app.querySelector('.scr.on');
-      app.classList.toggle('on-home', !!on && on.getAttribute('data-s') === 'home');
+      var quale = on ? on.getAttribute('data-s') : 'home';
+      app.classList.toggle('on-home', quale === 'home');
+      app.setAttribute('data-sec', quale);   // pilota --sec: arancio HUB / verde Affiliazione / blu Profilo
     }
     try {
       var mo = new MutationObserver(sync);
@@ -2057,10 +2121,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var s=SLIDES[i], last=!!s.final, dots='';
       for(var k=0;k<SLIDES.length;k++) dots+='<span style="height:7px;border-radius:99px;transition:width .25s;width:'+(k===i?'24px':'7px')+';background:'+(k===i?'var(--acc)':'var(--line2)')+'"></span>';
       var brandTop = s.splash ? '<div></div>'
-        : '<div class="onb-brand brandmark" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div>';
+        : '<div class="onb-brand brandmark" style="font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--tx)">Cash<span style="color:var(--sec)">ly</span></div>';
       var center = s.splash
-        ? '<div class="onb-stmt" style="display:flex;flex-direction:column;align-items:center"><div class="brandmark" style="font-family:var(--display);font-size:56px;font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--tx)">Cash<span style="color:var(--acc)">ly</span></div><div style="font-size:14px;color:var(--dim);letter-spacing:.01em;margin-top:14px">'+s.slogan+'</div></div>'
-        : '<div class="onb-stmt" style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.26;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--acc)">')+'</div>';
+        ? '<div class="onb-stmt" style="display:flex;flex-direction:column;align-items:center"><div class="brandmark" style="font-family:var(--display);font-size:56px;font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--tx)">Cash<span style="color:var(--sec)">ly</span></div><div style="font-size:14px;color:var(--dim);letter-spacing:.01em;margin-top:14px">'+s.slogan+'</div></div>'
+        : '<div class="onb-stmt" style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.26;color:var(--tx);max-width:330px">'+s.statement.replace(/<b>/g,'<b style="color:var(--sec)">')+'</div>';
       ov.innerHTML =
         '<div class="onb-glow"></div>'
         + '<div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column">'
