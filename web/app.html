@@ -411,11 +411,6 @@
     var on=sBtn.classList.toggle('on');
     sBtn.querySelector('.stxt').textContent = on ? 'Salvato' : 'Salva';
   });}
-  // identikit: calcola -> mostra risultato
-  var calcBtn=document.getElementById('calcIdentikit');
-  if(calcBtn){calcBtn.addEventListener('click',function(){
-    var r=document.getElementById('identikitResult'); if(r){r.classList.remove('hide'); r.scrollIntoView({behavior:'smooth',block:'center'});}
-  });}
 
   // scheda servizio: stati Nuovo / In corso / Attivato
   function setSvc(state){
@@ -450,105 +445,6 @@
 })();
 </script>
 
-<script>
-/* ===== Identikit wizard + matching + Per te ===== */
-(function(){
-  var app=document.querySelector('.app'), bodyEl=app.querySelector('.body');
-  function sc0(){ if(bodyEl) bodyEl.scrollTop=0; }
-  function scr(name){ app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===name);}); }
-
-  var QUESTIONS=[
-    {id:'settore',kick:'1 di 5',title:'Cosa ti interessa?',help:'Puoi lasciare aperto a tutto e decidere dopo.',
-     opts:[['trading','Trading e mercati'],['banking','Banca e conti'],['crypto','Crypto'],['ecom','E-commerce'],['online','Business online / digitale'],['rendite','Rendite automatiche'],['tutto','Va bene tutto']]},
-    {id:'capitale',kick:'2 di 5',title:'Quanto puoi investire?',help:'La base con cui il business opera. Non lo spendi: serve ad avere il minimo richiesto.',
-     opts:[['a','Meno di 1.000€'],['b','1.000 – 5.000€'],['c','5.000 – 20.000€'],['d','Oltre 20.000€']]},
-    {id:'spesa',kick:'3 di 5',title:'Budget per avviarlo?',help:'Soldi che escono davvero: attivazione + eventuali costi fissi mensili.',
-     opts:[['g','Solo gratis'],['s50','Fino a 50€'],['s200','Fino a 200€'],['over','Oltre 200€']]},
-    {id:'rischio',kick:'4 di 5',title:'Che rischio accetti?',help:'Serve solo a non proporti cose fuori dalla tua soglia.',
-     opts:[['sicuro','Basso — capitale al sicuro'],['regole','Medio — con regole chiare'],['alto','Alto — per guadagni alti']]},
-    {id:'esperienza',kick:'5 di 5',title:'Quanta esperienza hai?',help:'Se parti da zero, ti mostriamo cose adatte al tuo livello.',
-     opts:[['zero','Parto da zero'],['basi','Ho delle basi'],['esperto','Sono esperto']]}
-  ];
-  var SERVICES=[
-    {n:'Broker VS Broker · Swap',ic:'S',col:'var(--acc)',ds:'Hedging per incassare la differenza di swap, ogni notte.',budget:2000,att:50,fissi:15,risk:2,tipo:'esecuzione',sett:'trading',esp:2,split:30},
-    {n:'Broker VS Broker · Bonus',ic:'B',col:'var(--amber)',ds:'Hedging tra due broker per sfruttare il bonus tradabile.',budget:500,att:0,fissi:0,risk:2,tipo:'esecuzione',sett:'trading',esp:2,split:40},
-    {n:'Edgefunds',ic:'E',col:'var(--blue)',ds:'Servizio conto terzi per gestione hedging.',budget:5000,att:100,fissi:20,risk:2,tipo:'esecuzione',sett:'trading',esp:3,split:50}
-  ];
-  var CAP={a:800,b:3000,c:12000,d:30000},SPESA={g:0,s50:50,s200:200,over:100000},RISK={sicuro:1,regole:2,alto:3},TIPO={sicuro:'protetto',regole:'esecuzione',alto:'mercato'},ESP={zero:1,basi:2,esperto:3};
-  var RECAP={settore:{trading:'Trading',banking:'Banca e conti',crypto:'Crypto',ecom:'E-commerce',online:'Business online',rendite:'Rendite',tutto:'aperto a tutto'},capitale:{a:'capitale piccolo',b:'capitale medio',c:'capitale alto',d:'capitale ampio'},rischio:{sicuro:'rischio basso',regole:'rischio medio',alto:'rischio alto'}};
-
-  function compat(s,a){
-    var capU=CAP[a.capitale],spesaU=SPESA[a.spesa],riskU=RISK[a.rischio],tipoU=TIPO[a.rischio],espU=ESP[a.esperienza],settU=a.settore;
-    var need=s.att+s.fissi,capHard=false,spesaHard=false,capSoft=false;
-    var cCap; if(s.budget>0&&capU<0.8*s.budget){cCap=0;capHard=true;} else if(s.budget>0&&capU<s.budget){cCap=0.5;capSoft=true;} else cCap=1;
-    var cSpesa; if(need>0&&spesaU===0){cSpesa=0;spesaHard=true;} else if(need>0&&spesaU>=need)cSpesa=1; else if(need>0&&spesaU>=0.8*need)cSpesa=0.5; else if(need===0)cSpesa=1; else cSpesa=0.2;
-    var d=s.risk-riskU,cRisk=d<=0?1:(d===1?0.5:0.1); if(tipoU==='protetto'&&s.tipo==='mercato')cRisk=Math.min(cRisk,0.15);
-    var de=s.esp-espU,cEsp=de<=0?1:(de===1?0.5:0.15);
-    var cSett=(settU==='tutto'||settU===s.sett)?1:0.25;
-    var base=25*cCap+15*cSpesa+25*cRisk+15*cEsp+20*cSett+Math.round(s.split/100*3);
-    var raw=Math.max(0,Math.min(100,base));
-    if(capHard||spesaHard)raw=Math.min(raw,15);
-    if(capSoft)raw=Math.min(raw,50);
-    if(riskU===1&&s.risk===3)raw=Math.min(raw,42);
-    var val=Math.round(raw),reason='Adatto al tuo profilo';
-    if(capHard)reason='Ti serve più capitale'; else if(spesaHard)reason='Costo di avvio troppo alto'; else if(cRisk<=0.15)reason='Più rischioso di quanto vuoi'; else if(cEsp<=0.15)reason='Serve più esperienza'; else if(cSett<1)reason='Fuori dal tuo settore'; else if(capSoft)reason='Sei al limite di capitale';
-    return {val:val,reason:reason,locked:(capHard||spesaHard)};
-  }
-  function band(v){ if(v>=80)return{c:'#f7f9fc',bg:'rgba(247,249,252,.13)'}; if(v>=60)return{c:'#c4cbd6',bg:'rgba(196,203,214,.10)'}; if(v>=40)return{c:'#e6b24c',bg:'rgba(230,178,76,.14)'}; return{c:'#818a9c',bg:'rgba(129,138,156,.12)'}; }
-
-  function rowHtml(s,c){
-    var b=c?band(c.val):null;
-    var right = c ? '<div class="pt-pill" style="color:'+b.c+';background:'+b.bg+'">'+c.val+'%</div>'
-      : '<div class="up"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linejoin:round"><path d="M12 5 3 18h18L12 5Z"/></svg><span class="n" style="color:var(--dim)">0</span></div>';
-    var barHtml = c ? '<div class="pt-bar"><i style="width:'+c.val+'%;background:'+b.c+'"></i></div>' : '';
-    var ds = c ? c.reason : s.ds;
-    return '<div class="frow" data-goto="servizio">'
-      +'<div class="fbody"><div class="fnm">'+s.n+'</div><div class="fds">'+ds+'</div>'+barHtml+'</div>'+right+'</div>';
-  }
-  function bindRows(container){ container.querySelectorAll('[data-goto]').forEach(function(el){ el.addEventListener('click',function(){ scr(el.getAttribute('data-goto')); sc0(); }); }); }
-  function renderPerte(a){
-    var feed=document.getElementById('perteFeed'),sub=document.getElementById('pertesub'); if(!feed)return;
-    if(!a){ feed.innerHTML=SERVICES.map(function(s){return rowHtml(s,null);}).join(''); bindRows(feed); return; }
-    if(sub) sub.innerHTML='In base al tuo identikit · <b style="color:var(--dim)">'+[RECAP.settore[a.settore],RECAP.capitale[a.capitale],RECAP.rischio[a.rischio]].join(' · ')+'</b>';
-    var scored=SERVICES.map(function(s){return {s:s,c:compat(s,a)};}).sort(function(x,y){return y.c.val-x.c.val;});
-    feed.innerHTML=scored.map(function(x){return rowHtml(x.s,x.c);}).join('');
-    bindRows(feed);
-  }
-
-  var ans={},cur=0;
-  var Q=document.getElementById('idkQ'),bar=document.getElementById('idkBar'),stepL=document.getElementById('idkStep'),back=document.getElementById('idkBack');
-  function render(){
-    var q=QUESTIONS[cur];
-    if(bar)bar.style.width=((cur+1)/QUESTIONS.length*100)+'%';
-    if(stepL)stepL.textContent=(cur+1)+' / '+QUESTIONS.length;
-    var h='<div class="idk-kick">'+q.kick+'</div><div class="idk-title">'+q.title+'</div><div class="idk-help">'+q.help+'</div><div class="idk-opts">';
-    q.opts.forEach(function(o){ h+='<button class="idk-opt'+(ans[q.id]===o[0]?' on':'')+'" data-v="'+o[0]+'"><span class="rad"></span><span>'+o[1]+'</span></button>'; });
-    h+='</div>';
-    Q.innerHTML=h;
-    Q.querySelectorAll('.idk-opt').forEach(function(b){ b.addEventListener('click',function(){ choose(q,b.getAttribute('data-v')); }); });
-  }
-  function choose(q,v){
-    ans[q.id]=v;
-    Q.querySelectorAll('.idk-opt').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-v')===v);});
-    setTimeout(function(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); },220);
-  }
-  function finish(){
-    void 0;
-    scr('home');
-    app.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-go')==='home');});
-    var home=app.querySelector('.scr[data-s="home"]');
-    if(home){
-      home.querySelectorAll('.seg button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-view')==='perte');});
-      home.querySelectorAll('.feed[data-view]').forEach(function(fd){fd.classList.toggle('hide',fd.getAttribute('data-view')!=='perte');});
-    }
-    sc0();
-  }
-  if(back) back.onclick=function(){ if(cur>0){cur--;render();} else scr('profile'); };
-  app.querySelectorAll('[data-goto="identikit"]').forEach(function(el){ el.addEventListener('click',function(){ ans={};cur=0;render(); }); });
-  if(Q){ render(); void 0; }
-  if(/demo=perte/.test(location.search)){ ans={settore:'trading',capitale:'b',spesa:'s50',rischio:'regole',esperienza:'basi'}; finish(); }
-})();
-</script>
 
 <script>
 /* ===== Logica Partner: invita 3 -> sblocca Suggerisci + Link ref ===== */
@@ -1027,7 +923,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=53"></script>
+<script src="identikit.js?v=54"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){

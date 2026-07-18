@@ -471,7 +471,7 @@
       <div class="lock-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <h3>Completa la tua anagrafica</h3>
       <p>Per attivare un servizio e vedere la rete, compila nome, contatti e qualche domanda veloce.</p>
-      <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa ora</button>
+      <button class="btn btn-primary" onclick="window.location.href='app.html?_=' + Date.now() + '#profilo'">Completa ora</button>
     </div>
 
     <!-- SEZIONE · Business List (il core) -->
@@ -618,7 +618,7 @@
     })();
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="identikit.js?v=53"></script>
+  <script src="identikit.js?v=54"></script>
   <script>
     // L'app ora vive su app.html (nome nuovo per bypassare la cache di Telegram). Reindirizza subito.
     if (!/app\.html/.test(location.pathname)) { location.replace("app.html" + (location.search || "?_=" + Date.now()) + location.hash); }
@@ -1011,7 +1011,7 @@
 
       let cta;
       if (!window.sondaggioCompletato) {
-        cta = `<button class="biz-cta" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica per iscriverti</button>`;
+        cta = `<button class="biz-cta" onclick="window.location.href='app.html?_=' + Date.now() + '#profilo'">Completa l'anagrafica per iscriverti</button>`;
       } else if (data.gia_interessato) {
         cta = `<button class="biz-cta" onclick="apriRefLink(${id})">Apri il link e registrati</button>
                <div class="biz-linkbox">${data.ref_link || ""}</div>${fonteNote}`;
@@ -1429,7 +1429,7 @@
     }
     function onbNext() {
       if (onbI < ONB.length - 1) { onbI++; onbRender(); try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {} }
-      else { onbTrack("profilo"); try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} window.location.href = "sondaggio.html?_=" + Date.now(); }
+      else { onbTrack("profilo"); try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} window.location.href = "app.html?_=" + Date.now(); }
     }
     function onbClose() { onbTrack("esplora"); try { localStorage.setItem("cashly_onboarded", "1"); } catch (e) {} document.getElementById("onbOverlay").classList.remove("show"); }
     window.onbNext = onbNext; window.onbClose = onbClose;

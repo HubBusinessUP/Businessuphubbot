@@ -824,9 +824,9 @@ async function apiMe(telegramId: number, tgUser?: any) {
   return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, prodotti_in_arrivo: prodottiInArrivo, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
 }
 
-// Anagrafica modificabile dal Profilo. Volutamente SEPARATA da /sondaggio: quella marca
-// sondaggio_completato e scrive un evento, cose che non devono accadere solo perche'
-// l'utente corregge il proprio numero di telefono.
+// Anagrafica modificabile dal Profilo: unico punto in cui l'utente da' i suoi dati,
+// da quando il questionario e' stato eliminato. La tabella si chiama ancora
+// sondaggio_risposte per ragioni storiche, ma ormai contiene SOLO anagrafica.
 async function apiAnagrafica(telegramId: number, body: any) {
   const clean = (v: unknown, max: number) => {
     const s = String(v ?? "").trim()
@@ -854,10 +854,14 @@ async function apiAnagrafica(telegramId: number, body: any) {
 
   // Il nome sul lead e' quello che vede lo sponsor nella sua rete: tienilo allineato.
   // anagrafica_manuale blinda la scelta dell'utente contro /start e il refresh getChat.
+  // sondaggio_completato: il questionario non esiste piu', ma il flag resta il gate
+  // di 7 funzioni (attiva servizio, pagina pubblica, suggerimenti...). Ora lo alza
+  // il salvataggio dell'anagrafica: chi ha dato i dati passa, esattamente come prima.
   const lu = await supabase.from("leads").update({
     nome,
     cognome,
     anagrafica_manuale: true,
+    sondaggio_completato: true,
   }).eq("telegram_id", telegramId)
   if (lu.error) {
     console.error("anagrafica leads update failed:", lu.error)
@@ -865,41 +869,6 @@ async function apiAnagrafica(telegramId: number, body: any) {
   }
 
   return json({ ok: true, anagrafica: row })
-}
-
-async function apiSondaggioSave(telegramId: number, body: any) {
-  const { nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato, consapevolezza, identikit } = body
-  if (!disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
-
-  const row: any = { telegram_id: telegramId, nome, cognome, email, telefono, citta, livello_trading, esperienza_broker, capitale, prodotto_preferito, willingness_to_pay, note_libere, disclaimer_accettato: true }
-  // Le risposte del test e l'identikit si aggiornano solo quando l'assessment li invia,
-  // così il salvataggio della sola anagrafica dal profilo non li azzera.
-  if (consapevolezza !== undefined) row.consapevolezza = consapevolezza
-  if (identikit !== undefined) row.identikit = identikit
-
-  const { data: ex } = await supabase.from("sondaggio_risposte").select("id").eq("telegram_id", telegramId).maybeSingle()
-  const saveResult = ex
-    ? await supabase.from("sondaggio_risposte").update(row).eq("id", ex.id)
-    : await supabase.from("sondaggio_risposte").insert(row)
-  if (saveResult.error) {
-    console.error("sondaggio_risposte save failed:", saveResult.error)
-    return json({ error: "save_failed", detail: saveResult.error.message }, 500)
-  }
-
-  const leadUpdate = await supabase.from("leads").update({
-    sondaggio_completato: true,
-    sondaggio_completato_at: new Date().toISOString(),
-    nome: nome ?? undefined,
-    cognome: cognome ?? undefined,
-  }).eq("telegram_id", telegramId)
-  if (leadUpdate.error) {
-    console.error("leads update failed:", leadUpdate.error)
-    return json({ error: "save_failed", detail: leadUpdate.error.message }, 500)
-  }
-
-  await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "sondaggio_completato" })
-
-  return json({ ok: true })
 }
 
 async function apiBusinessList(telegramId?: number | null) {
@@ -2370,11 +2339,6 @@ serve(async (req) => {
       return await apiMe(tid, parseInitDataUser(rawInitData))
     }
 
-    if (sub === "sondaggio" && req.method === "POST") {
-      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
-      if (!tid) return json({ error: "unauthorized" }, 401)
-      return await apiSondaggioSave(tid, await req.json())
-    }
 
     if (sub === "waitlist" && req.method === "POST") {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")

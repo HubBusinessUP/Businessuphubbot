@@ -143,22 +143,6 @@
   .af-partner-ico { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
   /* ===== IDENTIKIT ===== */
-  .ik-arch { background: var(--s0); border: 1px solid var(--line); border-radius: 4px; padding: 14px; margin-bottom: 14px; }
-  .ik-arch-lbl { font-size: 11.5px; color: var(--dim); }
-  .ik-arch-name { font-size: 17px; font-weight: 800; margin: 3px 0 5px; color: var(--tx); }
-  .ik-arch-desc { font-size: 12.5px; color: var(--dim); line-height: 1.45; }
-  .ik-row { margin-bottom: 12px; }
-  .ik-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-  .ik-name { font-size: 13.5px; font-weight: 600; color: var(--tx); }
-  .ik-val { font-family: var(--mono); font-size: 14.5px; font-weight: 800; }
-  .ik-track { height: 8px; background: var(--s0); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
-  .ik-fill { height: 100%; border-radius: 4px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
-  .ik-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 4px; }
-  .ik-mini { background: var(--s0); border: 1px solid var(--line); border-radius: 4px; padding: 12px; }
-  .ik-mini-h { font-family: var(--mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
-  .ik-mini-h.ok { color: var(--acc); }
-  .ik-mini-h.warn { color: var(--amber); }
-  .ik-mini div:not(.ik-mini-h) { font-size: 12.5px; margin-bottom: 3px; color: var(--tx); }
 
   /* ===== PRODOTTI / ATTIVITA ===== */
   .prod-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -307,7 +291,7 @@
           </div>
           <div id="paginaLocked" style="display:none">
             <p class="locked" style="margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, social e i tuoi link.</p>
-            <button class="btn btn-primary" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+            <button class="btn btn-primary" onclick="window.location.href='app.html?_=' + Date.now() + '#profilo'">Completa l'anagrafica</button>
           </div>
           <div id="paginaReady" style="display:none">
             <div class="invite-row" style="margin-bottom:10px">
@@ -385,7 +369,7 @@
           <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">La tua pagina pubblica <span id="affPaginaStato" style="display:none;font-family:var(--mono);font-size:11px;font-weight:800;padding:3px 9px;border-radius:4px"></span></div>
           <div id="affPaginaLocked" style="display:none">
             <p class="locked" style="margin-bottom:12px">Completa l'anagrafica per creare la tua pagina pubblica con bio, foto, social e i tuoi link.</p>
-            <button class="btn btn-sm btn-primary" style="width:100%" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Completa l'anagrafica</button>
+            <button class="btn btn-sm btn-primary" style="width:100%" onclick="window.location.href='app.html?_=' + Date.now() + '#profilo'">Completa l'anagrafica</button>
           </div>
           <div id="affPaginaReady" style="display:none">
             <p class="locked" style="margin-bottom:12px">La tua vetrina pubblica: bio, foto, social e i tuoi link in un unico posto. Gestiscila completa qui.</p>
@@ -427,7 +411,6 @@
       </div>
       <div class="rtabs">
         <button class="rtab active" id="ptabDati" onclick="switchProfilo('dati')">Dati</button>
-        <button class="rtab" id="ptabIdentikit" onclick="switchProfilo('identikit')">Identikit</button>
         <button class="rtab" id="ptabAttivita" onclick="switchProfilo('attivita')">Attività</button>
       </div>
 
@@ -451,12 +434,6 @@
       <p class="save-note" id="saveNote"></p>
       </div>
 
-      <div class="rpanel" id="profilo-identikit">
-      <div class="card">
-        <h2>Il tuo identikit business</h2>
-        <div id="identikitBox"></div>
-      </div>
-      </div>
 
       <div class="rpanel" id="profilo-attivita">
       <button class="btn btn-primary" style="margin-bottom:12px" onclick="window.location.href='dashboard.html?_=' + Date.now() + '#suggerisci'">+ Candida un business</button>
@@ -540,7 +517,7 @@
     window.addEventListener("pageshow", (e) => { if (e.persisted) window.location.reload(); });
   </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="identikit.js?v=53"></script>
+  <script src="identikit.js?v=54"></script>
   <script>
     const API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
     const tg = window.Telegram?.WebApp;
@@ -559,34 +536,6 @@
       document.getElementById("fEmail").value = sond.email || "";
       document.getElementById("fTelefono").value = sond.telefono || "";
       document.getElementById("fCitta").value = sond.citta || "";
-      renderIdentikit(sond.identikit);
-    }
-
-    // Identikit business nel profilo: punteggi per area + archetipo + rifai il test.
-    function renderIdentikit(idk) {
-      const box = document.getElementById("identikitBox");
-      if (!idk || !idk.scores) {
-        box.innerHTML = `<p style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Non hai ancora fatto il test di consapevolezza business.</p>
-          <button class="btn btn-sm" style="background:var(--blue);color:#fff" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Fai il test</button>`;
-        return;
-      }
-      const bars = Object.keys(CONS_DIM).map((d) => {
-        const c = CONS_DIM[d], val = idk.scores[d] ?? 0;
-        return `<div class="ik-row"><div class="ik-top"><span class="ik-name">${c.label}</span><span class="ik-val" style="color:${c.color}">${val}</span></div>
-          <div class="ik-track"><div class="ik-fill" style="width:${val}%;background:${c.color}"></div></div></div>`;
-      }).join("");
-      box.innerHTML = `
-        <div class="ik-arch">
-          <div class="ik-arch-lbl">Il tuo archetipo</div>
-          <div class="ik-arch-name">${escapeHtml(idk.archetipo || "")}</div>
-          <div class="ik-arch-desc">${escapeHtml(idk.descrizione || "")}</div>
-        </div>
-        ${bars}
-        <div class="ik-two">
-          <div class="ik-mini"><div class="ik-mini-h ok">Punti di forza</div>${(idk.forze || []).map((f) => `<div>${escapeHtml(f)}</div>`).join("")}</div>
-          <div class="ik-mini"><div class="ik-mini-h warn">Da rafforzare</div>${(idk.lacune || []).map((f) => `<div>${escapeHtml(f)}</div>`).join("")}</div>
-        </div>
-        <button class="btn btn-sm" style="background:var(--panel);border:1px solid var(--border);color:var(--text);margin-top:12px" onclick="window.location.href='sondaggio.html?_=' + Date.now()">Rifai il test</button>`;
     }
 
     document.getElementById("saveBtn").onclick = async () => {
@@ -600,10 +549,11 @@
         email: document.getElementById("fEmail").value.trim(),
         telefono: document.getElementById("fTelefono").value.trim(),
         citta: document.getElementById("fCitta").value.trim(),
-        disclaimer_accettato: true,
       };
 
-      const res = await fetch(`${API_URL}/sondaggio`, {
+      // Anagrafica, non sondaggio: il questionario non esiste piu'. /anagrafica salva
+      // solo i dati personali e NON marca l'utente come "qualificato".
+      const res = await fetch(`${API_URL}/anagrafica`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-telegram-init-data": initData },
         body: JSON.stringify(body),
@@ -911,15 +861,13 @@
     }
     window.inviaBroadcast = inviaBroadcast;
 
-    // Schede interne alla vista Profilo: Dati / Identikit / Attività.
+    // Schede interne alla vista Profilo: Dati / Attività.
     function switchProfilo(sub) {
-      const subs = ["dati", "identikit", "attivita"];
+      const subs = ["dati", "attivita"];
       const s = subs.includes(sub) ? sub : "dati";
       document.getElementById("profilo-dati").classList.toggle("active", s === "dati");
-      document.getElementById("profilo-identikit").classList.toggle("active", s === "identikit");
       document.getElementById("profilo-attivita").classList.toggle("active", s === "attivita");
       document.getElementById("ptabDati").classList.toggle("active", s === "dati");
-      document.getElementById("ptabIdentikit").classList.toggle("active", s === "identikit");
       document.getElementById("ptabAttivita").classList.toggle("active", s === "attivita");
       try { tg?.HapticFeedback?.selectionChanged(); } catch (e) {}
     }
