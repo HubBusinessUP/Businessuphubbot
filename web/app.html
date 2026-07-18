@@ -913,6 +913,43 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .navb.on{color:var(--sec)}
 .navb.on .ico{stroke:var(--sec)}
 
+/* ===================================================================
+   ANIMAZIONI — poche e funzionali. Servono a far capire cosa sta
+   succedendo (questa scheda si e' aperta, sei passato di schermata),
+   non a decorare: l'eccesso di movimento e' uno dei segnali che fanno
+   dire "fatto con l'AI". Tutte brevi e disattivabili da sistema.
+   =================================================================== */
+
+/* 1. La scheda prodotto si apriva di scatto (display:none -> block).
+      Ora il contenuto entra da sopra mentre compare. */
+.fitem.open .fdrop{animation:apri .22s cubic-bezier(.2,.7,.2,1) both}
+@keyframes apri{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* 2. Cambio schermata: prima era un taglio secco. Un velo di dissolvenza
+      con 4px di risalita basta a far leggere il passaggio. */
+.scr.on{animation:entra .2s ease-out both}
+@keyframes entra{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* 3. Tocco sulla riga: risposta immediata al dito, come in un'app nativa. */
+.fitem{transition:background .16s ease, border-color .16s ease}
+.frow{transition:transform .12s ease}
+.frow:active{transform:scale(.985)}
+
+/* 4. Il voto: un piccolo scatto quando lo dai, cosi' il tocco "si sente". */
+.votebtn{transition:background .16s ease, border-color .16s ease, color .16s ease}
+.votebtn.on .vn{animation:votato .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes votato{0%{transform:scale(1)}45%{transform:scale(1.28)}100%{transform:scale(1)}}
+
+/* 5. I fogli che salgono dal basso (proponi, waitlist, condividi). */
+.pr-card{animation:sali .24s cubic-bezier(.2,.7,.2,1) both}
+@keyframes sali{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* Chi ha chiesto meno movimento al sistema non lo subisce. */
+@media (prefers-reduced-motion:reduce){
+  .fitem.open .fdrop,.scr.on,.votebtn.on .vn,.pr-card{animation:none}
+  .frow:active{transform:none}
+}
+
 /* Stato d'uso ("Attivo · 2 servizi"): sta accanto al badge di livello ma NON e' un badge.
    Testo piccolo con pallino, nessuna cornice: se avesse la pillola tornerebbe a leggersi
    come un grado sotto Partner, che e' esattamente l'errore che stiamo togliendo. */
@@ -963,7 +1000,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=58"></script>
+<script src="identikit.js?v=59"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
