@@ -307,6 +307,11 @@ async function getOrCreateRefCode(telegramId: number): Promise<string> {
 
 // ---------- BOT ----------
 const PARTNER_SOGLIA = 3
+// Livello piu' alto ("Partner Senior"): soglie sulla DIMENSIONE DELLA RETE, scelta di Antonio.
+// Sono numeri TARATI A OCCHIO, non misurati: con la base utenti attuale non li raggiunge
+// nessuno. Vanno rivisti quando ci sara' una distribuzione vera da guardare.
+const SENIOR_DIRETTI = 5
+const SENIOR_RETE = 25
 
 // Al raggiungimento della soglia di invitati lo sponsor diventa Partner in automatico e viene avvisato.
 async function verificaSbloccoPartner(sponsorId: number) {
@@ -737,6 +742,14 @@ async function apiMe(telegramId: number, tgUser?: any) {
   const { data: sondaggio } = await supabase.from("sondaggio_risposte").select("*").eq("telegram_id", telegramId).maybeSingle()
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
 
+  // Livello dell'utente: servono i DIRETTI ATTIVI (non i semplici invitati) e la rete a tutti i livelli.
+  // "Attivo" = non ha bloccato il bot E ha almeno un servizio attivo: e' la stessa definizione che usa
+  // gia' la soglia Partner, quindi i due conteggi non possono divergere.
+  const { count: direttiAttivi } = await supabase.from("leads")
+    .select("telegram_id", { count: "exact", head: true })
+    .eq("referred_by", telegramId).eq("attivo", true).eq("is_cliente", true)
+  const { data: reteTotale } = await supabase.rpc("rete_totale", { root_id: telegramId })
+
   // Tutti i tutorial iniziati ma non completati, per le notifiche "Riprendi" impilabili.
   const riprese: any[] = []
   const { data: progress } = await supabase.from("tutorial_progress")
@@ -821,7 +834,7 @@ async function apiMe(telegramId: number, tgUser?: any) {
     })
   }
 
-  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, prodotti_in_arrivo: prodottiInArrivo, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, is_admin: telegramId === ADMIN_ID })
+  return json({ lead, sondaggio, rete_count: invitati ?? 0, ripresa, riprese, suggeriti_count: suggeriti ?? 0, approvati_count: approvati ?? 0, sponsor, prodotti_attivi: prodottiAttivi, prodotti_in_arrivo: prodottiInArrivo, is_partner: !!lead?.is_partner, partner_richiesto: !!lead?.partner_richiesto, partner_soglia: PARTNER_SOGLIA, diretti_attivi: direttiAttivi ?? 0, rete_totale: reteTotale ?? 0, senior_soglia: SENIOR_DIRETTI, senior_rete: SENIOR_RETE, is_admin: telegramId === ADMIN_ID })
 }
 
 // Anagrafica modificabile dal Profilo: unico punto in cui l'utente da' i suoi dati,

@@ -275,9 +275,12 @@
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="pfNome" style="font-size:20px;font-weight:800;letter-spacing:-.02em">&nbsp;</span>
-            <span id="pfBadge" class="cbadge">Membro</span>
+            <span id="pfBadge" class="cbadge">Iscritto</span>
           </div>
           <div id="pfUser" style="font-size:13px;color:var(--dim);margin-top:3px">&nbsp;</div>
+          <!-- Stato d'uso: NON e' un grado, quindi e' testo con pallino e non una pillola.
+               Se sembrasse un secondo badge, "Attivo" tornerebbe a leggersi come un livello. -->
+          <div id="pfUso" class="uso" style="display:none"><span class="udot"></span><span id="pfUsoTxt"></span></div>
         </div>
       </div>
 
@@ -910,6 +913,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .navb.on{color:var(--sec)}
 .navb.on .ico{stroke:var(--sec)}
 
+/* Stato d'uso ("Attivo · 2 servizi"): sta accanto al badge di livello ma NON e' un badge.
+   Testo piccolo con pallino, nessuna cornice: se avesse la pillola tornerebbe a leggersi
+   come un grado sotto Partner, che e' esattamente l'errore che stiamo togliendo. */
+.uso{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--dim)}
+.udot{width:6px;height:6px;border-radius:50%;background:var(--acc);flex-shrink:0}
+
 /* Nel PROFILO l'avatar nell'header era un doppione: la stessa foto sta gia', piu' grande,
    nella scheda subito sotto. Al suo posto il titolo della sezione, cosi' l'header dice
    dove sei invece di ripetere la faccia. Altrove l'avatar resta (e' la scorciatoia al profilo). */
@@ -954,7 +963,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=57"></script>
+<script src="identikit.js?v=58"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1610,11 +1619,26 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (foto) { setAvatar(homeAvatarEl(), foto); setAvatarById('pfAvatar', foto); }
 
       // Badge: il Partner vive nel backend (soglia diretti attivi) -> qui e' l'unico posto dove si vede.
+      // Il badge misura UN SOLO asse: la rete che hai portato. Prima mescolava due cose
+      // ("Cliente" = hai attivato un business, "Partner" = hai portato 3 persone) e quindi
+      // non descriveva bene ne' l'uno ne' l'altro. L'uso della piattaforma esce dalla scala.
       var bd = document.getElementById('pfBadge');
       if (bd) {
-        if (me.is_partner) { bd.textContent = 'Partner'; bd.className = 'cbadge mid'; }
-        else if (L.is_cliente) { bd.textContent = 'Cliente'; bd.className = 'cbadge mid'; }
-        else { bd.textContent = 'Membro'; bd.className = 'cbadge'; }
+        var dirAtt = me.diretti_attivi || 0, reteTot = me.rete_totale || 0;
+        var liv = 'Iscritto', cls = 'cbadge';
+        if (dirAtt >= 1) { liv = 'Referente'; cls = 'cbadge mid'; }
+        if (me.is_partner) { liv = 'Partner'; cls = 'cbadge mid'; }
+        if (me.is_partner && dirAtt >= (me.senior_soglia || 5) && reteTot >= (me.senior_rete || 25)) {
+          liv = 'Partner Senior'; cls = 'cbadge mid';
+        }
+        bd.textContent = liv; bd.className = cls;
+      }
+      // Stato d'uso, accanto al badge ma volutamente diverso: nascosto a zero, mai "0 servizi".
+      var uso = document.getElementById('pfUso');
+      if (uso) {
+        var nSv = (me.prodotti_attivi || []).length;
+        uso.style.display = nSv ? 'flex' : 'none';
+        setTxt('pfUsoTxt', nSv ? ('Attivo · ' + nSv + (nSv === 1 ? ' servizio' : ' servizi')) : '');
       }
 
       var uname = L.username || u.username || '';
