@@ -216,6 +216,10 @@
 
     <!-- ===================== HUB ===================== -->
     <section class="scr on" data-s="home">
+      <div class="hero-intro">
+        <p class="hero-t">Scegli un business e attivalo.</p>
+        <p class="hero-s">Ogni scheda spiega cos'è e come si attiva, passo dopo passo. Sono servizi di terzi: l'account lo apri tu, sul loro sito.</p>
+      </div>
       <div class="cerca">
         <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="cerca" type="search" autocomplete="off" placeholder="Cerca un business">
@@ -905,6 +909,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .navb.on{color:var(--sec)}
 .navb.on .ico{stroke:var(--sec)}
 
+/* Intestazione HUB: solo gerarchia di peso e colore, allineata al margine di .cerca (20px).
+   Nessun contenitore e nessun accento: e' la parte piu' silenziosa della schermata,
+   non deve rubare la scena alla ricerca e alla lista. */
+.hero-intro{padding:16px 20px 2px}
+.hero-t{margin:0;font-size:15px;font-weight:600;line-height:1.25;letter-spacing:-.01em;color:var(--tx)}
+.hero-s{margin:5px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:var(--dim);max-width:34em}
+
 /* Il + nel menu: e' un'AZIONE, non una sezione, quindi non diventa mai "attivo".
    L'icona porta il colore della sezione cosi' si distingue dalle voci di navigazione. */
 .navb-add .ico{stroke:var(--sec)}
@@ -934,7 +945,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=55"></script>
+<script src="identikit.js?v=56"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
