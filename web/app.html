@@ -885,6 +885,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
    Profilo = blu (area personale, freddo)
    Il VIOLA resta fuori di proposito: e' la tinta che fa dire "stile AI".
    =================================================================== */
+/* Il MENU ha un colore SOLO, sempre lo stesso (scelta di Antonio): la navigazione
+   non deve cambiare tinta mentre ti muovi, se no sembra un'altra app a ogni schermata.
+   Il colore di sezione (--sec) resta, ma pilota solo i CONTENUTI: CTA, intestazioni, KPI. */
+:root{--menu:#FF6B3D;--menu-soft:rgba(255,107,61,.13);--menu-line:rgba(255,107,61,.30);--menu-tint:#FFA98F}
 .app{--sec:var(--acc);--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
 .app[data-sec="home"]{--sec:#FF6B3D;--sec-soft:rgba(255,107,61,.13);--sec-line:rgba(255,107,61,.30);--sec-tint:#FFA98F;--sec-on:#2A0E04;--sec-deep:#E85A2E}
 .app[data-sec="wallet"]{--sec:#25CF6E;--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
@@ -902,16 +906,16 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .app{height:100vh;height:100dvh}
 
 /* Tab macro: la sottolineatura prende il colore della sezione (era bianca) */
-.macro.on{color:var(--tx);border-bottom-color:var(--sec)}
+.macro.on{color:var(--tx);border-bottom-color:var(--menu)}
 /* Pill sotto-categoria attiva. Bordo trasparente anche da spenta: niente salto di 1px. */
 .sub{border:1px solid transparent}
-.sub.on{background:var(--sec-soft);border-color:var(--sec-line);color:var(--sec-tint);font-weight:600}
-.sub.on b{color:var(--sec-tint);opacity:.75}
+.sub.on{background:var(--menu-soft);border-color:var(--menu-line);color:var(--menu-tint);font-weight:600}
+.sub.on b{color:var(--menu-tint);opacity:.75}
 /* Intestazioni di gruppo (le fasce temporali): smettono di essere grigie */
 .grp{color:var(--sec-tint)}
 /* Bottom nav: UNA sola voce colorata, quella della sezione in cui sei (era bianca) */
-.navb.on{color:var(--sec)}
-.navb.on .ico{stroke:var(--sec)}
+.navb.on{color:var(--menu)}
+.navb.on .ico{stroke:var(--menu)}
 
 /* --- Skeleton: mentre carica si vede la FORMA di cio' che arrivera'. --- */
 .skel{background:var(--s1);border-radius:6.5px;animation:pulsa 1.1s ease-in-out infinite}
@@ -998,8 +1002,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 /* Il + nel menu: e' un'AZIONE, non una sezione, quindi non diventa mai "attivo".
    L'icona porta il colore della sezione cosi' si distingue dalle voci di navigazione. */
-.navb-add .ico{stroke:var(--sec)}
-.navb-add .lb{color:var(--sec)}
+.navb-add .ico{stroke:var(--menu)}
+.navb-add .lb{color:var(--menu)}
 
 /* CTA coordinate: fill piatto della sezione. Via i gradienti verdi e le ombre colorate,
    che erano l'unico colore dell'app e la facevano sembrare monocroma. */
@@ -1025,7 +1029,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=63"></script>
+<script src="identikit.js?v=64"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
