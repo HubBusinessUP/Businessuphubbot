@@ -715,8 +715,8 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sub.on b{color:var(--dim)}
 
 .grp{font-size:12.5px;font-weight:600;color:var(--mut);padding:26px 20px 0}
-/* Spazio in fondo alla lista: senza, il tasto + copre l'ultima card (visto nello screenshot). */
-#listaReale{padding-bottom:86px}
+/* Un filo d'aria in fondo alla lista (il + ora sta nel menu, non copre piu' niente). */
+#listaReale{padding-bottom:18px}
 
 /* Ogni tool e' una CARD orizzontale definita: bordo + pannello, staccata dalle altre. */
 .fitem{margin:10px 16px 0;background:var(--s0);border:1px solid transparent;border-radius:10.5px;overflow:hidden}
@@ -852,7 +852,6 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    cosi' resta ancorato alla colonna dell'app anche su schermo largo, non al viewport. */
 .fab{position:absolute;right:18px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:none;background:var(--sec);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:none}
 .fab:active{transform:scale(.94)}
-.app:not(.on-home) .fab{display:none}   /* il + propone alla directory: ha senso solo sull'HUB */
 .pr-sheet{position:fixed;inset:0;z-index:160;display:none}
 .pr-card{position:absolute;left:0;right:0;bottom:0;max-width:460px;margin:0 auto;max-height:88vh;overflow-y:auto;background:var(--s0);border-top:1px solid var(--line);border-radius:14.5px 16px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom))}
 .pr-sel{width:100%;box-sizing:border-box;background:var(--s0);border:1px solid var(--line2);border-radius:9.5px;padding:13px;color:var(--tx);font-family:var(--sans);font-size:15px;font-weight:600;outline:none;appearance:none;-webkit-appearance:none}
@@ -886,6 +885,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 /* Niente aloni ne' gradienti: Antonio li riconosce come "fatto con l'AI". Superfici piatte. */
 .hdr{position:relative;z-index:2}
 .body{position:relative;z-index:1}
+/* La nav DEVE stare sopra al contenuto che scorre: senza uno z-index proprio restava
+   a 'auto' (=0) mentre .body e' a 1, e il contenuto le passava sopra facendola sparire.
+   Sotto ai fogli modali (150/160), che devono poterla coprire. */
+.nav{position:sticky;bottom:0;z-index:50}
+/* L'app non deve mai superare l'altezza visibile: se cresce, a scorrere e' .body,
+   e la nav resta incollata in fondo. */
+.app{height:100vh;height:100dvh}
 
 /* Tab macro: la sottolineatura prende il colore della sezione (era bianca) */
 .macro.on{color:var(--tx);border-bottom-color:var(--sec)}
@@ -898,6 +904,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 /* Bottom nav: UNA sola voce colorata, quella della sezione in cui sei (era bianca) */
 .navb.on{color:var(--sec)}
 .navb.on .ico{stroke:var(--sec)}
+
+/* Il + nel menu: e' un'AZIONE, non una sezione, quindi non diventa mai "attivo".
+   L'icona porta il colore della sezione cosi' si distingue dalle voci di navigazione. */
+.navb-add .ico{stroke:var(--sec)}
+.navb-add .lb{color:var(--sec)}
 
 /* CTA coordinate: fill piatto della sezione. Via i gradienti verdi e le ombre colorate,
    che erano l'unico colore dell'app e la facevano sembrare monocroma. */
@@ -923,7 +934,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=54"></script>
+<script src="identikit.js?v=55"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1750,11 +1761,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   (function(){
     var app = document.querySelector('.app'); if (!app) return;
 
+    // Il + sta NEL MENU, non piu' flottante sopra la lista (copriva l'ultima card).
+    // Resta lo stesso elemento e lo stesso id: l'handler piu' sotto non cambia.
     var fab = document.createElement('button');
-    fab.className = 'fab'; fab.id = 'proponiFab'; fab.type = 'button';
+    fab.className = 'navb navb-add'; fab.id = 'proponiFab'; fab.type = 'button';
     fab.setAttribute('aria-label', 'Proponi un business');
-    fab.innerHTML = '<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round"><path d="M12 5v14M5 12h14"/></svg>';
-    app.appendChild(fab);
+    fab.innerHTML = '<svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><path d="M12 5v14M5 12h14"/></svg>'
+      + '<span class="lb">Proponi</span>';
+    var navEl = app.querySelector('.nav');
+    var vociProfilo = navEl && navEl.querySelector('.navb[data-go="profilo"]');
+    if (navEl) { navEl.insertBefore(fab, vociProfilo || null); }   // prima di Profilo, che resta ultimo
+    else { app.appendChild(fab); }
 
     var sh = document.createElement('div');
     sh.className = 'pr-sheet'; sh.id = 'proponiSheet';
@@ -1921,6 +1938,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       renderFeeds();
       sh.style.display = 'none';
     });
+  })();
+
+  // ===== ALTEZZA REALE DELLA WEBVIEW =====
+  // Dentro Telegram 100vh NON e' l'altezza visibile: la barra del client e la tastiera
+  // la accorciano, e la bottom nav finisce sotto il bordo (sembra "sparita").
+  // viewportStableHeight e' l'altezza davvero visibile: ci agganciamo a quella.
+  (function(){
+    if (!tg) return;
+    var app = document.querySelector('.app'); if (!app) return;
+    function sincronizzaAltezza(){
+      var h = tg.viewportStableHeight || tg.viewportHeight || 0;
+      if (h > 200) app.style.height = h + 'px';   // >200: scarta i valori assurdi iniziali
+    }
+    try { tg.onEvent('viewportChanged', sincronizzaAltezza); } catch(e){}
+    sincronizzaAltezza();
   })();
 
   // ===== CHROME: marca su .app la schermata attiva =====
