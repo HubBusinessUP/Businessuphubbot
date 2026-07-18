@@ -1025,7 +1025,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=60"></script>
+<script src="identikit.js?v=61"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1583,7 +1583,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       CATS = (d.categorie || []).map(function(c){ return { id: c.id, nome: c.nome, macro_categoria_id: c.macro_categoria_id }; });
       MACRO = (d.macro_categorie || []).map(function(m){ return { id: m.id, nome: m.nome }; });
       (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ ALLBIZ.push(s); }); });
-      ALLBIZ.sort(function(a,b){ return (b.voti||0)-(a.voti||0); });
+      // I VOTI DETERMINANO L'ORDINE (all-time), dentro ogni fascia temporale.
+      // Niente classifica "del giorno": il voto ha UNIQUE(utente,servizio), quindi e' uno
+      // STOCK e non un flusso — esauriti i voti possibili, "oggi" resterebbe a zero per sempre.
+      // A PARI MERITO l'ordine era quello del backend, cioe' congelato: con quasi tutti a zero
+      // voti (oggi 3 su 4) e' il caso NORMALE, non un caso limite, e chi era ultimo lo restava.
+      // Ora ruota: seme stabile per giornata -> ordine fermo mentre navighi, diverso domani.
+      var _seme = (function(){ var d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); })();
+      function _turno(id){ var x=Math.sin(_seme*9301 + (id||0)*49297)*233280; return x-Math.floor(x); }
+      ALLBIZ.sort(function(a,b){
+        var d=(b.voti||0)-(a.voti||0);
+        return d ? d : (_turno(a.id)-_turno(b.id));
+      });
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
       (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
       disegnaTabs();
