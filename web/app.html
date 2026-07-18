@@ -189,6 +189,7 @@
 <div class="app">
   <div class="hdr">
     <div id="homeAvatar" data-goto="profilo" aria-label="Vai al profilo">A</div>
+    <div class="hdrtit">Profilo</div>
     <div class="salu"><span id="homeGreet">Ciao,</span> <b id="homeName"></b></div>
     <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
   </div>
@@ -909,6 +910,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .navb.on{color:var(--sec)}
 .navb.on .ico{stroke:var(--sec)}
 
+/* Nel PROFILO l'avatar nell'header era un doppione: la stessa foto sta gia', piu' grande,
+   nella scheda subito sotto. Al suo posto il titolo della sezione, cosi' l'header dice
+   dove sei invece di ripetere la faccia. Altrove l'avatar resta (e' la scorciatoia al profilo). */
+.hdrtit{display:none;flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--tx)}
+.app[data-sec="profilo"] #homeAvatar{display:none}
+.app[data-sec="profilo"] .hdrtit{display:block}
+.app[data-sec="profilo"] .hdr .salu{display:none}
+
 /* Intestazione HUB: solo gerarchia di peso e colore, allineata al margine di .cerca (20px).
    Nessun contenitore e nessun accento: e' la parte piu' silenziosa della schermata,
    non deve rubare la scena alla ricerca e alla lista. */
@@ -945,7 +954,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=56"></script>
+<script src="identikit.js?v=57"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
