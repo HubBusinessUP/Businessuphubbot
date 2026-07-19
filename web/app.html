@@ -993,6 +993,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .app[data-sec="profilo"] .hdrtit{display:block}
 .app[data-sec="profilo"] .hdr .salu{display:none}
 
+/* "Cosa serve per iniziare": prosa, allineata al resto della scheda. Nessun riquadro:
+   i box tinti sono la firma del "fatto con l'AI" e sono gia' stati tolti ovunque. */
+.sreq{font-size:14.5px;line-height:1.55;color:var(--dim);white-space:pre-line}
+
 /* Intestazione HUB: solo gerarchia di peso e colore, allineata al margine di .cerca (20px).
    Nessun contenitore e nessun accento: e' la parte piu' silenziosa della schermata,
    non deve rubare la scena alla ricerca e alla lista. */
@@ -1078,7 +1082,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=69"></script>
+<script src="identikit.js?v=70"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1302,7 +1306,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     budget:  ['255,180,61',  'var(--amber)',  '<path d="M16 8a5 5 0 1 0 0 8M4 10h8M4 14h8"/>'],
     ciclo:   ['90,169,240',  'var(--blue)',   '<path d="M20 11a8 8 0 0 0-13.7-5.7L3 8.5M4 13a8 8 0 0 0 13.7 5.7L21 15.5"/><path d="M3 4v4.5h4.5M21 20v-4.5h-4.5"/>'],
     calend:  ['90,169,240',  'var(--blue)',   '<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'],
-    scudo:   ['37,207,110',  'var(--acc)',    '<path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9.5-4.8-1.2-8-5-8-9.5V6z"/>']
+    scudo:   ['37,207,110',  'var(--acc)',    '<path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9.5-4.8-1.2-8-5-8-9.5V6z"/>'],
+    costi:   ['255,107,61',  '#FF6B3D',       '<path d="M6 3v18l2-1.4 2 1.4 2-1.4 2 1.4 2-1.4 2 1.4V3l-2 1.4L14 3l-2 1.4L10 3 8 4.4z"/><path d="M9.5 8.5h5M9.5 12h5"/>']
   };
   function srow(icona, label, valore, sotto, colore){
     var i = ICO[icona];
@@ -1333,12 +1338,40 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
     // I 4 dati decisi con Antonio. Le righe senza valore non si disegnano.
     var righe = '';
-    var budget = s.budget_minimo ? ('da ' + s.budget_minimo + ' EUR') : (s.costo_attivazione ? ('da ' + s.costo_attivazione + ' EUR') : '');
-    if (budget) righe += srow('budget', 'Budget', budget, '', '');
+    // Budget: quanto ti serve per partire.
+    var budget = s.budget_minimo ? ('da ' + s.budget_minimo + ' EUR') : '';
+    if (budget) righe += srow('budget', 'Budget minimo', budget, 'per iniziare', '');
+
+    // COSTI: quanto costa il servizio in se'. Distinti da "budget", che e' il capitale
+    // che ti serve per operare: confonderli e' il modo piu' facile per far arrabbiare
+    // qualcuno che scopre una spesa mensile che non si aspettava.
+    var euro = function(v){ return String(v).replace(/\.00$/, '') + ' EUR'; };
+    var attiv = (s.costo_attivazione !== null && s.costo_attivazione !== undefined && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
+    var mens  = (s.costi_fissi_mensili !== null && s.costi_fissi_mensili !== undefined && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
+    if (attiv || mens) {
+      var valCosti = mens ? (euro(mens) + '/mese') : euro(attiv);
+      var sottoCosti = (attiv && mens) ? ('piu ' + euro(attiv) + ' una tantum')
+                     : (attiv ? 'una tantum' : 'ricorrente');
+      righe += srow('costi', 'Costi', valCosti, sottoCosti, '');
+    } else if (s.costi) {
+      righe += srow('costi', 'Costi', s.costi, '', '');
+    }
+
+    // Quanto ci vuole davvero ad attivarlo.
+    if (s.tempo_stimato) righe += srow('calend', 'Tempo per attivarlo', s.tempo_stimato, '', '');
+
     if (s.longevita) righe += srow('ciclo', 'Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
     var r = RISCHIO[s.rischio_livello];
     if (r) righe += srow('scudo', 'Rischio', r[0], '', r[1]);
     out += righe;
+
+    // COSA SERVE PER INIZIARE: e' prosa, non un valore, quindi non e' una riga-dato.
+    // Sta prima del disclaimer di proposito: sono le condizioni pratiche, il disclaimer
+    // e' quello legale. Chi scopre solo dopo di non avere i requisiti si sente preso in giro.
+    if (s.requisiti) {
+      out += '<div class="seyeb">Cosa serve per iniziare</div>'
+        + '<div class="sreq">' + esc(s.requisiti) + '</div>';
+    }
 
     if (!panor && !righe) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
 
