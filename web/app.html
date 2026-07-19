@@ -1026,10 +1026,59 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .disctxt{max-height:230px;overflow-y:auto;padding-right:8px;-webkit-overflow-scrolling:touch}
 .disctxt::-webkit-scrollbar{width:3px}
 .disctxt::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+/* ===================================================================
+   TESTO PIU' GRANDE — Antonio: "i font d testo sono troppo piccoli,
+   fallo grandi cm questi nella tua chat".
+   Riferimento: una chat sta sui 15-16px con interlinea ~1.6.
+   Ingrandisco cio' CHE SI LEGGE; etichette, contatori e badge restano
+   piccoli, se no diventa tutto ugualmente importante e sparisce la
+   gerarchia (e l'app sembra ingrandita col browser, non progettata).
+   =================================================================== */
+
+/* Intestazione HUB */
+.hero-t{font-size:18px;line-height:1.3}
+.hero-s{font-size:15px;line-height:1.55}
+
+/* Ricerca e titolo della riga in directory */
+#cerca{font-size:15.5px}
+.fnm{font-size:16.5px;line-height:1.3}
+
+/* Scheda prodotto: qui sta il testo vero da leggere */
+.spanor{font-size:16px;line-height:1.6}
+.sk{font-size:15px}
+.sv{font-size:17px}
+.st{font-size:15.5px}
+.sd{font-size:14.5px;line-height:1.55}
+.slink{font-size:14.5px}
+.wl{font-size:14px;line-height:1.55}
+.ssrc{font-size:12.5px;line-height:1.5}
+
+/* Disclaimer: e' lungo e va letto davvero, e' quello che guadagna di piu' */
+.disc{font-size:13.5px;line-height:1.65}
+.acct{font-size:14.5px;line-height:1.5}
+
+/* Card della rete (Affiliazione) */
+.mnm{font-size:16px}
+.mnk{font-size:13.5px}
+
+/* Profilo: righe dati e business */
+.dnm{font-size:16px}
+.dds{font-size:13.5px;line-height:1.5}
+
+/* Intestazioni: restano piu' piccole del corpo, ma leggibili */
+.grp{font-size:13.5px}
+.eyebrow,.sechd .eyebrow{font-size:12.5px}
+.macro{font-size:16px}
+.sub{font-size:14px}
+
+/* Menu: un filo piu' leggibile, senza gonfiarlo */
+.navb .lb{font-size:12px}
+
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=64"></script>
+<script src="identikit.js?v=65"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
