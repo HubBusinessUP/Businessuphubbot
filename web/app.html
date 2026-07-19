@@ -285,9 +285,9 @@
       </div>
 
       <!-- Numeri -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 18px 0">
-        <div class="aff-kpi"><div class="n" id="pfRete" style="color:var(--sec)">0</div><div class="l">Rete</div><div class="h">persone sotto di te</div></div>
-        <div class="aff-kpi"><div class="n" id="pfBiz">0</div><div class="l">Business attivi</div><div class="h">che hai avviato</div></div>
+      <div id="pfKpi" style="display:none;grid-template-columns:1fr 1fr;gap:10px;padding:18px 18px 0">
+        <div class="aff-kpi" id="pfKpiRete"><div class="n" id="pfRete" style="color:var(--sec)"></div><div class="l">Rete</div><div class="h">persone sotto di te</div></div>
+        <div class="aff-kpi" id="pfKpiBiz"><div class="n" id="pfBiz"></div><div class="l">Business attivi</div><div class="h">che hai avviato</div></div>
       </div>
 
       <!-- Anagrafica: modificabile dall'utente -->
@@ -317,6 +317,19 @@
           <button type="submit" id="pfSalva" class="aff-cta" style="flex:1;height:auto;padding:13px">Salva</button>
         </div>
       </form>
+
+      <!-- Tutorial lasciati a meta': il dato /me.riprese esisteva gia' e non si usava. -->
+      <div id="pfFinireWrap" style="display:none">
+        <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">Da finire</div></div>
+        <div class="list" id="pfFinireList" style="padding-top:6px;padding-bottom:8px"></div>
+      </div>
+
+      <!-- Le tue liste: NON una seconda directory, solo due voci con il conteggio vero
+           che accendono il filtro e portano all'HUB. Un solo renderer, zero id doppi. -->
+      <div id="pfCollWrap" style="display:none">
+        <div class="sechd" style="padding:22px 18px 4px"><div class="eyebrow">Le tue liste</div></div>
+        <div class="list" id="pfCollList" style="padding-top:6px;padding-bottom:8px"></div>
+      </div>
 
       <!-- Servizi attivi: da qui li puoi disattivare e tornare a riattivarli da capo -->
       <div id="pfBizWrap" style="display:none">
@@ -1082,7 +1095,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=70"></script>
+<script src="identikit.js?v=71"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1206,7 +1219,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function visibili(){
     var q = FILTRO_Q.trim().toLowerCase();
     return ALLBIZ.filter(function(s){
-      if (SOLO_SALVATI && !SAVED[s.id]) return false;
+      if (COLLEZIONE === 'salvati' && !SAVED[s.id]) return false;
+      if (COLLEZIONE === 'votati'  && !VOTED[s.id]) return false;
       if (FILTRO_MACRO && !CATS.some(function(c){ return c.id === s.categoria_id && c.macro_categoria_id === FILTRO_MACRO; })) return false;
       if (FILTRO_CAT && s.categoria_id !== FILTRO_CAT) return false;
       if (!q) return true;
@@ -1230,23 +1244,69 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
 
   // ---- CATEGORIE A DUE LIVELLI ----
-  var FILTRO_MACRO = 0, SOLO_SALVATI = false;
+  var FILTRO_MACRO = 0, COLLEZIONE = '';   // '' | 'salvati' | 'votati'
+  // Togliere un segnalibro assegna false, non cancella la chiave: contare le chiavi
+  // direbbe "5" a chi ne ha 2. Si incrocia con ALLBIZ, cosi' spariscono anche i
+  // business tolti dalla directory.
+  function contaColl(k){
+    var M = (k === 'votati') ? VOTED : SAVED;
+    return ALLBIZ.filter(function(s){ return !!M[s.id]; }).length;
+  }
+  // showScreen() vive dentro l'IIFE del prototipo e da QUI non e' raggiungibile
+  // (window.showScreen e' undefined). Invece di duplicarla, si preme il bottone della
+  // nav, che e' gia' cablato e allinea da solo schermata e voce attiva.
+  function vaiAllHub(){
+    var b = document.querySelector('.nav button[data-go="home"]');
+    if (b) b.click();
+  }
+
+  // Le tue liste nel Profilo: due VOCI con il conteggio vero, non righe di business.
+  // Ricopiare le card qui romperebbe apriScheda, che cerca [data-drop] con
+  // document.querySelector (globale): prenderebbe sempre la copia dell'HUB.
+  function renderCollezioni(){
+    var wrap = document.getElementById('pfCollWrap'), lista = document.getElementById('pfCollList');
+    if (!wrap || !lista) return;
+    var nSalv = contaColl('salvati'), nVot = contaColl('votati');
+    var voce = function(k, etichetta, sotto, n){
+      return '<div class="dir" data-coll="' + k + '" style="align-items:center;cursor:pointer">'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div class="dnm">' + etichetta + '</div>'
+        +   '<div class="dds">' + sotto + '</div>'
+        + '</div>'
+        + '<div style="font-size:17px;font-weight:800;color:var(--sec);margin-right:10px">' + n + '</div>'
+        + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--mut);stroke-width:2.2;stroke-linecap:round"><path d="m9 6 6 6-6 6"/></svg>'
+        + '</div>';
+    };
+    var h = '';
+    if (nSalv) h += voce('salvati', 'Salvati', 'quelli che vuoi rivedere con calma', nSalv);
+    if (nVot)  h += voce('votati',  'Votati',  'quelli che hai sostenuto', nVot);
+    lista.innerHTML = h;
+    wrap.style.display = h ? '' : 'none';   // a zero non esiste: niente scatole vuote
+  }
+
   function disegnaTabs(){
     var mt = document.getElementById('macroTabs'), st = document.getElementById('subTabs');
     if (!mt || !st) return;
     // Le macro senza categorie non si mostrano: sono rumore.
     var macroVive = MACRO.filter(function(m){ return CATS.some(function(c){ return c.macro_categoria_id === m.id; }); });
-    var h = '<button class="macro' + (!FILTRO_MACRO && !SOLO_SALVATI ? ' on' : '') + '" data-macro="0">Tutti</button>';
+    // FILTRO FANTASMA (bug reale): togliendo l'ultimo salvato la pillola spariva ma il
+    // filtro restava acceso -> lista vuota e nessun filtro visibile da cui uscire.
+    // Si spegne da sola la collezione rimasta senza contenuto.
+    var nSalv = contaColl('salvati'), nVot = contaColl('votati');
+    if (COLLEZIONE === 'salvati' && !nSalv) COLLEZIONE = '';
+    if (COLLEZIONE === 'votati'  && !nVot)  COLLEZIONE = '';
+
+    var h = '<button class="macro' + (!FILTRO_MACRO && !COLLEZIONE ? ' on' : '') + '" data-macro="0">Tutti</button>';
     macroVive.forEach(function(m){
-      h += '<button class="macro' + (FILTRO_MACRO === m.id && !SOLO_SALVATI ? ' on' : '') + '" data-macro="' + m.id + '">' + esc(m.nome) + '</button>';
+      h += '<button class="macro' + (FILTRO_MACRO === m.id && !COLLEZIONE ? ' on' : '') + '" data-macro="' + m.id + '">' + esc(m.nome) + '</button>';
     });
-    var nSalv = Object.keys(SAVED).filter(function(k){ return SAVED[k]; }).length;
-    if (nSalv) h += '<button class="macro' + (SOLO_SALVATI ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
+    if (nSalv) h += '<button class="macro' + (COLLEZIONE === 'salvati' ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
+    if (nVot)  h += '<button class="macro' + (COLLEZIONE === 'votati'  ? ' on' : '') + '" data-macro="votati">Votati</button>';
     mt.innerHTML = h;
 
     // Sotto-categorie: solo quelle della macro scelta.
     var figlie = FILTRO_MACRO ? CATS.filter(function(c){ return c.macro_categoria_id === FILTRO_MACRO; }) : [];
-    if (!figlie.length || SOLO_SALVATI) { st.innerHTML = ''; st.style.display = 'none'; return; }
+    if (!figlie.length || COLLEZIONE) { st.innerHTML = ''; st.style.display = 'none'; return; }
     st.style.display = '';
     var q = '<button class="sub' + (!FILTRO_CAT ? ' on' : '') + '" data-sub="0">Tutte <b>' + conta(0, FILTRO_MACRO) + '</b></button>';
     figlie.forEach(function(c){
@@ -1262,11 +1322,34 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }).length;
   }
   document.addEventListener('click', function(e){
+    // Riga di un business nel Profilo -> apre la sua scheda nell'HUB.
+    // Esclude il tasto Rimuovi, che ha il suo handler e non deve aprire niente.
+    var rip = e.target.closest && e.target.closest('[data-riprendi]');
+    if (rip && !(e.target.closest && e.target.closest('.disatt'))) {
+      var sid = parseInt(rip.getAttribute('data-riprendi'));
+      if (sid) {
+        COLLEZIONE = ''; FILTRO_MACRO = 0; FILTRO_CAT = 0;
+        var q = document.getElementById('cerca'); if (q) q.value = ''; FILTRO_Q = '';
+        disegnaTabs(); renderFeeds(); vaiAllHub();
+        setTimeout(function(){ apriScheda(sid); }, 60);   // dopo il render della lista
+        if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
+      }
+      return;
+    }
+    // Voce "Le tue liste" nel Profilo -> accende la collezione e va all'HUB filtrato.
+    var cv = e.target.closest && e.target.closest('[data-coll]');
+    if (cv) {
+      COLLEZIONE = cv.getAttribute('data-coll');
+      FILTRO_MACRO = 0; FILTRO_CAT = 0;
+      disegnaTabs(); renderFeeds(); vaiAllHub();
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
+      return;
+    }
     var m = e.target.closest && e.target.closest('[data-macro]');
     if (m) {
       var v = m.getAttribute('data-macro');
-      SOLO_SALVATI = (v === 'salvati');
-      FILTRO_MACRO = SOLO_SALVATI ? 0 : (parseInt(v) || 0);
+      COLLEZIONE = (v === 'salvati' || v === 'votati') ? v : '';
+      FILTRO_MACRO = COLLEZIONE ? 0 : (parseInt(v) || 0);
       FILTRO_CAT = 0;                       // cambiando macro, la sotto scelta non ha piu' senso
       disegnaTabs(); renderFeeds();
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
@@ -1514,8 +1597,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       SAVED[id] = !SAVED[id];
       b.innerHTML = saveSvg(!!SAVED[id]);
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
-      disegnaTabs();
-      if (SOLO_SALVATI) renderFeeds();
+      disegnaTabs(); renderCollezioni();
+      if (COLLEZIONE) renderFeeds();
       fetch(API_URL + '/preferito', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: id }) }).catch(function(){});
       return;
     }
@@ -1531,6 +1614,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       v.classList.toggle('on', !era);
       num.textContent = Math.max(0, (parseInt(num.textContent) || 0) + (era ? -1 : 1));
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      disegnaTabs(); renderCollezioni();
+      if (COLLEZIONE === 'votati') renderFeeds();
       fetch(API_URL + '/vota', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: vid }) })
         .then(function(r){ return r.json(); })
         .then(function(d){ if (d && typeof d.voti === 'number') num.textContent = d.voti; })   // il vero conteggio e del server
@@ -1679,6 +1764,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
       disegnaTabs();
       renderFeeds();
+      // "Le tue liste" del Profilo si disegna QUI, non nel .then di /me: SAVED e VOTED
+      // arrivano da questa fetch, e le due chiamate sono indipendenti. Disegnarlo di la'
+      // mostrerebbe zero a intermittenza, a seconda di quale risposta arriva prima.
+      renderCollezioni();
     })
     .catch(function(){});
 
@@ -1708,12 +1797,23 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!dd) return;
     var righe = '';
     var nomeCompleto = (ANAG.nome + (ANAG.cognome ? (' ' + ANAG.cognome) : '')).trim();
+    // Il nome e' l'unico campo davvero obbligatorio (lo vede chi ti ha invitato):
+    // e' l'unico che ha senso segnalare se manca.
     righe += rigaDato('Nome', nomeCompleto || 'da completare', !nomeCompleto);
-    righe += rigaDato('Email', ANAG.email || 'da completare', !ANAG.email);
-    righe += rigaDato('Telefono', ANAG.telefono || 'da completare', !ANAG.telefono);
-    righe += rigaDato('Citta', ANAG.citta || 'da completare', !ANAG.citta);
-    // Da qui in giu' e' Telegram: non lo puo' cambiare l'utente, e non lo fingiamo.
-    righe += rigaDato('Username', uname ? ('@' + uname) : 'non impostato su Telegram', !uname);
+    if (ANAG.email)    righe += rigaDato('Email', ANAG.email);
+    if (ANAG.telefono) righe += rigaDato('Telefono', ANAG.telefono);
+    if (ANAG.citta)    righe += rigaDato('Citta', ANAG.citta);
+    // Email, telefono e citta sono FACOLTATIVI: la validazione non li pretende. Elencarli
+    // uno per uno come "da completare" faceva sembrare il Profilo un modulo non compilato,
+    // presentando come debito dell'utente qualcosa che non deve fare. Una riga sola, neutra.
+    var mancanti = [];
+    if (!ANAG.email) mancanti.push('email');
+    if (!ANAG.telefono) mancanti.push('telefono');
+    if (!ANAG.citta) mancanti.push('citta');
+    if (mancanti.length) righe += rigaDato('Facoltativi', mancanti.join(', ') + ' non inseriti', true);
+    // Username: se non ce l'ha non lo diciamo. Non e' un'informazione, e' l'assenza di
+    // un'informazione che da qui nessuno puo' cambiare.
+    if (uname) righe += rigaDato('Username', '@' + uname);
     if (u.id || L.telegram_id) righe += rigaDato('ID Telegram', String(u.id || L.telegram_id));
     if (u.is_premium || L.is_premium) righe += rigaDato('Telegram Premium', 'attivo');
     var lng = u.language_code || L.lingua;
@@ -1823,7 +1923,22 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var uname = L.username || u.username || '';
       setTxt('pfUser', uname ? ('@' + uname) : 'senza username Telegram');
 
-      setTxt('pfRete', me.rete_count != null ? me.rete_count : 0);
+      // L'etichetta dice "persone sotto di te", cioe' TUTTI i livelli: il numero giusto e'
+      // rete_totale, non rete_count (che sono i soli diretti). Il valore c'era gia' in /me
+      // e non veniva usato: il KPI mostrava un numero piu' piccolo di quello che prometteva.
+      var nRete = (me.rete_totale != null ? me.rete_totale : (me.rete_count || 0));
+      var nBiz  = (me.prodotti_attivi || []).length;
+      setTxt('pfRete', nRete);
+      var kw = document.getElementById('pfKpi');
+      if (kw) {
+        // Nascosti a zero, come ogni altro contatore dell'app: due "0" grandi in cima
+        // al Profilo di un nuovo iscritto dicevano solo che non ha fatto niente.
+        var kr = document.getElementById('pfKpiRete'), kb = document.getElementById('pfKpiBiz');
+        if (kr) kr.style.display = nRete ? '' : 'none';
+        if (kb) kb.style.display = nBiz ? '' : 'none';
+        kw.style.display = (nRete || nBiz) ? 'grid' : 'none';
+        kw.style.gridTemplateColumns = (nRete && nBiz) ? '1fr 1fr' : '1fr';
+      }
       setTxt('pfBiz', (me.prodotti_attivi || []).length);
 
       // Solo dati che abbiamo davvero: niente campi inventati.
@@ -1846,12 +1961,32 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           + (b.disclaimer_ver ? (' &middot; v.' + b.disclaimer_ver) : '') + '</div>';
       }
 
+      // DA FINIRE: /me.riprese elencava gia' i tutorial iniziati e non completati
+      // (con nome, ultimo_step e totale) e il client non li leggeva. Chi aveva lasciato
+      // qualcosa a meta' vedeva un Profilo identico a chi non aveva mai fatto nulla.
+      var daFinire = me.riprese || [];
+      var fw = document.getElementById('pfFinireWrap'), fl = document.getElementById('pfFinireList');
+      if (fw && fl) {
+        fw.style.display = daFinire.length ? '' : 'none';
+        fl.innerHTML = daFinire.map(function(r){
+          return '<div class="dir" data-riprendi="' + r.servizio_id + '" style="align-items:center;cursor:pointer">'
+            + '<div style="flex:1;min-width:0">'
+            +   '<div class="dnm">' + esc(r.servizio_nome) + '</div>'
+            +   '<div class="dds">Step ' + r.ultimo_step + ' di ' + r.totale_step + '</div>'
+            + '</div>'
+            + '<span style="flex-shrink:0;font-size:13px;font-weight:700;color:var(--sec)">Riprendi</span>'
+            + '</div>';
+        }).join('');
+      }
+
       var biz = me.prodotti_attivi || [];
       var bw = document.getElementById('pfBizWrap'), bl = document.getElementById('pfBizList');
       if (bw && bl) {
         bw.style.display = biz.length ? '' : 'none';
         bl.innerHTML = biz.map(function(b){
-          return '<div class="dir" style="align-items:center">'
+          // Toccando la riga si apre la scheda nell'HUB: prima l'unica azione possibile
+          // su un business attivo era "Rimuovi", cioe' disfare.
+          return '<div class="dir" data-riprendi="' + b.servizio_id + '" style="align-items:center;cursor:pointer">'
             + '<div style="flex:1;min-width:0">'
             +   '<div class="dnm">' + esc(b.nome) + '</div>'
             +   '<div class="dds">' + (b.tutorial_completato ? 'Tutorial completato' : 'Tutorial da finire')
