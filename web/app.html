@@ -1078,7 +1078,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=68"></script>
+<script src="identikit.js?v=69"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1220,8 +1220,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         : '<div class="vuoto">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
       return;
     }
-    // Raggruppati per FASCIA TEMPORALE (Antonio): la categoria resta la navigazione (tab).
-    host.innerHTML = raggruppaTempo(lista, function(s){ return s.created_at; }, rowHtml);
+    // Lista PIATTA, ordinata per interesse (voti + salvati). Niente piu' fasce temporali:
+    // la data diceva quando l'abbiamo inserito noi, non quanto vale per chi guarda.
+    host.innerHTML = lista.map(rowHtml).join('');
   }
 
   // ---- CATEGORIE A DUE LIVELLI ----
@@ -1627,16 +1628,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       CATS = (d.categorie || []).map(function(c){ return { id: c.id, nome: c.nome, macro_categoria_id: c.macro_categoria_id }; });
       MACRO = (d.macro_categorie || []).map(function(m){ return { id: m.id, nome: m.nome }; });
       (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ ALLBIZ.push(s); }); });
-      // I VOTI DETERMINANO L'ORDINE (all-time), dentro ogni fascia temporale.
+      // L'ORDINE LO FANNO VOTI + SALVATI (all-time). Due segnali di interesse:
+      // il voto e' pubblico, il salvataggio e' privato, ma valgono uguale e si sommano.
       // Niente classifica "del giorno": il voto ha UNIQUE(utente,servizio), quindi e' uno
       // STOCK e non un flusso — esauriti i voti possibili, "oggi" resterebbe a zero per sempre.
-      // A PARI MERITO l'ordine era quello del backend, cioe' congelato: con quasi tutti a zero
-      // voti (oggi 3 su 4) e' il caso NORMALE, non un caso limite, e chi era ultimo lo restava.
+      // A PARI MERITO l'ordine era quello del backend, cioe' congelato: con quasi tutto a zero
+      // e' il caso NORMALE, non un caso limite, e chi era ultimo restava ultimo per sempre.
       // Ora ruota: seme stabile per giornata -> ordine fermo mentre navighi, diverso domani.
       var _seme = (function(){ var d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); })();
       function _turno(id){ var x=Math.sin(_seme*9301 + (id||0)*49297)*233280; return x-Math.floor(x); }
+      function _punti(s){ return (s.voti||0) + (s.salvati||0); }
       ALLBIZ.sort(function(a,b){
-        var d=(b.voti||0)-(a.voti||0);
+        var d=_punti(b)-_punti(a);
         return d ? d : (_turno(a.id)-_turno(b.id));
       });
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });

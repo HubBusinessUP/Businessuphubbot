@@ -897,9 +897,19 @@ async function apiBusinessList(telegramId?: number | null) {
     votiCount[(v as any).servizio_id] = (votiCount[(v as any).servizio_id] ?? 0) + 1
     if (telegramId && (v as any).telegram_id === telegramId) mieiVoti.push((v as any).servizio_id)
   }
+  // Salvataggi TOTALI per servizio (non solo i miei): insieme ai voti fanno l'ordine
+  // della directory. Sono due segnali di interesse diversi — il voto e' pubblico,
+  // il salvataggio e' privato — ma contano entrambi, quindi si sommano.
+  const { data: prefTutti } = await supabase.from("preferiti").select("servizio_id")
+  const salvatiCount: Record<number, number> = {}
+  for (const p of prefTutti ?? []) {
+    salvatiCount[(p as any).servizio_id] = (salvatiCount[(p as any).servizio_id] ?? 0) + 1
+  }
+
   const serviziConVoti = (servizi ?? [])
-    .map((s: any) => ({ ...s, voti: votiCount[s.id] ?? 0 }))
-    .sort((a: any, b: any) => b.voti - a.voti || (a.created_at < b.created_at ? 1 : -1))
+    .map((s: any) => ({ ...s, voti: votiCount[s.id] ?? 0, salvati: salvatiCount[s.id] ?? 0 }))
+    .sort((a: any, b: any) =>
+      (b.voti + b.salvati) - (a.voti + a.salvati) || (a.created_at < b.created_at ? 1 : -1))
 
   let mieiPreferiti: number[] = []
   if (telegramId) {
