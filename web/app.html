@@ -1078,7 +1078,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=65"></script>
+<script src="identikit.js?v=66"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1341,17 +1341,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
     if (!panor && !righe) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
 
-    // Utenti attivi: blocco a parte. Gli altri dati li dichiara il fornitore, questo lo contiamo noi.
-    // A zero resta nascosto: "0 utenti attivi" e' peggio del silenzio.
-    if (d.utenti_attivi) {
-      out += '<div class="hubbox">'
-        + '<div class="hubi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:var(--purple);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg></div>'
-        + '<div style="flex:1;min-width:0">'
-        +   '<div class="hubn">' + d.utenti_attivi + (d.utenti_attivi === 1 ? ' utente Cashly attivo' : ' utenti Cashly attivi') + '</div>'
-        +   '<div class="hubt">Non ce lo dice il fornitore: lo contiamo noi.</div>'
-        + '</div></div>';
-    }
-
     var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
     var attivo = !!d.gia_interessato;
     var fatto = (d.step_progress && d.step_progress.ultimo_step) || 0;
@@ -1371,7 +1360,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             + '</div></div>';
         }).join('');
       } else {
-        out += '<div class="vuoto" style="padding:18px 0">Attivato. Il tutorial non e ancora stato scritto.</div>';
+        // Nessun messaggio se il tutorial non c'e': meglio il silenzio che confessare
+        // all'utente che la guida non e' stata scritta. Resta comunque il tasto Condividi.
+        out += '';
       }
       return out;
     }
