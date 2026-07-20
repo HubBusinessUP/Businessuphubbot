@@ -94,6 +94,7 @@
 
   .step-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
   .step-row .step-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .step-azioni { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .step-row input, .step-row textarea { font-size: 13px; }
 
   .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
@@ -1737,7 +1738,27 @@
       loadAll();
     }
 
-    function addStepRow(step) {
+    // Legge i valori CORRENTI di una riga step dal DOM. Serve sia al salvataggio sia
+    // alla duplicazione: duplicare partendo dall'oggetto con cui la riga era stata
+    // creata copierebbe il testo vecchio invece di quello appena scritto.
+    function leggiStepRow(row) {
+      return {
+        titolo: row.querySelector(".step-titolo").value.trim(),
+        testo: row.querySelector(".step-testo").value.trim(),
+        link_label: row.querySelector(".step-linklabel").value.trim(),
+        link_url: row.querySelector(".step-linkurl").value.trim(),
+      };
+    }
+
+    // La copia va SUBITO SOTTO l'originale, non in fondo: gli step sono una sequenza,
+    // e ritrovarsi il duplicato all'ultimo posto vorrebbe dire risistemare l'ordine a mano.
+    function duplicaStepRow(btn) {
+      const row = btn.closest(".step-row");
+      if (!row) return;
+      addStepRow(leggiStepRow(row), row);
+    }
+
+    function addStepRow(step, dopo) {
       const wrap = document.createElement("div");
       wrap.className = "step-row";
       const esc = (x) => String(x ?? "").replace(/"/g, "&quot;");
@@ -1750,9 +1771,17 @@
             <input class="step-linkurl" placeholder="https://... (opzionale)" value="${esc(step?.link_url)}" style="flex:1.4" />
           </div>
         </div>
-        <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
+        <div class="step-azioni">
+          <button class="icon-btn" onclick="duplicaStepRow(this)" title="Duplica questo step">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button class="icon-btn danger" onclick="this.closest('.step-row').remove()" title="Elimina questo step">✕</button>
+        </div>
       `;
-      document.getElementById("stepsEditor").appendChild(wrap);
+      const editor = document.getElementById("stepsEditor");
+      if (dopo && dopo.parentElement === editor) editor.insertBefore(wrap, dopo.nextSibling);
+      else editor.appendChild(wrap);
+      return wrap;
     }
 
     function openServizioForm(s) {
@@ -1807,12 +1836,8 @@
     }
 
     async function saveServizio() {
-      const steps = [...document.querySelectorAll("#stepsEditor .step-row")].map((row) => ({
-        titolo: row.querySelector(".step-titolo").value.trim(),
-        testo: row.querySelector(".step-testo").value.trim(),
-        link_label: row.querySelector(".step-linklabel").value.trim(),
-        link_url: row.querySelector(".step-linkurl").value.trim(),
-      })).filter((s) => s.titolo || s.testo);
+      const steps = [...document.querySelectorAll("#stepsEditor .step-row")]
+        .map(leggiStepRow).filter((s) => s.titolo || s.testo);
 
       const risorse = [...document.querySelectorAll("#risorseEditor .risorsa-row")].map((row) => ({
         label: row.querySelector(".ris-label").value.trim(),
