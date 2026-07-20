@@ -772,7 +772,9 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 #listaReale{padding-bottom:18px}
 
 /* Ogni tool e' una CARD orizzontale definita: bordo + pannello, staccata dalle altre. */
-.fitem{margin:10px 16px 0;background:var(--s0);border:1px solid transparent;border-radius:10.5px;overflow:hidden}
+.fitem{margin:10px 20px 0;background:var(--s0);border:1px solid transparent;border-radius:10.5px;overflow:hidden}
+/* 20px e non 16: le card sporgevano di 4px per lato rispetto alla ricerca e
+   all'hero sopra. Ora tutta la colonna sta sullo stesso asse. */
 .fitem.open{border-color:transparent;background:var(--s1)}
 .frow{display:flex;align-items:center;gap:13px;padding:15px 16px}
 .fbody{flex:1;min-width:0}
@@ -1188,7 +1190,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=89"></script>
+<script src="identikit.js?v=90"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
