@@ -1,4 +1,24 @@
 <!DOCTYPE html>
+<!--
+  QUESTO FILE E' LA SORGENTE. Si modifica qui, a mano.
+
+  Fino alla build 81 veniva GENERATO da uno script (build-app.py) che viveva in una
+  cartella temporanea di sessione, insieme al prototipo di partenza. Quella cartella
+  e' stata ripulita dal sistema e i due file sono andati persi: non erano nel repo.
+  Il risultato del builder, cioe' questo file, era pero' gia' committato e integro,
+  quindi non si e' perso niente di cio' che gira. Da qui in avanti si edita direttamente.
+
+  Le due zone che si toccano quasi sempre:
+   - il blocco di stile "override", che riscrive il look del prototipo di partenza
+     (si riconosce dal commento "Niente aloni ne' gradienti");
+   - l'ultimo blocco di codice, che contiene la logica vera: schedaHtml, rowHtml,
+     mediaHtml e gli handler dei tocchi.
+
+  Ad ogni modifica va alzata la versione in TRE posti insieme, se no Telegram serve
+  una copia vecchia o l'app entra in un ciclo di ricaricamenti:
+   web/version.json, APP_BUILD in web/identikit.js, e identikit.js?v=N qui e nelle
+   altre pagine (account, dashboard, lista).
+-->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -1143,7 +1163,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=81"></script>
+<script src="identikit.js?v=82"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
