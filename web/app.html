@@ -1196,7 +1196,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=94"></script>
+<script src="identikit.js?v=95"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1300,13 +1300,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return '<div class="grp">' + esc(buckets[k].label) + '</div>' + buckets[k].items.map(rowFn).join('');
     }).join('');
   }
-  // La riga sotto il nome: cosa e' questo business. Descrizione breve se l'admin
-  // l'ha scritta, altrimenti la categoria (meglio "Prop VS Broker" di niente).
+  // La riga sotto il nome: la descrizione breve, se l'admin l'ha scritta.
+  // NIENTE ripiego sulla categoria: e' gia' nei tag sopra, ripeterla e' ridondante.
+  // Senza descrizione la riga non c'e' e si vede solo il nome.
   function sottoBiz(s){
-    var d = (s.descrizione || '').trim();
-    if (d) return d;
-    var c = CATS.filter(function(x){ return x.id === s.categoria_id; })[0];
-    return c ? c.nome : '';
+    return (s.descrizione || '').trim();
   }
   function rowHtml(s){
     var votato = !!VOTED[s.id];
