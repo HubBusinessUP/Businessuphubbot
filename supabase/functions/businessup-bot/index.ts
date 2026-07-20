@@ -22,6 +22,17 @@ const DISCLAIMER_WAITLIST =
 const DISCLAIMER_CHECKBOX =
   "Ho letto e compreso: il servizio è di un fornitore terzo, che risponde di ogni conseguenza. Cashly si limita a segnalarlo e non garantisce nulla."
 
+// Confronto a TEMPO COSTANTE. Con === la funzione esce al primo carattere diverso:
+// misurando quanto ci mette a rispondere si puo' ricostruire la chiave un carattere
+// alla volta. Qui si scorrono sempre tutti i caratteri, quindi il tempo non dice nulla.
+function confrontoCostante(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
 // Registra l'accettazione nel registro immodificabile: la prova legale (chi/quando/versione/testo).
 async function registraAccettazioneDisclaimer(telegramId: number, servizioId: number, contesto: "attivazione" | "waitlist", testo: string) {
   const { error } = await supabase.from("disclaimer_accettazioni").insert({
@@ -2501,12 +2512,23 @@ serve(async (req) => {
 
     if (sub.startsWith("admin/")) {
       const provided = req.headers.get("x-admin-key") || ""
-      let adminOk = !!ADMIN_API_KEY && provided === ADMIN_API_KEY
+      let adminOk = !!ADMIN_API_KEY && confrontoCostante(provided, ADMIN_API_KEY)
       if (!adminOk) {
         const { data: cfgKey } = await supabase.from("config").select("valore").eq("chiave", "admin_key").maybeSingle()
-        adminOk = !!cfgKey?.valore && provided === cfgKey.valore
+        adminOk = !!cfgKey?.valore && confrontoCostante(provided, cfgKey.valore)
       }
-      if (!adminOk) return json({ error: "unauthorized" }, 401)
+      if (!adminOk) {
+        // Il pannello sta su internet pubblico (hub.cashlypro.com/admin/) e la chiave e'
+        // l'unica cosa che lo protegge: chi prova a indovinarla deve lasciare traccia e
+        // deve rallentare. Un secondo di attesa rende inutile il tentativo a tappeto e
+        // non da' fastidio a chi ha solo sbagliato a incollare.
+        await supabase.from("eventi").insert({
+          tipo: "admin_accesso_negato",
+          dettaglio: sub + " | chiave di " + provided.length + " caratteri",
+        }).then(() => {}, () => {})
+        await new Promise((r) => setTimeout(r, 1000))
+        return json({ error: "unauthorized" }, 401)
+      }
 
       if (sub === "admin/stats" && req.method === "GET") {
         const { count: leads } = await supabase.from("leads").select("*", { count: "exact", head: true })
@@ -2610,6 +2632,11 @@ serve(async (req) => {
       if (sub === "admin/affiliate-links" && req.method === "GET") return await apiAdminAffiliateLinksList()
       if (sub === "admin/affiliate-links/approve" && req.method === "POST") return await apiAdminAffiliateLinkApprove(await req.json())
       if (sub === "admin/affiliate-links/delete" && req.method === "POST") return await apiAdminAffiliateLinkDelete(await req.json())
+
+      // Una rotta admin scritta male cadeva fuori dal blocco e finiva sul 200 "ready"
+      // finale: il pannello lo leggeva come successo, chiudeva la finestra e ricaricava
+      // come se avesse salvato, mentre non era stato scritto niente.
+      return json({ error: "not_found", path: sub }, 404)
     }
 
     return json({ service: "businessup-bot", status: "ready" })
