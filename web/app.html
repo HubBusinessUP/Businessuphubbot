@@ -481,8 +481,22 @@
     });
   });
   setSvc('incorso');
-  var h=location.hash.replace('#','');
-  if(h&&/^[a-z]+$/.test(h)&&app.querySelector('.scr[data-s="'+h+'"]')){app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===h);});}
+  // DEEP LINK dai messaggi del bot: "aprimi direttamente su questa schermata".
+  // Si legge dalla QUERY (?s=wallet) e non dall'hash, perche' Telegram appende
+  // sempre #tgWebAppData=... e, se un hash c'e' gia', ci si accoda: "wallet" diventa
+  // "wallet&tgWebAppData=..." e il controllo sul nome fallisce. La query non la tocca.
+  // L'hash resta accettato per i link vecchi, tagliando via cio' che Telegram aggiunge.
+  var dest='';
+  try{ dest=(new URLSearchParams(location.search).get('s')||'').trim(); }catch(e){}
+  if(!dest){ dest=(location.hash.replace('#','').split('&')[0]||'').trim(); }
+  if(dest&&/^[a-z]+$/.test(dest)&&app.querySelector('.scr[data-s="'+dest+'"]')){
+    // Preme la voce di menu invece di accendere la schermata a mano: quella e' gia'
+    // cablata e allinea anche l'evidenziazione in basso, se no si aprirebbe la
+    // schermata giusta con il menu che indica quella sbagliata.
+    var voce=app.querySelector('.navb[data-go="'+dest+'"]');
+    if(voce){ voce.click(); }
+    else { app.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-s')===dest);}); }
+  }
 })();
 </script>
 
@@ -1163,7 +1177,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=83"></script>
+<script src="identikit.js?v=84"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){

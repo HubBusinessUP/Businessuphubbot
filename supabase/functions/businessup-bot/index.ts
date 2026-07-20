@@ -336,7 +336,7 @@ async function verificaSbloccoPartner(sponsorId: number) {
     sponsorId,
     `🚀 <b>Complimenti, ora sei Partner!</b>\n\nHai portato ${count} iscritti. Da adesso puoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`,
     "🔗 Inserisci i miei link",
-    "/account.html?view=affiliazione",
+    "/app.html?s=wallet",
   )
 }
 
@@ -367,7 +367,7 @@ async function verificaRetentionPartner(sponsorId: number) {
   const { count: refOk } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("telegram_id", sponsorId).eq("approvato", true)
   if ((suggOk ?? 0) > 0 || (refOk ?? 0) > 0) return // ha contribuito o ha ref link attivi -> mantiene Partner
   await supabase.from("leads").update({ is_partner: false }).eq("telegram_id", sponsorId)
-  await notifyUser(sponsorId, `⚠️ Sei sceso sotto i ${PARTNER_SOGLIA} iscritti attivi e non hai ancora un suggerimento approvato né un link referral attivo: lo stato Partner è in pausa.\n\nInvita ancora qualcuno per riattivarlo.`, "👀 La mia rete", "/account.html?view=affiliazione").catch(() => {})
+  await notifyUser(sponsorId, `⚠️ Sei sceso sotto i ${PARTNER_SOGLIA} iscritti attivi e non hai ancora un suggerimento approvato né un link referral attivo: lo stato Partner è in pausa.\n\nInvita ancora qualcuno per riattivarlo.`, "👀 La mia rete", "/app.html?s=wallet").catch(() => {})
 }
 
 // Imposta il menu button (in basso nella chat) sull'app nuova (app.html), così l'ingresso non usa il vecchio dashboard.html cachato da Telegram.
@@ -424,7 +424,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
       sponsorFinale,
       `🎉 <b>Nuovo iscritto nella tua rete!</b>\n\n<b>${nuovoNome}</b> è appena entrato in Cashly col tuo invito. Ora è collegato a te per sempre.`,
       "👀 Vedi la tua rete",
-      "/account.html?view=affiliazione",
+      "/app.html?s=wallet",
     ).catch((e) => console.error("notifica nuovo iscritto:", e))
     if (sponsorFinale !== ADMIN_ID) verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
   }
@@ -1563,7 +1563,7 @@ async function apiAdminSuggerimentoApprova(body: any) {
     reward = true
   }
 
-  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata approvata!</b>\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "🔎 Vedi nella lista", "/lista.html")
+  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata approvata!</b>\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "🔎 Vedi nella lista", "/app.html")
   notificaNuovoServizio(sug.nome, sug.categoria_id).catch((e) => console.error("notifica:", e))
   return json({ ok: true, servizio_id: nuovo.id })
 }
@@ -1586,7 +1586,7 @@ async function apiAdminSuggerimentoRifiuta(body: any) {
 
   if (blocca) await supabase.from("leads").update({ sugg_bloccato: true }).eq("telegram_id", sug.telegram_id)
 
-  await notifyUser(sug.telegram_id, `❌ <b>La tua candidatura "${htmlEsc(sug.nome)}" non è stata approvata.</b>\n\nMotivo: ${htmlEsc(testoCausale)}${blocca ? "\n\n⚠️ La funzione suggerimenti è stata disattivata per il tuo profilo." : ""}`, "➕ Proponine un altro", "/lista.html")
+  await notifyUser(sug.telegram_id, `❌ <b>La tua candidatura "${htmlEsc(sug.nome)}" non è stata approvata.</b>\n\nMotivo: ${htmlEsc(testoCausale)}${blocca ? "\n\n⚠️ La funzione suggerimenti è stata disattivata per il tuo profilo." : ""}`, "➕ Proponine un altro", "/app.html")
   return json({ ok: true })
 }
 
@@ -1839,7 +1839,7 @@ async function apiAdminAffiliateLinkApprove(body: any) {
   }
 
   if (link.telegram_id) {
-    await notifyUser(link.telegram_id, `🔗 <b>Il tuo link affiliato è stato approvato!</b>\n\nSu <b>${htmlEsc(sv?.nome || "un business")}</b> ora la tua rete vedrà il tuo referral.`, "📊 I miei link", "/account.html?view=affiliazione")
+    await notifyUser(link.telegram_id, `🔗 <b>Il tuo link affiliato è stato approvato!</b>\n\nSu <b>${htmlEsc(sv?.nome || "un business")}</b> ora la tua rete vedrà il tuo referral.`, "📊 I miei link", "/app.html?s=wallet")
   }
 
   return json({ ok: true })
@@ -1853,7 +1853,7 @@ async function apiAdminAffiliateLinkDelete(body: any) {
   if (error) return json({ error: error.message }, 500)
   if (link && !link.approvato && link.telegram_id) {
     const { data: sv } = await supabase.from("servizi").select("nome").eq("id", link.servizio_id).maybeSingle()
-    await notifyUser(link.telegram_id, `❌ <b>Il tuo link affiliato non è stato approvato.</b>\n\nSu <b>${htmlEsc(sv?.nome || "il business")}</b>. Puoi proporne uno nuovo dalla sezione Affiliazione.`, "🔗 Riprova", "/account.html?view=affiliazione")
+    await notifyUser(link.telegram_id, `❌ <b>Il tuo link affiliato non è stato approvato.</b>\n\nSu <b>${htmlEsc(sv?.nome || "il business")}</b>. Puoi proporne uno nuovo dalla sezione Affiliazione.`, "🔗 Riprova", "/app.html?s=wallet")
   }
   return json({ ok: true })
 }
@@ -1954,9 +1954,9 @@ async function apiAdminPartnerDecidi(body: any) {
   if (error) return json({ error: error.message }, 500)
 
   if (approva) {
-    await notifyUser(telegramId, `🚀 <b>La tua richiesta è stata approvata: ora sei Partner!</b>\n\nPuoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`, "🔗 Inserisci i miei link", "/account.html?view=affiliazione")
+    await notifyUser(telegramId, `🚀 <b>La tua richiesta è stata approvata: ora sei Partner!</b>\n\nPuoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`, "🔗 Inserisci i miei link", "/app.html?s=wallet")
   } else {
-    await notifyUser(telegramId, `La tua richiesta Partner non è stata approvata per ora.\n\nPorta ${PARTNER_SOGLIA} iscritti con il tuo link invito e lo status si sblocca in automatico.`, "🔗 Il tuo link invito", "/account.html?view=affiliazione")
+    await notifyUser(telegramId, `La tua richiesta Partner non è stata approvata per ora.\n\nPorta ${PARTNER_SOGLIA} iscritti con il tuo link invito e lo status si sblocca in automatico.`, "🔗 Il tuo link invito", "/app.html?s=wallet")
   }
   return json({ ok: true })
 }
