@@ -746,14 +746,6 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .fbody{flex:1;min-width:0}
 /* Titolo piu' piccolo e meno bold (Antonio) */
 .fnm{font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.25;display:block}
-.fst{font-size:11.5px;color:var(--mut);margin-top:5px;display:flex;align-items:center;gap:6px}
-.pdot{width:6px;height:6px;border-radius:50%;position:relative;flex-shrink:0;background:var(--mut);opacity:.6}
-.fst.live{color:var(--acc)}
-.fst.live .pdot{background:var(--acc);opacity:1}
-.fst.live .pdot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--acc);
-  animation:pdotp 1.8s ease-out infinite}
-@keyframes pdotp{0%{transform:scale(1);opacity:.8}70%{transform:scale(3.2);opacity:0}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.fst.live .pdot::after{animation:none}}
 .fchev{width:16px;height:16px;flex-shrink:0;color:var(--mut);opacity:.6;transition:transform .2s}
 .fitem.open .fchev{transform:rotate(180deg)}
 .fdrop{padding:0 16px 16px}
@@ -1112,7 +1104,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=74"></script>
+<script src="identikit.js?v=75"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1218,12 +1210,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   function rowHtml(s){
     var votato = !!VOTED[s.id];
-    var attivo = s.stato === 'attivo';
+    // Nessuna etichetta di stato qui: la riga porta il nome e i bottoni, lo stato lo
+    // dichiara la CTA dentro la scheda ("Attiva Servizio" / "Avvisami quando parte").
     return '<div class="fitem" data-item="' + s.id + '">'
       + '<div class="frow" data-open="' + s.id + '">'
       +   '<div class="fbody">'
       +     '<div class="fnm">' + esc(s.nome) + '</div>'
-      +     '<div class="fst' + (attivo ? ' live' : '') + '"><span class="pdot"></span>' + (attivo ? 'Attivo' : 'In arrivo') + '</div>'
       +   '</div>'
       +   '<button class="votebtn' + (votato ? ' on' : '') + '" data-vote="' + s.id + '" aria-label="Vota">'
       +     voteSvg() + '<span class="vn">' + (s.voti || 0) + '</span></button>'
