@@ -897,9 +897,10 @@ async function apiBusinessList(telegramId?: number | null) {
     votiCount[(v as any).servizio_id] = (votiCount[(v as any).servizio_id] ?? 0) + 1
     if (telegramId && (v as any).telegram_id === telegramId) mieiVoti.push((v as any).servizio_id)
   }
-  // Salvataggi TOTALI per servizio (non solo i miei): insieme ai voti fanno l'ordine
-  // della directory. Sono due segnali di interesse diversi — il voto e' pubblico,
-  // il salvataggio e' privato — ma contano entrambi, quindi si sommano.
+  // Salvataggi TOTALI per servizio (non solo i miei). NON entrano nell'ordine della
+  // directory: l'ordine lo fanno i soli VOTI, perche' il voto e' l'unico numero che
+  // l'utente vede, e l'ordine deve essere spiegato da cio' che si vede. Il salvataggio
+  // resta un segnale privato, utile in admin per capire cosa interessa davvero.
   const { data: prefTutti } = await supabase.from("preferiti").select("servizio_id")
   const salvatiCount: Record<number, number> = {}
   for (const p of prefTutti ?? []) {
@@ -908,8 +909,7 @@ async function apiBusinessList(telegramId?: number | null) {
 
   const serviziConVoti = (servizi ?? [])
     .map((s: any) => ({ ...s, voti: votiCount[s.id] ?? 0, salvati: salvatiCount[s.id] ?? 0 }))
-    .sort((a: any, b: any) =>
-      (b.voti + b.salvati) - (a.voti + a.salvati) || (a.created_at < b.created_at ? 1 : -1))
+    .sort((a: any, b: any) => b.voti - a.voti || (a.created_at < b.created_at ? 1 : -1))
 
   let mieiPreferiti: number[] = []
   if (telegramId) {
