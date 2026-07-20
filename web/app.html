@@ -835,10 +835,6 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .hubt{font-size:12px;color:var(--dim);line-height:1.45;margin-top:4px}
 
 /* Lista d'attesa */
-.wl{display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:13px 0 0;border-top:1px solid var(--line);
-  font-size:12.5px;color:var(--dim);line-height:1.5}
-.wl b{color:var(--tx);font-weight:700}
-.wl.on{border-color:var(--line)}
 
 /* Disclaimer: sopra il bottone, perche' va accettato PRIMA di attivare */
 .disc{margin-top:18px;padding:14px;border:1px solid var(--line2);border-radius:10.5px;background:var(--s0);
@@ -1077,7 +1073,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .slink{font-size:14.5px}
 .sfatto{font-size:13.5px}
 .sfine{font-size:14px}
-.wl{font-size:14px;line-height:1.55}
 .ssrc{font-size:12.5px;line-height:1.5}
 
 /* Disclaimer: e' lungo e va letto davvero, e' quello che guadagna di piu' */
@@ -1104,7 +1099,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=75"></script>
+<script src="identikit.js?v=76"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1508,12 +1503,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           + '<a class="slink" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1">Apri ' + esc(s.nome)
           + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
         if (d.ref_fonte === 'sponsor') out += '<div class="sd">E il link di chi ti ha invitato.</div>';
-      } else if (!steps.length) {
-        // Senza step e senza link non c'e' niente da mostrare: dirlo e' meglio che
-        // lasciare la scheda muta, che sembra un errore dell'app.
-        out += '<div class="wl">'
-          + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
-          + '<div><b>Istruzioni in arrivo.</b> Te le mando appena sono pronte.</div></div>';
       }
       return out;
     }
@@ -1521,22 +1510,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // 1b) l'ho attivato ma l'admin ha sospeso il servizio: niente tutorial verso un
     // fornitore che abbiamo tolto, e niente lista d'attesa (lo sta gia' usando).
     if (mioAttivo && !d.attivo) {
-      out += '<div class="wl">'
-        + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
-        + '<div><b>Sospeso per ora.</b> Lo avevi attivato: se torna disponibile te lo scrive il bot.</div></div>';
+      out += '<button class="cta-attiva" disabled>Non disponibile</button>';
       return out;
     }
 
     // 2) servizio non ancora attivo -> lista d'attesa, non attivazione
     if (!d.attivo) {
       if (d.in_waitlist) {
-        out += '<div class="wl on">'
-          + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--acc);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>'
-          + '<div><b>Sei in lista.</b> Quando parte te lo scrive il bot.</div></div>';
+        out += '<button class="cta-attiva" disabled>'
+          + '<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:7px"><path d="M20 6 9 17l-5-5"/></svg>'
+          + 'Sei in lista</button>';
       } else {
-        out += '<div class="wl">'
-          + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
-          + '<div><b>Non e ancora attivo.</b> Lascia che ti avvisi: quando parte ti arriva un messaggio dal bot.</div></div>';
         out += '<button class="cta-attiva" data-wait="' + s.id + '">Avvisami quando parte</button>';
         if (d.waitlist_count) out += '<div class="ssrc">' + d.waitlist_count + (d.waitlist_count === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>';
       }
@@ -1544,13 +1528,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     // 3) attivo -> disclaimer (testo UNICO del server, la stessa cosa che registriamo) da accettare, POI il bottone
-    // Chi si era prenotato ha avuto la promessa "hai la priorita'": almeno riconoscerlo,
-    // invece di servirgli la stessa identica schermata di chi arriva adesso.
-    if (d.in_waitlist) {
-      out += '<div class="wl on">'
-        + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--acc);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>'
-        + '<div><b>E partito.</b> Lo aspettavi: puoi attivarlo adesso.</div></div>';
-    }
     var disc = d.disclaimer || {};
     out += '<div class="disc">'
       + '<div class="disctxt">' + (disc.attivazione || DISC_FALLBACK.attivazione) + '</div>'
