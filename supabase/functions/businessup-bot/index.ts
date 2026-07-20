@@ -776,7 +776,10 @@ async function apiMe(telegramId: number, tgUser?: any) {
       const sv = svMap[(p as any).servizio_id]
       if (!sv) continue
       const totale = Array.isArray(sv.tutorial_steps) && sv.tutorial_steps.length ? sv.tutorial_steps.length : 4
-      riprese.push({ servizio_id: (p as any).servizio_id, servizio_nome: sv.nome, ultimo_step: (p as any).ultimo_step, totale_step: totale })
+      // Tagliato al totale: se l'admin ha accorciato il tutorial, il progresso salvato
+      // e' piu' alto e il Profilo scriveva assurdita' tipo "Step 3 di 2".
+      const fatti = Math.min((p as any).ultimo_step, totale)
+      riprese.push({ servizio_id: (p as any).servizio_id, servizio_nome: sv.nome, ultimo_step: fatti, totale_step: totale })
     }
   }
   const ripresa = riprese[0] ?? null
@@ -1076,8 +1079,22 @@ async function apiServizio(telegramId: number, servizioId: number) {
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente, anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
-  const { data: progress } = await supabase.from("tutorial_progress").select("ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const { data: progress } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refInfo = await resolveRefLinkConFonte(telegramId, servizioId)
+
+  // Se l'admin ACCORCIA un tutorial mentre qualcuno e' a meta', il progresso salvato
+  // resta piu' alto degli step rimasti: tutti i passi risultano fatti e all'utente non
+  // resta niente da premere, quindi la riconciliazione non puo' aspettare una sua azione.
+  // Va fatta qui, in lettura, che e' il momento in cui quello stato torna a galla.
+  const nStep = Array.isArray(servizio.tutorial_steps) ? servizio.tutorial_steps.length : 0
+  let progressoOk = progress
+  if (progress && !progress.completato && nStep > 0 && progress.ultimo_step >= nStep) {
+    await supabase.from("tutorial_progress")
+      .update({ ultimo_step: nStep, completato: true, updated_at: new Date().toISOString() })
+      .eq("id", progress.id)
+    inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
+    progressoOk = { ...progress, ultimo_step: nStep, completato: true }
+  }
 
   // Servizio non ancora attivo -> lista d'attesa al posto dell'attivazione.
   const attivo = servizio.stato === "attivo"
@@ -1105,7 +1122,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
     anagrafica_ok: !!(lead?.sondaggio_completato || lead?.anagrafica_manuale),
     is_cliente: !!lead?.is_cliente,
     mio_link: mioLink || null,
-    step_progress: { ultimo_step: progress?.ultimo_step ?? 0, completato: !!progress?.completato },
+    step_progress: { ultimo_step: progressoOk?.ultimo_step ?? 0, completato: !!progressoOk?.completato },
     disclaimer: { ver: DISCLAIMER_VER, attivazione: DISCLAIMER_ATTIVAZIONE, waitlist: DISCLAIMER_WAITLIST, checkbox: DISCLAIMER_CHECKBOX },
   })
 }
@@ -1406,6 +1423,21 @@ async function apiStepProgressSave(telegramId: number, body: any) {
 
   const { data: existing } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const attuale = existing?.ultimo_step ?? 0
+
+  // L'admin puo' ACCORCIARE un tutorial mentre qualcuno e' a meta': il progresso
+  // salvato resta piu' alto del numero di step rimasti, e da li' non si esce piu'
+  // (ogni indice sotto il totale e' fuori sequenza, ogni indice sopra e' fuori range).
+  // Quel progresso ha di fatto superato il tutorial: si riconcilia e si chiude.
+  if (attuale >= totale) {
+    if (existing && !existing.completato) {
+      await supabase.from("tutorial_progress")
+        .update({ ultimo_step: totale, completato: true, updated_at: new Date().toISOString() })
+        .eq("id", existing.id)
+      inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
+    }
+    return json({ ok: true, ultimo_step: totale, completato: true, totale_step: totale })
+  }
+
   if (stepIndex !== attuale) return json({ error: "step_non_in_sequenza" }, 409)
 
   const ultimoStep = attuale + 1

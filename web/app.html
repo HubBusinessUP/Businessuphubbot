@@ -553,7 +553,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 [style*="border-radius:4px"]{border-radius:10.5px !important}
 .card,.feed,.stats{background:var(--s1);border:1px solid var(--line);border-radius:14.5px;box-shadow:none}
 .dav,.flogo,.iconbtn,.search,.fdd,.field,.minibtn,.act,.mvi,.vote,.metachip,.actbtn,.pvbtn,.idk-opt,.statesel button,.fab{border-radius:10.5px}
-.chip,.pill,.badge,.cbadge,.tag,.live,.seg button,.steplink,.toggle,.pt-pill{border-radius:999px}
+.chip,.pill,.badge,.cbadge,.tag,.live,.seg button,.toggle,.pt-pill{border-radius:999px}
 
 /* VIA I BORDI BIANCHI: l'identikit usava border/pallino bianchi -> accento brand */
 .idk-opt.on{border-color:var(--acc) !important;background:rgba(37,207,110,.12) !important}
@@ -817,13 +817,13 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .pctab tr:first-child td{border-top:none}
 .pctab .k{font-size:13.5px;color:var(--dim);font-weight:500}
 .pctab .v{font-size:15px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;
-  letter-spacing:-.02em;white-space:nowrap;padding-left:14px}
+  letter-spacing:-.02em;padding-left:14px;overflow-wrap:anywhere}
 .pctab .v small{display:block;font-size:11.5px;font-weight:400;color:var(--mut);
   letter-spacing:0;margin-top:2px;white-space:normal}
 
 /* STEP: una card per passo. */
 .stc{background:var(--s2);border:1px solid transparent;border-radius:12.5px;padding:13px 14px;margin-top:10px}
-.stc.futuro{opacity:.5}
+.stc.futuro{opacity:.8}
 .sthd{display:flex;align-items:center;gap:11px}
 .stn{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--s3);color:var(--dim);
   font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
@@ -832,7 +832,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .stt{flex:1;min-width:0;font-size:14.5px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
 .std{font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:9px}
 .stlink{display:inline-flex;align-items:center;gap:7px;margin-top:11px;padding:9px 14px;
-  background:var(--s0);border:1px solid var(--line2);border-radius:8.5px;color:var(--tx);
+  background:var(--s3);border:1px solid transparent;border-radius:8.5px;color:var(--tx);
   font-size:13px;font-weight:700;text-decoration:none}
 .stlink:active{transform:scale(.97)}
 
@@ -842,10 +842,12 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   padding:0;position:relative;cursor:pointer;transition:background .18s ease}
 .sw::after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;
   background:var(--tx);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+/* Il pill e' alto 25px: da solo e' un bersaglio scomodo. Questa e' area
+   sensibile invisibile, non grafica: il pill resta identico. */
+.sw::before{content:'';position:absolute;inset:-11px -6px}
 .sw.on{background:var(--acc)}
 .sw.on::after{transform:translateX(19px)}
 .sw[disabled]{cursor:default}
-.sw:not(.on)[disabled]{opacity:.4}
 @media (prefers-reduced-motion:reduce){.sw,.sw::after{transition:none}}
 .vuoto{padding:30px 18px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6}
 
@@ -1133,7 +1135,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=77"></script>
+<script src="identikit.js?v=78"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1405,6 +1407,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Panoramica, costi e step NON arrivano da /business-list: li chiediamo a /servizio
   // solo quando la scheda si apre davvero, e li teniamo in cache.
   var SCHEDE = {};
+  // Le richieste di avanzamento in volo, per CHIAVE e non per nodo: il ri-render
+  // sostituisce il bottone, quindi guardarsi solo dal doppio tap sullo stesso
+  // elemento non basta a impedire due POST per lo stesso passo.
+  var STEP_IN_VOLO = {};
   // Rete di sicurezza: se una scheda arriva senza il disclaimer del server (cache vecchia),
   // mostriamo comunque il testo corrente. La fonte di verita' resta il server.
   var DISC_FALLBACK = {
@@ -1412,10 +1418,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     waitlist: "<b>Prodotto non ancora attivo</b><br>Ti stai prenotando per un prodotto non ancora disponibile, offerto da un fornitore esterno indipendente da Cashly. La prenotazione non è un acquisto: nessun pagamento e nessun impegno.<br><br><b>Assenza di garanzie</b><br>Cashly non garantisce che il prodotto venga reso disponibile, né tempi, condizioni o caratteristiche definitive, che restano di competenza del fornitore.<br><br><b>Responsabilità</b><br>Al momento dell'eventuale attivazione, di ogni evento o conseguenza risponde esclusivamente il fornitore. Cashly si limita a segnalarlo e a raccogliere la prenotazione.<br><br><b>Informazioni e accettazione</b><br>I contenuti pubblicati hanno finalità informativa e non costituiscono consulenza finanziaria, legale o fiscale. Cashly può percepire una commissione dal fornitore, senza costi aggiuntivi per te. Prima dell'attivazione dovrai accettare i termini del fornitore. Spuntando la casella dichiari di aver letto e compreso quanto sopra; l'accettazione viene registrata.",
     checkbox: "Ho letto e compreso: il servizio è di un fornitore terzo, che risponde di ogni conseguenza. Cashly si limita a segnalarlo e non garantisce nulla."
   };
-  function riga(k, v){
-    if (v === null || v === undefined || v === '') return '';
-    return '<div class="sr"><div class="sk">' + esc(k) + '</div><div class="sv">' + esc(String(v)) + '</div></div>';
-  }
   function euro(v){
     if (v === null || v === undefined || v === '') return '';
     var n = Number(v);
@@ -1423,13 +1425,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   var RISCHIO = { 1:'Molto basso', 2:'Basso', 3:'Medio', 4:'Alto', 5:'Molto alto' };
 
-  var ICO = {
-    budget:  ['255,180,61',  'var(--amber)',  '<path d="M16 8a5 5 0 1 0 0 8M4 10h8M4 14h8"/>'],
-    ciclo:   ['90,169,240',  'var(--blue)',   '<path d="M20 11a8 8 0 0 0-13.7-5.7L3 8.5M4 13a8 8 0 0 0 13.7 5.7L21 15.5"/><path d="M3 4v4.5h4.5M21 20v-4.5h-4.5"/>'],
-    calend:  ['90,169,240',  'var(--blue)',   '<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'],
-    scudo:   ['37,207,110',  'var(--acc)',    '<path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9.5-4.8-1.2-8-5-8-9.5V6z"/>'],
-    costi:   ['255,107,61',  '#FF6B3D',       '<path d="M6 3v18l2-1.4 2 1.4 2-1.4 2 1.4 2-1.4 2 1.4V3l-2 1.4L14 3l-2 1.4L10 3 8 4.4z"/><path d="M9.5 8.5h5M9.5 12h5"/>']
-  };
   // Una riga della tabella caratteristiche. Il colore resta un GIUDIZIO (serve
   // solo al Rischio), non decorazione: gli altri valori restano neutri.
   function srow(label, valore, sotto, colore){
@@ -1446,6 +1441,34 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
   // Lo share va SOTTO ogni scheda, qualunque sia il ramo (tutorial / waitlist / attiva):
   // il corpo ha return anticipati, quindi lo aggiungo con un wrapper invece che dentro ogni ramo.
+  // Il Profilo viene disegnato una volta sola, nel .then di /me al boot: dopo un
+  // avanzamento va ritoccato a mano, altrimenti continua a dire "Da finire" su un
+  // tutorial appena concluso. Selettori limitati alla lista giusta: data-riprendi
+  // compare sia in "Da finire" sia nei business attivi.
+  function aggiornaProfiloDopoStep(sid, d){
+    var fl = document.getElementById('pfFinireList');
+    if (fl) {
+      var r = fl.querySelector('[data-riprendi="' + sid + '"]');
+      if (r) {
+        if (d.completato) {
+          r.remove();
+          if (!fl.querySelector('.dir')) {
+            var fw = document.getElementById('pfFinireWrap');
+            if (fw) fw.style.display = 'none';
+          }
+        } else {
+          var sub = r.querySelector('.dds');
+          if (sub && d.totale_step) sub.textContent = 'Step ' + d.ultimo_step + ' di ' + d.totale_step;
+        }
+      }
+    }
+    if (d.completato) {
+      var bl = document.getElementById('pfBizList');
+      var b = bl && bl.querySelector('[data-riprendi="' + sid + '"] .dds');
+      if (b) b.textContent = b.textContent.replace('Tutorial da finire', 'Tutorial completato');
+    }
+  }
+
   function schedaHtml(d){
     return _schedaBody(d)
       + '<button class="sc-share" data-share="1"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>';
@@ -1467,7 +1490,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // COSTI: quanto costa il servizio in se'. Distinti da "budget", che e' il capitale
     // che ti serve per operare: confonderli e' il modo piu' facile per far arrabbiare
     // qualcuno che scopre una spesa mensile che non si aspettava.
-    var euro = function(v){ return String(v).replace(/\.00$/, '') + ' EUR'; };
     var attiv = (s.costo_attivazione !== null && s.costo_attivazione !== undefined && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
     var mens  = (s.costi_fissi_mensili !== null && s.costi_fissi_mensili !== undefined && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
     if (attiv || mens) {
@@ -1496,14 +1518,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         + '<div class="sreq">' + esc(s.requisiti) + '</div></div>';
     }
 
-    if (!panor && !righe) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
-
     var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
+    // La scheda e' "da compilare" solo se non c'e' PROPRIO niente: prima bastava
+    // che mancassero panoramica e caratteristiche per dirlo anche a una scheda
+    // con i requisiti scritti e il tutorial completo.
+    if (!panor && !righe && !s.requisiti && !steps.length) {
+      out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
+    }
     // Due cose diverse che si chiamavano tutte e due "attivo": quello che ha fatto
     // l'utente e lo stato del servizio. Confonderle mostrava il tutorial di un
     // servizio che l'admin aveva sospeso.
     var mioAttivo = !!d.gia_interessato;
-    var fatto = (d.step_progress && d.step_progress.ultimo_step) || 0;
+    // Tagliato al numero di step ESISTENTI: se l'admin accorcia il tutorial dopo
+    // che qualcuno lo ha iniziato, il progresso salvato resta piu' alto e nessuno
+    // step risulterebbe corrente, lasciando l'utente senza un toggle da premere.
+    var fatto = Math.min((d.step_progress && d.step_progress.ultimo_step) || 0, steps.length);
 
     // 1) l'ho attivato E il servizio e' operativo -> il tutorial
     if (mioAttivo && d.attivo) {
@@ -1516,8 +1545,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             + '<div class="sthd">'
             +   '<div class="stn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
             +   '<div class="stt">' + esc(st.titolo || ('Passo ' + (i + 1))) + '</div>'
-            +   '<button class="sw' + (done ? ' on' : '') + '" data-step="' + s.id + '" data-idx="' + i + '"'
-            +     (ora ? '' : ' disabled') + ' aria-label="Segna questo passo come fatto"></button>'
+            +   '<button class="sw' + (done ? ' on' : '') + '" role="switch" aria-checked="' + (done ? 'true' : 'false') + '"'
+            +     ' data-step="' + s.id + '" data-idx="' + i + '"' + (ora ? '' : ' disabled')
+            +     ' aria-label="' + esc(st.titolo || ('Passo ' + (i + 1))) + ': segna come fatto"></button>'
             + '</div>'
             + (st.testo ? '<div class="std">' + esc(st.testo) + '</div>' : '')
             + (st.link_url ? '<a class="stlink" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(st.link_label || 'Apri') + '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
@@ -1533,6 +1563,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           + '<a class="slink" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1">Apri ' + esc(s.nome)
           + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
         if (d.ref_fonte === 'sponsor') out += '<div class="sd">E il link di chi ti ha invitato.</div>';
+      }
+      // Ne' istruzioni ne' link: senza questo la scheda resterebbe muta e sembrerebbe
+      // un errore dell'app. Un bottone spento, non un paragrafo.
+      if (!steps.length && !d.ref_link) {
+        out += '<button class="cta-attiva" disabled>Istruzioni in arrivo</button>';
       }
       return out;
     }
@@ -1565,7 +1600,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +   '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
       +   '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
       + '</div></div>';
-    out += '<button class="cta-attiva" data-attiva="' + s.id + '" disabled>Attiva Servizio</button>';
+    // data-bloccato: la spunta del disclaimer non deve poter accendere un bottone
+    // che il server rifiutera' comunque con 403.
+    out += '<button class="cta-attiva" data-attiva="' + s.id + '"'
+      + (d.anagrafica_ok === false ? ' data-bloccato="1"' : '') + ' disabled>Attiva Servizio</button>';
     // Il gate dell'anagrafica scattava solo DOPO il tap, con un 403 muto: chi non
     // aveva compilato i dati ripremeva all'infinito senza sapere perche'.
     if (d.anagrafica_ok === false) {
@@ -1740,7 +1778,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var on = ac.classList.toggle('on');
       var cont = ac.closest('.fdrop') || ac.closest('.pr-card');
       var btnA = cont && (cont.querySelector('.cta-attiva[data-attiva]') || cont.querySelector('#wlConferma'));
-      if (btnA) btnA.disabled = !on;
+      if (btnA && !btnA.hasAttribute('data-bloccato')) btnA.disabled = !on;
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
       return;
     }
@@ -1819,9 +1857,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var sid = parseInt(sw.getAttribute('data-step'));
       var six = parseInt(sw.getAttribute('data-idx'));
       if (!sid || isNaN(six)) return;
+      var chiave = sid + ':' + six;
+      if (STEP_IN_VOLO[chiave]) return;
+      STEP_IN_VOLO[chiave] = true;
       // Ottimistico: un interruttore deve scattare sotto il dito, non dopo la rete.
       sw.disabled = true;
       sw.classList.add('on');
+      sw.setAttribute('aria-checked', 'true');
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('medium'); } catch(x){} }
       fetch(API_URL + '/step-progress', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: sid, step_index: six }) })
         .then(function(r){ return r.json(); })
@@ -1831,12 +1873,31 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           var drop = document.querySelector('[data-drop="' + sid + '"]');
           if (drop && SCHEDE[sid]) drop.innerHTML = schedaHtml(SCHEDE[sid]);
           if (d.completato) toast('Attivazione completata');
+          aggiornaProfiloDopoStep(sid, d);
         })
         .catch(function(err){
+          var code = err && err.message;
+          if (code === 'step_non_in_sequenza') {
+            // Il server sta a un punto diverso da questa copia della scheda (altra
+            // finestra, oppure il tutorial e' cambiato). Rimettere il toggle com'era
+            // sarebbe una bugia: si ricarica la scheda dalla fonte.
+            fetch(API_URL + '/servizio?id=' + sid, { headers: HDRS, cache: 'no-store' })
+              .then(function(r){ return r.json(); })
+              .then(function(fresca){
+                if (!fresca || fresca.error) return;
+                SCHEDE[sid] = fresca;
+                var dp = document.querySelector('[data-drop="' + sid + '"]');
+                if (dp) dp.innerHTML = schedaHtml(fresca);
+              })
+              .catch(function(){});
+            return;
+          }
           sw.disabled = false;
           sw.classList.remove('on');
-          toast(msgErrore(err && err.message));
-        });
+          sw.setAttribute('aria-checked', 'false');
+          toast(msgErrore(code));
+        })
+        .then(function(){ delete STEP_IN_VOLO[chiave]; });
       return;
     }
 
