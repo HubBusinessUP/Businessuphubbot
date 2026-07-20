@@ -86,7 +86,7 @@
 
   /* directory rows */
   .list{padding:8px 0 4px}
-  .dir{display:flex;align-items:center;gap:14px;padding:13px 18px;cursor:pointer;transition:background .12s}
+  .dir{display:flex;align-items:center;gap:14px;padding:8px 18px;cursor:pointer;transition:background .12s}
   .dir+.dir{border-top:1px solid var(--line)}
   .dir:active{background:var(--s0)}
   .dav{width:46px;height:46px;border-radius:4px;display:flex;align-items:center;justify-content:center;
@@ -688,7 +688,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    Regola: titoli a 700, testo a 400. L'unica cosa che resta a 800 e' il marchio (.brandmark).
    Servono !important e i selettori [style*=] perche' i pesi sono inline nel prototipo. */
 [style*="font-weight:800"]:not(.brandmark){font-weight:700!important}
-.dnm,.fnm,.nm,.st{font-weight:700;letter-spacing:-.015em}
+.dnm,.fnm,.nm,.st{font-weight:700;letter-spacing:-.005em}
 .dds,.fds,.ds,.sd{font-weight:400;letter-spacing:0}
 .eyebrow,.sechd .eyebrow{font-weight:700;letter-spacing:.09em}
 /* Scendendo di peso il testo si sfilaccia se resta stretto com'era a 800:
@@ -776,10 +776,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 /* 20px e non 16: le card sporgevano di 4px per lato rispetto alla ricerca e
    all'hero sopra. Ora tutta la colonna sta sullo stesso asse. */
 .fitem.open{border-color:transparent;background:var(--s1)}
-.frow{display:flex;align-items:center;gap:13px;padding:15px 16px}
+.frow{display:flex;align-items:center;gap:13px;padding:8px 16px}
 .fbody{flex:1;min-width:0}
 /* Titolo piu' piccolo e meno bold (Antonio) */
-.fnm{font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.25;display:block}
+.fnm{font-size:15px;font-weight:600;letter-spacing:-.003em;line-height:1.2;display:block}
 .fchev{width:16px;height:16px;flex-shrink:0;color:var(--mut);opacity:.6;transition:transform .2s}
 .fitem.open .fchev{transform:rotate(180deg)}
 .fdrop{padding:0 16px 16px}
@@ -809,8 +809,8 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .frow{align-items:center;gap:10px}
 .fchev{width:17px;height:17px;flex-shrink:0;color:var(--mut);transition:transform .2s}
 .fitem.open .fchev{transform:rotate(90deg)}
-.votebtn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;width:42px;padding:6px 0;
-  background:var(--s1);border:1px solid var(--line2);border-radius:7.5px;color:var(--dim);cursor:pointer}
+.votebtn{flex-shrink:0;display:flex;flex-direction:row;align-items:center;gap:5px;padding:5px 10px;
+  background:var(--s1);border:1px solid var(--line2);border-radius:8px;color:var(--dim);cursor:pointer}
 .fitem.open .votebtn{background:var(--s2)}
 .votebtn .vn{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--tx)}
 .votebtn.on{background:rgba(37,207,110,.12);border-color:rgba(37,207,110,.45);color:var(--acc)}
@@ -1190,7 +1190,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=90"></script>
+<script src="identikit.js?v=91"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1261,7 +1261,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       : '<svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linejoin:round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z"/></svg>';
   }
   function voteSvg(){
-    return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14M6 11l6-6 6 6"/></svg>';
+    return '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14M6 11l6-6 6 6"/></svg>';
   }
   // Fascia temporale di una data: piu' recente in alto. Serve sia ai business (created_at)
   // sia ai ref (iscritto_il). Antonio: dividere per giorni/settimane/mesi/anni.
