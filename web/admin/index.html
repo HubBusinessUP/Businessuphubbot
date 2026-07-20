@@ -64,6 +64,16 @@
   .badge.attivo { background: var(--lime-dim); color: var(--lime); }
   .badge.pausa { background: rgba(232,179,76,0.14); color: var(--amber); }
   .badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
+  /* Flag di stato: lo stato corrente e' l'unico acceso ed e' disabilitato, cosi' si
+     legge a colpo d'occhio dov'e' il servizio e si clicca solo per spostarlo. */
+  .flagrow { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .flagbtn { padding: 6px 12px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--border);
+             color: var(--text-dim); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .flagbtn:hover:not([disabled]) { color: var(--text); border-color: var(--text-dim); }
+  .flagbtn[disabled] { cursor: default; }
+  .flagbtn.on.attivo { background: var(--lime-dim); color: var(--lime); border-color: transparent; }
+  .flagbtn.on.pausa { background: rgba(232,179,76,0.14); color: var(--amber); border-color: transparent; }
+  .flagbtn.on.fermo { background: rgba(226,87,74,0.12); color: var(--coral); border-color: transparent; }
   .badge.pending { background: rgba(232,179,76,0.14); color: var(--amber); }
   .badge.approved { background: var(--lime-dim); color: var(--lime); }
   .link-preview { font-size: 11.5px; color: var(--text-dim); font-family: monospace; word-break: break-all; margin-top: 6px; }
@@ -350,6 +360,14 @@
     </div>
 
     <div class="section">
+      <div class="section-head"><h2>Lista d'attesa</h2></div>
+      <div class="item">
+        <p class="item-meta" style="margin-bottom:10px">Chi si è prenotato per un servizio non ancora attivo. Quando lo metti su Attivo, a queste persone parte un messaggio dal bot.</p>
+        <div id="waitlistRows"></div>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-head">
         <h2>Link affiliato da approvare</h2>
       </div>
@@ -406,8 +424,8 @@
         <div class="field"><label>Stato</label>
           <select id="svcStato">
             <option value="attivo">Attivo</option>
-            <option value="pausa">Pausa</option>
-            <option value="fermo">Fermo</option>
+            <option value="pausa">In arrivo</option>
+            <option value="fermo">Ritirato</option>
           </select>
         </div>
       </div>
@@ -600,7 +618,7 @@
     const STADIO_LABEL = { lead: "Lead", attivato: "Attivato", in_training: "In training", attivo: "Attivo", criticita: "Criticità" };
 
     async function loadAll() {
-      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes] = await Promise.all([
+      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes] = await Promise.all([
         api("admin/kpi").then((r) => r.json()),
         api("admin/macro-categorie").then((r) => r.json()),
         api("admin/categorie").then((r) => r.json()),
@@ -613,6 +631,8 @@
         api("admin/templates").then((r) => r.json()),
         api("admin/partner-richieste").then((r) => r.json()),
         api("admin/whitelist").then((r) => r.json()),
+        // NB: wlRes qui sopra e' la WHITElist dei domini, non la lista d'attesa.
+        api("admin/waitlist").then((r) => r.json()),
       ]);
 
       renderKpi(kpi);
@@ -629,6 +649,7 @@
       richiestePartner = partnerRes.richieste || [];
       renderDaValidare();
       renderWhitelist(wlRes.domini || []);
+      renderWaitlist(attesaRes.lista || []);
       renderSegnalazioni(segRes.segnalazioni || []);
       renderTopBusiness(kpi.top_business || []);
       renderSponsorboard(boardRes.sponsorboard || []);
@@ -746,6 +767,31 @@
           <button class="icon-btn danger" onclick="rimuoviDominio(${d.id})" title="Rimuovi">✕</button>
         </div>
       `).join("");
+    }
+
+    // Chi aspetta cosa. Raggruppato per servizio: la domanda dell'admin non e' "chi si e'
+    // prenotato" ma "se attivo questo, a quanti scrivo".
+    function renderWaitlist(lista) {
+      const el = document.getElementById("waitlistRows");
+      if (!lista.length) { el.innerHTML = '<p class="empty">Nessuna prenotazione.</p>'; return; }
+      const perServizio = {};
+      for (const r of lista) {
+        (perServizio[r.servizio_id] = perServizio[r.servizio_id] || { nome: r.servizio_nome, stato: r.servizio_stato, righe: [] }).righe.push(r);
+      }
+      el.innerHTML = Object.values(perServizio).map((g) => {
+        const daAvvisare = g.righe.filter((r) => !r.avvisato).length;
+        return `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div class="row-flex" style="margin-bottom:6px">
+            <div style="flex:1"><b style="font-size:13px">${esc(g.nome)}</b>
+              <span class="badge ${g.stato}" style="margin-left:6px">${SVC_STATO_LABEL[g.stato] || g.stato}</span></div>
+            <div style="font-size:12px;color:var(--text-dim)">${daAvvisare} da avvisare · ${g.righe.length} in tutto</div>
+          </div>
+          <div style="font-size:12.5px;color:var(--text-dim);line-height:1.7">
+            ${g.righe.map((r) => `${esc(r.nome)}${r.username ? ` <span style="opacity:.7">@${esc(r.username)}</span>` : ""}${r.avvisato ? ' <span style="color:var(--lime)">avvisato</span>' : ""}`).join(" · ")}
+          </div>
+        </div>`;
+      }).join("");
     }
 
     async function aggiungiDominio() {
@@ -1593,26 +1639,63 @@
       }).join("");
     }
 
+    // Il DB conserva i valori storici (attivo/pausa/fermo), ma admin e utenti devono
+    // leggere la stessa parola: prima l'admin vedeva "pausa" dove l'utente leggeva
+    // "in arrivo", e nessuno dei due sapeva cosa vedesse l'altro.
+    const SVC_STATO_LABEL = { attivo: "Attivo", pausa: "In arrivo", fermo: "Ritirato" };
+
     function renderServizi() {
       const el = document.getElementById("serviziList");
       if (!servizi.length) { el.innerHTML = '<p class="empty">Nessun servizio.</p>'; return; }
       el.innerHTML = servizi.map((s) => {
         const cat = categorie.find((c) => c.id === s.categoria_id);
+        const attesa = s.in_attesa || 0;
+        // Il flag: tre bottoni, quello acceso e' lo stato corrente. Cambia SOLO lo stato,
+        // non ripassa dal form completo (che riscriverebbe tutorial, risorse e descrizione).
+        const flag = ["attivo", "pausa", "fermo"].map((v) => `
+          <button class="flagbtn ${s.stato === v ? "on " + v : ""}"
+                  onclick="flaggaServizio(${s.id}, '${v}')"
+                  ${s.stato === v ? "disabled" : ""}>${SVC_STATO_LABEL[v]}</button>`).join("");
         return `
         <div class="item">
           <div class="item-head">
             <div>
-              <div class="item-title">${s.nome} <span class="badge ${s.stato}">${s.stato}</span></div>
-              <div class="item-meta">${cat ? cat.nome : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}</div>
+              <div class="item-title">${s.nome} <span class="badge ${s.stato}">${SVC_STATO_LABEL[s.stato] || s.stato}</span></div>
+              <div class="item-meta">${cat ? cat.nome : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}${attesa ? ` · <b>${attesa}</b> in lista d'attesa` : ""}</div>
             </div>
             <div class="item-actions">
               <button class="icon-btn" onclick='openServizioForm(${JSON.stringify(s).replace(/'/g, "&apos;")})'>✎</button>
               <button class="icon-btn danger" onclick="deleteServizio(${s.id})">✕</button>
             </div>
           </div>
+          <div class="flagrow">${flag}</div>
         </div>
       `;
       }).join("");
+    }
+
+    // Cambio stato a un click. Il passaggio ad "Attivo" fa partire messaggi Telegram a
+    // tutta la lista d'attesa: e' irreversibile, quindi si chiede conferma dicendo a
+    // quante persone si sta per scrivere.
+    async function flaggaServizio(id, stato) {
+      const s = servizi.find((x) => x.id === id);
+      if (!s || s.stato === stato) return;
+      if (stato === "attivo") {
+        const n = s.in_attesa || 0;
+        const avviso = n
+          ? `Attivare "${s.nome}"?\n\nParte subito un messaggio Telegram a ${n} ${n === 1 ? "persona che lo aspetta" : "persone che lo aspettano"}. Non si può annullare.`
+          : `Attivare "${s.nome}"?\n\nNessuno è in lista d'attesa, quindi non parte nessun messaggio.`;
+        if (!(await askConfirm(avviso))) return;
+      }
+      if (stato === "fermo" && !(await askConfirm(`Ritirare "${s.nome}"?\n\nSparisce dall'app per tutti. Voti, salvataggi e storico restano.`))) return;
+
+      const res = await api("admin/servizi/stato", { method: "POST", body: JSON.stringify({ id, stato }) });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert("Non ha funzionato: " + (d.error || res.status));
+        return;
+      }
+      loadAll();
     }
 
     function openModal(id) { document.getElementById(id).classList.add("open"); }
@@ -1638,7 +1721,12 @@
         descrizione: document.getElementById("catDescrizione").value.trim(),
         ordine: parseInt(document.getElementById("catOrdine").value) || 0,
       };
-      await api("admin/categorie/save", { method: "POST", body: JSON.stringify(body) });
+      const res = await api("admin/categorie/save", { method: "POST", body: JSON.stringify(body) });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert("Non ha salvato: " + (d.error || res.status));
+        return;
+      }
       closeModal("catOverlay");
       loadAll();
     }
@@ -1688,8 +1776,11 @@
       document.getElementById("svcEsperienza").value = s?.esperienza_richiesta || "";
 
       const catSelect = document.getElementById("svcCategoria");
-      catSelect.innerHTML = categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
-      if (s?.categoria_id) catSelect.value = s.categoria_id;
+      // Il placeholder evita che un servizio nuovo prenda in silenzio la prima categoria
+      // dell'elenco solo perche' nessuno ha toccato la select.
+      catSelect.innerHTML = '<option value="">— Scegli categoria —</option>'
+        + categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+      catSelect.value = s?.categoria_id || "";
 
       document.getElementById("stepsEditor").innerHTML = "";
       const steps = Array.isArray(s?.tutorial_steps) ? s.tutorial_steps : [];
@@ -1750,7 +1841,27 @@
         tutorial_steps: steps,
         risorse,
       };
-      await api("admin/servizi/save", { method: "POST", body: JSON.stringify(body) });
+      if (!body.categoria_id) { alert("Scegli una categoria."); return; }
+
+      // Anche da qui il passaggio ad Attivo fa partire l'invio: la conferma va chiesta
+      // prima, non dopo, ed e' l'unico punto in cui l'admin vede a quanti scrivera'.
+      const prec = servizi.find((x) => String(x.id) === String(body.id));
+      if (body.stato === "attivo" && prec && prec.stato !== "attivo") {
+        const n = prec.in_attesa || 0;
+        const avviso = n
+          ? `Attivare "${body.nome}"?\n\nParte subito un messaggio Telegram a ${n} ${n === 1 ? "persona che lo aspetta" : "persone che lo aspettano"}. Non si può annullare.`
+          : `Attivare "${body.nome}"?\n\nNessuno è in lista d'attesa, quindi non parte nessun messaggio.`;
+        if (!(await askConfirm(avviso))) return;
+      }
+
+      // Senza questo controllo il modale si chiudeva anche su 500: l'admin credeva di
+      // aver salvato, gli utenti continuavano a vedere il servizio com'era prima.
+      const res = await api("admin/servizi/save", { method: "POST", body: JSON.stringify(body) });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert("Non ha salvato: " + (d.error || res.status));
+        return;
+      }
       closeModal("svcOverlay");
       loadAll();
     }
@@ -1762,7 +1873,7 @@
     }
 
     const ADTABS = [
-      { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi"] },
+      { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi", "Lista d'attesa"] },
       { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
       { key: "rubrica", label: "Rubrica", titles: ["Miei contatti"] },

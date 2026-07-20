@@ -816,6 +816,21 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cta-attiva:active{transform:scale(.98)}
 .cta-attiva[disabled]{opacity:.6;cursor:default}
 .ssrc{font-size:11px;color:var(--mut);text-align:center;margin-top:9px;line-height:1.4}
+/* "Fatto" dello step corrente: un bottone di conferma, non una CTA. Resta secondario
+   perche' l'azione vera e' aprire il link del fornitore, non spuntare la riga. */
+.sfatto{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:8px 13px;
+  background:var(--s1);border:1px solid var(--line2);border-radius:8.5px;color:var(--dim);
+  font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:-.01em;cursor:pointer}
+.sfatto:active{transform:scale(.97)}
+.sfatto[disabled]{opacity:.55;cursor:default}
+/* Lo step corrente e' l'unico su cui si puo' agire: gli altri restano quieti. */
+.sstep.ora .st{color:var(--sec)}
+.sstep.ora .sn{background:var(--sec);color:var(--sec-on)}
+/* Riga di chiusura del tutorial. */
+.sfine{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px}
+.sfine svg{width:16px;height:16px;flex-shrink:0;fill:none;stroke:var(--acc);stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round}
 .vuoto{padding:30px 18px;text-align:center;color:var(--mut);font-size:13px;line-height:1.6}
 
 
@@ -1068,6 +1083,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .st{font-size:15.5px}
 .sd{font-size:14.5px;line-height:1.55}
 .slink{font-size:14.5px}
+.sfatto{font-size:13.5px}
+.sfine{font-size:14px}
 .wl{font-size:14px;line-height:1.55}
 .ssrc{font-size:12.5px;line-height:1.5}
 
@@ -1095,7 +1112,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=72"></script>
+<script src="identikit.js?v=73"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1404,6 +1421,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '</div>';
   }
   // Il colore e' un giudizio, non decorazione: verde ok, ambra attenzione, rosso no.
+  // Etichetta del bottone "Fatto" in un posto solo: il renderer e il ripristino
+  // dopo un errore devono per forza usare la stessa cosa.
+  var FATTO_HTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"/></svg>Fatto, vai al prossimo';
   var RISCHIO = { 1:['Molto basso','var(--acc)'], 2:['Basso','var(--acc)'], 3:['Medio','var(--amber)'], 4:['Alto','#E5484D'], 5:['Molto alto','#E5484D'] };
 
   // Lo share va SOTTO ogni scheda, qualunque sia il ramo (tutorial / waitlist / attiva):
@@ -1459,28 +1479,59 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!panor && !righe) out += '<div class="vuoto" style="padding:20px 0">Scheda ancora da compilare.</div>';
 
     var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
-    var attivo = !!d.gia_interessato;
+    // Due cose diverse che si chiamavano tutte e due "attivo": quello che ha fatto
+    // l'utente e lo stato del servizio. Confonderle mostrava il tutorial di un
+    // servizio che l'admin aveva sospeso.
+    var mioAttivo = !!d.gia_interessato;
     var fatto = (d.step_progress && d.step_progress.ultimo_step) || 0;
 
-    // 1) gia' attivato -> il tutorial
-    if (attivo) {
+    // 1) l'ho attivato E il servizio e' operativo -> il tutorial
+    if (mioAttivo && d.attivo) {
       if (steps.length) {
         out += '<div class="seyeb">Come si attiva &mdash; ' + steps.length + (steps.length === 1 ? ' passo' : ' passi') + '</div>';
         out += steps.map(function(st, i){
           var done = i < fatto;
-          return '<div class="sstep' + (done ? ' done' : '') + '">'
+          var ora = (i === fatto);   // lo step corrente: l'unico che si puo' spuntare
+          return '<div class="sstep' + (done ? ' done' : (ora ? ' ora' : '')) + '">'
             + '<div class="sn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
             + '<div style="flex:1;min-width:0">'
             +   '<div class="st">' + esc(st.titolo || ('Passo ' + (i + 1))) + '</div>'
             +   (st.testo ? '<div class="sd">' + esc(st.testo) + '</div>' : '')
             +   (st.link_url ? '<a class="slink" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(st.link_label || 'Apri') + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
+            +   (ora ? '<div><button class="sfatto" data-step="' + s.id + '" data-idx="' + i + '">' + FATTO_HTML + '</button></div>' : '')
             + '</div></div>';
         }).join('');
-      } else {
-        // Nessun messaggio se il tutorial non c'e': meglio il silenzio che confessare
-        // all'utente che la guida non e' stata scritta. Resta comunque il tasto Condividi.
-        out += '';
+        if (fatto >= steps.length) {
+          out += '<div class="sfine">'
+            + '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>'
+            + '<div>Attivazione completata.</div></div>';
+        }
       }
+
+      // Il link del fornitore: finora d.ref_link era letto solo come booleano per
+      // stampare una didascalia, e il valore non finiva mai in un href. Sta QUI e non
+      // nel ramo 3 perche' prima dell'attivazione il disclaimer non e' ancora accettato.
+      if (d.ref_link) {
+        out += '<div class="seyeb">Il tuo link</div>'
+          + '<a class="slink" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1">Apri ' + esc(s.nome)
+          + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
+        if (d.ref_fonte === 'sponsor') out += '<div class="sd">E il link di chi ti ha invitato.</div>';
+      } else if (!steps.length) {
+        // Senza step e senza link non c'e' niente da mostrare: dirlo e' meglio che
+        // lasciare la scheda muta, che sembra un errore dell'app.
+        out += '<div class="wl">'
+          + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
+          + '<div><b>Istruzioni in arrivo.</b> Te le mando appena sono pronte.</div></div>';
+      }
+      return out;
+    }
+
+    // 1b) l'ho attivato ma l'admin ha sospeso il servizio: niente tutorial verso un
+    // fornitore che abbiamo tolto, e niente lista d'attesa (lo sta gia' usando).
+    if (mioAttivo && !d.attivo) {
+      out += '<div class="wl">'
+        + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
+        + '<div><b>Sospeso per ora.</b> Lo avevi attivato: se torna disponibile te lo scrive il bot.</div></div>';
       return out;
     }
 
@@ -1501,6 +1552,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     // 3) attivo -> disclaimer (testo UNICO del server, la stessa cosa che registriamo) da accettare, POI il bottone
+    // Chi si era prenotato ha avuto la promessa "hai la priorita'": almeno riconoscerlo,
+    // invece di servirgli la stessa identica schermata di chi arriva adesso.
+    if (d.in_waitlist) {
+      out += '<div class="wl on">'
+        + '<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:var(--acc);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>'
+        + '<div><b>E partito.</b> Lo aspettavi: puoi attivarlo adesso.</div></div>';
+    }
     var disc = d.disclaimer || {};
     out += '<div class="disc">'
       + '<div class="disctxt">' + (disc.attivazione || DISC_FALLBACK.attivazione) + '</div>'
@@ -1508,8 +1566,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +   '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
       +   '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
       + '</div></div>';
-    out += '<button class="cta-attiva" data-attiva="' + s.id + '" disabled>Attiva servizio</button>';
-    if (steps.length) out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
+    out += '<button class="cta-attiva" data-attiva="' + s.id + '" disabled>Attiva Servizio</button>';
+    // Il gate dell'anagrafica scattava solo DOPO il tap, con un 403 muto: chi non
+    // aveva compilato i dati ripremeva all'infinito senza sapere perche'.
+    if (d.anagrafica_ok === false) {
+      out += '<div class="ssrc">Prima completa i tuoi dati nel Profilo.</div>';
+    } else if (steps.length) {
+      out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
+    }
     if (d.ref_link && d.ref_fonte === 'sponsor') out += '<div class="ssrc">Il link e di chi ti ha invitato.</div>';
     return out;
   }
@@ -1652,6 +1716,22 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return;
     }
 
+    // Ogni rotta risponde con un codice preciso; collassarli tutti in "ko" e poi non
+    // mostrare niente lasciava l'utente a ripremere un bottone che non spiegava nulla.
+    function msgErrore(code){
+      return ({
+        anagrafica_richiesta:  'Prima completa i tuoi dati nel Profilo.',
+        non_attivo:            'Questo servizio non e piu attivo.',
+        gia_attivo:            'E gia partito: puoi attivarlo.',
+        non_prenotabile:       'Questo servizio non e piu disponibile.',
+        disclaimer_richiesto:  'Devi accettare le condizioni.',
+        servizio_non_attivato: 'Prima attiva il servizio.',
+        step_non_in_sequenza:  'Questo passo risulta gia fatto.',
+        nessuno_step:          'Le istruzioni non sono ancora pronte.',
+        not_found:             'Questo servizio non esiste piu.'
+      })[code] || 'Non ha funzionato, riprova.';
+    }
+
     // Spunta: vale sia per il disclaimer nella scheda sia per il popup della waitlist.
     // Il bottone da accendere si cerca nel contenitore di QUELLA spunta (.fdrop o .pr-card):
     // con un solo contenitore fisso, la spunta del popup si accendeva ma il bottone no.
@@ -1684,7 +1764,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       fetch(API_URL + '/waitlist', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: wid, disclaimer_accettato: true }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
-          if (!d || d.error) throw new Error('ko');
+          if (!d || d.error) throw new Error(d && d.error || 'ko');
           if (SCHEDE[wid]) { SCHEDE[wid].in_waitlist = true; SCHEDE[wid].waitlist_count = d.waitlist_count; }
           var drop = document.querySelector('[data-drop="' + wid + '"]');
           if (drop && SCHEDE[wid]) drop.innerHTML = schedaHtml(SCHEDE[wid]);
@@ -1692,7 +1772,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           toast('Sei in lista: ti avvisa il bot');
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
-        .catch(function(){ wc.disabled = false; wc.textContent = 'Confermo, mettimi in lista'; });
+        .catch(function(err){
+          wc.disabled = false; wc.textContent = 'Confermo, mettimi in lista';
+          toast(msgErrore(err && err.message));
+        });
       return;
     }
 
@@ -1710,14 +1793,50 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       fetch(API_URL + '/attiva', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: aid, disclaimer_accettato: true }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
-          if (!d || d.error) throw new Error('ko');
-          if (SCHEDE[aid]) SCHEDE[aid].gia_interessato = true;
+          if (!d || d.error) throw new Error(d && d.error || 'ko');
+          if (SCHEDE[aid]) {
+            SCHEDE[aid].gia_interessato = true;
+            SCHEDE[aid].in_waitlist = false;      // il server toglie la riga: allineati
+            if (d.ref_link) { SCHEDE[aid].ref_link = d.ref_link; SCHEDE[aid].ref_fonte = d.ref_fonte; }
+          }
           var drop = document.querySelector('[data-drop="' + aid + '"]');
           if (drop && SCHEDE[aid]) drop.innerHTML = schedaHtml(SCHEDE[aid]);   // ora appaiono gli step
           toast('Servizio attivato');
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
-        .catch(function(){ a.disabled = false; a.textContent = 'Attiva servizio'; });
+        .catch(function(err){
+          a.disabled = false; a.textContent = 'Attiva Servizio';
+          toast(msgErrore(err && err.message));
+        });
+      return;
+    }
+
+    // "Fatto" su uno step: e' il server a decidere quando il tutorial e' completo,
+    // qui si dichiara solo di aver fatto QUESTO passo.
+    var sf = t.closest('.sfatto[data-step]');
+    if (sf) {
+      e.stopPropagation();
+      if (sf.disabled) return;
+      var sid = parseInt(sf.getAttribute('data-step'));
+      var six = parseInt(sf.getAttribute('data-idx'));
+      if (!sid || isNaN(six)) return;
+      attendi(sf, 'Un attimo...');
+      fetch(API_URL + '/step-progress', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: sid, step_index: six }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || d.error) throw new Error(d && d.error || 'ko');
+          if (SCHEDE[sid]) SCHEDE[sid].step_progress = { ultimo_step: d.ultimo_step, completato: d.completato };
+          var drop = document.querySelector('[data-drop="' + sid + '"]');
+          if (drop && SCHEDE[sid]) drop.innerHTML = schedaHtml(SCHEDE[sid]);
+          if (d.completato) toast('Attivazione completata');
+          if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('medium'); } catch(x){} }
+        })
+        .catch(function(err){
+          // attendi() ha sostituito tutto l'innerHTML con lo spinner: rimetti anche l'icona.
+          sf.disabled = false;
+          sf.innerHTML = FATTO_HTML;
+          toast(msgErrore(err && err.message));
+        });
       return;
     }
 

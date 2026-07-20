@@ -898,7 +898,9 @@ async function apiAnagrafica(telegramId: number, body: any) {
 async function apiBusinessList(telegramId?: number | null) {
   const { data: macroCategorie } = await supabase.from("macro_categorie").select("*").order("ordine")
   const { data: categorie } = await supabase.from("categorie").select("*").order("ordine")
-  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta").order("created_at", { ascending: false })
+  // "fermo" = ritirato: resta in archivio con voti e storico, ma sparisce dall'app.
+  // E' l'unico modo di togliere un business senza cancellarlo.
+  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta").neq("stato", "fermo").order("created_at", { ascending: false })
 
   // Voti per servizio: la posizione in classifica è determinata dal numero di voti.
   const { data: voti } = await supabase.from("voti").select("servizio_id, telegram_id")
@@ -1002,6 +1004,9 @@ async function apiWaitlist(telegramId: number, body: any) {
   const { data: sv } = await supabase.from("servizi").select("id, nome, stato").eq("id", servizioId).maybeSingle()
   if (!sv) return json({ error: "not_found" }, 404)
   if (sv.stato === "attivo") return json({ error: "gia_attivo" }, 409)
+  // Ci si prenota solo per cio' che deve ancora partire. Su un servizio ritirato la
+  // prenotazione sarebbe una promessa che non manterremo mai.
+  if (sv.stato !== "pausa") return json({ error: "non_prenotabile" }, 409)
 
   // Anche la prenotazione e' un consenso da tracciare: e' pur sempre un servizio di terzi.
   if (!body?.disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
@@ -1026,31 +1031,49 @@ async function apiWaitlist(telegramId: number, body: any) {
 
 // Avvisa chi aspettava: chiamata quando un servizio passa ad attivo.
 // avvisato_at evita il doppio invio se lo stato viene toccato piu' volte.
+//
+// Qui si scrive a persone vere una sola volta: avvisato_at e' l'UNICA guardia
+// anti-doppione, quindi marcare per sbaglio qualcuno significa che quel messaggio
+// non partira' MAI piu'. Da qui le tre regole di questa funzione:
+//  1) si guarda data.ok della risposta Telegram, non il fatto che la fetch non abbia
+//     lanciato: un "bot was blocked" e' un HTTP 403 che si risolve normalmente;
+//  2) si marca RIGA PER RIGA subito dopo l'invio riuscito, non in blocco alla fine.
+//     Cosi' se l'isolate viene ucciso a meta' coda, chi non ha ricevuto resta NULL
+//     ed e' ripescabile, e chi ha ricevuto non viene riavvisato;
+//  3) si marca per id della riga, non con un filtro sul servizio: chi si prenota
+//     MENTRE il ciclo gira non deve risultare avvisato senza aver ricevuto niente.
 async function avvisaWaitlist(servizioId: number, nomeServizio: string) {
   const { data: attesa } = await supabase.from("waitlist")
-    .select("telegram_id").eq("servizio_id", servizioId).is("avvisato_at", null)
+    .select("id, telegram_id").eq("servizio_id", servizioId).is("avvisato_at", null)
   if (!attesa?.length) return 0
 
   const btn = { inline_keyboard: [[{ text: "🚀 Aprilo su Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
   let inviati = 0
   for (const w of attesa) {
+    const uid = (w as any).telegram_id
     try {
-      await sendMessage((w as any).telegram_id,
+      const res = await sendMessage(uid,
         `🔔 <b>${nomeServizio}</b> è attivo.\n\nMi avevi chiesto di avvisarti: ora puoi partire.`, btn, "HTML")
+      const data = await res.json()
+      if (!data.ok) {
+        // Non marcare: al prossimo passaggio ad attivo ci riproviamo.
+        console.error("waitlist notify rifiutata", uid, data.description)
+        continue
+      }
+      await supabase.from("waitlist")
+        .update({ avvisato_at: new Date().toISOString() }).eq("id", (w as any).id)
       inviati++
     } catch (e) {
-      console.error("waitlist notify failed", (w as any).telegram_id, e)
+      console.error("waitlist notify failed", uid, e)
     }
   }
-  await supabase.from("waitlist").update({ avvisato_at: new Date().toISOString() })
-    .eq("servizio_id", servizioId).is("avvisato_at", null)
   return inviati
 }
 
 async function apiServizio(telegramId: number, servizioId: number) {
   const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
   if (!servizio) return json({ error: "not_found" }, 404)
-  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente").eq("telegram_id", telegramId).maybeSingle()
+  const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente, anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: progress } = await supabase.from("tutorial_progress").select("ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
@@ -1077,6 +1100,9 @@ async function apiServizio(telegramId: number, servizioId: number) {
     ref_link: refInfo.link,
     ref_fonte: refInfo.fonte,
     sondaggio_completato: !!lead?.sondaggio_completato,
+    // Stessa condizione che apiAttiva applica come gate: cosi' la scheda puo' dirlo
+    // PRIMA, invece di far premere un bottone che risponde 403.
+    anagrafica_ok: !!(lead?.sondaggio_completato || lead?.anagrafica_manuale),
     is_cliente: !!lead?.is_cliente,
     mio_link: mioLink || null,
     step_progress: { ultimo_step: progress?.ultimo_step ?? 0, completato: !!progress?.completato },
@@ -1312,7 +1338,8 @@ async function apiAttiva(telegramId: number, body: any) {
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato, anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
   if (!lead?.sondaggio_completato && !lead?.anagrafica_manuale) return json({ error: "anagrafica_richiesta" }, 403)
 
-  const { servizio_id } = body
+  const servizio_id = parseInt(body?.servizio_id) || 0
+  if (!servizio_id) return json({ error: "servizio_id_richiesto" }, 400)
 
   // Non si attiva un servizio non ancora attivo: per quelli c'e' la lista d'attesa.
   const { data: sv0 } = await supabase.from("servizi").select("stato, disclaimer_ver").eq("id", servizio_id).maybeSingle()
@@ -1322,12 +1349,22 @@ async function apiAttiva(telegramId: number, body: any) {
   // Il disclaimer deve lasciare traccia: chi, quando, quale versione, quale testo. Senza, non copre da niente.
   if (!body?.disclaimer_accettato) return json({ error: "disclaimer_richiesto" }, 400)
 
-  await supabase.from("lead_servizi").insert({
+  // upsert e non insert: il bottone disabilitato lato client e' un accorgimento di UI,
+  // non un vincolo. Due webview aperte (desktop + telefono) creerebbero due righe, e i
+  // duplicati gonfiano i conteggi e rompono il maybeSingle() che legge l'attivazione.
+  const { error: errAtt } = await supabase.from("lead_servizi").upsert({
     telegram_id: telegramId, servizio_id, stato: "interessato",
     disclaimer_accettato_at: new Date().toISOString(),
     disclaimer_ver: DISCLAIMER_VER,
     disclaimer_testo: DISCLAIMER_ATTIVAZIONE,
-  })
+  }, { onConflict: "telegram_id,servizio_id" })
+  if (errAtt) {
+    console.error("attivazione fallita:", errAtt)
+    return json({ error: "save_failed", detail: errAtt.message }, 500)
+  }
+  // Ha attivato: non e' piu' in attesa. Senza questo resterebbe in lista per un
+  // servizio che sta gia' usando, e l'admin lo conterebbe tra i prenotati.
+  await supabase.from("waitlist").delete().eq("telegram_id", telegramId).eq("servizio_id", servizio_id)
   await registraAccettazioneDisclaimer(telegramId, servizio_id, "attivazione", DISCLAIMER_ATTIVAZIONE)
   await supabase.from("leads").update({ is_cliente: true }).eq("telegram_id", telegramId)
   const refInfo = await resolveRefLinkConFonte(telegramId, servizio_id)
@@ -1344,23 +1381,46 @@ async function apiAttiva(telegramId: number, body: any) {
 }
 
 // Segna completato uno step del tutorial; sblocca il successivo solo se gli step precedenti sono già fatti.
+//
+// "Completato" NON e' una parola del client: fa partire un messaggio allo sponsor e
+// all'admin, quindi lo decide il server contando gli step veri del servizio. Allo stesso
+// modo il progresso si registra solo su un servizio attivo che l'utente ha davvero
+// attivato: senza queste guardie bastava una POST per annunciare un'attivazione mai avvenuta.
 async function apiStepProgressSave(telegramId: number, body: any) {
-  const { servizio_id, step_index, is_last } = body
-  const { data: existing } = await supabase.from("tutorial_progress").select("id, ultimo_step").eq("telegram_id", telegramId).eq("servizio_id", servizio_id).maybeSingle()
-  const attuale = existing?.ultimo_step ?? 0
-  if (step_index !== attuale) return json({ error: "step_non_in_sequenza" }, 409)
+  const servizioId = parseInt(body?.servizio_id) || 0
+  const stepIndex = Number.isInteger(body?.step_index) ? body.step_index : -1
+  if (!servizioId) return json({ error: "servizio_id_richiesto" }, 400)
+  if (stepIndex < 0) return json({ error: "step_index_non_valido" }, 400)
 
-  const row = { telegram_id: telegramId, servizio_id, ultimo_step: attuale + 1, completato: !!is_last, updated_at: new Date().toISOString() }
+  const { data: sv } = await supabase.from("servizi").select("stato, tutorial_steps").eq("id", servizioId).maybeSingle()
+  if (!sv) return json({ error: "not_found" }, 404)
+  if (sv.stato !== "attivo") return json({ error: "non_attivo" }, 409)
+
+  const { data: attivazione } = await supabase.from("lead_servizi")
+    .select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).limit(1).maybeSingle()
+  if (!attivazione) return json({ error: "servizio_non_attivato" }, 403)
+
+  const totale = Array.isArray(sv.tutorial_steps) ? sv.tutorial_steps.length : 0
+  if (!totale) return json({ error: "nessuno_step" }, 409)
+  if (stepIndex >= totale) return json({ error: "step_fuori_range" }, 400)
+
+  const { data: existing } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const attuale = existing?.ultimo_step ?? 0
+  if (stepIndex !== attuale) return json({ error: "step_non_in_sequenza" }, 409)
+
+  const ultimoStep = attuale + 1
+  const completato = ultimoStep >= totale
+  const row = { telegram_id: telegramId, servizio_id: servizioId, ultimo_step: ultimoStep, completato, updated_at: new Date().toISOString() }
   const { error } = existing
     ? await supabase.from("tutorial_progress").update(row).eq("id", existing.id)
     : await supabase.from("tutorial_progress").insert(row)
   if (error) return json({ error: error.message }, 500)
 
   // Tutorial completato: avvisa lo sponsor (se non è il Founder) e l'admin che l'utente ha attivato il servizio.
-  if (is_last && !existing?.completato) {
-    notificaAttivazioneCompletata(telegramId, servizio_id).catch((e) => console.error("notifica attivazione:", e))
+  if (completato && !existing?.completato) {
+    inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
   }
-  return json({ ok: true, ultimo_step: row.ultimo_step, completato: row.completato })
+  return json({ ok: true, ultimo_step: ultimoStep, completato, totale_step: totale })
 }
 
 async function notificaAttivazioneCompletata(telegramId: number, servizioId: number) {
@@ -1539,29 +1599,80 @@ async function apiAdminCategorieDelete(body: any) {
 
 async function apiAdminServiziList() {
   const { data } = await supabase.from("servizi").select("*").order("ordine")
-  return json({ servizi: data ?? [] })
+  // Quante persone aspettano ciascun servizio. L'admin sta per far partire un invio
+  // irreversibile: deve sapere PRIMA se scrive a una persona o a cinquecento.
+  const { data: att } = await supabase.from("waitlist").select("servizio_id").is("avvisato_at", null)
+  const inAttesa: Record<number, number> = {}
+  for (const w of att ?? []) inAttesa[(w as any).servizio_id] = (inAttesa[(w as any).servizio_id] ?? 0) + 1
+  const servizi = (data ?? []).map((s: any) => ({ ...s, in_attesa: inAttesa[s.id] ?? 0 }))
+  return json({ servizi })
+}
+
+// Un lavoro che deve sopravvivere alla risposta HTTP. Senza waitUntil l'isolate Deno
+// puo' essere ucciso appena la response chiude, troncando la coda delle notifiche a meta'.
+function inBackground(p: Promise<unknown>) {
+  const rt = (globalThis as any).EdgeRuntime
+  if (rt?.waitUntil) rt.waitUntil(p)
+  return p
+}
+
+// Le due transizioni di stato che hanno conseguenze verso gli utenti, in un punto solo:
+// il salvataggio completo e il flag rapido devono comportarsi in modo identico.
+async function applicaCambioStato(id: number, nome: string, prima: string, dopo: string) {
+  if (prima === dopo) return
+  if (dopo === "attivo") {
+    // Parte adesso: avvisa chi si era prenotato.
+    inBackground(avvisaWaitlist(id, nome).catch((e) => console.error("avvisaWaitlist:", e)))
+    return
+  }
+  if (prima === "attivo") {
+    // Esce da attivo: le prenotazioni tornano "da avvisare", altrimenti chi era gia'
+    // stato avvisato resterebbe muto per sempre al successivo riavvio del servizio.
+    await supabase.from("waitlist").update({ avvisato_at: null }).eq("servizio_id", id)
+  }
 }
 
 async function apiAdminServiziSave(body: any) {
   const { id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse, longevita, attivo_da } = body
-  const row = { nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
-    budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null, risorse: risorse ?? [],
-    longevita: longevita || null, attivo_da: attivo_da || null }
+  const row: Record<string, unknown> = { nome, categoria_id: categoria_id || null, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
+    budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null, risorse: risorse ?? [] }
+  // longevita e attivo_da NON sono nel form dell'admin: scriverli sempre significherebbe
+  // azzerarli a ogni salvataggio (undefined -> null). Si toccano solo se arrivano davvero.
+  if (longevita !== undefined) row.longevita = longevita || null
+  if (attivo_da !== undefined) row.attivo_da = attivo_da || null
   if (id) {
     // Leggi lo stato PRIMA di scrivere: il passaggio a "attivo" e' cio' che fa partire
     // le notifiche a chi era in lista d'attesa.
     const { data: prima } = await supabase.from("servizi").select("stato, nome").eq("id", id).maybeSingle()
     const { error } = await supabase.from("servizi").update(row).eq("id", id)
     if (error) return json({ error: error.message }, 500)
-    if (prima && prima.stato !== "attivo" && stato === "attivo") {
-      avvisaWaitlist(id, nome || prima.nome).catch((e) => console.error("avvisaWaitlist:", e))
-    }
+    if (prima) await applicaCambioStato(id, nome || prima.nome, prima.stato, stato)
   } else {
     const { error } = await supabase.from("servizi").insert(row)
     if (error) return json({ error: error.message }, 500)
     notificaNuovoServizio(nome, categoria_id).catch((e) => console.error("notifica nuovo servizio:", e))
   }
   return json({ ok: true })
+}
+
+// Flag rapido dello stato dalla lista admin. Deliberatamente separato dal salvataggio
+// completo: cambiare stato non deve poter riscrivere tutorial, risorse o descrizione.
+const STATI_SERVIZIO = ["attivo", "pausa", "fermo"]
+
+async function apiAdminServiziStato(body: any) {
+  const id = parseInt(body?.id) || 0
+  const stato = String(body?.stato ?? "")
+  if (!id) return json({ error: "id_richiesto" }, 400)
+  if (!STATI_SERVIZIO.includes(stato)) return json({ error: "stato_non_valido" }, 400)
+
+  const { data: prima } = await supabase.from("servizi").select("stato, nome").eq("id", id).maybeSingle()
+  if (!prima) return json({ error: "not_found" }, 404)
+  if (prima.stato === stato) return json({ ok: true, stato, invariato: true })
+
+  const { error } = await supabase.from("servizi").update({ stato }).eq("id", id)
+  if (error) return json({ error: error.message }, 500)
+  await applicaCambioStato(id, prima.nome, prima.stato, stato)
+  return json({ ok: true, stato })
 }
 
 // Avvisa via bot gli utenti che hanno preferiti nella stessa categoria del nuovo servizio.
@@ -1575,11 +1686,16 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number) 
   const { data: cat } = await supabase.from("categorie").select("nome").eq("id", categoriaId).maybeSingle()
 
   for (const tid of destinatari) {
-    await sendMessage(
-      tid,
-      `🆕 Nuovo business nella categoria ${cat?.nome || "che segui"}!\n\n${nomeServizio} è appena arrivato nella Business List.`,
-      { inline_keyboard: [[{ text: "Guardalo ora", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] },
-    )
+    // Un destinatario irraggiungibile non deve interrompere la coda di tutti gli altri.
+    try {
+      await sendMessage(
+        tid,
+        `🆕 Nuovo business nella categoria ${cat?.nome || "che segui"}!\n\n${nomeServizio} è appena arrivato nella Business List.`,
+        { inline_keyboard: [[{ text: "Guardalo ora", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] },
+      )
+    } catch (e) {
+      console.error("notifica nuovo servizio fallita", tid, e)
+    }
   }
 }
 
@@ -2583,6 +2699,7 @@ serve(async (req) => {
 
       if (sub === "admin/servizi" && req.method === "GET") return await apiAdminServiziList()
       if (sub === "admin/servizi/save" && req.method === "POST") return await apiAdminServiziSave(await req.json())
+      if (sub === "admin/servizi/stato" && req.method === "POST") return await apiAdminServiziStato(await req.json())
       if (sub === "admin/servizi/delete" && req.method === "POST") return await apiAdminServiziDelete(await req.json())
 
       if (sub === "admin/suggerimenti" && req.method === "GET") return await apiAdminSuggerimentiList()
