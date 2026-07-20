@@ -1143,7 +1143,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=80"></script>
+<script src="identikit.js?v=81"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1431,7 +1431,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var n = Number(v);
     return isNaN(n) ? String(v) : (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)) + ' EUR';
   }
-  var RISCHIO = { 1:'Molto basso', 2:'Basso', 3:'Medio', 4:'Alto', 5:'Molto alto' };
 
   // Una riga della tabella caratteristiche. Il colore resta un GIUDIZIO (serve
   // solo al Rischio), non decorazione: gli altri valori restano neutri.
@@ -1471,7 +1470,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Il colore e' un giudizio, non decorazione: verde ok, ambra attenzione, rosso no.
   // Etichetta del bottone "Fatto" in un posto solo: il renderer e il ripristino
   // dopo un errore devono per forza usare la stessa cosa.
-  var RISCHIO = { 1:['Molto basso','var(--acc)'], 2:['Basso','var(--acc)'], 3:['Medio','var(--amber)'], 4:['Alto','#E5484D'], 5:['Molto alto','#E5484D'] };
+  // Stessa scala della select in admin: 1 Basso, 2 Medio, 3 Alto. Se qui si aggiunge
+  // un gradino va aggiunto anche li', se no si salva un numero che l'app legge come
+  // un'altra cosa (e' successo: "Medio" in admin usciva "Basso" nella scheda).
+  var RISCHIO = { 1:['Basso','var(--acc)'], 2:['Medio','var(--amber)'], 3:['Alto','#E5484D'] };
 
   // Lo share va SOTTO ogni scheda, qualunque sia il ramo (tutorial / waitlist / attiva):
   // il corpo ha return anticipati, quindi lo aggiungo con un wrapper invece che dentro ogni ramo.
