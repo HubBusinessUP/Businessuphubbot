@@ -1707,6 +1707,45 @@ async function apiAdminServiziStato(body: any) {
   return json({ ok: true, stato })
 }
 
+// Media degli step del tutorial: screenshot e clip brevi caricati dall'admin.
+// Il tetto e' basso di proposito: il file viaggia in base64 dentro il JSON della
+// richiesta, e un video lungo va su YouTube, non nel nostro storage.
+const UPLOAD_MAX = 6 * 1024 * 1024
+const ESTENSIONE_MEDIA: Record<string, string> = {
+  "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif",
+  "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov",
+}
+
+async function apiAdminUpload(body: any) {
+  const contentType = String(body?.content_type ?? "")
+  const b64 = String(body?.data ?? "")
+  const est = ESTENSIONE_MEDIA[contentType]
+  if (!est) return json({ error: "tipo_non_supportato" }, 400)
+  if (!b64) return json({ error: "file_mancante" }, 400)
+
+  let bytes: Uint8Array
+  try {
+    const bin = atob(b64)
+    bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  } catch (_e) {
+    return json({ error: "file_illeggibile" }, 400)
+  }
+  if (!bytes.length) return json({ error: "file_vuoto" }, 400)
+  if (bytes.length > UPLOAD_MAX) return json({ error: "file_troppo_grande" }, 413)
+
+  // Nome non indovinabile: il bucket e' pubblico, quindi il percorso non deve essere
+  // enumerabile. Mai il nome originale del file, che puo' contenere di tutto.
+  const nome = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}.${est}`
+  const up = await supabase.storage.from("tutorial").upload(nome, bytes, { contentType, upsert: false })
+  if (up.error) {
+    console.error("upload tutorial fallito:", up.error.message)
+    return json({ error: "upload_fallito", detail: up.error.message }, 500)
+  }
+  const url = supabase.storage.from("tutorial").getPublicUrl(nome).data.publicUrl
+  return json({ ok: true, url, tipo: contentType.startsWith("video/") ? "video" : "foto", byte: bytes.length })
+}
+
 // Avvisa via bot gli utenti che hanno preferiti nella stessa categoria del nuovo servizio.
 async function notificaNuovoServizio(nomeServizio: string, categoriaId: number) {
   if (!categoriaId) return
@@ -2732,6 +2771,7 @@ serve(async (req) => {
       if (sub === "admin/servizi" && req.method === "GET") return await apiAdminServiziList()
       if (sub === "admin/servizi/save" && req.method === "POST") return await apiAdminServiziSave(await req.json())
       if (sub === "admin/servizi/stato" && req.method === "POST") return await apiAdminServiziStato(await req.json())
+      if (sub === "admin/upload" && req.method === "POST") return await apiAdminUpload(await req.json())
       if (sub === "admin/servizi/delete" && req.method === "POST") return await apiAdminServiziDelete(await req.json())
 
       if (sub === "admin/suggerimenti" && req.method === "GET") return await apiAdminSuggerimentiList()
