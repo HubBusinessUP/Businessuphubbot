@@ -1104,6 +1104,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
    per battere `--sec`, che tinge di arancione tutta la sezione HUB. */
 .cta-attiva[data-attiva]{background:var(--acc)!important;color:var(--on)!important}
 .cta-attiva[data-attiva]:active{background:var(--acc-d)!important}
+/* Riga di consenso sotto la CTA: dice cosa comporta premere, e apre il testo
+   integrale. Deve leggersi, non nascondersi: e' la parte che tutela. */
+.cons{font-size:11.5px;color:var(--mut);text-align:center;margin-top:9px;line-height:1.5}
+.cons a{color:var(--dim);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+/* Foglio con il testo integrale, aperto dal link. */
+#discSheet{position:fixed;inset:0;z-index:200;display:none}
+#discSheet .dsc-card{position:absolute;left:0;right:0;bottom:0;max-height:82vh;overflow:auto;
+  background:var(--s1);border-radius:16px 16px 0 0;padding:16px 18px 22px}
+#discSheet h4{font-size:16px;font-weight:700;letter-spacing:-.02em;margin:0 0 10px}
+#discSheet .dsc-txt{font-size:13.5px;line-height:1.65;color:var(--dim)}
+#discSheet .dsc-txt b{color:var(--tx)}
 .cta-attiva[data-wait],#wlConferma{background:#FF6B3D!important;color:#2A0E04!important}
 .cta-attiva[data-wait]:active,#wlConferma:active{background:#E85A2E!important}
 /* Ultima, cosi' vince su entrambe quando il bottone e' spento. */
@@ -1177,7 +1188,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=84"></script>
+<script src="identikit.js?v=85"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1673,17 +1684,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     // 3) attivo -> disclaimer (testo UNICO del server, la stessa cosa che registriamo) da accettare, POI il bottone
-    var disc = d.disclaimer || {};
-    out += '<div class="disc">'
-      + '<div class="disctxt">' + (disc.attivazione || DISC_FALLBACK.attivazione) + '</div>'
-      + '<div class="acc" data-acc="' + s.id + '">'
-      +   '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
-      +   '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
-      + '</div></div>';
-    // data-bloccato: la spunta del disclaimer non deve poter accendere un bottone
-    // che il server rifiutera' comunque con 403.
+    // Niente muro di testo e niente casella da spuntare: il bottone e' subito
+    // premibile, e premerlo VALE come accettazione (lo dice la riga qui sotto e il
+    // testo integrale e' a un tocco). L'accettazione si registra come prima.
+    // Resta spento solo se manca l'anagrafica, che il server rifiuterebbe con 403.
     out += '<button class="cta-attiva" data-attiva="' + s.id + '"'
-      + (d.anagrafica_ok === false ? ' data-bloccato="1"' : '') + ' disabled>Attiva Servizio</button>';
+      + (d.anagrafica_ok === false ? ' data-bloccato="1" disabled' : '') + '>Attiva Servizio</button>';
+    out += '<div class="cons">Attivando accetti le <a data-disc="attivazione">condizioni</a>.'
+      + ' Servizio di un fornitore terzo: di ogni conseguenza risponde lui.</div>';
     // Il gate dell'anagrafica scattava solo DOPO il tap, con un 403 muto: chi non
     // aveva compilato i dati ripremeva all'infinito senza sapere perche'.
     if (d.anagrafica_ok === false) {
@@ -1725,20 +1733,38 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +   '<div class="wlp"><span class="wlpi">2</span><div><b>Hai la priorita.</b> Chi e in lista entra prima di chi arriva dopo.</div></div>'
       +   '<div class="wlp"><span class="wlpi">3</span><div><b>Non stai comprando niente.</b> Nessun impegno, nessun pagamento: quando parte decidi tu se attivarlo davvero.</div></div>'
       +   (quanti ? '<div style="font-size:12px;color:var(--mut);margin-top:12px">' + quanti + (quanti === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>' : '')
-      +   '<div class="disc" style="margin-top:14px">'
-      +     '<div class="disctxt">' + (disc.waitlist || DISC_FALLBACK.waitlist) + '</div>'
-      +     '<div class="acc" id="wlAcc">'
-      +       '<div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#04210F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
-      +       '<div class="acct">' + esc(disc.checkbox || DISC_FALLBACK.checkbox) + '</div>'
-      +     '</div>'
-      +   '</div>'
-      +   '<div style="display:flex;gap:9px;margin-top:14px">'
+      +   '<div style="display:flex;gap:9px;margin-top:16px">'
       +     '<button type="button" data-wlclose="1" style="flex:1;background:var(--s1);border:1px solid var(--line2);color:var(--tx);border-radius:9.5px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Annulla</button>'
-      +     '<button type="button" id="wlConferma" data-wait="' + id + '" class="aff-cta" style="flex:1.4;height:auto;padding:13px" disabled>Confermo, mettimi in lista</button>'
+      +     '<button type="button" id="wlConferma" data-wait="' + id + '" class="aff-cta" style="flex:1.4;height:auto;padding:13px">Confermo, mettimi in lista</button>'
       +   '</div>'
+      +   '<div class="cons">Prenotando accetti le <a data-disc="waitlist">condizioni</a>.'
+      +     ' Non stai comprando niente e non c e nessun impegno.</div>'
       + '</div>';
     sh.style.display = 'block';
     if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+  }
+
+  // Le condizioni per intero. Si prende il testo dall'ultima scheda caricata, che e'
+  // quello che il server ha mandato e che registrera'; il fallback serve solo se
+  // l'app gira su una copia in cache piu' vecchia del backend.
+  function apriDisclaimer(contesto){
+    var sh = document.getElementById('discSheet');
+    if (!sh) {
+      sh = document.createElement('div');
+      sh.id = 'discSheet';
+      document.body.appendChild(sh);
+    }
+    var disc = null;
+    for (var k in SCHEDE) { if (SCHEDE[k] && SCHEDE[k].disclaimer) { disc = SCHEDE[k].disclaimer; break; } }
+    var testo = (disc && disc[contesto]) || DISC_FALLBACK[contesto] || '';
+    sh.innerHTML = '<div data-dscclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
+      + '<div class="dsc-card">'
+      +   '<div style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px"></div>'
+      +   '<h4>Condizioni</h4>'
+      +   '<div class="dsc-txt">' + testo + '</div>'
+      +   '<button type="button" data-dscclose="1" class="cta-attiva" style="margin-top:18px">Ho capito</button>'
+      + '</div>';
+    sh.style.display = 'block';
   }
 
   function apriScheda(id){
@@ -1850,19 +1876,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       })[code] || 'Non ha funzionato, riprova.';
     }
 
-    // Spunta: vale sia per il disclaimer nella scheda sia per il popup della waitlist.
-    // Il bottone da accendere si cerca nel contenitore di QUELLA spunta (.fdrop o .pr-card):
-    // con un solo contenitore fisso, la spunta del popup si accendeva ma il bottone no.
-    var ac = t.closest('.acc');
-    if (ac) {
-      e.stopPropagation();
-      var on = ac.classList.toggle('on');
-      var cont = ac.closest('.fdrop') || ac.closest('.pr-card');
-      var btnA = cont && (cont.querySelector('.cta-attiva[data-attiva]') || cont.querySelector('#wlConferma'));
-      if (btnA && !btnA.hasAttribute('data-bloccato')) btnA.disabled = !on;
-      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+    // Il testo integrale delle condizioni, aperto dal link sotto la CTA. Il testo
+    // arriva dal server (d.disclaimer): e' lo STESSO che viene registrato, se no si
+    // mostrerebbe una cosa e se ne archivierebbe un'altra.
+    var dl = t.closest('[data-disc]');
+    if (dl) {
+      e.preventDefault(); e.stopPropagation();
+      apriDisclaimer(dl.getAttribute('data-disc'));
       return;
     }
+    var dx = t.closest('[data-dscclose]');
+    if (dx) { e.stopPropagation(); var ds = document.getElementById('discSheet'); if (ds) ds.style.display = 'none'; return; }
 
     // lista d'attesa per i servizi non ancora attivi
     var w = t.closest('.cta-attiva[data-wait]');
