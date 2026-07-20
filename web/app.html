@@ -1163,7 +1163,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=82"></script>
+<script src="identikit.js?v=83"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1518,10 +1518,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         }
       }
     }
-    if (d.completato) {
-      var bl = document.getElementById('pfBizList');
-      var b = bl && bl.querySelector('[data-riprendi="' + sid + '"] .dds');
-      if (b) b.textContent = b.textContent.replace('Tutorial da finire', 'Tutorial completato');
+    // L'etichetta segue il progresso in ENTRAMBI i versi: da quando il toggle si puo'
+    // rimettere indietro, un tutorial completato puo' tornare da finire.
+    var bl = document.getElementById('pfBizList');
+    var b = bl && bl.querySelector('[data-riprendi="' + sid + '"] .dds');
+    if (b) {
+      b.textContent = d.completato
+        ? b.textContent.replace('Tutorial da finire', 'Tutorial completato')
+        : b.textContent.replace('Tutorial completato', 'Tutorial da finire');
     }
   }
 
@@ -1596,14 +1600,19 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         out += '<div class="seyeb">Come si attiva &mdash; ' + steps.length + (steps.length === 1 ? ' passo' : ' passi') + '</div>';
         out += steps.map(function(st, i){
           var done = i < fatto;
-          var ora = (i === fatto);   // il passo corrente: l'unico che si puo' spuntare
+          var ora = (i === fatto);   // il primo passo ancora da fare
+          // Si tocca quello corrente (per farlo) e quelli gia' fatti (per disdirli).
+          // I successivi no: il progresso e' una sequenza, non una lista di spunte
+          // sparse, e il server rifiuterebbe comunque un salto in avanti.
+          var tocc = done || ora;
+          var etichetta = esc(st.titolo || ('Passo ' + (i + 1)));
           return '<div class="stc' + (done ? ' done' : (ora ? ' ora' : ' futuro')) + '">'
             + '<div class="sthd">'
             +   '<div class="stn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
-            +   '<div class="stt">' + esc(st.titolo || ('Passo ' + (i + 1))) + '</div>'
+            +   '<div class="stt">' + etichetta + '</div>'
             +   '<button class="sw' + (done ? ' on' : '') + '" role="switch" aria-checked="' + (done ? 'true' : 'false') + '"'
-            +     ' data-step="' + s.id + '" data-idx="' + i + '"' + (ora ? '' : ' disabled')
-            +     ' aria-label="' + esc(st.titolo || ('Passo ' + (i + 1))) + ': segna come fatto"></button>'
+            +     ' data-step="' + s.id + '" data-idx="' + i + '"' + (tocc ? '' : ' disabled')
+            +     ' aria-label="' + etichetta + (done ? ': fatto, tocca per annullare' : ': segna come fatto') + '"></button>'
             + '</div>'
             + (st.testo ? '<div class="std">' + esc(st.testo) + '</div>' : '')
             + mediaHtml(st.media_url)
@@ -1821,6 +1830,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         disclaimer_richiesto:  'Devi accettare le condizioni.',
         servizio_non_attivato: 'Prima attiva il servizio.',
         step_non_in_sequenza:  'Questo passo risulta gia fatto.',
+        step_non_fatto:        'Questo passo non risulta fatto.',
         nessuno_step:          'Le istruzioni non sono ancora pronte.',
         not_found:             'Questo servizio non esiste piu.'
       })[code] || 'Non ha funzionato, riprova.';
@@ -1917,12 +1927,15 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var chiave = sid + ':' + six;
       if (STEP_IN_VOLO[chiave]) return;
       STEP_IN_VOLO[chiave] = true;
+      // Acceso -> lo sto disdicendo; spento -> lo sto facendo.
+      var eraAcceso = sw.classList.contains('on');
+      var vaAcceso = !eraAcceso;
       // Ottimistico: un interruttore deve scattare sotto il dito, non dopo la rete.
       sw.disabled = true;
-      sw.classList.add('on');
-      sw.setAttribute('aria-checked', 'true');
+      sw.classList.toggle('on', vaAcceso);
+      sw.setAttribute('aria-checked', vaAcceso ? 'true' : 'false');
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('medium'); } catch(x){} }
-      fetch(API_URL + '/step-progress', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: sid, step_index: six }) })
+      fetch(API_URL + '/step-progress', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS), body: JSON.stringify({ servizio_id: sid, step_index: six, fatto: vaAcceso }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
           if (!d || d.error) throw new Error(d && d.error || 'ko');
@@ -1934,7 +1947,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         })
         .catch(function(err){
           var code = err && err.message;
-          if (code === 'step_non_in_sequenza') {
+          if (code === 'step_non_in_sequenza' || code === 'step_non_fatto') {
             // Il server sta a un punto diverso da questa copia della scheda (altra
             // finestra, oppure il tutorial e' cambiato). Rimettere il toggle com'era
             // sarebbe una bugia: si ricarica la scheda dalla fonte.
@@ -1949,9 +1962,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
               .catch(function(){});
             return;
           }
+          // Rimetti l'interruttore com'era prima del tocco, non spento a prescindere.
           sw.disabled = false;
-          sw.classList.remove('on');
-          sw.setAttribute('aria-checked', 'false');
+          sw.classList.toggle('on', eraAcceso);
+          sw.setAttribute('aria-checked', eraAcceso ? 'true' : 'false');
           toast(msgErrore(code));
         })
         .then(function(){ delete STEP_IN_VOLO[chiave]; });

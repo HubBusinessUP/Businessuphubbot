@@ -1079,7 +1079,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente, anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
-  const { data: progress } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const { data: progress } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato, notificato_at").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const refInfo = await resolveRefLinkConFonte(telegramId, servizioId)
 
   // Se l'admin ACCORCIA un tutorial mentre qualcuno e' a meta', il progresso salvato
@@ -1092,7 +1092,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
     await supabase.from("tutorial_progress")
       .update({ ultimo_step: nStep, completato: true, updated_at: new Date().toISOString() })
       .eq("id", progress.id)
-    inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
+    await annunciaCompletamento(telegramId, servizioId, progress.id, progress.notificato_at)
     progressoOk = { ...progress, ultimo_step: nStep, completato: true }
   }
 
@@ -1421,26 +1421,39 @@ async function apiStepProgressSave(telegramId: number, body: any) {
   if (!totale) return json({ error: "nessuno_step" }, 409)
   if (stepIndex >= totale) return json({ error: "step_fuori_range" }, 400)
 
-  const { data: existing } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
+  const { data: existing } = await supabase.from("tutorial_progress").select("id, ultimo_step, completato, notificato_at").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const attuale = existing?.ultimo_step ?? 0
+
+  // Il toggle e' reversibile: fatto=false vuol dire "questo passo non l'ho fatto".
+  // Chi manda solo lo step_index, senza dire altro, sta avanzando (contratto vecchio).
+  const fatto = body?.fatto === undefined ? true : !!body.fatto
 
   // L'admin puo' ACCORCIARE un tutorial mentre qualcuno e' a meta': il progresso
   // salvato resta piu' alto del numero di step rimasti, e da li' non si esce piu'
   // (ogni indice sotto il totale e' fuori sequenza, ogni indice sopra e' fuori range).
   // Quel progresso ha di fatto superato il tutorial: si riconcilia e si chiude.
-  if (attuale >= totale) {
+  if (fatto && attuale >= totale) {
     if (existing && !existing.completato) {
       await supabase.from("tutorial_progress")
         .update({ ultimo_step: totale, completato: true, updated_at: new Date().toISOString() })
         .eq("id", existing.id)
-      inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
+      await annunciaCompletamento(telegramId, servizioId, existing.id, existing.notificato_at)
     }
     return json({ ok: true, ultimo_step: totale, completato: true, totale_step: totale })
   }
 
-  if (stepIndex !== attuale) return json({ error: "step_non_in_sequenza" }, 409)
+  let ultimoStep: number
+  if (fatto) {
+    if (stepIndex !== attuale) return json({ error: "step_non_in_sequenza" }, 409)
+    ultimoStep = attuale + 1
+  } else {
+    // Spegnere un passo riporta il progresso LI': i passi successivi tornano da fare,
+    // perche' "ultimo_step = N" significa "i primi N sono fatti" e non si puo' avere
+    // il primo non fatto e il terzo si'. Spegnere qualcosa che non era acceso non ha senso.
+    if (stepIndex >= attuale) return json({ error: "step_non_fatto" }, 409)
+    ultimoStep = stepIndex
+  }
 
-  const ultimoStep = attuale + 1
   const completato = ultimoStep >= totale
   const row = { telegram_id: telegramId, servizio_id: servizioId, ultimo_step: ultimoStep, completato, updated_at: new Date().toISOString() }
   const { error } = existing
@@ -1448,11 +1461,21 @@ async function apiStepProgressSave(telegramId: number, body: any) {
     : await supabase.from("tutorial_progress").insert(row)
   if (error) return json({ error: error.message }, 500)
 
-  // Tutorial completato: avvisa lo sponsor (se non è il Founder) e l'admin che l'utente ha attivato il servizio.
-  if (completato && !existing?.completato) {
-    inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
-  }
+  if (completato) await annunciaCompletamento(telegramId, servizioId, existing?.id, existing?.notificato_at)
   return json({ ok: true, ultimo_step: ultimoStep, completato, totale_step: totale })
+}
+
+// Avvisa sponsor e admin che l'attivazione e' completa, UNA VOLTA SOLA. Da quando il
+// toggle si puo' rimettere indietro, "completato" va e viene: senza questa memoria
+// bastava spegnere e riaccendere l'ultimo passo per far ripartire il messaggio ogni volta.
+async function annunciaCompletamento(telegramId: number, servizioId: number, rigaId?: number, notificatoAt?: string | null) {
+  if (notificatoAt) return
+  if (rigaId) {
+    // Marca PRIMA di inviare: se l'invio fallisce si perde un avviso, se si marca dopo
+    // si rischia di mandarne due. Meglio uno in meno che due allo stesso sponsor.
+    await supabase.from("tutorial_progress").update({ notificato_at: new Date().toISOString() }).eq("id", rigaId)
+  }
+  inBackground(notificaAttivazioneCompletata(telegramId, servizioId).catch((e) => console.error("notifica attivazione:", e)))
 }
 
 async function notificaAttivazioneCompletata(telegramId: number, servizioId: number) {
