@@ -246,7 +246,6 @@
         <input id="cerca" type="search" autocomplete="off" placeholder="Cerca un business">
       </div>
       <nav class="macros" id="macroTabs"></nav>
-      <div class="macroline"></div>
       <nav class="subs" id="subTabs"></nav>
       <div id="listaReale"></div>
     </section>
@@ -779,6 +778,36 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    spazi), logo quadrato a sinistra, titolo pieno, sottotitolo su due righe,
    e a destra il triangolo col numero. Il colore lo danno i logo, non l'interfaccia. */
 #listaReale{background:var(--s0);border-radius:22px;margin:6px 20px 0;padding:2px 0;overflow:hidden}
+
+/* ===== TESTATA E CATEGORIE, SUL MODELLO DEL RIFERIMENTO =====
+   Barra in alto con piu' aria, e i filtri come pillole invece che come
+   sottolineature. Due livelli: macro-categoria (pillola piena, attiva BIANCA
+   con testo scuro) e sotto-categoria (pillola leggera di contorno). */
+.hdr{padding:14px 20px 12px!important}
+.hdr #homeAvatar{width:42px!important;height:42px!important;font-size:16px!important}
+.hdr .salu{font-size:14.5px!important}
+.hdr #shareBtn{width:42px!important;height:42px!important;border-radius:999px!important;
+  background:var(--s1)!important;border:1px solid transparent!important;color:var(--tx)!important}
+
+.hero-intro{padding:2px 20px 0!important}
+
+.macros{display:flex;gap:9px;overflow-x:auto;padding:16px 20px 0;scrollbar-width:none}
+.macros::-webkit-scrollbar{display:none}
+.macro{flex-shrink:0;padding:10px 18px;border-radius:999px;
+  background:var(--s1);border:1px solid transparent;color:var(--dim);
+  font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-.01em;
+  line-height:1;white-space:nowrap;cursor:pointer;border-bottom-color:transparent}
+.macro:active{transform:scale(.97)}
+.macro.on{background:#F6F7F9;color:#131418;border-color:transparent;border-bottom-color:transparent}
+
+.subs{display:flex;gap:8px;overflow-x:auto;padding:10px 20px 0;scrollbar-width:none}
+.subs::-webkit-scrollbar{display:none}
+.sub{flex-shrink:0;padding:7px 14px;border-radius:999px;
+  background:transparent;border:1px solid var(--line2);color:var(--mut);
+  font-family:inherit;font-size:13.5px;font-weight:500;line-height:1;
+  white-space:nowrap;cursor:pointer}
+.sub:active{transform:scale(.97)}
+.sub.on{background:var(--s2);border-color:transparent;color:var(--tx);font-weight:600}
 #listaReale .vuoto{padding:26px 18px}
 
 .fitem{margin:0!important;background:transparent!important;border:none!important;border-radius:0!important;position:relative}
@@ -1026,10 +1055,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .app{height:100vh;height:100dvh}
 
 /* Tab macro: la sottolineatura prende il colore della sezione (era bianca) */
-.macro.on{color:var(--tx);border-bottom-color:var(--menu)}
 /* Pill sotto-categoria attiva. Bordo trasparente anche da spenta: niente salto di 1px. */
-.sub{border:1px solid transparent}
-.sub.on{background:var(--menu-soft);border-color:var(--menu-line);color:var(--menu-tint);font-weight:600}
 .sub.on b{color:var(--menu-tint);opacity:.75}
 /* Intestazioni di gruppo (le fasce temporali): smettono di essere grigie */
 .grp{color:var(--sec-tint)}
@@ -1223,7 +1249,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 /* Intestazioni: restano piu' piccole del corpo, ma leggibili */
 .grp{font-size:13.5px}
 .eyebrow,.sechd .eyebrow{font-size:12.5px}
-.macro{font-size:16px}
+.macro{font-size:15.5px}
 .sub{font-size:14px}
 
 /* Menu: un filo piu' leggibile, senza gonfiarlo */
@@ -1232,7 +1258,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=97"></script>
+<script src="identikit.js?v=98"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
