@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cashly — Slide presentazione</title>
+<!--
+  10 slide 1920x1080 per il video di presentazione di Cashly.
+
+  COME SI USA
+  1. Apri questo file nel browser.
+  2. Sulle slide 2, 4 e 5 sostituisci lo screenshot: cerca "SOSTITUIRE" qui sotto e
+     metti il percorso della tua immagine nell'attributo src dell'<img>.
+     Esempio:  <img src="screen-hub.png" ...>
+  3. Per avere le slide come file: Stampa (Ctrl+P / Cmd+P) -> Salva come PDF.
+     Il CSS di stampa e' gia' impostato: esce un PDF di 10 pagine 1920x1080,
+     una slide per pagina, senza margini. Da li' le importi nel montaggio.
+
+  Design e testi approvati. I colori sono quelli veri dell'app (#131418 fondo,
+  #25CF6E verde Cashly): le slide e il prodotto devono sembrare la stessa cosa.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Manrope:wght@800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#131418}
+  a{color:#25CF6E;text-decoration:none}
+
+  /* Vista a schermo: le slide impilate, con un po' d'aria per scorrerle. */
+  .deck{display:flex;flex-direction:column;align-items:center;gap:56px;
+    background:#131418;padding:56px 0;
+    font-family:Inter,-apple-system,'Segoe UI',Roboto,sans-serif}
+
+  /* Stampa / PDF: una slide per pagina, misura esatta, zero margini.
+     E' il modo piu' affidabile per tirare fuori i fotogrammi da montare. */
+  @page{size:1920px 1080px;margin:0}
+  @media print{
+    .deck{gap:0;padding:0}
+    .deck > section{break-after:page;page-break-after:always}
+    .deck > section:last-child{break-after:auto;page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- SLIDE 1 — Titolo -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;">
+    <div style="font-family:Manrope,Inter,sans-serif;font-weight:800;font-size:240px;line-height:1;letter-spacing:-0.02em;color:#F6F7F9;">Cash<span style="color:#25CF6E;">ly</span></div>
+    <div style="margin-top:56px;font-size:52px;font-weight:400;color:#AAB0BB;">L'hub dei business online</div>
+    <div style="margin-top:28px;font-size:30px;font-weight:400;color:#7B828F;">Dentro Telegram. Gratis.</div>
+  </section>
+
+  <!-- SLIDE 2 — Frase + screenshot -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:120px;overflow:hidden;">
+    <div style="font-size:88px;font-weight:400;line-height:1.18;color:#F6F7F9;text-wrap:pretty;max-width:760px;">Una lista di metodi e servizi online, selezionati e spiegati.</div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <div style="width:369px;height:800px;border-radius:28px;background:#191B20;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <!-- SOSTITUIRE: metti in src lo screenshot della LISTA dell'HUB -->
+        <img src="slide/app-hub.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 — Tre passi -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:120px;width:100%;">
+      <div style="display:flex;flex-direction:column;gap:32px;">
+        <div style="font-size:140px;font-weight:600;line-height:1;color:#25CF6E;">1</div>
+        <div style="font-size:64px;font-weight:400;color:#F6F7F9;">Apri</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:32px;">
+        <div style="font-size:140px;font-weight:600;line-height:1;color:#25CF6E;">2</div>
+        <div style="font-size:64px;font-weight:400;color:#F6F7F9;">Scegli</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:32px;">
+        <div style="font-size:140px;font-weight:600;line-height:1;color:#25CF6E;">3</div>
+        <div style="font-size:64px;font-weight:400;color:#F6F7F9;">Segui gli step</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 — Scheda + screenshot -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:120px;overflow:hidden;">
+    <div style="max-width:760px;">
+      <div style="font-size:88px;font-weight:400;line-height:1.18;color:#F6F7F9;text-wrap:pretty;">Ogni scheda ti dice tutto prima che tu inizi.</div>
+      <div style="margin-top:48px;font-size:30px;font-weight:400;color:#AAB0BB;">Panoramica · Budget minimo · Rischio · Costi · Cosa serve</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <div style="width:369px;height:800px;border-radius:28px;background:#191B20;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <!-- SOSTITUIRE: metti in src lo screenshot di una SCHEDA APERTA (panoramica + caratteristiche) -->
+        <img src="slide/app-scheda.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 — Tutorial + screenshot -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:120px;overflow:hidden;">
+    <div style="max-width:760px;">
+      <div style="font-size:88px;font-weight:400;line-height:1.18;color:#F6F7F9;text-wrap:pretty;">Il tutorial passo passo.</div>
+      <div style="margin-top:36px;font-size:30px;font-weight:400;color:#7B828F;">Spunti gli step man mano che li fai.</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <div style="width:369px;height:800px;border-radius:28px;background:#191B20;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <!-- SOSTITUIRE: metti in src lo screenshot del TUTORIAL con gli step e i toggle -->
+        <img src="slide/app-tutorial.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — In lista -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;">
+    <div style="font-size:96px;font-weight:400;line-height:1.15;color:#F6F7F9;max-width:1300px;text-wrap:pretty;">Non è ancora attivo?</div>
+    <div style="margin-top:44px;font-size:32px;font-weight:400;color:#7B828F;max-width:1000px;text-wrap:pretty;">Ti metti in lista. Quando parte, te lo scrive il bot.</div>
+  </section>
+
+  <!-- SLIDE 7 — Voti -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;">
+    <div style="font-size:96px;font-weight:400;line-height:1.2;color:#F6F7F9;max-width:1400px;text-wrap:pretty;">L'ordine della lista lo fanno i voti di chi la usa.</div>
+  </section>
+
+  <!-- SLIDE 8 — Servizi di terzi (la più nuda) -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:220px 140px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;">
+    <div style="font-size:96px;font-weight:400;line-height:1.15;color:#F6F7F9;">Sono servizi di terzi.</div>
+    <div style="margin-top:52px;font-size:32px;font-weight:400;color:#7B828F;max-width:1100px;text-wrap:pretty;">Cashly li seleziona e li spiega. Non li gestisce e non li garantisce.</div>
+  </section>
+
+  <!-- SLIDE 9 — Hub personale -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;">
+    <div style="font-size:96px;font-weight:400;line-height:1.15;color:#F6F7F9;max-width:1300px;text-wrap:pretty;">Hai il tuo hub personale.</div>
+    <div style="margin-top:44px;font-size:32px;font-weight:400;color:#7B828F;max-width:1050px;text-wrap:pretty;">Condividilo: chi entra col tuo link resta collegato a te.</div>
+  </section>
+
+  <!-- SLIDE 10 — Chiusura -->
+  <section style="width:1920px;height:1080px;background:#131418;padding:140px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;">
+    <div style="font-family:Manrope,Inter,sans-serif;font-weight:800;font-size:200px;line-height:1;letter-spacing:-0.02em;color:#F6F7F9;">Cash<span style="color:#25CF6E;">ly</span></div>
+    <div style="margin-top:52px;font-size:48px;font-weight:400;color:#AAB0BB;">Apri l'hub</div>
+    <div style="margin-top:24px;font-size:40px;font-weight:600;color:#25CF6E;">@cashlyhub_bot</div>
+  </section>
+
+</div>
+</body>
+</html>
