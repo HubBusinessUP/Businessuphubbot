@@ -834,8 +834,8 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .votebtn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;
   gap:3px;width:auto;padding:2px 6px;background:none;border:none;border-radius:0;
   color:var(--dim);cursor:pointer}
-.votebtn svg{width:16px;height:16px}
-.votebtn .vn{font-size:16.5px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums}
+.votebtn svg{width:14px;height:14px}
+.votebtn .vn{font-size:14px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums}
 .votebtn.on{color:var(--acc)}
 .votebtn.on .vn{color:var(--acc)}
 .fitem.open .votebtn{background:none}
@@ -1207,8 +1207,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
    incorporabile): qui si copia il peso, la dimensione e la spaziatura. */
 .fnm,.dnm{font-weight:400;letter-spacing:0}
 /* Nelle righe della directory il titolo torna pieno: e' il look del riferimento. */
-.frow .fnm{font-size:17.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
-.frow .fds{font-size:16px;font-weight:400;color:var(--dim);line-height:1.35;margin-top:4px;
+.frow .fnm{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+/* La descrizione scende con il titolo: a 16px sarebbe rimasta PIU' GRANDE del nome
+   del prodotto, e la riga si leggerebbe al contrario. Mantenuto il rapporto del
+   riferimento (descrizione ~0.9 del titolo). */
+.frow .fds{font-size:13.5px;font-weight:400;color:var(--dim);line-height:1.4;margin-top:3px;
   white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* Scheda prodotto: qui sta il testo vero da leggere */
@@ -1248,7 +1251,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=100"></script>
+<script src="identikit.js?v=101"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
