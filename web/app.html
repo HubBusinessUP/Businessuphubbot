@@ -770,14 +770,13 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sub.on b{color:var(--dim)}
 
 .grp{font-size:12.5px;font-weight:600;color:var(--mut);padding:26px 20px 0}
-/* Un filo d'aria in fondo alla lista (il + ora sta nel menu, non copre piu' niente). */
-#listaReale{padding-bottom:18px}
-
 /* ===== LISTA STILE PRODUCT HUNT =====
    Un solo contenitore arrotondato, righe separate da un filo rientrato (non da
    spazi), logo quadrato a sinistra, titolo pieno, sottotitolo su due righe,
    e a destra il triangolo col numero. Il colore lo danno i logo, non l'interfaccia. */
-#listaReale{background:var(--s0);border-radius:22px;margin:6px 20px 0;padding:2px 0;overflow:hidden}
+/* Margine sotto, non solo sopra: .nav e' fratello di .body, quindi senza questo
+   il riquadro della lista finisce esattamente sul bordo del menu. */
+#listaReale{background:var(--s0);border-radius:22px;margin:14px 20px 20px;padding:2px 0;overflow:hidden}
 
 /* ===== TESTATA E CATEGORIE, SUL MODELLO DEL RIFERIMENTO =====
    Barra in alto con piu' aria, e i filtri come pillole invece che come
@@ -1242,7 +1241,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 /* Intestazioni: restano piu' piccole del corpo, ma leggibili */
 .grp{font-size:13.5px}
 .eyebrow,.sechd .eyebrow{font-size:12.5px}
-.macro{font-size:16.5px}
+.macro{font-size:17px}
 .sub{font-size:14.5px}
 
 /* Menu: un filo piu' leggibile, senza gonfiarlo */
@@ -1251,7 +1250,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=101"></script>
+<script src="identikit.js?v=102"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
