@@ -1368,7 +1368,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=106"></script>
+<script src="identikit.js?v=107"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1604,7 +1604,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       .sort(function(a, b){ return b.n - a.n || a.m.nome.localeCompare(b.m.nome); });
     var regina = macroVive.length ? macroVive[0].m : null;
 
-    var h = '<button class="macro' + (!FILTRO_MACRO && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="0">Tutti</button>';
+    // Niente pillola "Tutti" (Antonio). La via d'uscita dal filtro resta doppia e
+    // sempre disponibile: la voce "Tutti i business" in cima alla tendina, e il
+    // secondo tocco sulla pillola gia' accesa, che la spegne. Senza una delle due
+    // si resterebbe chiusi dentro un filtro senza un modo ovvio per uscirne.
+    var h = '';
     if (regina) {
       h += '<button class="macro' + (FILTRO_MACRO === regina.id && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="' + regina.id + '">' + esc(regina.nome) + '</button>';
     }
@@ -1668,8 +1672,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var m = e.target.closest && e.target.closest('[data-macro]');
     if (m) {
       var v = m.getAttribute('data-macro');
-      COLLEZIONE = (v === 'salvati' || v === 'votati') ? v : '';
-      FILTRO_MACRO = COLLEZIONE ? 0 : (parseInt(v) || 0);
+      // Secondo tocco sulla pillola accesa = la spegne. E' quello che sostituisce
+      // la pillola "Tutti": senza, chi filtra da qui non avrebbe piu' modo di
+      // togliere il filtro se non aprendo la tendina.
+      var spegni = m.classList.contains('on');
+      COLLEZIONE = (!spegni && (v === 'salvati' || v === 'votati')) ? v : '';
+      FILTRO_MACRO = (spegni || COLLEZIONE) ? 0 : (parseInt(v) || 0);
       FILTRO_CAT = 0;                       // cambiando macro, la sotto scelta non ha piu' senso
       disegnaTabs(); renderFeeds();
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
