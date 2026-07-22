@@ -22,7 +22,7 @@ if (typeof document !== "undefined") {
 
 // Auto-update: se il server ha una build più nuova, l'app si ricarica DA SOLA (nessuna cache da svuotare,
 // batte anche Telegram che tiene viva la webview). Controlla all'avvio e ogni volta che torna in primo piano.
-var APP_BUILD = "111";
+var APP_BUILD = "112";
 if (typeof document !== "undefined" && typeof fetch !== "undefined") {
   var checkBuild = function () {
     if (document.hidden) return;

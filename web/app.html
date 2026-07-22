@@ -1424,7 +1424,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=111"></script>
+<script src="identikit.js?v=112"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1909,7 +1909,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function scMisure(d){
     var s = d.servizio || {};
     var m = [];
-    if (s.budget_minimo) m.push(['Quanto serve?', s.budget_minimo + ' <small>&euro;</small>', 'di capitale']);
+    if (s.budget_minimo) m.push(['Quanto serve?', s.budget_minimo + ' <small>&euro;</small>', 'minimo di capitale']);
 
     var attiv = (s.costo_attivazione != null && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
     var mens  = (s.costi_fissi_mensili != null && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
