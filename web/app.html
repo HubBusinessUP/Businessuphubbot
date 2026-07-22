@@ -1424,7 +1424,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=113"></script>
+<script src="identikit.js?v=114"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2084,8 +2084,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // testo integrale e' a un tocco). L'accettazione si registra come prima.
     // Resta spento solo se manca l'anagrafica, che il server rifiuterebbe con 403.
     out += '<button class="cta-attiva" data-attiva="' + s.id + '"'
-      + (d.anagrafica_ok === false ? ' data-bloccato="1" disabled' : '') + '>Attiva Servizio</button>';
-    out += '<div class="cons">Attivando accetti le <a data-disc="attivazione">condizioni</a>.'
+      + (d.anagrafica_ok === false ? ' data-bloccato="1" disabled' : '') + '>Aggiungi subito</button>';
+    out += '<div class="cons">Proseguendo accetti le <a data-disc="attivazione">condizioni</a>.'
       + ' Servizio di un fornitore terzo: di ogni conseguenza risponde lui.</div>';
     // Il gate dell'anagrafica scattava solo DOPO il tap, con un 403 muto: chi non
     // aveva compilato i dati ripremeva all'infinito senza sapere perche'.
@@ -2442,7 +2442,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
         .catch(function(err){
-          a.disabled = false; a.textContent = 'Attiva Servizio';
+          a.disabled = false; a.textContent = 'Aggiungi subito';
           toast(msgErrore(err && err.message));
         });
       return;
