@@ -237,13 +237,40 @@
 
     <!-- ===================== HUB ===================== -->
     <section class="scr on" data-s="home">
-      <div class="cerca">
+      <div class="hubtop">
+        <button class="catdd" id="catDD" data-catopen="1" aria-haspopup="listbox">
+          <span id="catDDtxt">Tutte le categorie</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <button class="lentebtn" id="lenteBtn" aria-label="Cerca" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+      </div>
+      <div class="cerca" id="cercaWrap" hidden>
         <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="cerca" type="search" autocomplete="off" placeholder="Cerca un business">
+        <button class="cercaX" id="cercaX" aria-label="Chiudi la ricerca">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
       </div>
       <nav class="macros" id="macroTabs"></nav>
-      <nav class="subs" id="subTabs"></nav>
       <div id="listaReale"></div>
+    </section>
+
+    <!-- ===================== SCHEDA PRODOTTO (schermata dedicata) ===================== -->
+    <section class="scr" data-s="scheda">
+      <button class="indietro" data-goto="home">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Directory
+      </button>
+      <div id="scBody"></div>
+    </section>
+
+    <!-- ===================== TUTORIAL (schermata dedicata) ===================== -->
+    <section class="scr" data-s="tutorial">
+      <button class="indietro" data-goto="scheda">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheda
+      </button>
+      <div id="tuBody"></div>
     </section>
 
     <!-- ===================== AFFILIAZIONE ===================== -->
@@ -386,6 +413,8 @@
   </div>
 
   <!-- ===================== NAV ===================== -->
+  <button id="goScheda" data-goto="scheda" hidden aria-hidden="true"></button>
+  <button id="goTutorial" data-goto="tutorial" hidden aria-hidden="true"></button>
   <div class="nav">
     <button class="navb on" data-go="home"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span class="lb">HUB</span></button>
     <button class="navb" data-go="wallet"><svg class="ico" viewBox="0 0 24 24" style="width:23px;height:23px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/></svg><span class="lb">Affiliazione</span></button>
@@ -721,6 +750,62 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cat-opt.on{background:rgba(37,207,110,.1);color:var(--acc)}
 .cat-n{font-size:12px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
 .cat-opt.on .cat-n{color:var(--acc)}
+
+/* ===== SCHERMATE SCHEDA E TUTORIAL ===== */
+.indietro{display:inline-flex;align-items:center;gap:5px;margin:14px 0 0 14px;padding:9px 14px 9px 10px;
+  background:var(--s1);border:1px solid transparent;border-radius:999px;color:var(--dim);
+  font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer}
+.indietro svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.indietro:active{transform:scale(.97)}
+
+/* Testa della scheda: la stessa riga della directory, ingrandita. Chi arriva qui
+   deve riconoscere subito da dove viene, per questo logo/titolo/sottotitolo
+   restano nello stesso ordine. */
+.sctesta{display:flex;align-items:center;gap:14px;padding:16px 20px 4px}
+.sctesta .flogo{width:62px;height:62px;border-radius:15px;font-size:24px}
+.sctit{flex:1;min-width:0}
+.sctit h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.25;color:var(--tx)}
+.sctit p{margin:5px 0 0;font-size:14px;font-weight:400;line-height:1.4;color:var(--dim)}
+
+/* Le due schede. Sottolineatura e non pillole: qui non sono filtri, sono pagine
+   dello stesso documento, e devono pesare meno delle categorie in home. */
+.sctabs{display:flex;gap:22px;margin:16px 20px 0;border-bottom:1px solid var(--line)}
+.sctab{background:none;border:none;padding:0 0 11px;color:var(--mut);font-family:var(--sans);
+  font-size:14.5px;font-weight:600;cursor:pointer;position:relative}
+.sctab.on{color:var(--tx)}
+.sctab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--acc);border-radius:2px}
+.scpane{padding:16px 20px 0}
+.scpane[hidden]{display:none}
+.scfondo{padding:18px 20px calc(24px + env(safe-area-inset-bottom))}
+
+/* Step del tutorial: graficamente le card della directory (Antonio), con il numero
+   al posto del logo. */
+.stcard{display:flex;gap:13px;padding:14px 16px;background:var(--s0);border-radius:14px;margin:10px 20px 0}
+.stcard.futuro{opacity:.45}
+.stnum{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:var(--s2);color:var(--dim);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.stcard.done .stnum{background:rgba(37,207,110,.14);color:var(--acc)}
+.stcard.ora .stnum{background:var(--acc);color:var(--on)}
+.stbody{flex:1;min-width:0}
+.sttit{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.3;color:var(--tx)}
+.sttxt{font-size:13.5px;font-weight:400;line-height:1.5;color:var(--dim);margin-top:5px;white-space:pre-line}
+.stbtn{display:inline-flex;align-items:center;gap:6px;margin-top:11px;padding:9px 14px;background:var(--s2);
+  border:1px solid transparent;border-radius:9px;color:var(--tx);font-size:13.5px;font-weight:600;text-decoration:none}
+.stbtn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.stfatto{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 0 0;border-top:1px solid var(--line);
+  background:none;border-left:none;border-right:none;border-bottom:none;width:100%;
+  color:var(--dim);font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer;text-align:left}
+.stfatto[disabled]{opacity:.4;cursor:default}
+.stspunta{width:21px;height:21px;border-radius:6.5px;border:1.5px solid var(--line2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:transparent}
+.stfatto.on{color:var(--acc)}
+.stfatto.on .stspunta{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.stspunta svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.tuintro{padding:14px 20px 0}
+.tuintro h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--tx)}
+.tuintro p{margin:6px 0 0;font-size:13.5px;color:var(--dim);line-height:1.45}
+.tubarra{height:4px;border-radius:999px;background:var(--s2);margin:14px 20px 0;overflow:hidden}
+.tubarra i{display:block;height:100%;background:var(--acc);border-radius:999px;transition:width .3s ease}
 /* Due livelli dentro il foglio: la macro fa da testa, le figlie rientrano con un
    trattino. In verticale la gerarchia si legge; in orizzontale no, ed e' il motivo
    per cui questo foglio esiste. */
@@ -759,7 +844,27 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 /* Fuori dall'HUB il saluto sparisce ma NON collassa: l'avatar resta a sinistra */
 .app:not(.on-home) .hdr .salu{visibility:hidden}
 
-.cerca{display:flex;align-items:center;gap:9px;margin:18px 20px 0;padding:11px 14px;
+/* TESTATA HUB: una riga sola. A sinistra la tendina delle categorie, a destra la
+   lente. La barra di ricerca sempre aperta costava 46px di altezza per una cosa che
+   si usa di rado: ora sta dietro l'icona e quello spazio lo prende la lista. */
+.hubtop{display:flex;align-items:center;gap:10px;margin:16px 20px 0}
+.catdd{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--s1);border:1px solid transparent;border-radius:999px;padding:11px 14px 11px 16px;
+  color:var(--tx);font-family:var(--sans);font-size:14.5px;font-weight:600;cursor:pointer;text-align:left}
+.catdd span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.catdd svg{width:16px;height:16px;flex-shrink:0;fill:none;stroke:var(--mut);stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
+.catdd.aperta svg{transform:rotate(180deg)}
+.catdd:active,.lentebtn:active{transform:scale(.97)}
+.lentebtn{flex-shrink:0;width:42px;height:42px;border-radius:999px;background:var(--s1);
+  border:1px solid transparent;color:var(--tx);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lentebtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
+.lentebtn[aria-expanded="true"]{background:var(--s2);color:var(--acc)}
+.cercaX{flex-shrink:0;width:24px;height:24px;border-radius:999px;background:none;border:none;
+  color:var(--mut);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.cercaX svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.cerca[hidden]{display:none}
+.cerca{display:flex;align-items:center;gap:9px;margin:12px 20px 0;padding:11px 14px;
   background:var(--s1);border-radius:8.5px;color:var(--mut)}
 #cerca{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);
   font-family:var(--sans);font-size:14px;padding:0}
@@ -1263,7 +1368,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=105"></script>
+<script src="identikit.js?v=106"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1400,7 +1505,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +     voteSvg() + '<span class="vn">' + (s.voti || 0) + '</span></button>'
       +   '<button class="savebtn" data-id="' + s.id + '" aria-label="Salva">' + saveSvg(!!SAVED[s.id]) + '</button>'
       + '</div>'
-      + '<div class="fdrop" data-drop="' + s.id + '"></div>'
       + '</div>';
   }
   function visibili(){
@@ -1458,7 +1562,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
 
   // Le tue liste nel Profilo: due VOCI con il conteggio vero, non righe di business.
-  // Ricopiare le card qui romperebbe apriScheda, che cerca [data-drop] con
+  // Ricopiare le card qui romperebbe apriScheda, che lavora sulla schermata con
   // document.querySelector (globale): prenderebbe sempre la copia dell'HUB.
   function renderCollezioni(){
     var wrap = document.getElementById('pfCollWrap'), lista = document.getElementById('pfCollList');
@@ -1482,65 +1586,54 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
 
   function disegnaTabs(){
-    var mt = document.getElementById('macroTabs'), st = document.getElementById('subTabs');
-    if (!mt || !st) return;
-    // Le macro senza categorie non si mostrano: sono rumore.
-    var macroVive = MACRO.filter(function(m){ return CATS.some(function(c){ return c.macro_categoria_id === m.id; }); });
+    var mt = document.getElementById('macroTabs');
+    if (!mt) return;
     // FILTRO FANTASMA (bug reale): togliendo l'ultimo salvato la pillola spariva ma il
     // filtro restava acceso -> lista vuota e nessun filtro visibile da cui uscire.
-    // Si spegne da sola la collezione rimasta senza contenuto.
     var nSalv = contaColl('salvati'), nVot = contaColl('votati');
     if (COLLEZIONE === 'salvati' && !nSalv) COLLEZIONE = '';
     if (COLLEZIONE === 'votati'  && !nVot)  COLLEZIONE = '';
 
-    // Ordine per numero di servizi (scelta di Antonio): davanti quelle piene.
-    macroVive = macroVive.map(function(m){ return { m: m, n: conta(0, m.id) }; })
-      .sort(function(a, b){ return b.n - a.n || a.m.nome.localeCompare(b.m.nome); })
-      .map(function(x){ return x.m; });
+    // QUATTRO PILLOLE, PUNTO (Antonio). Tutte le categorie e le sotto-categorie
+    // vivono nella tendina: una fila che cresce con il catalogo e' una fila che
+    // prima o poi nessuno scorre fino in fondo.
+    // La macro in pillola e' la PIU' POPOLATA, non una scritta a mano: cosi' resta
+    // quella giusta anche quando il catalogo cambia.
+    var macroVive = MACRO.filter(function(m){ return CATS.some(function(c){ return c.macro_categoria_id === m.id; }); })
+      .map(function(m){ return { m: m, n: conta(0, m.id) }; })
+      .sort(function(a, b){ return b.n - a.n || a.m.nome.localeCompare(b.m.nome); });
+    var regina = macroVive.length ? macroVive[0].m : null;
 
-    // TETTO ALLE PILLOLE. Oltre questa soglia la fila orizzontale smette di
-    // funzionare: non e' la fatica di scorrere, e' che non vedi cosa esiste e le
-    // ultime non le apre nessuno. Da li' in poi comanda il foglio verticale.
-    var MAX_PILL = 5;
-    var troppe = macroVive.length > MAX_PILL;
-    var mostrate = macroVive;
-    if (troppe) {
-      mostrate = macroVive.slice(0, MAX_PILL - 1);
-      // La macro accesa resta SEMPRE visibile anche se sta fuori dalle prime: un
-      // filtro attivo ma invisibile e' una lista che sembra rotta e non si sa spegnere.
-      if (FILTRO_MACRO && !mostrate.some(function(m){ return m.id === FILTRO_MACRO; })) {
-        var sel = macroVive.filter(function(m){ return m.id === FILTRO_MACRO; })[0];
-        if (sel) mostrate = macroVive.slice(0, MAX_PILL - 2).concat([sel]);
-      }
+    var h = '<button class="macro' + (!FILTRO_MACRO && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="0">Tutti</button>';
+    if (regina) {
+      h += '<button class="macro' + (FILTRO_MACRO === regina.id && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="' + regina.id + '">' + esc(regina.nome) + '</button>';
     }
-
-    // La porta al foglio va PRIMA, non in fondo: messa in coda finirebbe nascosta
-    // dietro lo stesso scorrimento laterale che deve risolvere. Qui e' sempre
-    // visibile senza muovere un dito.
-    var h = '';
-    if (troppe) {
-      h += '<button class="macro macro-piu" data-catopen="1">'
-         + '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
-         + 'Categorie <b>' + macroVive.length + '</b></button>';
-    }
-    h += '<button class="macro' + (!FILTRO_MACRO && !COLLEZIONE ? ' on' : '') + '" data-macro="0">Tutti</button>';
-    mostrate.forEach(function(m){
-      h += '<button class="macro' + (FILTRO_MACRO === m.id && !COLLEZIONE ? ' on' : '') + '" data-macro="' + m.id + '">' + esc(m.nome) + '</button>';
-    });
     if (nSalv) h += '<button class="macro' + (COLLEZIONE === 'salvati' ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
     if (nVot)  h += '<button class="macro' + (COLLEZIONE === 'votati'  ? ' on' : '') + '" data-macro="votati">Votati</button>';
     mt.innerHTML = h;
 
-    // Sotto-categorie: solo quelle della macro scelta.
-    var figlie = FILTRO_MACRO ? CATS.filter(function(c){ return c.macro_categoria_id === FILTRO_MACRO; }) : [];
-    if (!figlie.length || COLLEZIONE) { st.innerHTML = ''; st.style.display = 'none'; return; }
-    st.style.display = '';
-    var q = '<button class="sub' + (!FILTRO_CAT ? ' on' : '') + '" data-sub="0">Tutte <b>' + conta(0, FILTRO_MACRO) + '</b></button>';
-    figlie.forEach(function(c){
-      q += '<button class="sub' + (FILTRO_CAT === c.id ? ' on' : '') + '" data-sub="' + c.id + '">' + esc(c.nome) + ' <b>' + conta(c.id, 0) + '</b></button>';
-    });
-    st.innerHTML = q;
+    etichettaTendina();
   }
+
+  // La tendina deve dire COSA STAI GUARDANDO, se no un filtro scelto li' dentro
+  // sparisce dalla vista e la lista sembra incompleta senza motivo.
+  function etichettaTendina(){
+    var el = document.getElementById('catDDtxt');
+    if (!el) return;
+    var txt = 'Tutte le categorie';
+    if (FILTRO_CAT) {
+      var c = CATS.filter(function(x){ return x.id === FILTRO_CAT; })[0];
+      if (c) txt = c.nome;
+    } else if (FILTRO_MACRO) {
+      var m = MACRO.filter(function(x){ return x.id === FILTRO_MACRO; })[0];
+      if (m) txt = m.nome;
+    } else if (COLLEZIONE === 'salvati') { txt = 'Salvati'; }
+    else if (COLLEZIONE === 'votati')  { txt = 'Votati'; }
+    el.textContent = txt;
+    var dd = document.getElementById('catDD');
+    if (dd) dd.classList.toggle('scelta', !!(FILTRO_CAT || FILTRO_MACRO));
+  }
+
   function conta(catId, macroId){
     return ALLBIZ.filter(function(s){
       if (catId) return s.categoria_id === catId;
@@ -1688,6 +1781,48 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
   }
 
+  // ===================== SCHEDA PRODOTTO COME SCHERMATA =====================
+  // Prima era una tendina dentro la riga: la scheda nasceva schiacciata sotto la
+  // lista, e il tutorial ci finiva dentro insieme. Ora sono due schermate.
+  var SC_ID = 0;            // servizio aperto nella schermata scheda
+  var SC_TAB = 'pan';       // 'pan' | 'car'
+
+  function scTesta(d){
+    var s = d.servizio || {};
+    return '<div class="sctesta">' + logoHtml(s)
+      + '<div class="sctit"><h1>' + esc(s.nome || '') + '</h1>'
+      + (s.descrizione ? '<p>' + esc(s.descrizione) + '</p>' : '')
+      + '</div></div>';
+  }
+
+  function scPanoramica(d){
+    var s = d.servizio || {};
+    var t = s.panoramica || s.descrizione || '';
+    if (!t) return '<div class="vuoto" style="padding:18px 0">Panoramica ancora da scrivere.</div>';
+    return '<div class="spanor">' + esc(t) + '</div>'
+      + (s.requisiti ? '<div class="seyeb" style="margin-top:20px">Cosa serve per iniziare</div>'
+                     + '<div class="sreq">' + esc(s.requisiti) + '</div>' : '');
+  }
+
+  function scCaratteristiche(d){
+    var s = d.servizio || {};
+    var righe = '';
+    var budget = s.budget_minimo ? ('da ' + s.budget_minimo + ' EUR') : '';
+    if (budget) righe += srow('Budget minimo', budget, 'per iniziare', '');
+    var attiv = (s.costo_attivazione != null && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
+    var mens  = (s.costi_fissi_mensili != null && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
+    if (attiv || mens) {
+      righe += srow('Costi', mens ? (euro(mens) + '/mese') : euro(attiv),
+        (attiv && mens) ? ('piu ' + euro(attiv) + ' una tantum') : (attiv ? 'una tantum' : 'ricorrente'), '');
+    } else if (s.costi) { righe += srow('Costi', s.costi, '', ''); }
+    if (s.tempo_stimato) righe += srow('Tempo per attivarlo', s.tempo_stimato, '', '');
+    if (s.longevita) righe += srow('Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
+    var r = RISCHIO[s.rischio_livello];
+    if (r) righe += srow('Rischio', r[0], '', r[1]);
+    if (!righe) return '<div class="vuoto" style="padding:18px 0">Caratteristiche ancora da compilare.</div>';
+    return '<table class="pctab"><tbody>' + righe + '</tbody></table>';
+  }
+
   function schedaHtml(d){
     return _schedaBody(d)
       + '<button class="sc-share" data-share="1"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>';
@@ -1738,6 +1873,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
+    out = '';   // panoramica e caratteristiche stanno nelle SCHEDE, non qui: qui resta la CTA
     // La scheda e' "da compilare" solo se non c'e' PROPRIO niente: prima bastava
     // che mancassero panoramica e caratteristiche per dirlo anche a una scheda
     // con i requisiti scritti e il tutorial completo.
@@ -1753,44 +1889,24 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // step risulterebbe corrente, lasciando l'utente senza un toggle da premere.
     var fatto = Math.min((d.step_progress && d.step_progress.ultimo_step) || 0, steps.length);
 
-    // 1) l'ho attivato E il servizio e' operativo -> il tutorial
+    // 1) l'ho attivato E il servizio e' operativo -> si va al TUTORIAL, che ora e'
+    // una schermata a se'. Qui resta solo la porta: infilare venti step in fondo
+    // alla scheda era il motivo per cui la scheda non si leggeva.
     if (mioAttivo && d.attivo) {
       if (steps.length) {
-        out += '<div class="seyeb">Come si attiva &mdash; ' + steps.length + (steps.length === 1 ? ' passo' : ' passi') + '</div>';
-        out += steps.map(function(st, i){
-          var done = i < fatto;
-          var ora = (i === fatto);   // il primo passo ancora da fare
-          // Si tocca quello corrente (per farlo) e quelli gia' fatti (per disdirli).
-          // I successivi no: il progresso e' una sequenza, non una lista di spunte
-          // sparse, e il server rifiuterebbe comunque un salto in avanti.
-          var tocc = done || ora;
-          var etichetta = esc(st.titolo || ('Passo ' + (i + 1)));
-          return '<div class="stc' + (done ? ' done' : (ora ? ' ora' : ' futuro')) + '">'
-            + '<div class="sthd">'
-            +   '<div class="stn">' + (done ? '&#10003;' : (i + 1)) + '</div>'
-            +   '<div class="stt">' + etichetta + '</div>'
-            +   '<button class="sw' + (done ? ' on' : '') + '" role="switch" aria-checked="' + (done ? 'true' : 'false') + '"'
-            +     ' data-step="' + s.id + '" data-idx="' + i + '"' + (tocc ? '' : ' disabled')
-            +     ' aria-label="' + etichetta + (done ? ': fatto, tocca per annullare' : ': segna come fatto') + '"></button>'
-            + '</div>'
-            + (st.testo ? '<div class="std">' + esc(st.testo) + '</div>' : '')
-            + mediaHtml(st.media_url)
-            + (st.link_url ? '<a class="stlink" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(st.link_label || 'Apri') + '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
-            + '</div>';
-        }).join('');
+        var fattiOra = Math.min((d.step_progress && d.step_progress.ultimo_step) || 0, steps.length);
+        var finito = fattiOra >= steps.length;
+        out += '<button class="cta-attiva" data-tutorial="' + s.id + '">'
+             + (finito ? 'Rivedi i passi' : (fattiOra ? 'Riprendi dal passo ' + (fattiOra + 1) : 'Apri le istruzioni'))
+             + '</button>';
+        out += '<div class="ssrc">' + fattiOra + ' di ' + steps.length + (finito ? ' completati.' : ' fatti.') + '</div>';
       }
-
-      // Il link del fornitore: finora d.ref_link era letto solo come booleano per
-      // stampare una didascalia, e il valore non finiva mai in un href. Sta QUI e non
-      // nel ramo 3 perche' prima dell'attivazione il disclaimer non e' ancora accettato.
       if (d.ref_link) {
-        out += '<div class="seyeb">Il tuo link</div>'
+        out += '<div class="seyeb" style="margin-top:18px">Il tuo link</div>'
           + '<a class="slink" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1">Apri ' + esc(s.nome)
           + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
         if (d.ref_fonte === 'sponsor') out += '<div class="sd">E il link di chi ti ha invitato.</div>';
       }
-      // Ne' istruzioni ne' link: senza questo la scheda resterebbe muta e sembrerebbe
-      // un errore dell'app. Un bottone spento, non un paragrafo.
       if (!steps.length && !d.ref_link) {
         out += '<button class="cta-attiva" disabled>Istruzioni in arrivo</button>';
       }
@@ -1901,34 +2017,131 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     sh.style.display = 'block';
   }
 
+  function vaiA(nome){
+    var b = document.getElementById(nome === 'scheda' ? 'goScheda' : 'goTutorial');
+    if (b) b.click();
+    var bd = document.querySelector('.body'); if (bd) bd.scrollTop = 0;
+  }
+
+  // Ridisegna la scheda ovunque sia in questo momento. Prima ogni gestore andava a
+  // cercarsi il proprio [data-drop] a mano: cinque copie della stessa riga, e ogni
+  // volta che cambiava la struttura ne restava indietro una.
+  function ridisegnaScheda(id){
+    if (SC_ID !== id || !SCHEDE[id]) return;
+    var b = document.getElementById('scBody');
+    if (b) b.innerHTML = schedaScreenHtml(SCHEDE[id]);
+    var tu = document.getElementById('tuBody');
+    if (tu && tu.innerHTML) tu.innerHTML = tutorialScreenHtml(SCHEDE[id]);
+  }
+
+  function schedaScreenHtml(d){
+    return scTesta(d)
+      + '<div class="sctabs">'
+      +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
+      +   '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>'
+      + '</div>'
+      + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
+      + '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + scCaratteristiche(d) + '</div>'
+      + '<div class="scfondo">' + schedaHtml(d) + '</div>';
+  }
+
+  // ===================== TUTORIAL COME SCHERMATA =====================
+  // Ogni passo e' una card come quelle della directory (Antonio): numero al posto
+  // del logo, titolo, testo, l'eventuale link come BOTTONE, e la spunta fatto.
+  function tutorialScreenHtml(d){
+    var s = d.servizio || {};
+    var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
+    var fatti = Math.min((d.step_progress && d.step_progress.ultimo_step) || 0, steps.length);
+    if (!steps.length) return '<div class="vuoto" style="padding:26px 20px">Le istruzioni non sono ancora pronte.</div>';
+    var perc = Math.round(fatti / steps.length * 100);
+    var out = '<div class="tuintro"><h1>' + esc(s.nome || '') + '</h1>'
+      + '<p>' + fatti + ' di ' + steps.length + (fatti === steps.length ? ' completati.' : ' passi fatti.') + '</p></div>'
+      + '<div class="tubarra"><i style="width:' + perc + '%"></i></div>';
+
+    out += steps.map(function(st, i){
+      var done = i < fatti;
+      var ora  = (i === fatti);
+      // Si tocca quello corrente (per farlo) e quelli gia' fatti (per disdirli). I
+      // successivi no: il progresso e' una sequenza, e il server rifiuta i salti.
+      var tocc = done || ora;
+      var titolo = esc(st.titolo || ('Passo ' + (i + 1)));
+      return '<div class="stcard ' + (done ? 'done' : (ora ? 'ora' : 'futuro')) + '">'
+        + '<div class="stnum">' + (done ? '&#10003;' : (i + 1)) + '</div>'
+        + '<div class="stbody">'
+        +   '<div class="sttit">' + titolo + '</div>'
+        +   (st.testo ? '<div class="sttxt">' + esc(st.testo) + '</div>' : '')
+        +   mediaHtml(st.media_url)
+        +   (st.link_url ? '<a class="stbtn" href="' + esc(st.link_url) + '" target="_blank" rel="noopener" data-ext="1">'
+              + esc(st.link_label || 'Apri il link')
+              + '<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '')
+        +   '<button class="stfatto' + (done ? ' on' : '') + '" data-step="' + s.id + '" data-idx="' + i + '"'
+        +     (tocc ? '' : ' disabled') + ' role="switch" aria-checked="' + (done ? 'true' : 'false') + '">'
+        +     '<span class="stspunta"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>'
+        +     (done ? 'Fatto &mdash; tocca per annullare' : 'Segna come fatto')
+        +   '</button>'
+        + '</div></div>';
+    }).join('');
+    return out + '<div style="height:26px"></div>';
+  }
+
   function apriScheda(id){
-    var drop = document.querySelector('[data-drop="' + id + '"]');
-    var item = document.querySelector('[data-item="' + id + '"]');
-    if (!drop || !item) return;
-    var aperta = item.classList.toggle('open');
-    if (!aperta) return;
+    if (!id) return;
+    SC_ID = id; SC_TAB = 'pan';
+    var box = document.getElementById('scBody');
+    var tu = document.getElementById('tuBody');
+    if (tu) tu.innerHTML = '';
     if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
-    if (SCHEDE[id]) { drop.innerHTML = schedaHtml(SCHEDE[id]); return; }
-    // Skeleton: si vede la forma della scheda che sta arrivando, non la parola "Carico".
-    drop.innerHTML = '<div style="padding:14px 0 6px">'
-      + '<div class="skel" style="height:13px;width:92%"></div>'
-      + '<div class="skel" style="height:13px;width:78%"></div>'
-      + '<div class="skel" style="height:44px;margin-top:14px"></div>'
-      + '<div class="skel" style="height:44px"></div>'
-      + '</div>';
+    vaiA('scheda');
+    if (SCHEDE[id]) { if (box) box.innerHTML = schedaScreenHtml(SCHEDE[id]); return; }
+    if (box) box.innerHTML = '<div style="padding:18px 20px">'
+      + '<div class="skel" style="height:62px;width:62px;border-radius:15px"></div>'
+      + '<div class="skel" style="height:16px;width:60%;margin-top:14px"></div>'
+      + '<div class="skel" style="height:13px;width:88%"></div>'
+      + '<div class="skel" style="height:44px;margin-top:22px"></div>'
+      + '<div class="skel" style="height:44px"></div></div>';
     fetch(API_URL + '/servizio?id=' + id, { headers: HDRS, cache: 'no-store' })
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (!d || d.error) throw new Error('ko');
         SCHEDE[id] = d;
-        drop.innerHTML = schedaHtml(d);
+        if (SC_ID === id && box) box.innerHTML = schedaScreenHtml(d);
       })
-      .catch(function(){ drop.innerHTML = '<div class="vuoto" style="padding:18px 0">Non sono riuscito a caricare la scheda.</div>'; });
+      .catch(function(){
+        if (box) box.innerHTML = '<div class="vuoto" style="padding:26px 20px">Non sono riuscito a caricare la scheda.</div>';
+      });
+  }
+
+  function apriTutorial(id){
+    // La fonte di verita' e' la scheda APERTA, non l'id stampato nel bottone: quello
+    // viene dal payload del server, la cache e' indicizzata sull'id della riga. Finche'
+    // coincidono non si nota; il giorno che divergono il tutorial non si aprirebbe piu'
+    // e non ci sarebbe niente in console a dirlo.
+    if (!id || !SCHEDE[id]) id = SC_ID;
+    if (!SCHEDE[id]) return;
+    SC_ID = id;
+    var tu = document.getElementById('tuBody');
+    if (tu) tu.innerHTML = tutorialScreenHtml(SCHEDE[id]);
+    vaiA('tutorial');
   }
 
   document.addEventListener('click', function(e){
     var t = e.target;
     if (!t || !t.closest) return;
+
+    // Cambio scheda dentro la pagina prodotto: si nasconde/mostra, non si ridisegna
+    // (ridisegnare azzererebbe lo scorrimento e farebbe ripartire la CTA).
+    var tb = t.closest('[data-sctab]');
+    if (tb) {
+      e.stopPropagation();
+      SC_TAB = tb.getAttribute('data-sctab');
+      document.querySelectorAll('.sctab').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-sctab') === SC_TAB); });
+      document.querySelectorAll('.scpane').forEach(function(x){ x.hidden = (x.getAttribute('data-pane') !== SC_TAB); });
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
+      return;
+    }
+
+    var tt = t.closest('[data-tutorial]');
+    if (tt) { e.stopPropagation(); apriTutorial(parseInt(tt.getAttribute('data-tutorial'))); return; }
 
     var b = t.closest('.savebtn');
     if (b) {
@@ -1984,8 +2197,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           // la scheda nell'HUB deve tornare a mostrare la CTA, non il tutorial
           if (SCHEDE[oid]) {
             SCHEDE[oid].gia_interessato = false;
-            var drop = document.querySelector('[data-drop="' + oid + '"]');
-            if (drop) drop.innerHTML = schedaHtml(SCHEDE[oid]);
+          ridisegnaScheda(oid);
           }
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
@@ -2042,8 +2254,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         .then(function(d){
           if (!d || d.error) throw new Error(d && d.error || 'ko');
           if (SCHEDE[wid]) { SCHEDE[wid].in_waitlist = true; SCHEDE[wid].waitlist_count = d.waitlist_count; }
-          var drop = document.querySelector('[data-drop="' + wid + '"]');
-          if (drop && SCHEDE[wid]) drop.innerHTML = schedaHtml(SCHEDE[wid]);
+          ridisegnaScheda(wid);
           chiudiPopupWaitlist();
           toast('Sei in lista: ti avvisa il bot');
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
@@ -2075,8 +2286,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             SCHEDE[aid].in_waitlist = false;      // il server toglie la riga: allineati
             if (d.ref_link) { SCHEDE[aid].ref_link = d.ref_link; SCHEDE[aid].ref_fonte = d.ref_fonte; }
           }
-          var drop = document.querySelector('[data-drop="' + aid + '"]');
-          if (drop && SCHEDE[aid]) drop.innerHTML = schedaHtml(SCHEDE[aid]);   // ora appaiono gli step
+          ridisegnaScheda(aid);
           toast('Servizio attivato');
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
@@ -2112,8 +2322,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         .then(function(d){
           if (!d || d.error) throw new Error(d && d.error || 'ko');
           if (SCHEDE[sid]) SCHEDE[sid].step_progress = { ultimo_step: d.ultimo_step, completato: d.completato };
-          var drop = document.querySelector('[data-drop="' + sid + '"]');
-          if (drop && SCHEDE[sid]) drop.innerHTML = schedaHtml(SCHEDE[sid]);
+          ridisegnaScheda(sid);
           if (d.completato) toast('Attivazione completata');
           aggiornaProfiloDopoStep(sid, d);
         })
@@ -2128,8 +2337,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
               .then(function(fresca){
                 if (!fresca || fresca.error) return;
                 SCHEDE[sid] = fresca;
-                var dp = document.querySelector('[data-drop="' + sid + '"]');
-                if (dp) dp.innerHTML = schedaHtml(fresca);
+                ridisegnaScheda(sid);
               })
               .catch(function(){});
             return;
@@ -2666,6 +2874,31 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       });
     }
 
+    // ===== RICERCA A SCOMPARSA =====
+    // Chiudendola si AZZERA anche il filtro: lasciare una ricerca attiva dietro
+    // un'icona chiusa significa una lista mutilata senza niente che lo spieghi.
+    var lente = document.getElementById('lenteBtn');
+    var wrap  = document.getElementById('cercaWrap');
+    function apriRicerca(){
+      if (!wrap) return;
+      wrap.hidden = false;
+      if (lente) lente.setAttribute('aria-expanded', 'true');
+      if (inp) { try { inp.focus(); } catch(x){} }
+    }
+    function chiudiRicerca(){
+      if (!wrap) return;
+      wrap.hidden = true;
+      if (lente) lente.setAttribute('aria-expanded', 'false');
+      if (inp && inp.value) { inp.value = ''; FILTRO_Q = ''; renderFeeds(); }
+      if (inp) { try { inp.blur(); } catch(x){} }
+    }
+    if (lente) lente.addEventListener('click', function(){
+      if (wrap && wrap.hidden) apriRicerca(); else chiudiRicerca();
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+    });
+    var ics = document.getElementById('cercaX');
+    if (ics) ics.addEventListener('click', chiudiRicerca);
+
     // ===== FOGLIO CATEGORIE =====
     // Era codice morto: si agganciava a un #catBtn che nel markup non esiste piu'.
     // Rianimato e portato a DUE livelli, perche' la fila di pillole non scala. Con
@@ -2737,6 +2970,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     function apri(){
+      var dd = document.getElementById('catDD');
+      if (dd) dd.classList.add('aperta');
       // La ricerca compare solo quando serve davvero: con quattro voci e' arredamento.
       var quante = vive().length + CATS.length;
       var w = document.getElementById('catCercaWrap');
@@ -2747,7 +2982,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       sh.style.display = 'block';
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
     }
-    function chiudi(){ sh.style.display = 'none'; }
+    function chiudi(){
+      sh.style.display = 'none';
+      var dd = document.getElementById('catDD');
+      if (dd) dd.classList.remove('aperta');
+    }
 
     document.addEventListener('click', function(e){
       if (e.target.closest && e.target.closest('[data-catopen]')) apri();
