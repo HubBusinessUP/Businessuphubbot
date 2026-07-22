@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=114"></script>
+<script src="/identikit.js?v=115"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -633,7 +633,9 @@
       document.getElementById("gate").style.display = "none";
       document.getElementById("app").style.display = "block";
       initAdminTabs();
-      loadAll();
+      // Senza catch, un errore qui dentro moriva in console e l'admin restava vuoto
+      // con l'aria di non avere dati, invece che di non essere riuscito a prenderli.
+      loadAll().catch((e) => avvisaCadute(["tutto (" + (e && e.message || "errore") + ")"]));
     }
 
     let contatti = [];
@@ -647,23 +649,29 @@
 
     const STADIO_LABEL = { lead: "Lead", attivato: "Attivato", in_training: "In training", attivo: "Attivo", criticita: "Criticità" };
 
+    // Tredici chiamate in parallelo. Con Promise.all ne bastava UNA andata storta
+    // -- una rete mobile che perde un colpo, un endpoint lento -- per far fallire
+    // tutto il blocco: nessuna sezione veniva disegnata e la pagina restava vuota,
+    // senza nemmeno un errore, perche' il rifiuto non lo raccoglieva nessuno.
+    // Con allSettled ogni sezione vive per conto suo: quelle arrivate si disegnano,
+    // e di quelle cadute si dice il nome invece di lasciare il vuoto.
     async function loadAll() {
-      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes] = await Promise.all([
-        api("admin/kpi").then((r) => r.json()),
-        api("admin/macro-categorie").then((r) => r.json()),
-        api("admin/categorie").then((r) => r.json()),
-        api("admin/servizi").then((r) => r.json()),
-        api("admin/affiliate-links").then((r) => r.json()),
-        api("admin/suggerimenti").then((r) => r.json()),
-        api("admin/segnalazioni").then((r) => r.json()),
-        api("admin/sponsorboard").then((r) => r.json()),
-        api("admin/crm").then((r) => r.json()),
-        api("admin/templates").then((r) => r.json()),
-        api("admin/partner-richieste").then((r) => r.json()),
-        api("admin/whitelist").then((r) => r.json()),
-        // NB: wlRes qui sopra e' la WHITElist dei domini, non la lista d'attesa.
-        api("admin/waitlist").then((r) => r.json()),
-      ]);
+      const ROTTE = [
+        "admin/kpi", "admin/macro-categorie", "admin/categorie", "admin/servizi",
+        "admin/affiliate-links", "admin/suggerimenti", "admin/segnalazioni",
+        "admin/sponsorboard", "admin/crm", "admin/templates", "admin/partner-richieste",
+        // NB: "admin/whitelist" e' la WHITElist dei domini, non la lista d'attesa.
+        "admin/whitelist", "admin/waitlist",
+      ];
+      const esiti = await Promise.allSettled(ROTTE.map((r) => api(r).then((x) => x.json())));
+      const cadute = [];
+      const dati = esiti.map((e, i) => {
+        if (e.status === "fulfilled" && e.value && !e.value.error) return e.value;
+        cadute.push(ROTTE[i].replace("admin/", ""));
+        return {};
+      });
+      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes] = dati;
+      avvisaCadute(cadute);
 
       renderKpi(kpi);
       macroCategorie = macroRes.macro_categorie || [];
@@ -692,6 +700,24 @@
       renderTemplates();
       renderBcServizi();
       loadRubrica();
+    }
+
+    // Una sezione che non ha caricato deve DIRLO. Un elenco vuoto e un elenco che
+    // non e' arrivato si somigliano troppo, e il secondo fa prendere decisioni
+    // sbagliate: "non ci sono candidature da validare" quando invece ce ne sono.
+    function avvisaCadute(cadute) {
+      let box = document.getElementById("cadute");
+      if (!cadute.length) { if (box) box.remove(); return; }
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "cadute";
+        box.style.cssText = "background:var(--panel);border:1px solid #b45309;border-radius:4px;" +
+          "padding:11px 13px;margin-bottom:14px;font-size:13px;line-height:1.5";
+        const app = document.getElementById("app");
+        app.insertBefore(box, app.firstChild);
+      }
+      box.textContent = "Non ho caricato: " + cadute.join(", ") +
+        ". Quello che vedi sotto e' incompleto: ricarica prima di decidere qualcosa.";
     }
 
     function esc(s) {
