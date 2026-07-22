@@ -778,8 +778,42 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sctab.on{color:var(--tx)}
 .sctab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--acc);border-radius:2px}
 .scpane{padding:16px 20px 0}
+/* Misure e voci portano il proprio margine laterale: qui va tolto, se no rientrano
+   due volte e la colonna non si allinea piu' con il resto della schermata. */
+.scpane[data-pane="car"]{padding:16px 0 0}
 .scpane[hidden]{display:none}
 .scfondo{padding:18px 20px calc(24px + env(safe-area-inset-bottom))}
+
+/* LE TRE MISURE. Sono le uniche tre risposte che fanno chiudere la scheda in due
+   secondi: capitale, costo, tempo. Stanno in alto come NUMERI e non come righe di
+   tabella, perche' chi non ha il capitale deve poterlo capire senza leggere il
+   resto. Una misura senza valore non si disegna: meglio due caselle che tre con
+   un trattino dentro. */
+.scmis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:0 20px}
+.scmis.due{grid-template-columns:repeat(2,minmax(0,1fr))}
+.scmis.una{grid-template-columns:1fr}
+.scm{background:var(--s0);border-radius:10.5px;padding:11px 12px;min-width:0}
+/* Etichetta su UNA riga: andando a capo sfasava l'altezza delle tre caselle e i
+   numeri non erano piu' sulla stessa linea. */
+.scm .k{font-size:11.5px;color:var(--mut);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Il valore VA A CAPO, non si taglia: un prezzo troncato in "19 EU..." e' peggio
+   che non scriverlo. Piuttosto occupa due righe. */
+.scm .v{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--tx);margin-top:5px;
+  line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.scm .v small{font-size:12.5px;font-weight:600;color:var(--dim);letter-spacing:0;white-space:nowrap}
+.scm .n{font-size:11px;color:var(--mut);margin-top:3px;line-height:1.35}
+
+/* LE VOCI LIBERE. Etichetta = la domanda, sotto la risposta. Filo sottile fra
+   una e l'altra, niente riquadri: e' un elenco da scorrere, non una griglia. */
+.scv{display:flex;gap:13px;padding:14px 0;border-bottom:1px solid var(--line)}
+.scv:last-child{border-bottom:none}
+.scv .q{font-size:13px;color:var(--mut);font-weight:500}
+.scv .a{font-size:14.5px;color:var(--tx);line-height:1.5;margin-top:3px;white-space:pre-line}
+.scv .nn{font-size:12.5px;color:var(--mut);margin-top:4px;font-family:var(--mono)}
+.scv .pt{width:7px;height:7px;border-radius:50%;background:var(--line2);flex-shrink:0;margin-top:7px}
+/* Una sola voce puo' avere l'evidenza: se le accendi tutte non ne risalta nessuna. */
+.scv.spicca .pt{background:#FF6B3D}
+.scv.spicca .q{color:#FF6B3D}
 
 /* Step del tutorial: graficamente le card della directory (Antonio), con il numero
    al posto del logo. */
@@ -1390,7 +1424,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=110"></script>
+<script src="identikit.js?v=111"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1870,23 +1904,68 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
                      + '<div class="sreq">' + esc(s.requisiti) + '</div>' : '');
   }
 
-  function scCaratteristiche(d){
+  // Le TRE misure confrontabili. Restano campi veri (non voci libere) perche' sono
+  // le uniche su cui ha senso confrontare servizi diversi e, un giorno, filtrare.
+  function scMisure(d){
     var s = d.servizio || {};
-    var righe = '';
-    var budget = s.budget_minimo ? ('da ' + s.budget_minimo + ' EUR') : '';
-    if (budget) righe += srow('Budget minimo', budget, 'per iniziare', '');
+    var m = [];
+    if (s.budget_minimo) m.push(['Quanto serve?', s.budget_minimo + ' <small>&euro;</small>', 'di capitale']);
+
     var attiv = (s.costo_attivazione != null && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
     var mens  = (s.costi_fissi_mensili != null && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
-    if (attiv || mens) {
-      righe += srow('Costi', mens ? (euro(mens) + '/mese') : euro(attiv),
-        (attiv && mens) ? ('piu ' + euro(attiv) + ' una tantum') : (attiv ? 'una tantum' : 'ricorrente'), '');
-    } else if (s.costi) { righe += srow('Costi', s.costi, '', ''); }
-    if (s.tempo_stimato) righe += srow('Tempo per attivarlo', s.tempo_stimato, '', '');
-    if (s.longevita) righe += srow('Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
-    var r = RISCHIO[s.rischio_livello];
-    if (r) righe += srow('Rischio', r[0], '', r[1]);
-    if (!righe) return '<div class="vuoto" style="padding:18px 0">Caratteristiche ancora da compilare.</div>';
-    return '<table class="pctab"><tbody>' + righe + '</tbody></table>';
+    if (mens || attiv) {
+      // Nella casella "EUR" diventa il simbolo: tre caselle su 390px non hanno spazio
+      // per una sigla di tre lettere accanto a ogni numero.
+      var eu = function(x){ return String(euro(x)).replace(/\s*EUR\s*/i, ' &euro;'); };
+      m.push(['Quanto costa?',
+        mens ? (eu(mens) + '<small>/mese</small>') : eu(attiv),
+        (attiv && mens) ? ('piu ' + euro(attiv) + ' una tantum') : (attiv ? 'una tantum' : 'ricorrente')]);
+    } else if (s.costi) { m.push(['Quanto costa?', esc(s.costi), '']); }
+
+    // "circa 40 minuti" in un terzo di schermo a 18px non ci sta: nella casella si
+    // tiene il numero e l'unita', il resto e' rumore ("circa" lo dice gia' il contesto).
+    if (s.tempo_stimato) {
+      var t = String(s.tempo_stimato).replace(/^\s*(circa|about)\s+/i, '');
+      var mm = t.match(/^(\d+)\s*(.*)$/);
+      m.push(['Quanto tempo?', mm ? (mm[1] + (mm[2] ? ' <small>' + esc(mm[2]) + '</small>' : '')) : esc(t), 'per attivarlo']);
+    }
+    if (!m.length) return '';
+    var largo = m.length === 1 ? ' una' : (m.length === 2 ? ' due' : '');
+    return '<div class="scmis' + largo + '">' + m.map(function(x){
+      return '<div class="scm"><div class="k">' + x[0] + '</div><div class="v">' + x[1] + '</div>'
+        + (x[2] ? '<div class="n">' + x[2] + '</div>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  // Le voci libere, decise servizio per servizio dall'admin.
+  function scVoci(d){
+    var s = d.servizio || {};
+    var v = Array.isArray(s.voci) ? s.voci.filter(function(x){ return x && (x.etichetta || x.valore); }) : [];
+    if (!v.length) return '';
+    return '<div style="padding:4px 20px 0">' + v.map(function(x){
+      return '<div class="scv' + (x.evidenza ? ' spicca' : '') + '"><div class="pt"></div><div style="min-width:0">'
+        + (x.etichetta ? '<div class="q">' + esc(x.etichetta) + '</div>' : '')
+        + (x.valore ? '<div class="a">' + esc(x.valore) + '</div>' : '')
+        + (x.nota ? '<div class="nn">' + esc(x.nota) + '</div>' : '')
+        + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  function scCaratteristiche(d){
+    var s = d.servizio || {};
+    var out = scMisure(d) + scVoci(d);
+    // Ripiego finche' le voci non sono scritte: si mostra la vecchia tabella invece
+    // di una scheda vuota. Sparisce da sola appena l'admin compila le voci.
+    if (!scVoci(d)) {
+      var righe = '';
+      if (s.longevita) righe += srow('Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
+      var r = RISCHIO[s.rischio_livello];
+      if (r) righe += srow('Rischio', r[0], '', r[1]);
+      if (s.requisiti) righe += srow('Cosa serve', s.requisiti, '', '');
+      if (righe) out += '<div style="padding:8px 20px 0"><table class="pctab"><tbody>' + righe + '</tbody></table></div>';
+    }
+    if (!out) return '<div class="vuoto" style="padding:18px 0">Caratteristiche ancora da compilare.</div>';
+    return out;
   }
 
   function schedaHtml(d){

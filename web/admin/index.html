@@ -501,6 +501,20 @@
         </div>
       </div>
 
+      <div class="field" style="border-top:1px solid var(--border);padding-top:14px">
+        <label>Voci della scheda — le domande a cui questo servizio risponde</label>
+        <div class="item-meta" style="margin-bottom:8px">
+          Capitale, costo e tempo stanno già nei campi qui sopra e compaiono da soli in cima
+          alla scheda. Qui metti tutto il resto, nell'ordine in cui vuoi che si legga.
+          «In evidenza» accende una voce sola: se le accendi tutte non risalta più niente.
+        </div>
+        <div id="vociEditor"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn btn-secondary btn-small" onclick="addVoceRow()">+ Aggiungi voce</button>
+          <button class="btn btn-secondary btn-small" onclick="caricaModelloVoci()">Carica le 4 domande base</button>
+        </div>
+      </div>
+
       <div class="field">
         <label>Tutorial — step "Come funziona" (ogni step può avere un bottone-link)</label>
         <div id="stepsEditor"></div>
@@ -1910,6 +1924,11 @@
       document.getElementById("svcLink").value = s?.link_principale || "";
       document.getElementById("svcOrdine").value = s?.ordine ?? 0;
       document.getElementById("svcTempo").value = s?.tempo_stimato || "";
+      const boxVoci = document.getElementById("vociEditor");
+      if (boxVoci) {
+        boxVoci.innerHTML = "";
+        (Array.isArray(s?.voci) ? s.voci : []).forEach(addVoceRow);
+      }
       document.getElementById("svcDifficolta").value = s?.difficolta || "";
       document.getElementById("svcBudget").value = s?.budget_minimo || "";
       document.getElementById("svcRischio").value = s?.rischio_livello || "";
@@ -1947,6 +1966,70 @@
       document.getElementById("risorseEditor").appendChild(wrap);
     }
 
+    // ===== VOCI DELLA SCHEDA =====
+    // Righe libere: ogni servizio dichiara quello che ha senso per lui. Un broker e
+    // un metodo di hedge non hanno le stesse cose da dire, e una tabella a colonne
+    // fisse costringe a lasciare celle vuote o a stiracchiare i significati.
+    const MODELLO_VOCI = [
+      { etichetta: "Che cosa serve avere?", valore: "" },
+      { etichetta: "Quanto impegno richiede dopo?", valore: "" },
+      { etichetta: "Che cosa si può perdere?", valore: "", evidenza: true },
+      { etichetta: "Chi fornisce il servizio?", valore: "" },
+    ];
+
+    function addVoceRow(v) {
+      v = v || {};
+      const wrap = document.createElement("div");
+      wrap.className = "voce-row";
+      wrap.style.cssText = "border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px";
+      wrap.innerHTML =
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">' +
+        '  <input class="voce-et" placeholder="La domanda — es. Che cosa si può perdere?" style="flex:1" />' +
+        '  <button class="icon-btn" title="Sposta su">↑</button>' +
+        '  <button class="icon-btn" title="Sposta giù">↓</button>' +
+        '  <button class="icon-btn danger" title="Elimina">✕</button>' +
+        '</div>' +
+        '<textarea class="voce-val" rows="2" placeholder="La risposta" style="width:100%"></textarea>' +
+        '<div style="display:flex;gap:8px;align-items:center;margin-top:6px">' +
+        '  <input class="voce-nota" placeholder="Nota piccola sotto (facoltativa) — es. FSCA · FSP 51105" style="flex:1" />' +
+        '  <label style="display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap">' +
+        '    <input type="checkbox" class="voce-ev" /> In evidenza</label>' +
+        '</div>';
+      // I valori si assegnano come PROPRIETA', non interpolati nell'HTML: un
+      // apostrofo o un < in un testo scritto a mano romperebbe il markup.
+      wrap.querySelector(".voce-et").value = v.etichetta || "";
+      wrap.querySelector(".voce-val").value = v.valore || "";
+      wrap.querySelector(".voce-nota").value = v.nota || "";
+      wrap.querySelector(".voce-ev").checked = !!v.evidenza;
+      const btn = wrap.querySelectorAll(".icon-btn");
+      btn[0].onclick = () => { const pr = wrap.previousElementSibling; if (pr) wrap.parentElement.insertBefore(wrap, pr); };
+      btn[1].onclick = () => { const nx = wrap.nextElementSibling; if (nx) wrap.parentElement.insertBefore(nx, wrap); };
+      btn[2].onclick = () => wrap.remove();
+      document.getElementById("vociEditor").appendChild(wrap);
+    }
+
+    function leggiVoceRow(row) {
+      return {
+        etichetta: row.querySelector(".voce-et").value.trim(),
+        valore: row.querySelector(".voce-val").value.trim(),
+        nota: row.querySelector(".voce-nota").value.trim(),
+        evidenza: row.querySelector(".voce-ev").checked,
+      };
+    }
+
+    function caricaModelloVoci() {
+      // Non cancella quello che c'e' gia': aggiunge solo le domande mancanti, se no
+      // un click sbagliato spazzerebbe via una scheda gia' scritta.
+      const gia = [...document.querySelectorAll("#vociEditor .voce-row")]
+        .map((r) => r.querySelector(".voce-et").value.trim().toLowerCase());
+      let aggiunte = 0;
+      MODELLO_VOCI.forEach((v) => {
+        if (gia.includes(v.etichetta.toLowerCase())) return;
+        addVoceRow(v); aggiunte++;
+      });
+      if (!aggiunte) alert("Le domande del modello ci sono già tutte.");
+    }
+
     async function saveServizio() {
       const steps = [...document.querySelectorAll("#stepsEditor .step-row")]
         .map(leggiStepRow).filter((s) => s.titolo || s.testo);
@@ -1956,7 +2039,13 @@
         url: row.querySelector(".ris-url").value.trim(),
       })).filter((r) => r.url);
 
+      // Le voci si salvano ANCHE se vuote: cancellarle tutte deve poter significare
+      // "questa scheda non ha voci", non "non ho toccato niente".
+      const voci = [...document.querySelectorAll("#vociEditor .voce-row")]
+        .map(leggiVoceRow).filter((v) => v.etichetta || v.valore);
+
       const body = {
+        voci,
         id: document.getElementById("svcId").value || undefined,
         nome: document.getElementById("svcNome").value.trim(),
         logo_url: document.getElementById("svcLogo").value.trim(),
