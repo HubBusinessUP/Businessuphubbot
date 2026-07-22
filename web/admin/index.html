@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=115"></script>
+<script src="/identikit.js?v=116"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -663,14 +663,23 @@
         // NB: "admin/whitelist" e' la WHITElist dei domini, non la lista d'attesa.
         "admin/whitelist", "admin/waitlist",
       ];
-      const esiti = await Promise.allSettled(ROTTE.map((r) => api(r).then((x) => x.json())));
+      const esiti = await Promise.allSettled(ROTTE.map((r) => api(r).then(async (x) => {
+        // Un 401 non e' "una chiamata andata storta": e' la chiave rifiutata, e va
+        // riconosciuto per quello che e', se no si elencano tredici rotte quando la
+        // cosa da dire e' una sola.
+        if (x.status === 401 || x.status === 403) { const err = new Error("chiave"); err.chiave = true; throw err; }
+        return x.json();
+      })));
       const cadute = [];
+      let chiaveRifiutata = false;
       const dati = esiti.map((e, i) => {
+        if (e.status === "rejected" && e.reason && e.reason.chiave) { chiaveRifiutata = true; return {}; }
         if (e.status === "fulfilled" && e.value && !e.value.error) return e.value;
         cadute.push(ROTTE[i].replace("admin/", ""));
         return {};
       });
       const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes] = dati;
+      if (chiaveRifiutata) { chiaveScaduta(); return; }
       avvisaCadute(cadute);
 
       renderKpi(kpi);
@@ -700,6 +709,25 @@
       renderTemplates();
       renderBcServizi();
       loadRubrica();
+    }
+
+    // La chiave non vale piu': si torna alla porta, e la chiave marcia si butta.
+    // Tenerla vorrebbe dire ripresentare lo stesso pannello vuoto al ricaricamento,
+    // e ogni tentativo costa un secondo di attesa lato server (e' la difesa contro
+    // chi prova a indovinarla).
+    function chiaveScaduta() {
+      try { localStorage.removeItem("bu_admin_key"); } catch (e) {}
+      ADMIN_KEY = "";
+      mostraGate("La chiave non e piu valida. Reinseriscila.");
+    }
+
+    function mostraGate(messaggio) {
+      const g = document.getElementById("gate");
+      const a = document.getElementById("app");
+      if (a) a.style.display = "none";
+      if (g) g.style.display = "";
+      const err = document.getElementById("gateError");
+      if (err && messaggio) { err.textContent = messaggio; err.style.display = "block"; }
     }
 
     // Una sezione che non ha caricato deve DIRLO. Un elenco vuoto e un elenco che
@@ -2157,11 +2185,22 @@
     }
     window.switchAdminTab = switchAdminTab;
 
+    // All'avvio la chiave in memoria si VERIFICA prima di aprire il pannello.
+    // Prima bastava che ci fosse: con una chiave vecchia o sbagliata si entrava
+    // lo stesso, il pannello si disegnava tutto e le tredici chiamate tornavano
+    // 401 -- risultato, un centro di comando pieno di zeri che sembrava dire
+    // "non hai utenti" mentre stava solo dicendo "non ti conosco".
     if (ADMIN_KEY) {
-      document.getElementById("gate").style.display = "none";
-      document.getElementById("app").style.display = "block";
-      initAdminTabs();
-      loadAll();
+      api("admin/stats")
+        .then((r) => {
+          if (r.status === 401 || r.status === 403) { chiaveScaduta(); return; }
+          if (!r.ok) { mostraGate("Il server non risponde. Riprova fra poco."); return; }
+          document.getElementById("gate").style.display = "none";
+          document.getElementById("app").style.display = "block";
+          initAdminTabs();
+          loadAll().catch((e) => avvisaCadute(["tutto (" + (e && e.message || "errore") + ")"]));
+        })
+        .catch(() => mostraGate("Nessuna connessione. Controlla la rete e riprova."));
     }
   </script>
 </body>
