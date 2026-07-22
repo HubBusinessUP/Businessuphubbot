@@ -1387,7 +1387,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=108"></script>
+<script src="identikit.js?v=109"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1499,13 +1499,19 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   // Il logo del servizio. Senza, un riquadro neutro con l'iniziale: meglio di un
   // buco, e non inventa colori che il prodotto non ha.
+  // Ripiego: chi non ha un marchio proprio mostra quello di Cashly, non l'iniziale
+  // del nome. Una fila di lettere grigie sembra una lista di segnaposto da riempire;
+  // il marchio dice "questo lo pubblichiamo noi". Se anche il logo del fornitore non
+  // carica (dominio cambiato, hotlink bloccato) si ricade sulla stessa immagine
+  // invece di lasciare un buco.
+  // Percorso ASSOLUTO: relativo si romperebbe da qualunque pagina non stia nella
+  // radice del sito (e' successo subito, nella copia di prova).
+  var LOGO_RISERVA = '/loghi/cashly.svg';
   function logoHtml(s){
     var u = (s.logo_url || '').trim();
-    if (u && /^https?:\/\//i.test(u)) {
-      return '<div class="flogo"><img src="' + esc(u) + '" alt="" loading="lazy"'
-        + ' onerror="this.remove()"></div>';
-    }
-    return '<div class="flogo">' + esc((s.nome || '?').trim().charAt(0).toUpperCase()) + '</div>';
+    var src = (u && /^https?:\/\//i.test(u)) ? u : LOGO_RISERVA;
+    return '<div class="flogo"><img src="' + esc(src) + '" alt="" loading="lazy"'
+      + ' onerror="this.onerror=null;this.src=&quot;' + LOGO_RISERVA + '&quot;"></div>';
   }
 
   function rowHtml(s, i){

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Cashly">
+  <!-- Logo di riserva per i servizi senza marchio proprio. Fondo scuro come l'app,
+       marchio in verde: nella lista deve leggersi come "questo e' di Cashly", non
+       come un logo mancante. -->
+  <rect width="100" height="100" fill="#191B20"/>
+  <path d="M69 31.5A24 24 0 1 0 69 68.5" fill="none" stroke="#25CF6E" stroke-width="11" stroke-linecap="round"/>
+</svg>
