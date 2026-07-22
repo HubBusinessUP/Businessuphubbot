@@ -237,10 +237,6 @@
 
     <!-- ===================== HUB ===================== -->
     <section class="scr on" data-s="home">
-      <div class="hero-intro">
-        <p class="hero-t">Esplora prodotti e servizi condivisi dalla Community.</p>
-        <p class="hero-s">Tutto in un Hub. Condividilo e crea la tua rete definitiva.</p>
-      </div>
       <div class="cerca">
         <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="cerca" type="search" autocomplete="off" placeholder="Cerca un business">
@@ -763,7 +759,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 /* Fuori dall'HUB il saluto sparisce ma NON collassa: l'avatar resta a sinistra */
 .app:not(.on-home) .hdr .salu{visibility:hidden}
 
-.cerca{display:flex;align-items:center;gap:9px;margin:14px 20px 0;padding:11px 14px;
+.cerca{display:flex;align-items:center;gap:9px;margin:18px 20px 0;padding:11px 14px;
   background:var(--s1);border-radius:8.5px;color:var(--mut)}
 #cerca{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);
   font-family:var(--sans);font-size:14px;padding:0}
@@ -804,8 +800,6 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .hdr #shareBtn{width:42px!important;height:42px!important;border-radius:999px!important;
   background:var(--s1)!important;border:1px solid transparent!important;color:var(--tx)!important}
 
-.hero-intro{padding:2px 20px 0!important}
-
 .macros{display:flex;gap:9px;overflow-x:auto;padding:16px 20px 0;scrollbar-width:none}
 .macros::-webkit-scrollbar{display:none}
 .macro{flex-shrink:0;padding:10px 18px;border-radius:999px;
@@ -824,6 +818,17 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sub:active{transform:scale(.97)}
 .sub.on{background:var(--s2);border-color:transparent;color:var(--tx);font-weight:600}
 #listaReale .vuoto{padding:26px 18px}
+
+/* ENTRATA IN SCENA. Le righe salgono sfalsate: e' l'unico effetto che si puo'
+   permettere una lista, perche' dura meno di mezzo secondo e poi sparisce.
+   Lo scaglionamento si ferma alla decima riga: oltre, l'ultima aspetterebbe
+   secondi prima di comparire e sembrerebbe un caricamento lento. */
+@keyframes entra{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+#listaReale.anima .fitem{opacity:0;animation:entra .34s cubic-bezier(.2,.7,.2,1) forwards;
+  animation-delay:calc(var(--i, 0) * 34ms)}
+@media (prefers-reduced-motion:reduce){
+  #listaReale.anima .fitem{animation:none;opacity:1}
+}
 
 /* ---------------------------------------------------------------------------
    RIGA DELLA DIRECTORY — unica definizione valida.
@@ -1042,9 +1047,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 /* Il MENU ha un colore SOLO, sempre lo stesso (scelta di Antonio): la navigazione
    non deve cambiare tinta mentre ti muovi, se no sembra un'altra app a ogni schermata.
    Il colore di sezione (--sec) resta, ma pilota solo i CONTENUTI: CTA, intestazioni, KPI. */
-:root{--menu:#FF6B3D;--menu-soft:rgba(255,107,61,.13);--menu-line:rgba(255,107,61,.30);--menu-tint:#FFA98F}
+/* Il menu prende i colori del marchio: Cashly e' bianco e verde, non arancione.
+   L'arancione resta SOLO dove significa qualcosa (il bottone della lista d'attesa,
+   in contrapposizione al verde di "attivo"): li' e' informazione, non decorazione. */
+:root{--menu:#25CF6E;--menu-soft:rgba(37,207,110,.13);--menu-line:rgba(37,207,110,.30);--menu-tint:#6FE6A2}
 .app{--sec:var(--acc);--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
-.app[data-sec="home"]{--sec:#FF6B3D;--sec-soft:rgba(255,107,61,.13);--sec-line:rgba(255,107,61,.30);--sec-tint:#FFA98F;--sec-on:#2A0E04;--sec-deep:#E85A2E}
+.app[data-sec="home"]{--sec:#25CF6E;--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
 .app[data-sec="wallet"]{--sec:#25CF6E;--sec-soft:rgba(37,207,110,.12);--sec-line:rgba(37,207,110,.28);--sec-tint:#6FE6A2;--sec-on:#04210F;--sec-deep:#1BB65D}
 .app[data-sec="profilo"]{--sec:#5E8BFF;--sec-soft:rgba(94,139,255,.13);--sec-line:rgba(94,139,255,.30);--sec-tint:#9DB8FF;--sec-on:#04102E;--sec-deep:#4A75E8}
 
@@ -1148,13 +1156,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
    i box tinti sono la firma del "fatto con l'AI" e sono gia' stati tolti ovunque. */
 .sreq{font-size:14.5px;line-height:1.55;color:var(--dim);white-space:pre-line}
 
-/* Intestazione HUB: solo gerarchia di peso e colore, allineata al margine di .cerca (20px).
-   Nessun contenitore e nessun accento: e' la parte piu' silenziosa della schermata,
-   non deve rubare la scena alla ricerca e alla lista. */
-.hero-intro{padding:16px 20px 2px}
-.hero-t{margin:0;font-size:15px;font-weight:600;line-height:1.25;letter-spacing:-.01em;color:var(--tx)}
-.hero-s{margin:5px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:var(--dim);max-width:34em}
-
 /* Il + nel menu: e' un'AZIONE, non una sezione, quindi non diventa mai "attivo".
    L'icona porta il colore della sezione cosi' si distingue dalle voci di navigazione. */
 .navb-add .ico{stroke:var(--menu)}
@@ -1210,10 +1211,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
    gerarchia (e l'app sembra ingrandita col browser, non progettata).
    =================================================================== */
 
-/* Intestazione HUB */
-.hero-t{font-size:18px;line-height:1.3}
-.hero-s{font-size:15px;line-height:1.55}
-
 /* Ricerca e titolo della riga in directory */
 #cerca{font-size:15.5px}
 .fnm{font-size:16.5px;line-height:1.3}
@@ -1266,7 +1263,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=104"></script>
+<script src="identikit.js?v=105"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1387,12 +1384,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     return '<div class="flogo">' + esc((s.nome || '?').trim().charAt(0).toUpperCase()) + '</div>';
   }
 
-  function rowHtml(s){
+  function rowHtml(s, i){
     var votato = !!VOTED[s.id];
     var sub = sottoBiz(s);
     // Nessuna etichetta di stato qui: la riga porta il nome e i bottoni, lo stato lo
     // dichiara la CTA dentro la scheda ("Attiva Servizio" / "Avvisami quando parte").
-    return '<div class="fitem" data-item="' + s.id + '">'
+    return '<div class="fitem" data-item="' + s.id + '" style="--i:' + Math.min(i || 0, 10) + '">'
       + '<div class="frow" data-open="' + s.id + '">'
       +   logoHtml(s)
       +   '<div class="fbody">'
@@ -1418,10 +1415,15 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return ((s.nome || '') + ' ' + (s.descrizione || '')).toLowerCase().indexOf(q) >= 0;
     });
   }
+  var ULTIMA_Q = '';
   function renderFeeds(){
     var host = document.getElementById('listaReale');
     if (!host) return;
     var lista = visibili();
+    // Si rientra in scena solo se NON stai digitando: rianimare a ogni lettera
+    // sarebbe un tremolio, non un effetto.
+    var animare = (FILTRO_Q === ULTIMA_Q);
+    ULTIMA_Q = FILTRO_Q;
     if (!lista.length) {
       host.innerHTML = ALLBIZ.length
         ? '<div class="vuoto">Nessun business con questi filtri.</div>'
@@ -1430,7 +1432,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
     // Lista PIATTA, ordinata per interesse (voti + salvati). Niente piu' fasce temporali:
     // la data diceva quando l'abbiamo inserito noi, non quanto vale per chi guarda.
-    host.innerHTML = lista.map(rowHtml).join('');
+    host.classList.remove('anima');
+    host.innerHTML = lista.map(function(s, i){ return rowHtml(s, i); }).join('');
+    if (animare) {
+      void host.offsetWidth;          // forza il ricalcolo, se no l'animazione non riparte
+      host.classList.add('anima');
+    }
   }
 
   // ---- CATEGORIE A DUE LIVELLI ----
