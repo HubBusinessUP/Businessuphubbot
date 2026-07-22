@@ -725,6 +725,22 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .cat-opt.on{background:rgba(37,207,110,.1);color:var(--acc)}
 .cat-n{font-size:12px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
 .cat-opt.on .cat-n{color:var(--acc)}
+/* Due livelli dentro il foglio: la macro fa da testa, le figlie rientrano con un
+   trattino. In verticale la gerarchia si legge; in orizzontale no, ed e' il motivo
+   per cui questo foglio esiste. */
+.cat-testa{font-size:15px;font-weight:700;margin-top:4px}
+.cat-figlia{font-size:14px;font-weight:500;color:var(--dim);padding-left:28px;position:relative}
+.cat-figlia::before{content:'';position:absolute;left:13px;top:50%;width:7px;height:1px;background:var(--line2)}
+.cat-figlia.on{color:var(--acc)}
+.cat-cerca{display:flex;align-items:center;gap:8px;margin:12px 0 4px;padding:10px 12px;
+  background:var(--s1);border-radius:8.5px;color:var(--mut)}
+.cat-cerca input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);
+  font-family:var(--sans);font-size:14.5px}
+.cat-cerca input::placeholder{color:var(--mut)}
+/* La pillola che apre il foglio: stessa forma delle altre ma piu' chiara, perche'
+   non e' un filtro come gli altri, e' una porta. */
+.macro-piu{background:var(--s2);color:var(--tx);display:inline-flex;align-items:center;gap:7px}
+.macro-piu b{font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
 
 
 /* ===== HUB: header ordinato da sx a dx -> avatar (profilo) | saluto | share ===== */
@@ -1250,7 +1266,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=103"></script>
+<script src="identikit.js?v=104"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1470,8 +1486,38 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (COLLEZIONE === 'salvati' && !nSalv) COLLEZIONE = '';
     if (COLLEZIONE === 'votati'  && !nVot)  COLLEZIONE = '';
 
-    var h = '<button class="macro' + (!FILTRO_MACRO && !COLLEZIONE ? ' on' : '') + '" data-macro="0">Tutti</button>';
-    macroVive.forEach(function(m){
+    // Ordine per numero di servizi (scelta di Antonio): davanti quelle piene.
+    macroVive = macroVive.map(function(m){ return { m: m, n: conta(0, m.id) }; })
+      .sort(function(a, b){ return b.n - a.n || a.m.nome.localeCompare(b.m.nome); })
+      .map(function(x){ return x.m; });
+
+    // TETTO ALLE PILLOLE. Oltre questa soglia la fila orizzontale smette di
+    // funzionare: non e' la fatica di scorrere, e' che non vedi cosa esiste e le
+    // ultime non le apre nessuno. Da li' in poi comanda il foglio verticale.
+    var MAX_PILL = 5;
+    var troppe = macroVive.length > MAX_PILL;
+    var mostrate = macroVive;
+    if (troppe) {
+      mostrate = macroVive.slice(0, MAX_PILL - 1);
+      // La macro accesa resta SEMPRE visibile anche se sta fuori dalle prime: un
+      // filtro attivo ma invisibile e' una lista che sembra rotta e non si sa spegnere.
+      if (FILTRO_MACRO && !mostrate.some(function(m){ return m.id === FILTRO_MACRO; })) {
+        var sel = macroVive.filter(function(m){ return m.id === FILTRO_MACRO; })[0];
+        if (sel) mostrate = macroVive.slice(0, MAX_PILL - 2).concat([sel]);
+      }
+    }
+
+    // La porta al foglio va PRIMA, non in fondo: messa in coda finirebbe nascosta
+    // dietro lo stesso scorrimento laterale che deve risolvere. Qui e' sempre
+    // visibile senza muovere un dito.
+    var h = '';
+    if (troppe) {
+      h += '<button class="macro macro-piu" data-catopen="1">'
+         + '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+         + 'Categorie <b>' + macroVive.length + '</b></button>';
+    }
+    h += '<button class="macro' + (!FILTRO_MACRO && !COLLEZIONE ? ' on' : '') + '" data-macro="0">Tutti</button>';
+    mostrate.forEach(function(m){
       h += '<button class="macro' + (FILTRO_MACRO === m.id && !COLLEZIONE ? ' on' : '') + '" data-macro="' + m.id + '">' + esc(m.nome) + '</button>';
     });
     if (nSalv) h += '<button class="macro' + (COLLEZIONE === 'salvati' ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
@@ -2613,61 +2659,110 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       });
     }
 
-    var btn = document.getElementById('catBtn');
-    if (!btn) return;
+    // ===== FOGLIO CATEGORIE =====
+    // Era codice morto: si agganciava a un #catBtn che nel markup non esiste piu'.
+    // Rianimato e portato a DUE livelli, perche' la fila di pillole non scala. Con
+    // venti categorie il problema non e' scorrere: e' che non vedi cosa c'e' dentro
+    // l'hub. Qui e' tutto in verticale, col numero di servizi accanto, ordinato per
+    // quantita' (le piene per prime).
     var sh = document.createElement('div');
     sh.className = 'cat-sheet'; sh.id = 'catSheet';
     sh.innerHTML = '<div data-cat="close" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
       + '<div class="cat-card">'
       +   '<div style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px"></div>'
-      +   '<div style="font-weight:700;font-size:16px">Categoria</div>'
-      +   '<div id="catLista" style="margin-top:8px"></div>'
+      +   '<div style="font-weight:700;font-size:16px">Categorie</div>'
+      +   '<label class="cat-cerca" id="catCercaWrap" style="display:none">'
+      +     '<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+      +     '<input id="catCerca" type="search" autocomplete="off" placeholder="Filtra le categorie">'
+      +   '</label>'
+      +   '<div id="catLista" style="margin-top:6px"></div>'
       + '</div>';
     document.body.appendChild(sh);
 
-    function conta(catId){
-      return ALLBIZ.filter(function(s){ return !catId || s.categoria_id === catId; }).length;
+    function vive(){
+      return MACRO.filter(function(m){ return CATS.some(function(c){ return c.macro_categoria_id === m.id; }); })
+        .map(function(m){ return { m: m, n: conta(0, m.id) }; })
+        .sort(function(a, b){ return b.n - a.n || a.m.nome.localeCompare(b.m.nome); });
     }
-    function disegna(){
+
+    function disegna(q){
+      q = (q || '').trim().toLowerCase();
       var box = document.getElementById('catLista');
-      var h = '<button class="cat-opt' + (FILTRO_CAT ? '' : ' on') + '" data-cat="0">'
-            + '<span>Tutte</span><span class="cat-n">' + ALLBIZ.length + '</span></button>';
-      // raggruppate per macro, cosi' si legge la gerarchia invece di un elenco piatto
-      MACRO.forEach(function(m){
-        var figlie = CATS.filter(function(c){ return c.macro_categoria_id === m.id; });
-        if (!figlie.length) return;
-        h += '<div class="cat-macro">' + esc(m.nome) + '</div>';
-        figlie.forEach(function(c){
-          h += '<button class="cat-opt' + (FILTRO_CAT === c.id ? ' on' : '') + '" data-cat="' + c.id + '">'
-             + '<span>' + esc(c.nome) + '</span><span class="cat-n">' + conta(c.id) + '</span></button>';
+      if (!box) return;
+      var h = '<button class="cat-opt' + (!FILTRO_MACRO && !FILTRO_CAT ? ' on' : '') + '" data-pick="0:0">'
+            + '<span>Tutti i business</span><span class="cat-n">' + ALLBIZ.length + '</span></button>';
+      var trovato = false;
+
+      vive().forEach(function(x){
+        var figlie = CATS.filter(function(c){ return c.macro_categoria_id === x.m.id; })
+          .map(function(c){ return { c: c, n: conta(c.id, 0) }; })
+          .sort(function(a, b){ return b.n - a.n || a.c.nome.localeCompare(b.c.nome); });
+        // Cercando il nome di una macro restano tutte le sue figlie: se scrivi
+        // "trading" vuoi vedere cosa c'e' sotto, non solo la testa.
+        var macroOk = !q || x.m.nome.toLowerCase().indexOf(q) >= 0;
+        var viste = macroOk ? figlie : figlie.filter(function(y){ return y.c.nome.toLowerCase().indexOf(q) >= 0; });
+        if (!macroOk && !viste.length) return;
+        trovato = true;
+        h += '<button class="cat-opt cat-testa' + (FILTRO_MACRO === x.m.id && !FILTRO_CAT ? ' on' : '') + '" data-pick="' + x.m.id + ':0">'
+           + '<span>' + esc(x.m.nome) + '</span><span class="cat-n">' + x.n + '</span></button>';
+        viste.forEach(function(y){
+          h += '<button class="cat-opt cat-figlia' + (FILTRO_CAT === y.c.id ? ' on' : '') + '" data-pick="' + x.m.id + ':' + y.c.id + '">'
+             + '<span>' + esc(y.c.nome) + '</span><span class="cat-n">' + y.n + '</span></button>';
         });
       });
-      // categorie senza macro: non lasciarle sparire
-      var orfane = CATS.filter(function(c){ return !MACRO.some(function(m){ return m.id === c.macro_categoria_id; }); });
+
+      // Categorie senza macro: non devono sparire dall'hub solo perche' sono orfane.
+      var orfane = CATS.filter(function(c){ return !MACRO.some(function(m){ return m.id === c.macro_categoria_id; }); })
+        .filter(function(c){ return !q || c.nome.toLowerCase().indexOf(q) >= 0; })
+        .map(function(c){ return { c: c, n: conta(c.id, 0) }; })
+        .sort(function(a, b){ return b.n - a.n || a.c.nome.localeCompare(b.c.nome); });
       if (orfane.length) {
+        trovato = true;
         h += '<div class="cat-macro">Altro</div>';
-        orfane.forEach(function(c){
-          h += '<button class="cat-opt' + (FILTRO_CAT === c.id ? ' on' : '') + '" data-cat="' + c.id + '">'
-             + '<span>' + esc(c.nome) + '</span><span class="cat-n">' + conta(c.id) + '</span></button>';
+        orfane.forEach(function(y){
+          h += '<button class="cat-opt cat-figlia' + (FILTRO_CAT === y.c.id ? ' on' : '') + '" data-pick="0:' + y.c.id + '">'
+             + '<span>' + esc(y.c.nome) + '</span><span class="cat-n">' + y.n + '</span></button>';
         });
       }
+
+      if (!trovato) h += '<div style="padding:22px 12px;color:var(--mut);font-size:14px">Nessuna categoria con questo nome.</div>';
       box.innerHTML = h;
     }
-    btn.addEventListener('click', function(){
-      disegna();
+
+    function apri(){
+      // La ricerca compare solo quando serve davvero: con quattro voci e' arredamento.
+      var quante = vive().length + CATS.length;
+      var w = document.getElementById('catCercaWrap');
+      var ci = document.getElementById('catCerca');
+      if (ci) ci.value = '';
+      if (w) w.style.display = quante > 12 ? '' : 'none';
+      disegna('');
       sh.style.display = 'block';
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+    }
+    function chiudi(){ sh.style.display = 'none'; }
+
+    document.addEventListener('click', function(e){
+      if (e.target.closest && e.target.closest('[data-catopen]')) apri();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && sh.style.display === 'block') chiudi();
+    });
+    sh.addEventListener('input', function(e){
+      if (e.target && e.target.id === 'catCerca') disegna(e.target.value);
     });
     sh.addEventListener('click', function(e){
-      var b = e.target.closest && e.target.closest('[data-cat]');
+      var b = e.target.closest && e.target.closest('[data-cat],[data-pick]');
       if (!b) return;
-      var v = b.getAttribute('data-cat');
-      if (v === 'close') { sh.style.display = 'none'; return; }
-      FILTRO_CAT = parseInt(v) || 0;
-      var scelta = CATS.filter(function(c){ return c.id === FILTRO_CAT; })[0];
-      setTxt('catVal', scelta ? scelta.nome : 'Tutte');
-      renderFeeds();
-      sh.style.display = 'none';
+      if (b.getAttribute('data-cat') === 'close') { chiudi(); return; }
+      var pick = (b.getAttribute('data-pick') || '0:0').split(':');
+      // Scegliendo una sotto-categoria si accende ANCHE la sua macro: altrimenti la
+      // fila di pillole resta su "Tutti" e il filtro attivo non si vede da nessuna parte.
+      FILTRO_MACRO = parseInt(pick[0]) || 0;
+      FILTRO_CAT   = parseInt(pick[1]) || 0;
+      COLLEZIONE   = '';
+      disegnaTabs(); renderFeeds(); chiudi();
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
     });
   })();
 
