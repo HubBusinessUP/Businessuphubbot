@@ -211,6 +211,9 @@
     <div id="homeAvatar" data-goto="profilo" aria-label="Vai al profilo">A</div>
     <div class="hdrtit">Profilo</div>
     <div class="salu"><span id="homeGreet">Ciao,</span> <b id="homeName"></b></div>
+    <button id="homeBtn" aria-label="Torna alla directory" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+    </button>
     <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
   </div>
   <div class="body">
@@ -902,6 +905,14 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .hdr{padding:14px 20px 12px!important}
 .hdr #homeAvatar{width:42px!important;height:42px!important;font-size:16px!important}
 .hdr .salu{font-size:14.5px!important}
+/* Scorciatoia alla directory globale. Non c'e' sempre: compare SOLO quando sei
+   da qualche altra parte (filtro acceso, ricerca, scheda, tutorial). Un tasto
+   "torna a casa" sempre presente mentre sei gia' a casa e' solo rumore. */
+.hdr #homeBtn{flex-shrink:0;width:42px;height:42px;border-radius:999px;background:var(--s1);
+  border:1px solid transparent;color:var(--acc);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hdr #homeBtn[hidden]{display:none}
+.hdr #homeBtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hdr #homeBtn:active{transform:scale(.94)}
 .hdr #shareBtn{width:42px!important;height:42px!important;border-radius:999px!important;
   background:var(--s1)!important;border:1px solid transparent!important;color:var(--tx)!important}
 
@@ -912,6 +923,14 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-.01em;
   line-height:1;white-space:nowrap;cursor:pointer;border-bottom-color:transparent}
 .macro:active{transform:scale(.97)}
+/* PILLOLA IN EVIDENZA: la categoria messa in vetrina. Pieno d'accento, non un
+   riquadro tinto: deve essere l'unica cosa colorata della fila, se no smette di
+   evidenziare qualcosa. Selezionata scurisce invece di diventare bianca come le
+   altre: cambiando famiglia di colore perderebbe la vetrina proprio quando la usi. */
+.macro.spot{background:var(--acc);color:var(--on);font-weight:700}
+.macro.spot.on{background:var(--acc-d);color:var(--on)}
+.macro.spot svg{width:13px;height:13px;flex-shrink:0;fill:currentColor;stroke:none}
+.macro.spot{display:inline-flex;align-items:center;gap:7px}
 .macro.on{background:#F6F7F9;color:#131418;border-color:transparent;border-bottom-color:transparent}
 
 .subs{display:flex;gap:8px;overflow-x:auto;padding:10px 20px 0;scrollbar-width:none}
@@ -1368,7 +1387,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=107"></script>
+<script src="identikit.js?v=108"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1610,13 +1629,43 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // si resterebbe chiusi dentro un filtro senza un modo ovvio per uscirne.
     var h = '';
     if (regina) {
-      h += '<button class="macro' + (FILTRO_MACRO === regina.id && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="' + regina.id + '">' + esc(regina.nome) + '</button>';
+      // In vetrina la macro-categoria principale. Oggi si sceglie da sola: e' la
+      // piu' popolata, quindi resta quella giusta anche quando il catalogo cambia,
+      // senza che nessuno debba ricordarsi di aggiornare un nome scritto a mano.
+      h += '<button class="macro spot' + (FILTRO_MACRO === regina.id && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="' + regina.id + '">'
+         + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.7 6.7L12 16.8 6.1 20.5l1.7-6.7L2.5 9.4 9.4 9z"/></svg>'
+         + esc(regina.nome) + '</button>';
     }
     if (nSalv) h += '<button class="macro' + (COLLEZIONE === 'salvati' ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
     if (nVot)  h += '<button class="macro' + (COLLEZIONE === 'votati'  ? ' on' : '') + '" data-macro="votati">Votati</button>';
     mt.innerHTML = h;
 
     etichettaTendina();
+    aggiornaTastoHome();
+  }
+
+  // Il tasto compare quando NON sei nella directory pulita: filtro acceso, ricerca
+  // aperta, oppure sei dentro una scheda o un tutorial.
+  function aggiornaTastoHome(){
+    var b = document.getElementById('homeBtn');
+    if (!b) return;
+    var sc = document.querySelector('.scr.on');
+    var dove = sc ? sc.getAttribute('data-s') : 'home';
+    var altrove = (dove !== 'home') || !!FILTRO_MACRO || !!FILTRO_CAT || !!COLLEZIONE || !!(FILTRO_Q && FILTRO_Q.trim());
+    b.hidden = !altrove;
+  }
+
+  // Torna alla directory GLOBALE: schermata home e tutti i filtri spenti. Mezza
+  // pulizia (tornare in home lasciando il filtro acceso) e' peggio di niente:
+  // sembrerebbe che la directory si sia svuotata.
+  function tornaAllaDirectory(){
+    FILTRO_MACRO = 0; FILTRO_CAT = 0; COLLEZIONE = ''; FILTRO_Q = '';
+    var inp = document.getElementById('cerca'); if (inp) inp.value = '';
+    var wrap = document.getElementById('cercaWrap'); if (wrap) wrap.hidden = true;
+    var lente = document.getElementById('lenteBtn'); if (lente) lente.setAttribute('aria-expanded', 'false');
+    vaiAllHub();
+    disegnaTabs(); renderFeeds();
+    if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
   }
 
   // La tendina deve dire COSA STAI GUARDANDO, se no un filtro scelto li' dentro
@@ -2132,6 +2181,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     vaiA('tutorial');
   }
 
+  // Le schermate cambiano da piu' punti (nav, [data-goto], telecomandi): invece di
+  // agganciare ognuno, si rivaluta dopo ogni click. Costa niente e non se ne perde uno.
+  document.addEventListener('click', function(){ setTimeout(aggiornaTastoHome, 0); }, true);
+
   document.addEventListener('click', function(e){
     var t = e.target;
     if (!t || !t.closest) return;
@@ -2150,6 +2203,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
     var tt = t.closest('[data-tutorial]');
     if (tt) { e.stopPropagation(); apriTutorial(parseInt(tt.getAttribute('data-tutorial'))); return; }
+
+    if (t.closest('#homeBtn')) { e.stopPropagation(); tornaAllaDirectory(); return; }
 
     var b = t.closest('.savebtn');
     if (b) {
