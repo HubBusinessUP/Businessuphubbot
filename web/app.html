@@ -1367,6 +1367,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .cta-attiva[data-wait]:active,#wlConferma:active{background:#E85A2E!important}
 /* Ultima, cosi' vince su entrambe quando il bottone e' spento. */
 .cta-attiva[disabled]{background:var(--s2)!important;color:var(--mut)!important;border-color:var(--line2)!important}
+/* Il secondario ha la stessa forma del principale ma non il pieno d'accento: due
+   bottoni pieni uno sull'altro competono, e non si capisce piu' quale sia l'azione. */
+.cta-secondaria{width:100%;margin-top:9px;background:var(--s1);color:var(--tx);border:1px solid transparent;
+  border-radius:11px;padding:15px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer}
+.cta-secondaria:active{transform:scale(.98)}
 #wlConferma[disabled]{background:var(--s2)!important;color:var(--mut)!important}
 
 /* Spunta del disclaimer coordinata alla sezione */
@@ -1443,7 +1448,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=120"></script>
+<script src="identikit.js?v=121"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2079,19 +2084,22 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // una schermata a se'. Qui resta solo la porta: infilare venti step in fondo
     // alla scheda era il motivo per cui la scheda non si leggeva.
     if (mioAttivo && d.attivo) {
+      // DUE bottoni, in quest'ordine (Antonio): sopra l'azione vera -- andare dal
+      // fornitore e attivare -- sotto la porta alle istruzioni. Prima il bottone
+      // cambiava nome da solo ("Rivedi i passi", "Riprendi dal passo 3") e chi
+      // tornava sulla scheda non ritrovava piu' quello che aveva premuto.
+      if (d.ref_link) {
+        out += '<a class="cta-attiva" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1"'
+             + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center">Attiva servizio</a>';
+        if (d.ref_fonte === 'sponsor') out += '<div class="ssrc">E il link di chi ti ha invitato.</div>';
+      }
       if (steps.length) {
         var fattiOra = Math.min((d.step_progress && d.step_progress.ultimo_step) || 0, steps.length);
-        var finito = fattiOra >= steps.length;
-        out += '<button class="cta-attiva" data-tutorial="' + s.id + '">'
-             + (finito ? 'Rivedi i passi' : (fattiOra ? 'Riprendi dal passo ' + (fattiOra + 1) : 'Apri le istruzioni'))
-             + '</button>';
-        out += '<div class="ssrc">' + fattiOra + ' di ' + steps.length + (finito ? ' completati.' : ' fatti.') + '</div>';
-      }
-      if (d.ref_link) {
-        out += '<div class="seyeb" style="margin-top:18px">Il tuo link</div>'
-          + '<a class="slink" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1">Apri ' + esc(s.nome)
-          + '<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
-        if (d.ref_fonte === 'sponsor') out += '<div class="sd">E il link di chi ti ha invitato.</div>';
+        // Etichetta FISSA. Lo stato di avanzamento sta nella riga sotto, dove puo'
+        // cambiare senza spostare il punto di riferimento.
+        out += '<button class="cta-secondaria" data-tutorial="' + s.id + '">Accedi al tutorial</button>';
+        out += '<div class="ssrc">' + fattiOra + ' di ' + steps.length
+             + (fattiOra >= steps.length ? ' completati.' : ' passi fatti.') + '</div>';
       }
       if (!steps.length && !d.ref_link) {
         out += '<button class="cta-attiva" disabled>Istruzioni in arrivo</button>';
