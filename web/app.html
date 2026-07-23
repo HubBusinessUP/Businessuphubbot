@@ -1455,7 +1455,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=124"></script>
+<script src="identikit.js?v=125"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2044,6 +2044,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     return out;
   }
 
+  // Le etichette dei bottoni. Vuoto in admin = si usa quella predefinita, cosi'
+  // un servizio nuovo non nasce con bottoni senza nome e cambiare il testo di
+  // riferimento vale per tutti quelli che non l'hanno personalizzato.
+  var CTA_STD = {
+    aggiungi: 'Aggiungi subito',
+    attiva:   'Attiva servizio',
+    tutorial: 'Accedi al tutorial',
+    waitlist: 'Avvisami quando parte'
+  };
+  function etichetta(s, chiave){
+    var c = (s && s.cta) || {};
+    var v = (c[chiave] || '').trim ? (c[chiave] || '').trim() : '';
+    return esc(v || CTA_STD[chiave]);
+  }
+
   function schedaHtml(d){
     return _schedaBody(d)
       + '<button class="sc-share" data-share="1"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>';
@@ -2120,14 +2135,15 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       // tornava sulla scheda non ritrovava piu' quello che aveva premuto.
       if (d.ref_link) {
         out += '<a class="cta-attiva" href="' + esc(d.ref_link) + '" target="_blank" rel="noopener" data-ext="1"'
-             + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center">Attiva servizio</a>';
+             + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center">'
+             + etichetta(s, 'attiva') + '</a>';
         if (d.ref_fonte === 'sponsor') out += '<div class="ssrc">E il link di chi ti ha invitato.</div>';
       }
       if (steps.length) {
         var fattiOra = Math.min((d.step_progress && d.step_progress.ultimo_step) || 0, steps.length);
         // Etichetta FISSA. Lo stato di avanzamento sta nella riga sotto, dove puo'
         // cambiare senza spostare il punto di riferimento.
-        out += '<button class="cta-secondaria" data-tutorial="' + s.id + '">Accedi al tutorial</button>';
+        out += '<button class="cta-secondaria" data-tutorial="' + s.id + '">' + etichetta(s, 'tutorial') + '</button>';
         out += '<div class="ssrc">' + fattiOra + ' di ' + steps.length
              + (fattiOra >= steps.length ? ' completati.' : ' passi fatti.') + '</div>';
       }
@@ -2151,7 +2167,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           + '<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:7px"><path d="M20 6 9 17l-5-5"/></svg>'
           + 'Sei in lista</button>';
       } else {
-        out += '<button class="cta-attiva" data-wait="' + s.id + '">Avvisami quando parte</button>';
+        out += '<button class="cta-attiva" data-wait="' + s.id + '">' + etichetta(s, 'waitlist') + '</button>';
         if (d.waitlist_count) out += '<div class="ssrc">' + d.waitlist_count + (d.waitlist_count === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>';
       }
       return out;
@@ -2163,7 +2179,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // testo integrale e' a un tocco). L'accettazione si registra come prima.
     // Resta spento solo se manca l'anagrafica, che il server rifiuterebbe con 403.
     out += '<button class="cta-attiva" data-attiva="' + s.id + '"'
-      + (d.anagrafica_ok === false ? ' data-bloccato="1" disabled' : '') + '>Aggiungi subito</button>';
+      + (d.anagrafica_ok === false ? ' data-bloccato="1" disabled' : '') + '>' + etichetta(s, 'aggiungi') + '</button>';
     out += '<div class="cons">Proseguendo accetti le <a data-disc="attivazione">condizioni</a>.'
       + ' Servizio di un fornitore terzo: di ogni conseguenza risponde lui.</div>';
     // Il gate dell'anagrafica scattava solo DOPO il tap, con un 403 muto: chi non
@@ -2296,7 +2312,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var tocc = done || ora;
       var titolo = esc(st.titolo || ('Passo ' + (i + 1)));
       return '<div class="stcard ' + (done ? 'done' : (ora ? 'ora' : 'futuro')) + '">'
-        + '<div class="stnum">' + (done ? '&#10003;' : (i + 1)) + '</div>'
+        // Il numero resta SEMPRE, anche a step fatto: prima diventava una spunta e
+        // si perdeva il riferimento ("ero al 3 o al 4?"). Che sia fatto lo dicono
+        // gia' il colore del numero e la spunta qui sotto.
+        + '<div class="stnum">' + (i + 1) + '</div>'
         + '<div class="stbody">'
         +   '<div class="sttit">' + titolo + '</div>'
         +   (st.testo ? '<div class="sttxt">' + esc(st.testo) + '</div>' : '')
@@ -2541,7 +2560,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.notificationOccurred('success'); } catch(x){} }
         })
         .catch(function(err){
-          a.disabled = false; a.textContent = 'Aggiungi subito';
+          // L'etichetta era stata sostituita da "Un attimo...": si rimette quella
+          // vera del servizio, non la predefinita, se no il bottone cambia nome
+          // proprio nel momento in cui qualcosa e' andato storto.
+          a.disabled = false;
+          a.textContent = (SCHEDE[aid] && SCHEDE[aid].servizio && (SCHEDE[aid].servizio.cta || {}).aggiungi) || 'Aggiungi subito';
           toast(msgErrore(err && err.message));
         });
       return;

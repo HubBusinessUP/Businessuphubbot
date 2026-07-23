@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=124"></script>
+<script src="/identikit.js?v=125"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -97,6 +97,9 @@
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
   .step-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .step-n { flex: none; width: 26px; height: 26px; border-radius: 7px; background: var(--panel);
+    border: 1px solid var(--border); color: var(--text-dim); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; margin-top: 4px; font-variant-numeric: tabular-nums; }
   .step-row .step-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
   .step-azioni { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .step-row input, .step-row textarea { font-size: 13px; }
@@ -522,6 +525,21 @@
               <option value="4">Avanzata</option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <div class="field" style="border-top:1px solid var(--border);padding-top:14px">
+        <label>Etichette dei bottoni</label>
+        <div class="item-meta" style="margin-bottom:8px">
+          Lascia vuoto per usare il testo predefinito, quello scritto in grigio nel campo.
+        </div>
+        <div class="row2">
+          <div class="field"><label>Bottone principale</label><input id="svcCtaAggiungi" placeholder="Aggiungi subito" /></div>
+          <div class="field"><label>Vai dal fornitore</label><input id="svcCtaAttiva" placeholder="Attiva servizio" /></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Apri il tutorial</label><input id="svcCtaTutorial" placeholder="Accedi al tutorial" /></div>
+          <div class="field"><label>Lista d'attesa</label><input id="svcCtaWaitlist" placeholder="Avvisami quando parte" /></div>
         </div>
       </div>
 
@@ -1854,6 +1872,15 @@
     // Legge i valori CORRENTI di una riga step dal DOM. Serve sia al salvataggio sia
     // alla duplicazione: duplicare partendo dall'oggetto con cui la riga era stata
     // creata copierebbe il testo vecchio invece di quello appena scritto.
+    // Rinumera le righe di UN contenitore. Va richiamata dopo ogni aggiunta,
+    // duplicazione o eliminazione: un numero scritto alla creazione resta indietro
+    // appena si inserisce o si toglie qualcosa in mezzo.
+    function rinumeraStep(editor) {
+      if (!editor) return;
+      [...editor.querySelectorAll(":scope > .step-row .step-n")].forEach((n, i) => { n.textContent = i + 1; });
+    }
+    window.rinumeraStep = rinumeraStep;
+
     function leggiStepRow(row) {
       const links = [...row.querySelectorAll(".step-link")].map((r) => ({
         label: r.querySelector(".step-linklabel").value.trim(),
@@ -1990,6 +2017,7 @@
       wrap.className = "step-row";
       const esc = (x) => String(x ?? "").replace(/"/g, "&quot;");
       wrap.innerHTML = `
+        <div class="step-n"></div>
         <div class="step-fields">
           <input class="step-titolo" placeholder="Titolo step" value="${esc(step?.titolo)}" />
           <textarea class="step-testo" placeholder="Testo">${step?.testo || ""}</textarea>
@@ -2009,7 +2037,7 @@
           <button class="icon-btn" onclick="duplicaStepRow(this)" title="Duplica questo step">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
-          <button class="icon-btn danger" onclick="this.closest('.step-row').remove()" title="Elimina questo step">✕</button>
+          <button class="icon-btn danger" onclick="(function(b){var r=b.closest('.step-row');var e=r.parentElement;r.remove();rinumeraStep(e);})(this)" title="Elimina questo step">✕</button>
         </div>
       `;
       // Il contenitore: quello della riga da cui si duplica, altrimenti quello
@@ -2020,6 +2048,7 @@
       else editor.appendChild(wrap);
       // I link si aggiungono DOPO che la riga e' nel DOM. Il vecchio campo singolo
       // resta letto: gli step gia' scritti non vanno migrati a mano.
+      rinumeraStep(editor);
       const boxLink = wrap.querySelector(".step-links");
       let lk = Array.isArray(step?.links) ? step.links.filter((l) => l && l.url) : [];
       if (!lk.length && step?.link_url) lk = [{ label: step.link_label, url: step.link_url }];
@@ -2039,6 +2068,11 @@
       document.getElementById("svcStato").value = s?.stato || "pausa";
       document.getElementById("svcDescrizione").value = s?.descrizione || "";
       document.getElementById("svcPanoramica").value = s?.panoramica || "";
+      const cta = (s && s.cta) || {};
+      document.getElementById("svcCtaAggiungi").value = cta.aggiungi || "";
+      document.getElementById("svcCtaAttiva").value = cta.attiva || "";
+      document.getElementById("svcCtaTutorial").value = cta.tutorial || "";
+      document.getElementById("svcCtaWaitlist").value = cta.waitlist || "";
       contaParole();
       document.getElementById("svcSplit").value = s?.split_percent ?? "";
       document.getElementById("svcPrezzo").value = s?.prezzo || "";
@@ -2209,6 +2243,17 @@
         descrizione: document.getElementById("svcDescrizione").value.trim(),
         panoramica: document.getElementById("svcPanoramica").value.trim(),
         come_funziona: comeFunziona,
+        // Le chiavi vuote NON si salvano: una stringa vuota in database sarebbe
+        // indistinguibile da "voglio un bottone senza testo".
+        cta: (function () {
+          const c = {};
+          [["aggiungi", "svcCtaAggiungi"], ["attiva", "svcCtaAttiva"],
+           ["tutorial", "svcCtaTutorial"], ["waitlist", "svcCtaWaitlist"]].forEach(([k, id]) => {
+            const v = document.getElementById(id).value.trim();
+            if (v) c[k] = v;
+          });
+          return c;
+        })(),
         split_percent: document.getElementById("svcSplit").value ? parseInt(document.getElementById("svcSplit").value) : null,
         prezzo: document.getElementById("svcPrezzo").value.trim(),
         requisiti: document.getElementById("svcRequisiti").value.trim(),

@@ -1692,7 +1692,7 @@ async function applicaCambioStato(id: number, nome: string, prima: string, dopo:
 }
 
 async function apiAdminServiziSave(body: any) {
-  const { id, nome, categoria_id, tipo, descrizione, panoramica, come_funziona, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse, longevita, attivo_da, logo_url, voci, budget_nota, costi_nota, in_evidenza, voti_base, logo_pieno } = body
+  const { id, nome, categoria_id, tipo, descrizione, panoramica, come_funziona, cta, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse, longevita, attivo_da, logo_url, voci, budget_nota, costi_nota, in_evidenza, voti_base, logo_pieno } = body
   const row: Record<string, unknown> = { nome, categoria_id: categoria_id || null, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
     budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null, risorse: risorse ?? [], logo_url: logo_url || null }
   // longevita e attivo_da NON sono nel form dell'admin: scriverli sempre significherebbe
@@ -1704,6 +1704,7 @@ async function apiAdminServiziSave(body: any) {
   // manderebbe, e scriverla sempre cancellerebbe una panoramica gia' redatta.
   if (panoramica !== undefined) row.panoramica = panoramica || null
   if (come_funziona !== undefined) row.come_funziona = Array.isArray(come_funziona) ? come_funziona : []
+  if (cta !== undefined) row.cta = (cta && typeof cta === "object") ? cta : {}
   if (voti_base !== undefined) row.voti_base = parseInt(voti_base) || 0
   if (logo_pieno !== undefined) row.logo_pieno = !!logo_pieno
   if (budget_nota !== undefined) row.budget_nota = budget_nota || null
