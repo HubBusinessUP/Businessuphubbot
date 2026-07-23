@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=121"></script>
+<script src="/identikit.js?v=122"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -433,6 +433,10 @@
         </div>
         <div id="svcLogoStato" style="font-size:11.5px;color:var(--text-dim);margin-top:4px"></div>
         <div id="svcLogoPrev" style="margin-top:6px"></div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;margin-top:8px">
+          <input type="checkbox" id="svcLogoPieno" /> Riempi il riquadro (ritaglia i bordi)
+        </label>
+        <div class="item-meta">Lascialo spento per un logo largo: riempiendo se ne vedrebbe solo la parte centrale.</div>
       </div>
       <div class="field"><label>Categoria</label><select id="svcCategoria"></select></div>
       <div class="row2">
@@ -2011,6 +2015,7 @@
       document.getElementById("svcId").value = s?.id || "";
       document.getElementById("svcNome").value = s?.nome || "";
       document.getElementById("svcLogo").value = s?.logo_url || "";
+      document.getElementById("svcLogoPieno").checked = !!s?.logo_pieno;
       anteprimaLogo();
       document.getElementById("svcTipo").value = s?.tipo || "";
       document.getElementById("svcStato").value = s?.stato || "pausa";
@@ -2150,6 +2155,7 @@
         budget_nota: document.getElementById("svcBudgetNota").value.trim(),
         costi_nota: document.getElementById("svcCostiNota").value.trim(),
         voti_base: parseInt(document.getElementById("svcVotiBase").value) || 0,
+        logo_pieno: document.getElementById("svcLogoPieno").checked,
         in_evidenza: document.getElementById("svcEvidenza").checked,
         id: document.getElementById("svcId").value || undefined,
         nome: document.getElementById("svcNome").value.trim(),

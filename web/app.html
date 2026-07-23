@@ -1029,6 +1029,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    logotipo 228x66, e ritagliandolo nel riquadro quadrato se ne vedrebbe solo il
    terzo centrale -- cioe' tre lettere a caso. */
 .flogo img{width:100%;height:100%;object-fit:contain;display:block}
+.flogo.pieno img{object-fit:cover}
 
 /* Voto: triangolo pieno sopra il numero, senza scatola. */
 .votebtn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;
@@ -1448,7 +1449,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=121"></script>
+<script src="identikit.js?v=122"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1571,7 +1572,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function logoHtml(s){
     var u = (s.logo_url || '').trim();
     var src = (u && /^https?:\/\//i.test(u)) ? u : LOGO_RISERVA;
-    return '<div class="flogo"><img src="' + esc(src) + '" alt="" loading="lazy"'
+    // Chi ha un'immagine quadrata puo' riempire il riquadro; per un logotipo largo
+    // riempire vorrebbe dire mostrarne il terzo centrale, cioe' tre lettere a caso.
+    return '<div class="flogo' + (s.logo_pieno ? ' pieno' : '') + '"><img src="' + esc(src) + '" alt="" loading="lazy"'
       + ' onerror="this.onerror=null;this.src=&quot;' + LOGO_RISERVA + '&quot;"></div>';
   }
 
