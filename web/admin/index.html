@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=119"></script>
+<script src="/identikit.js?v=120"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -452,7 +452,14 @@
       </div>
       <div class="row2">
         <div class="field"><label>Requisiti</label><input id="svcRequisiti" /></div>
-        <div class="field"><label>Costi</label><input id="svcCosti" /></div>
+        <div class="field"><label>Costi</label><input id="svcCosti" placeholder="testo libero, es. 25 USDT/mese" /></div>
+        <div class="field"><label>Nota sotto il costo</label><input id="svcCostiNota" placeholder="es. VPS e gestione" /></div>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="svcEvidenza" /> In primo piano nella directory
+          </label>
+          <div class="item-meta">Sta sopra la lista, staccato. Uno solo alla volta: accendendolo qui si spegne da solo quello di prima.</div>
+        </div>
       </div>
       <div class="row2">
         <div class="field"><label>Link principale</label><input id="svcLink" /></div>
@@ -474,6 +481,7 @@
         <div class="item-meta" style="margin-bottom:8px">Requisiti (per il pallino di compatibilità col profilo utente). Lascia vuoto = nessun requisito su quel campo.</div>
         <div class="row2">
           <div class="field"><label>Budget minimo (€)</label><input id="svcBudget" type="number" min="0" placeholder="es. 5000" /></div>
+          <div class="field"><label>Nota sotto il capitale</label><input id="svcBudgetNota" placeholder="es. su ciascuno dei due broker (vuoto = &quot;minimo di capitale&quot;)" /></div>
           <div class="field"><label>Livello di rischio</label>
             <select id="svcRischio">
               <option value="">—</option>
@@ -2011,6 +2019,9 @@
       document.getElementById("svcLink").value = s?.link_principale || "";
       document.getElementById("svcOrdine").value = s?.ordine ?? 0;
       document.getElementById("svcTempo").value = s?.tempo_stimato || "";
+      document.getElementById("svcBudgetNota").value = s?.budget_nota || "";
+      document.getElementById("svcCostiNota").value = s?.costi_nota || "";
+      document.getElementById("svcEvidenza").checked = !!s?.in_evidenza;
       const boxVoci = document.getElementById("vociEditor");
       if (boxVoci) {
         boxVoci.innerHTML = "";
@@ -2132,6 +2143,9 @@
 
       const body = {
         voci,
+        budget_nota: document.getElementById("svcBudgetNota").value.trim(),
+        costi_nota: document.getElementById("svcCostiNota").value.trim(),
+        in_evidenza: document.getElementById("svcEvidenza").checked,
         id: document.getElementById("svcId").value || undefined,
         nome: document.getElementById("svcNome").value.trim(),
         logo_url: document.getElementById("svcLogo").value.trim(),

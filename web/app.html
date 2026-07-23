@@ -257,6 +257,7 @@
         </button>
       </div>
       <nav class="macros" id="macroTabs"></nav>
+      <div id="primoPiano"></div>
       <div id="listaReale"></div>
     </section>
 
@@ -981,6 +982,20 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sub.on{background:var(--s2);border-color:transparent;color:var(--tx);font-weight:600}
 #listaReale .vuoto{padding:26px 18px}
 
+/* IN PRIMO PIANO. Sta SOPRA la lista e fuori dal suo riquadro: dentro sarebbe una
+   riga come le altre con un bordo diverso, e si leggerebbe come un errore di stile.
+   Staccata invece si legge per quello che e', una scelta editoriale.
+   Il bordo e' l'unico dell'app: qui serve a dire "questa non e' in fila con le
+   altre", ed e' l'unico punto dove quel segnale non ha alternative. */
+#primoPiano:empty{display:none}
+#primoPiano{margin:14px 20px 0}
+.pp-et{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin:0 2px 8px}
+.pp-et::after{content:'';flex:1;height:1px;background:var(--line)}
+#primoPiano .fitem{background:var(--s0);border:1px solid rgba(37,207,110,.32);border-radius:14px}
+#primoPiano .fitem::before{display:none}
+#primoPiano .frow{padding:14px 14px 14px 16px}
+
 /* ENTRATA IN SCENA. Le righe salgono sfalsate: e' l'unico effetto che si puo'
    permettere una lista, perche' dura meno di mezzo secondo e poi sparisce.
    Lo scaglionamento si ferma alla decima riga: oltre, l'ultima aspetterebbe
@@ -1428,7 +1443,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=119"></script>
+<script src="identikit.js?v=120"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1575,7 +1590,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   function visibili(){
     var q = FILTRO_Q.trim().toLowerCase();
+    // Senza filtri il servizio in vetrina sta gia' sopra: lasciarlo anche in lista
+    // vorrebbe dire mostrarlo due volte nella stessa schermata.
+    var fuoriVetrina = !(FILTRO_MACRO || FILTRO_CAT || COLLEZIONE || q);
     return ALLBIZ.filter(function(s){
+      if (fuoriVetrina && s.in_evidenza) return false;
       if (COLLEZIONE === 'salvati' && !SAVED[s.id]) return false;
       if (COLLEZIONE === 'votati'  && !VOTED[s.id]) return false;
       if (FILTRO_MACRO && !CATS.some(function(c){ return c.id === s.categoria_id && c.macro_categoria_id === FILTRO_MACRO; })) return false;
@@ -1585,6 +1604,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return ((s.nome || '') + ' ' + (s.descrizione || '')).toLowerCase().indexOf(q) >= 0;
     });
   }
+  // Il servizio in vetrina. Sparisce quando un filtro e' acceso o stai cercando:
+  // li' stai guardando un sottoinsieme preciso, e una scheda che resta li' fuori
+  // dal filtro sembra un risultato sbagliato.
+  function renderPrimoPiano(){
+    var box = document.getElementById('primoPiano');
+    if (!box) return;
+    var filtrando = !!(FILTRO_MACRO || FILTRO_CAT || COLLEZIONE || (FILTRO_Q && FILTRO_Q.trim()));
+    var s = filtrando ? null : ALLBIZ.filter(function(x){ return x.in_evidenza; })[0];
+    if (!s) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="pp-et">In primo piano</div>' + rowHtml(s, 0);
+  }
+
   var ULTIMA_Q = '';
   function renderFeeds(){
     var host = document.getElementById('listaReale');
@@ -1602,6 +1633,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
     // Lista PIATTA, ordinata per interesse (voti + salvati). Niente piu' fasce temporali:
     // la data diceva quando l'abbiamo inserito noi, non quanto vale per chi guarda.
+    renderPrimoPiano();
     host.classList.remove('anima');
     host.innerHTML = lista.map(function(s, i){ return rowHtml(s, i); }).join('');
     if (animare) {
@@ -1913,7 +1945,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function scMisure(d){
     var s = d.servizio || {};
     var m = [];
-    if (s.budget_minimo) m.push(['Quanto serve?', Number(s.budget_minimo).toLocaleString('it-IT') + ' <small>&euro;</small>', 'minimo di capitale']);
+    if (s.budget_minimo) m.push(['Quanto serve?', Number(s.budget_minimo).toLocaleString('it-IT') + ' <small>&euro;</small>', s.budget_nota || 'minimo di capitale']);
 
     var attiv = (s.costo_attivazione != null && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
     var mens  = (s.costi_fissi_mensili != null && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
@@ -1924,7 +1956,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       m.push(['Quanto costa?',
         mens ? (eu(mens) + '<small>/mese</small>') : eu(attiv),
         (attiv && mens) ? ('piu ' + eu(attiv) + ' una tantum') : (attiv ? 'una tantum' : 'ricorrente')]);
-    } else if (s.costi) { m.push(['Quanto costa?', esc(s.costi), '']); }
+      if (s.costi_nota) m[m.length - 1][2] = esc(s.costi_nota);
+    } else if (s.costi) {
+      // Il campo numerico stampa sempre euro: per un prezzo in USDT (o in
+      // qualunque altra valuta) l'unico modo onesto e' il testo libero.
+      m.push(['Quanto costa?', esc(s.costi), esc(s.costi_nota || '')]);
+    }
 
     // "circa 40 minuti" in un terzo di schermo a 18px non ci sta: nella casella si
     // tiene il numero e l'unita', il resto e' rumore ("circa" lo dice gia' il contesto).
