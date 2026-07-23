@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=123"></script>
+<script src="/identikit.js?v=124"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -449,7 +449,12 @@
           </select>
         </div>
       </div>
-      <div class="field"><label>Descrizione</label><textarea id="svcDescrizione"></textarea></div>
+      <div class="field"><label>Descrizione</label><textarea id="svcDescrizione" placeholder="Una riga: la frase sotto il nome nella lista"></textarea></div>
+      <div class="field">
+        <label>Panoramica</label>
+        <textarea id="svcPanoramica" rows="10" placeholder="Cos'e il servizio e come funziona. Una riga vuota separa i paragrafi." oninput="contaParole()"></textarea>
+        <div class="item-meta" id="svcPanoramicaConta">0 parole</div>
+      </div>
       <div class="row2">
         <div class="field"><label>Split %</label><input id="svcSplit" type="number" /></div>
         <div class="field"><label>Prezzo</label><input id="svcPrezzo" placeholder="es: Abbonamento mensile" /></div>
@@ -518,6 +523,16 @@
             </select>
           </div>
         </div>
+      </div>
+
+      <div class="field" style="border-top:1px solid var(--border);padding-top:14px">
+        <label>Come funziona &mdash; blocchi della scheda</label>
+        <div class="item-meta" style="margin-bottom:8px">
+          Stessa forma degli step del tutorial, ma qui si SPIEGA e basta: niente spunta
+          &laquo;fatto&raquo;. La linguetta nella scheda compare solo se c'&egrave; almeno un blocco.
+        </div>
+        <div id="cfEditor"></div>
+        <button class="btn btn-secondary btn-small" onclick="addStepRow(null, null, 'cfEditor')">+ Aggiungi blocco</button>
       </div>
 
       <div class="field" style="border-top:1px solid var(--border);padding-top:14px">
@@ -1970,7 +1985,7 @@
       addStepRow(leggiStepRow(row), row);
     }
 
-    function addStepRow(step, dopo) {
+    function addStepRow(step, dopo, editorId) {
       const wrap = document.createElement("div");
       wrap.className = "step-row";
       const esc = (x) => String(x ?? "").replace(/"/g, "&quot;");
@@ -1997,7 +2012,10 @@
           <button class="icon-btn danger" onclick="this.closest('.step-row').remove()" title="Elimina questo step">✕</button>
         </div>
       `;
-      const editor = document.getElementById("stepsEditor");
+      // Il contenitore: quello della riga da cui si duplica, altrimenti quello
+      // chiesto, altrimenti gli step del tutorial. Cosi' "Duplica" finisce sempre
+      // nella sezione giusta senza che il chiamante debba dirlo.
+      const editor = (dopo && dopo.parentElement) || document.getElementById(editorId || "stepsEditor");
       if (dopo && dopo.parentElement === editor) editor.insertBefore(wrap, dopo.nextSibling);
       else editor.appendChild(wrap);
       // I link si aggiungono DOPO che la riga e' nel DOM. Il vecchio campo singolo
@@ -2020,6 +2038,8 @@
       document.getElementById("svcTipo").value = s?.tipo || "";
       document.getElementById("svcStato").value = s?.stato || "pausa";
       document.getElementById("svcDescrizione").value = s?.descrizione || "";
+      document.getElementById("svcPanoramica").value = s?.panoramica || "";
+      contaParole();
       document.getElementById("svcSplit").value = s?.split_percent ?? "";
       document.getElementById("svcPrezzo").value = s?.prezzo || "";
       document.getElementById("svcRequisiti").value = s?.requisiti || "";
@@ -2056,6 +2076,10 @@
       document.getElementById("stepsEditor").innerHTML = "";
       const steps = Array.isArray(s?.tutorial_steps) ? s.tutorial_steps : [];
       steps.forEach((st) => addStepRow(st));
+
+      document.getElementById("cfEditor").innerHTML = "";
+      const cf = Array.isArray(s?.come_funziona) ? s.come_funziona : [];
+      cf.forEach((b) => addStepRow(b, null, "cfEditor"));
 
       document.getElementById("risorseEditor").innerHTML = "";
       const risorse = Array.isArray(s?.risorse) ? s.risorse : [];
@@ -2141,8 +2165,22 @@
       if (!aggiunte) alert("Le domande del modello ci sono già tutte.");
     }
 
+    function contaParole() {
+      const t = (document.getElementById("svcPanoramica").value || "").trim();
+      const n = t ? t.split(/\s+/).length : 0;
+      const el = document.getElementById("svcPanoramicaConta");
+      el.textContent = n + (n === 1 ? " parola" : " parole");
+      // Oltre le 250 diventa un muro di testo su un telefono. Si segnala, non si
+      // blocca: il limite giusto lo decide chi scrive, non il campo.
+      el.style.color = n > 250 ? "#e0a640" : "";
+    }
+    window.contaParole = contaParole;
+
     async function saveServizio() {
       const steps = [...document.querySelectorAll("#stepsEditor .step-row")]
+        .map(leggiStepRow).filter((s) => s.titolo || s.testo);
+
+      const comeFunziona = [...document.querySelectorAll("#cfEditor .step-row")]
         .map(leggiStepRow).filter((s) => s.titolo || s.testo);
 
       const risorse = [...document.querySelectorAll("#risorseEditor .risorsa-row")].map((row) => ({
@@ -2169,6 +2207,8 @@
         tipo: document.getElementById("svcTipo").value.trim(),
         stato: document.getElementById("svcStato").value,
         descrizione: document.getElementById("svcDescrizione").value.trim(),
+        panoramica: document.getElementById("svcPanoramica").value.trim(),
+        come_funziona: comeFunziona,
         split_percent: document.getElementById("svcSplit").value ? parseInt(document.getElementById("svcSplit").value) : null,
         prezzo: document.getElementById("svcPrezzo").value.trim(),
         requisiti: document.getElementById("svcRequisiti").value.trim(),

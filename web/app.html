@@ -773,7 +773,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 
 /* Le due schede. Sottolineatura e non pillole: qui non sono filtri, sono pagine
    dello stesso documento, e devono pesare meno delle categorie in home. */
-.sctabs{display:flex;gap:22px;margin:16px 20px 0;border-bottom:1px solid var(--line)}
+.sctabs{display:flex;gap:18px;margin:16px 20px 0;border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none}
+.sctabs::-webkit-scrollbar{display:none}
+.sctab{white-space:nowrap}
 .sctab{background:none;border:none;padding:0 0 11px;color:var(--mut);font-family:var(--sans);
   font-size:14.5px;font-weight:600;cursor:pointer;position:relative}
 .sctab.on{color:var(--tx)}
@@ -781,7 +784,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .scpane{padding:16px 20px 0}
 /* Misure e voci portano il proprio margine laterale: qui va tolto, se no rientrano
    due volte e la colonna non si allinea piu' con il resto della schermata. */
-.scpane[data-pane="car"]{padding:16px 0 0}
+.scpane[data-pane="car"],.scpane[data-pane="cf"]{padding:16px 0 0}
+/* Le card di "Come funziona" non hanno stati: niente numero acceso, niente
+   opacita' ridotta. Sono tutte allo stesso livello perche' si leggono tutte. */
+.stcard.cf .stnum{background:var(--s2);color:var(--dim)}
 .scpane[hidden]{display:none}
 .scfondo{padding:18px 20px calc(24px + env(safe-area-inset-bottom))}
 
@@ -1449,7 +1455,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=123"></script>
+<script src="identikit.js?v=124"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2000,6 +2006,27 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }).join('') + '</div>';
   }
 
+  // "Come funziona": si spiega, non si esegue. Stessa forma delle card del
+  // tutorial (si riconoscono), ma niente spunta "fatto": una spiegazione che
+  // chiede di essere spuntata sembra un passo obbligatorio e blocca chi legge.
+  function scComeFunziona(d){
+    var s = d.servizio || {};
+    var b = Array.isArray(s.come_funziona) ? s.come_funziona.filter(function(x){
+      return x && (x.titolo || x.testo);
+    }) : [];
+    if (!b.length) return '';
+    return b.map(function(x, i){
+      return '<div class="stcard cf">'
+        + '<div class="stnum">' + (i + 1) + '</div>'
+        + '<div class="stbody">'
+        +   (x.titolo ? '<div class="sttit">' + esc(x.titolo) + '</div>' : '')
+        +   (x.testo ? '<div class="sttxt">' + esc(x.testo) + '</div>' : '')
+        +   mediaHtml(x.media_url)
+        +   linkStepHtml(x)
+        + '</div></div>';
+    }).join('');
+  }
+
   function scCaratteristiche(d){
     var s = d.servizio || {};
     var out = scMisure(d) + scVoci(d);
@@ -2232,12 +2259,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
 
   function schedaScreenHtml(d){
+    var cf = scComeFunziona(d);
+    // La linguetta compare solo se c'e' qualcosa dentro: una scheda vuota che si
+    // puo' aprire e' peggio di una scheda che non c'e'.
+    if (!cf && SC_TAB === 'cf') SC_TAB = 'pan';
     return scTesta(d)
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
+      +   (cf ? '<button class="sctab' + (SC_TAB === 'cf' ? ' on' : '') + '" data-sctab="cf">Come funziona</button>' : '')
       +   '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>'
       + '</div>'
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
+      + (cf ? '<div class="scpane"' + (SC_TAB === 'cf' ? '' : ' hidden') + ' data-pane="cf">' + cf + '</div>' : '')
       + '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + scCaratteristiche(d) + '</div>'
       + '<div class="scfondo">' + schedaHtml(d) + '</div>';
   }
