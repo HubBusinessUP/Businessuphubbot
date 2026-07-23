@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=117"></script>
+<script src="/identikit.js?v=118"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1825,14 +1825,39 @@
     // alla duplicazione: duplicare partendo dall'oggetto con cui la riga era stata
     // creata copierebbe il testo vecchio invece di quello appena scritto.
     function leggiStepRow(row) {
+      const links = [...row.querySelectorAll(".step-link")].map((r) => ({
+        label: r.querySelector(".step-linklabel").value.trim(),
+        url: r.querySelector(".step-linkurl").value.trim(),
+      })).filter((l) => l.url);
       return {
         titolo: row.querySelector(".step-titolo").value.trim(),
         testo: row.querySelector(".step-testo").value.trim(),
-        link_label: row.querySelector(".step-linklabel").value.trim(),
-        link_url: row.querySelector(".step-linkurl").value.trim(),
+        links,
+        // Il primo link resta anche nei campi vecchi: cosi' un'app non ancora
+        // aggiornata (in cache dentro Telegram) continua a mostrarne almeno uno,
+        // invece di uno step senza bottoni.
+        link_label: links[0] ? links[0].label : "",
+        link_url: links[0] ? links[0].url : "",
         media_url: row.querySelector(".step-media").value.trim(),
       };
     }
+
+    function addLinkRow(box, link) {
+      const r = document.createElement("div");
+      r.className = "step-link";
+      r.style.cssText = "display:flex;gap:6px;margin-bottom:6px";
+      r.innerHTML =
+        '<input class="step-linklabel" placeholder="Testo bottone (es. TotalFX)" style="flex:1" />' +
+        '<input class="step-linkurl" placeholder="https://..." style="flex:1.4" />' +
+        '<button class="icon-btn danger" title="Togli questo link">&#10005;</button>';
+      // Valori come proprieta', non interpolati: un apostrofo in un'etichetta
+      // scritta a mano romperebbe il markup.
+      r.querySelector(".step-linklabel").value = (link && link.label) || "";
+      r.querySelector(".step-linkurl").value = (link && link.url) || "";
+      r.querySelector(".icon-btn").onclick = () => r.remove();
+      box.appendChild(r);
+    }
+    window.addLinkRow = addLinkRow;
 
     // Il file viaggia in base64 dentro il JSON: FileReader.readAsDataURL da' una
     // stringa "data:<tipo>;base64,<dati>", di cui al server serve solo la coda.
@@ -1938,10 +1963,8 @@
         <div class="step-fields">
           <input class="step-titolo" placeholder="Titolo step" value="${esc(step?.titolo)}" />
           <textarea class="step-testo" placeholder="Testo">${step?.testo || ""}</textarea>
-          <div style="display:flex;gap:6px">
-            <input class="step-linklabel" placeholder="Testo bottone (es. Apri account)" value="${esc(step?.link_label)}" style="flex:1" />
-            <input class="step-linkurl" placeholder="https://... (opzionale)" value="${esc(step?.link_url)}" style="flex:1.4" />
-          </div>
+          <div class="step-links"></div>
+          <button class="btn btn-secondary btn-small" type="button" onclick="addLinkRow(this.previousElementSibling)" style="margin-bottom:6px">+ Aggiungi bottone-link</button>
           <div style="display:flex;gap:6px;align-items:center">
             <input class="step-media" placeholder="Foto o video: carica un file oppure incolla un link YouTube" value="${esc(step?.media_url)}" style="flex:1" oninput="anteprimaMedia(this.closest('.step-row'))" />
             <label class="btn btn-secondary btn-small" style="flex:none;cursor:pointer;margin:0">
@@ -1962,6 +1985,12 @@
       const editor = document.getElementById("stepsEditor");
       if (dopo && dopo.parentElement === editor) editor.insertBefore(wrap, dopo.nextSibling);
       else editor.appendChild(wrap);
+      // I link si aggiungono DOPO che la riga e' nel DOM. Il vecchio campo singolo
+      // resta letto: gli step gia' scritti non vanno migrati a mano.
+      const boxLink = wrap.querySelector(".step-links");
+      let lk = Array.isArray(step?.links) ? step.links.filter((l) => l && l.url) : [];
+      if (!lk.length && step?.link_url) lk = [{ label: step.link_label, url: step.link_url }];
+      lk.forEach((l) => addLinkRow(boxLink, l));
       anteprimaMedia(wrap);
       return wrap;
     }
@@ -2000,7 +2029,6 @@
         + categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
       catSelect.value = s?.categoria_id || "";
 
-      document.getElementById("stepsEditor").innerHTML = "";
       const steps = Array.isArray(s?.tutorial_steps) ? s.tutorial_steps : [];
       steps.forEach((st) => addStepRow(st));
 
