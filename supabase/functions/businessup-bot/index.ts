@@ -1568,7 +1568,7 @@ async function apiAdminSuggerimentoApprova(body: any) {
   }
 
   await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata approvata!</b>\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "🔎 Vedi nella lista", "/app.html")
-  notificaNuovoServizio(sug.nome, sug.categoria_id).catch((e) => console.error("notifica:", e))
+  notificaNuovoServizio(sug.nome, sug.categoria_id, null).catch((e) => console.error("notifica:", e))
   return json({ ok: true, servizio_id: nuovo.id })
 }
 
@@ -1732,7 +1732,10 @@ async function apiAdminServiziSave(body: any) {
   } else {
     const { error } = await supabase.from("servizi").insert(row)
     if (error) return json({ error: error.message }, 500)
-    notificaNuovoServizio(nome, categoria_id).catch((e) => console.error("notifica nuovo servizio:", e))
+    // In background: ora la coda scorre TUTTI gli iscritti con le pause, e senza
+    // waitUntil la funzione verrebbe chiusa appena risponde all'admin, lasciando
+    // meta' delle persone senza avviso e nessuno a saperlo.
+    inBackground(notificaNuovoServizio(nome, categoria_id, tipo).catch((e) => console.error("notifica nuovo servizio:", e)))
   }
   return json({ ok: true })
 }
@@ -1797,22 +1800,45 @@ async function apiAdminUpload(body: any) {
 }
 
 // Avvisa via bot gli utenti che hanno preferiti nella stessa categoria del nuovo servizio.
-async function notificaNuovoServizio(nomeServizio: string, categoriaId: number) {
+// L'articolo giusto per il tipo di servizio. Le poche parole femminili del settore
+// ("prop firm", "app") con "un nuovo" suonerebbero sbagliate, e un messaggio
+// automatico che sgrammatica si nota subito.
+const TIPI_FEMMINILI = ["app", "piattaforma", "prop firm", "carta", "banca"]
+function unNuovo(tipo: string) {
+  const t = tipo.trim().toLowerCase()
+  return TIPI_FEMMINILI.includes(t) ? `una nuova ${t}` : `un nuovo ${t}`
+}
+
+async function notificaNuovoServizio(nomeServizio: string, categoriaId: number, tipo?: string | null) {
   if (!categoriaId) return
-  const { data: serviziCategoria } = await supabase.from("servizi").select("id").eq("categoria_id", categoriaId)
-  const ids = (serviziCategoria ?? []).map((s: any) => s.id)
-  if (!ids.length) return
-  const { data: pref } = await supabase.from("preferiti").select("telegram_id").in("servizio_id", ids)
-  const destinatari = [...new Set((pref ?? []).map((p: any) => p.telegram_id))]
+  // A TUTTI GLI ISCRITTI (Antonio), non piu' solo a chi aveva salvato qualcosa
+  // nella stessa categoria. Con quel criterio l'avviso non partiva quasi mai: le
+  // categorie nuove non hanno salvataggi per definizione, quindi proprio i servizi
+  // che aprono una categoria -- quelli che meritano di piu' l'annuncio -- non lo
+  // facevano partire. Chi non vuole piu' riceverli blocca il bot, e il blocco lo
+  // gestiamo gia'.
+  const { data: iscritti } = await supabase.from("leads").select("telegram_id").eq("bot_started", true)
+  const destinatari = [...new Set((iscritti ?? []).map((l: any) => l.telegram_id))]
+  if (!destinatari.length) return
   const { data: cat } = await supabase.from("categorie").select("nome").eq("id", categoriaId).maybeSingle()
 
+  let inviati = 0
   for (const tid of destinatari) {
+    // Freno: Telegram limita a circa 30 messaggi al secondo e oltre quella soglia
+    // inizia a rifiutare. Una pausa ogni 25 tiene la coda dentro il limite.
+    if (inviati && inviati % 25 === 0) await new Promise((r) => setTimeout(r, 1100))
+    inviati++
     // Un destinatario irraggiungibile non deve interrompere la coda di tutti gli altri.
     try {
       await sendMessage(
         tid,
-        `🆕 Nuovo business nella categoria ${cat?.nome || "che segui"}!\n\n${nomeServizio} è appena arrivato nella Business List.`,
+        // Dice COSA e' stato aggiunto: "un nuovo broker" invece del generico
+        // "business". Chi ha salvato un broker vuole sapere che ne e' arrivato un
+        // altro, non che "e' arrivato qualcosa".
+        `🆕 È stato aggiunto ${unNuovo(String(tipo || "").trim() || "business")} in directory.\n\n` +
+        `<b>${nomeServizio}</b> — categoria ${cat?.nome || "che segui"}.`,
         { inline_keyboard: [[{ text: "Guardalo ora", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] },
+        "HTML",
       )
     } catch (e) {
       console.error("notifica nuovo servizio fallita", tid, e)
