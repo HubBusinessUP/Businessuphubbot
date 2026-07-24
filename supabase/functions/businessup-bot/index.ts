@@ -1285,8 +1285,82 @@ async function apiAffiliazione(telegramId: number) {
   }))
 
   const { data: servizi } = await supabase.from("servizi").select("id, nome").order("nome")
+  // I KPI restano sui DIRETTI, sempre: si calcolano ora, prima che la vista admin
+  // allarghi la lista alla rete completa. Se no "iscritti" e "attivazioni"
+  // salterebbero all'intera discesa e non vorrebbero piu' dire "i miei diretti".
   const attivazioniTot = Object.values(serviziCount).reduce((s: number, n: number) => s + n, 0)
   const clientiCount = membri.filter((m: any) => m.is_cliente).length
+  const direttiCount = membri.length
+
+  // === VISTA ADMIN: la genealogia completa, con lo sponsor di ciascuno ===
+  // Gate LATO SERVER, non lato client: solo l'admin riceve la rete a ogni livello e
+  // il campo "invitato_da". Per tutti gli altri il payload non contiene proprio il
+  // dato -- non c'e' niente da nascondere nel browser, perche' non gli arriva.
+  if (telegramId === ADMIN_ID) {
+    // I diretti li ha portati l'admin stesso: si segnano come "col tuo link".
+    for (const m of membri) (m as any).invitato_da = { tuo: true }
+
+    const { data: albero } = await supabase.rpc("rete_albero", { root_id: telegramId })
+    const direttiSet = new Set((membri as any[]).map((m) => m.telegram_id))
+    // I "profondi": chi e' nella rete ma NON tra i diretti -> l'ha invitato un
+    // sub-affiliato. E' l'unico caso in cui "chi lo ha invitato" dice qualcosa di
+    // diverso da "tu", ed e' esattamente cio' che manca alla vista di oggi.
+    const profondi = ((albero ?? []) as any[]).filter((r) => !direttiSet.has(r.telegram_id))
+    if (profondi.length) {
+      const profIds = profondi.map((r) => r.telegram_id)
+      const { data: profLeads } = await supabase.from("leads")
+        .select("telegram_id, nome, cognome, username, foto_url, sondaggio_completato, is_cliente, created_at, attivo, bloccato_at, is_premium")
+        .in("telegram_id", profIds)
+
+      // Servizi e business anche per i profondi, se no i loro badge restano a zero.
+      const { data: attProf } = await supabase.from("lead_servizi").select("telegram_id").in("telegram_id", profIds)
+      for (const a of attProf ?? []) serviziCount[(a as any).telegram_id] = (serviziCount[(a as any).telegram_id] ?? 0) + 1
+      const { data: appProf } = await supabase.from("suggerimenti").select("telegram_id").eq("stato", "approvato").in("telegram_id", profIds)
+      for (const a of appProf ?? []) approvatiCount[(a as any).telegram_id] = (approvatiCount[(a as any).telegram_id] ?? 0) + 1
+
+      // I nomi degli sponsor (chi ha invitato i profondi).
+      const sponsorIds = [...new Set(profondi.map((r) => r.referred_by).filter(Boolean))]
+      const { data: sponsorRows } = sponsorIds.length
+        ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", sponsorIds)
+        : { data: [] as any[] }
+      const sponsorMap: Record<number, { nome: string; username: string }> = {}
+      for (const s of (sponsorRows ?? []) as any[]) {
+        sponsorMap[s.telegram_id] = {
+          nome: [s.nome, s.cognome].filter(Boolean).join(" ").trim() || (s.username ? "@" + s.username : "Utente " + s.telegram_id),
+          username: s.username || "",
+        }
+      }
+
+      const leadById: Record<number, any> = {}
+      for (const l of (profLeads ?? []) as any[]) leadById[l.telegram_id] = l
+      // Si mantiene l'ordine dell'albero (per sponsor, poi per id).
+      for (const r of profondi) {
+        const i = leadById[r.telegram_id]
+        if (!i) continue
+        const sp = r.referred_by === telegramId ? { tuo: true } : (sponsorMap[r.referred_by] || { nome: "—", username: "" })
+        ;(membri as any[]).push({
+          telegram_id: i.telegram_id,
+          nome: i.nome || i.username || "Utente",
+          cognome: i.cognome || "",
+          username: i.username || "",
+          foto_url: i.foto_url || "",
+          is_cliente: !!i.is_cliente,
+          sondaggio_completato: !!i.sondaggio_completato,
+          stato_label: membroStatoLabel(i),
+          servizi_count: serviziCount[i.telegram_id] ?? 0,
+          business_approvati: approvatiCount[i.telegram_id] ?? 0,
+          iscritto_il: i.created_at || null,
+          uscito: i.attivo === false,
+          uscito_il: i.bloccato_at || null,
+          tg_bio: "",
+          lingua: "",
+          is_premium: i.is_premium === true,
+          invitato_da: sp,
+          profondo: true,   // non e' un diretto: portato da un sub-affiliato
+        })
+      }
+    }
+  }
 
   return json({
     ref_link: `https://t.me/${BOT_USERNAME}?start=ref_${refCode}`,
@@ -1298,14 +1372,14 @@ async function apiAffiliazione(telegramId: number) {
     soglia: PARTNER_SOGLIA,
     stats: {
       click: lead?.ref_clicks ?? 0,
-      iscritti: membri.length,
+      iscritti: direttiCount,
       attivazioni: attivazioniTot,
       clienti: clientiCount,
     },
     rete: {
-      invitati_count: membri.length,
+      invitati_count: direttiCount,
       // Rete completa: i diretti piu' tutti quelli invitati da loro, a ogni livello.
-      totale_count: typeof reteTot === "number" ? reteTot : membri.length,
+      totale_count: typeof reteTot === "number" ? reteTot : direttiCount,
       attivati_count: clientiCount,
       membri,
     },

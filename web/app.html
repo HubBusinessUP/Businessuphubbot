@@ -1098,6 +1098,16 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   background:var(--acc);color:#04210F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
 .mi.st-in{color:var(--acc);border-color:rgba(37,207,110,.35);background:rgba(37,207,110,.1)}
 .mi.st-out{color:#E5484D;border-color:rgba(226,87,74,.35);background:rgba(226,87,74,.1)}
+/* SOLO ADMIN: la card si apre e mostra chi ha invitato quella persona. La riga sta
+   nascosta finche' non si tocca -- niente rumore in piu' per la lettura normale. */
+.mcard.apri{cursor:pointer}
+.mchev{flex-shrink:0;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--mut);transition:transform .18s ease}
+.mchev svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.mcard.open .mchev{transform:rotate(90deg)}
+.minv{display:none;margin-top:8px;font-size:13px;color:var(--mut);line-height:1.4}
+.mcard.open .minv{display:block}
+.minv b{color:var(--tx);font-weight:600}
+.minv a{color:var(--acc);text-decoration:none}
 /* Condividi in fondo alla scheda, uguale allo stile dell'header */
 .sc-share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;
   background:var(--s1);border:1px solid var(--line2);border-radius:9.5px;padding:12px;color:var(--tx);
@@ -1514,7 +1524,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=143"></script>
+<script src="identikit.js?v=144"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3138,16 +3148,42 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var fuori = m.uscito
       ? '<div class="mfuori">Ha disattivato il bot' + (m.uscito_il ? ' &middot; ' + dataIt(m.uscito_il) : '') + '</div>'
       : '';
-    return '<div class="mcard' + (m.uscito ? ' spento' : '') + '">'
+    // Chi lo ha invitato: arriva SOLO all'admin (il server non lo mette nel payload
+    // per gli altri). Per i diretti e' "col tuo link", per i profondi il sub-affiliato
+    // che li ha portati, con link alla sua chat se ha username.
+    var inv = '';
+    if (m.invitato_da) {
+      inv = m.invitato_da.tuo
+        ? '<div class="minv">Iscritto <b>con il tuo link</b></div>'
+        : '<div class="minv">Invitato da <b>' + (m.invitato_da.username
+            ? '<a href="https://t.me/' + esc(m.invitato_da.username) + '" target="_blank" rel="noopener">' + esc(m.invitato_da.nome) + '</a>'
+            : esc(m.invitato_da.nome)) + '</b></div>';
+    }
+    var chev = m.invitato_da
+      ? '<span class="mchev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>'
+      : '';
+    return '<div class="mcard' + (m.uscito ? ' spento' : '') + (m.invitato_da ? ' apri' : '') + '">'
       + '<div style="flex:1;min-width:0">'
       +   '<div class="mnm">' + esc(nomeFull) + (m.is_premium ? STELLA : '') + '</div>'
       +   '<div class="mnk">' + esc(nick) + '</div>'
       +   fuori
+      +   inv
       + '</div>'
-      + '<div class="micons">' + msg + biz + stato + '</div>'
+      + '<div class="micons">' + msg + biz + stato + chev + '</div>'
       + '</div>';
   }
 
+
+  // Tocco su una card della rete che ha lo sponsor (solo admin): apre/chiude il
+  // dettaglio "chi lo ha invitato". Si ignora il tocco sui link interni (messaggio
+  // allo sponsor / al membro), che devono navigare, non aprire e richiudere.
+  document.addEventListener('click', function(e){
+    var card = e.target.closest && e.target.closest('.mcard.apri');
+    if (!card) return;
+    if (e.target.closest('a')) return;
+    card.classList.toggle('open');
+    if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.selectionChanged(); } catch(x){} }
+  });
 
   fetch(API_URL + "/affiliazione", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
