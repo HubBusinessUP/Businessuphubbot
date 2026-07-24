@@ -1592,8 +1592,21 @@ async function apiSuggerisci(telegramId: number, body: any) {
   if (lead?.sugg_bloccato) return json({ error: "funzione_bloccata" }, 403)
 
   const nome = String(body?.nome || "").trim()
-  const categoriaId = parseInt(body?.categoria_id) || null
-  const categoriaProposta = String(body?.categoria_proposta || "").trim().slice(0, 60)
+  // La categoria arriva come TESTO scritto a mano. Se combacia con una che esiste
+  // gia' -- a meno di maiuscole e spazi -- si usa quella; se no diventa una
+  // proposta. Il confronto lo fa il server e non il client: il client puo' avere
+  // un elenco vecchio, e due categorie identiche scritte diverse sono esattamente
+  // cio' che va evitato.
+  const categoriaTesto = String(body?.categoria_testo || "").trim().slice(0, 60)
+  let categoriaId = parseInt(body?.categoria_id) || null
+  let categoriaProposta = String(body?.categoria_proposta || "").trim().slice(0, 60)
+  if (categoriaTesto && !categoriaId) {
+    const { data: trovata } = await supabase.from("categorie")
+      .select("id").ilike("nome", categoriaTesto).maybeSingle()
+    if (trovata) categoriaProposta = ""
+    if (trovata) categoriaId = (trovata as any).id
+    else categoriaProposta = categoriaTesto
+  }
   const motivazione = String(body?.motivazione || "").trim()
   const caratteristiche = String(body?.caratteristiche || "").trim().slice(0, 600)
 

@@ -1484,7 +1484,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=136"></script>
+<script src="identikit.js?v=137"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3159,12 +3159,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +     '<div id="prLinks"></div>'
       +     '<button type="button" id="prAddLink" class="pr-piu">+ Aggiungi un altro link</button>'
       +     '<label class="pf-l" for="prCat">Categoria</label>'
-      +     '<select class="pr-sel" id="prCat"></select>'
-      +     '<div id="prCatNuovaBox" style="display:none">'
-      +       '<label class="pf-l" for="prCatNuova">Come la chiameresti</label>'
-      +       '<input class="pf-i" id="prCatNuova" type="text" maxlength="60" placeholder="es. Carte prepagate">'
-      +       '<div class="pf-nota">La proponi, non la crei: se ha senso la aggiungo io alla directory.</div>'
-      +     '</div>'
+      +     '<input class="pf-i" id="prCat" type="text" maxlength="60" list="prCatElenco" autocomplete="off" placeholder="Scrivi o scegli">'
+      +     '<datalist id="prCatElenco"></datalist>'
+      +     '<div class="pf-nota">Scrivi liberamente. Se la categoria non esiste la proponi, e se ha senso la aggiungo alla directory.</div>'
       +     '<label class="pf-l" for="prCaratt">Caratteristiche</label>'
       +     '<textarea class="pf-i" id="prCaratt" maxlength="600" placeholder="Quanto capitale serve, quanto costa, quanto tempo richiede, che rischi ha"></textarea>'
       +     '<div class="pf-nota">Quello che sai. Se non sai qualcosa lascialo fuori: meglio poco e vero.</div>'
@@ -3189,29 +3186,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         btn = document.getElementById('prInvia'), okBox = document.getElementById('prOk'),
         sel = document.getElementById('prCat');
 
-    // Le categorie RAGGRUPPATE per macro, come nella tendina della directory: un
-    // elenco piatto con trenta voci non si legge, e chi non trova la sua sceglie
-    // la prima che gli somiglia.
+    // Campo di testo con l'elenco di quelle che esistono gia' come suggerimento
+    // mentre si scrive: chi ne trova una buona la sceglie, chi non la trova scrive
+    // la sua. Una tendina obbliga a scegliere; un campo libero no, ed e' il punto.
     function riempiCategorie(){
-      var h = '<option value="">Scegli una categoria</option>';
-      var usate = {};
-      MACRO.forEach(function(m){
-        var figlie = CATS.filter(function(c){ return c.macro_categoria_id === m.id; });
-        if (!figlie.length) return;
-        h += '<optgroup label="' + esc(m.nome) + '">';
-        figlie.forEach(function(c){ usate[c.id] = 1; h += '<option value="' + c.id + '">' + esc(c.nome) + '</option>'; });
-        h += '</optgroup>';
-      });
-      var orfane = CATS.filter(function(c){ return !usate[c.id]; });
-      if (orfane.length) {
-        h += '<optgroup label="Altro">';
-        orfane.forEach(function(c){ h += '<option value="' + c.id + '">' + esc(c.nome) + '</option>'; });
-        h += '</optgroup>';
-      }
-      // L'ultima voce apre il campo libero: chi non trova la sua categoria non
-      // deve scegliere quella sbagliata pur di poter inviare.
-      h += '<option value="nuova">— Nessuna di queste, ne propongo una —</option>';
-      sel.innerHTML = h;
+      var dl = document.getElementById('prCatElenco');
+      if (dl) dl.innerHTML = CATS.map(function(c){ return '<option value="' + esc(c.nome) + '">'; }).join('');
     }
 
     var boxLink = document.getElementById('prLinks');
@@ -3235,19 +3215,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       aggiungiRigaLink().querySelector('.pr-url').focus();
     });
 
-    var catNuovaBox = document.getElementById('prCatNuovaBox');
-    sel.addEventListener('change', function(){
-      var nuova = sel.value === 'nuova';
-      catNuovaBox.style.display = nuova ? '' : 'none';
-      if (nuova) document.getElementById('prCatNuova').focus();
-    });
+
     function apri(){
       riempiCategorie();
       form.style.display = ''; okBox.style.display = 'none';
       err.style.display = 'none';
-      ['prNome','prPerche','prCatNuova','prCaratt'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.value=''; e.classList.remove('err'); } });
+      ['prNome','prPerche','prCat','prCaratt'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.value=''; e.classList.remove('err'); } });
       boxLink.innerHTML = ''; aggiungiRigaLink();
-      catNuovaBox.style.display = 'none';
       sel.value = '';
       sh.style.display = 'block';
       if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
@@ -3255,7 +3229,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     function chiudi(){ sh.style.display = 'none'; }
     function sbaglio(msg, id){
       err.textContent = msg; err.style.display = 'block';
-      ['prNome','prPerche','prCatNuova'].forEach(function(x){ var e=document.getElementById(x); if(e) e.classList.toggle('err', x === id); });
+      ['prNome','prPerche','prCat','prCaratt'].forEach(function(x){ var e=document.getElementById(x); if(e) e.classList.toggle('err', x === id); });
       if (id) { var e = document.getElementById(id); if (e) e.focus(); }
     }
 
@@ -3269,8 +3243,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       e.preventDefault();
       var nome = document.getElementById('prNome').value.trim();
       var perche = document.getElementById('prPerche').value.trim();
-      var cat = parseInt(sel.value) || 0;
-      var catNuova = sel.value === 'nuova' ? document.getElementById('prCatNuova').value.trim() : '';
+      // Si manda il NOME scritto. Se corrisponde a una categoria esistente il
+      // server la riconosce e la usa; se non corrisponde diventa una proposta.
+      // Il confronto lo fa il server: farlo qui vorrebbe dire fidarsi di un elenco
+      // che il client puo' avere vecchio.
+      var catTesto = document.getElementById('prCat').value.trim();
       var urls = [].map.call(boxLink.querySelectorAll('.pr-url'), function(i){ return i.value.trim(); })
                    .filter(function(u){ return u; });
       var buoni = urls.filter(function(u){ return /^https?:\/\/.+\..+/.test(u); });
@@ -3280,8 +3257,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       // Si controllano TUTTI, non solo il primo: un link sbagliato in fondo
       // passerebbe inosservato e arriverebbe rotto.
       if (buoni.length !== urls.length) return sbaglio('Un link non e valido: devono partire con http:// o https://');
-      if (!cat && !catNuova) return sbaglio(sel.value === 'nuova' ? 'Scrivi come la chiameresti.' : 'Scegli la categoria.',
-                                            sel.value === 'nuova' ? 'prCatNuova' : null);
+      if (!catTesto) return sbaglio('Scrivi una categoria: se non esiste la proponi.', 'prCat');
       if (perche.length < 10) return sbaglio('Spiega in due righe perche lo consigli.', 'prPerche');
 
       err.style.display = 'none';
@@ -3293,8 +3269,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           nome: nome,
           links: buoni.map(function(u){ return { url: u }; }),
           link: buoni[0],
-          categoria_id: cat || null,
-          categoria_proposta: catNuova || null,
+          categoria_testo: catTesto,
           motivazione: perche,
           caratteristiche: document.getElementById('prCaratt').value.trim()
         })
