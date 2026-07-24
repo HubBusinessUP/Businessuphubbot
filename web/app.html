@@ -1082,6 +1082,12 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   background:var(--s1);border:1px solid var(--line2);border-radius:9.5px;padding:12px;color:var(--tx);
   font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer}
 .sc-share:active{transform:scale(.98)}
+.sc-azioni{display:flex;gap:9px;margin-top:12px}
+.sc-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;
+  background:var(--s1);border:1px solid transparent;border-radius:11px;color:var(--tx);
+  font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;text-decoration:none}
+.sc-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sc-btn:active{transform:scale(.98)}
 
 /* ===== SCHEDA PRODOTTO A TENDINA ===== */
 .fchev{width:17px;height:17px;flex-shrink:0;color:var(--mut);transition:transform .2s}
@@ -1469,7 +1475,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=127"></script>
+<script src="identikit.js?v=128"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2075,7 +2081,16 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
   function schedaHtml(d){
     return _schedaBody(d)
-      + '<button class="sc-share" data-share="1"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>';
+      // Supporto e Condividi affiancati: sono due azioni secondarie, e una sopra
+      // l'altra a tutta larghezza peserebbero quanto la CTA vera.
+      // Il supporto e' un contatto DIRETTO con una persona, non un modulo: in una
+      // directory di servizi di terzi e' la cosa che rassicura di piu'.
+      + '<div class="sc-azioni">'
+      +   '<a class="sc-btn" href="https://t.me/caliblackk" target="_blank" rel="noopener" data-ext="1">'
+      +     '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.3A8 8 0 0 1 13 4a8 8 0 0 1 8 8Z"/></svg>Supporto</a>'
+      +   '<button class="sc-btn" data-share="1">'
+      +     '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>'
+      + '</div>';
   }
   function _schedaBody(d){
     var s = d.servizio || {};
@@ -2650,7 +2665,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
     // Condividi dalla scheda: apre lo stesso menu dell'header.
     var shb = t.closest('[data-share]');
-    if (shb) { e.stopPropagation(); if (window.__openShare) window.__openShare(); return; }
+    if (shb) {
+      e.stopPropagation();
+      // Se il tasto sta DENTRO una scheda aperta, il foglio riceve titolo e
+      // descrizione di quel servizio; dall'header resta l'invito generico.
+      var ctx = null;
+      if (shb.closest('#scBody') && SC_ID && SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio) {
+        ctx = { nome: SCHEDE[SC_ID].servizio.nome, descrizione: SCHEDE[SC_ID].servizio.descrizione };
+      }
+      if (window.__openShare) window.__openShare(ctx);
+      return;
+    }
 
     var r = t.closest('.frow');
     if (r) apriScheda(parseInt(r.getAttribute('data-open')));
@@ -3338,6 +3363,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // NB: dentro Telegram navigator.share spesso propone solo Telegram, quindi diamo i link diretti.
   (function(){
     var TXT = "Entra in Cashly, la directory dei business online. Ti guida passo passo:";
+    // Testo della condivisione. Aperto da una scheda porta con se' titolo e
+    // descrizione: un link nudo in WhatsApp non dice niente e non lo apre nessuno.
+    // Il LINK resta quello di invito, cosi' chi entra finisce comunque nella rete
+    // di chi ha condiviso -- cambia il messaggio, non la destinazione.
+    var CONTESTO = null;
+    function testoCondivisione(){
+      if (!CONTESTO) return TXT;
+      var t = CONTESTO.nome || '';
+      var d = (CONTESTO.descrizione || '').trim();
+      return t + (d ? '\n' + d : '') + '\n\nLo trovi su Cashly, la directory dei business online:';
+    }
+    function titoloCondivisione(){ return CONTESTO ? (CONTESTO.nome + ' su Cashly') : 'Cashly'; }
     function extOpen(u){ try{ if(tg&&tg.openLink) tg.openLink(u); else window.open(u,'_blank'); }catch(e){ window.open(u,'_blank'); } }
     function tgOpen(u){ try{ if(tg&&tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u,'_blank'); }catch(e){ window.open(u,'_blank'); } }
     function tile(id,label,bg,svg){ return '<button data-sh="'+id+'" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--dim);font-size:12px;font-weight:600"><span style="width:54px;height:54px;border-radius:14.5px;background:'+bg+';display:flex;align-items:center;justify-content:center">'+svg+'</span>'+label+'</button>'; }
@@ -3354,8 +3391,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     sheet.innerHTML='<div data-sh="close" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
       +'<div style="position:absolute;left:0;right:0;bottom:0;max-width:460px;margin:0 auto;background:var(--s0);border-top:1px solid var(--line);border-radius:14.5px 16px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom))">'
       +'<div style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px"></div>'
-      +'<div style="font-weight:800;font-size:17px">Invita su Cashly</div>'
-      +'<div style="font-size:13.5px;color:var(--dim);margin:3px 0 16px">Chi entra dal tuo link resta nella tua rete.</div>'
+      +'<div data-shtit style="font-weight:800;font-size:17px">Invita su Cashly</div>'
+      +'<div data-shsub style="font-size:14.5px;color:var(--dim);margin:3px 0 16px">Chi entra dal tuo link resta nella tua rete.</div>'
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 6px">'
       + tile('wa','WhatsApp','#25D366',iWa) + tile('tg','Telegram','#29A9EB',iTg) + tile('x','X','#000',iX) + tile('fb','Facebook','#1877F2',iFb)
       + tile('ml','Email','#6E7A8A',iMl) + tile('sm','SMS','#3FB950',iSm) + tile('native','Altre app','var(--s2)',iMr) + tile('cp','Copia link','var(--acc)',iCp)
@@ -3365,25 +3402,42 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     sheet.addEventListener('click', function(e){
       var b=e.target.closest && e.target.closest('[data-sh]'); if(!b) return;
       var k=b.getAttribute('data-sh'), link=REF_LINK;
+      var txt=testoCondivisione(), tit=titoloCondivisione();
       if(k==='close'){ sheet.style.display='none'; return; }
-      if(k==='wa'){ extOpen('https://wa.me/?text='+encodeURIComponent(TXT+' '+link)); }
-      else if(k==='tg'){ tgOpen('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent(TXT)); }
-      else if(k==='x'){ extOpen('https://twitter.com/intent/tweet?text='+encodeURIComponent(TXT)+'&url='+encodeURIComponent(link)); }
+      if(k==='wa'){ extOpen('https://wa.me/?text='+encodeURIComponent(txt+' '+link)); }
+      else if(k==='tg'){ tgOpen('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent(txt)); }
+      else if(k==='x'){ extOpen('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(link)); }
       else if(k==='fb'){ extOpen('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(link)); }
-      else if(k==='ml'){ extOpen('mailto:?subject='+encodeURIComponent('Entra in Cashly')+'&body='+encodeURIComponent(TXT+' '+link)); }
-      else if(k==='sm'){ extOpen('sms:?&body='+encodeURIComponent(TXT+' '+link)); }
-      else if(k==='cp'){ try{ navigator.clipboard.writeText(link); }catch(e){} toast('Link copiato'); }
-      else if(k==='native'){ if(navigator.share){ navigator.share({title:'Cashly', text:TXT, url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(link); }catch(e){} toast('Link copiato'); } }
+      else if(k==='ml'){ extOpen('mailto:?subject='+encodeURIComponent(tit)+'&body='+encodeURIComponent(txt+' '+link)); }
+      else if(k==='sm'){ extOpen('sms:?&body='+encodeURIComponent(txt+' '+link)); }
+      // Copia: va copiato TESTO E LINK, non il solo link. Chi copia da una scheda
+      // vuole incollare il messaggio, non un indirizzo da spiegare a voce.
+      else if(k==='cp'){ try{ navigator.clipboard.writeText(CONTESTO ? (txt+' '+link) : link); }catch(e){} toast(CONTESTO ? 'Messaggio copiato' : 'Link copiato'); }
+      else if(k==='native'){ if(navigator.share){ navigator.share({title:tit, text:txt, url:link}).catch(function(){}); } else { try{ navigator.clipboard.writeText(txt+' '+link); }catch(e){} toast('Messaggio copiato'); } }
       sheet.style.display='none';
     });
-    function openSheet(){ if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} } sheet.style.display='block'; }
+    function openSheet(ctx){
+      // Un contesto valido ha un nome. Passare qui l'oggetto Evento -- che succede
+      // agganciando openSheet direttamente a un listener -- dava "Condividi
+      // undefined" e un messaggio senza testo.
+      CONTESTO = (ctx && typeof ctx.nome === 'string' && ctx.nome) ? ctx : null;
+      // Anche l'intestazione del foglio deve dire cosa si sta condividendo: aprirlo
+      // da una scheda e leggere "Invita su Cashly" fa dubitare di cosa parta.
+      var h = sheet.querySelector('[data-shtit]'), p = sheet.querySelector('[data-shsub]');
+      if (h) h.textContent = CONTESTO ? ('Condividi ' + CONTESTO.nome) : 'Invita su Cashly';
+      if (p) p.textContent = CONTESTO
+        ? 'Parte il titolo, la descrizione e il tuo link di invito.'
+        : 'Chi entra dal tuo link resta nella tua rete.';
+      if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} }
+      sheet.style.display='block';
+    }
     window.__openShare = openSheet;   // riusato dal bottone Condividi dentro ogni scheda
     var sb=document.getElementById('shareBtn');
-    if(sb) sb.addEventListener('click', openSheet);
+    if(sb) sb.addEventListener('click', function(){ openSheet(); });
     // Il tasto "Invita" dell'Affiliazione apre lo STESSO menu: dentro Telegram navigator.share
     // proporrebbe solo Telegram, quindi servono i link diretti per ogni app.
     var ivb=document.getElementById('inviteBtn');
-    if(ivb) ivb.addEventListener('click', openSheet);
+    if(ivb) ivb.addEventListener('click', function(){ openSheet(); });
     // Anche il riquadro col link copia al tocco.
     var ilt=document.getElementById('inviteLinkText');
     if(ilt) ilt.addEventListener('click', function(){ try{ navigator.clipboard.writeText(REF_LINK); }catch(e){} toast('Link copiato'); });
