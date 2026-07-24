@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=131"></script>
+<script src="/identikit.js?v=132"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1670,12 +1670,12 @@
         <div class="item">
           <div class="item-head">
             <div style="min-width:0">
-              <div class="item-title">${s.nome} <span class="badge ${STATO_BADGE[s.stato] || "pending"}">${STATO_LABEL[s.stato] || s.stato}</span></div>
-              <div class="item-meta">da ${s.utente_nome} (ID ${s.telegram_id}) · ${s.categoria_nome} · ${new Date(s.created_at).toLocaleDateString("it-IT")}</div>
-              ${s.motivazione ? `<div class="item-meta">Perché: ${s.motivazione}</div>` : ""}
-              ${s.link ? `<div class="link-preview">${s.link}</div>` : ""}
-              ${s.ref_link_utente ? `<div class="link-preview">Ref utente: ${s.ref_link_utente}</div>` : ""}
-              ${s.causale_rifiuto ? `<div class="item-meta" style="color:var(--coral)">Rifiutato: ${s.causale_rifiuto}</div>` : ""}
+              <div class="item-title">${esc(s.nome)} <span class="badge ${STATO_BADGE[s.stato] || "pending"}">${esc(STATO_LABEL[s.stato] || s.stato)}</span></div>
+              <div class="item-meta">da ${esc(s.utente_nome)} (ID ${s.telegram_id}) · ${esc(s.categoria_nome)} · ${new Date(s.created_at).toLocaleDateString("it-IT")}</div>
+              ${s.motivazione ? `<div class="item-meta">Perché: ${esc(s.motivazione)}</div>` : ""}
+              ${s.link ? `<div class="link-preview">${esc(s.link)}</div>` : ""}
+              ${s.ref_link_utente ? `<div class="link-preview">Ref utente: ${esc(s.ref_link_utente)}</div>` : ""}
+              ${s.causale_rifiuto ? `<div class="item-meta" style="color:var(--coral)">Rifiutato: ${esc(s.causale_rifiuto)}</div>` : ""}
             </div>
             <div class="item-actions">
               <button class="icon-btn danger" onclick="deleteSuggerimento(${s.id})" title="Elimina">✕</button>
@@ -1836,7 +1836,7 @@
           <div class="item-head">
             <div>
               <div class="item-title">${s.nome} <span class="badge ${s.stato}">${SVC_STATO_LABEL[s.stato] || s.stato}</span></div>
-              <div class="item-meta">${cat ? cat.nome : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}${attesa ? ` · <b>${attesa}</b> in lista d'attesa` : ""}</div>
+              <div class="item-meta">${cat ? esc(cat.nome) : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}${attesa ? ` · <b>${attesa}</b> in lista d'attesa` : ""}</div>
             </div>
             <div class="item-actions">
               <button class="icon-btn" onclick='openServizioForm(${JSON.stringify(s).replace(/'/g, "&apos;")})'>✎</button>
@@ -1881,7 +1881,7 @@
       document.getElementById("catId").value = c?.id || "";
       document.getElementById("catNome").value = c?.nome || "";
       const macroSel = document.getElementById("catMacro");
-      macroSel.innerHTML = '<option value="">— Nessuna —</option>' + macroCategorie.map((m) => `<option value="${m.id}">${m.nome}</option>`).join("");
+      macroSel.innerHTML = '<option value="">— Nessuna —</option>' + macroCategorie.map((m) => `<option value="${m.id}">${esc(m.nome)}</option>`).join("");
       macroSel.value = c?.macro_categoria_id || "";
       document.getElementById("catDescrizione").value = c?.descrizione || "";
       document.getElementById("catOrdine").value = c?.ordine ?? 0;
@@ -2143,7 +2143,7 @@
       // Il placeholder evita che un servizio nuovo prenda in silenzio la prima categoria
       // dell'elenco solo perche' nessuno ha toccato la select.
       catSelect.innerHTML = '<option value="">— Scegli categoria —</option>'
-        + categorie.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+        + categorie.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
       catSelect.value = s?.categoria_id || "";
 
       // SVUOTARE PRIMA. Senza questa riga ogni apertura della scheda aggiungeva gli
