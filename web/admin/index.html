@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=133"></script>
+<script src="/identikit.js?v=134"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -165,6 +165,31 @@
   .rk-cell { flex: 1 0 auto; min-width: 62px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; text-align: center; }
   .rk-num { font-size: 18px; font-weight: 800; }
   .rk-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); margin-top: 1px; }
+  /* ---- Dashboard ---- */
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .dash-kpi { background: var(--panel); border-radius: 6px; padding: 13px 14px; }
+  .dash-kpi .n { font-size: 25px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .dash-kpi .l { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+  .dash-kpi .s { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
+  /* Imbuto: le barre sono proporzionali al primo gradino, cosi' il calo si VEDE
+     invece di doverlo calcolare a mente. */
+  .imb-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+  .imb-lbl { width: 150px; flex: none; font-size: 13px; }
+  .imb-bar { flex: 1; height: 22px; background: var(--panel); border-radius: 4px; overflow: hidden; position: relative; }
+  .imb-bar i { display: block; height: 100%; background: var(--blue); border-radius: 4px; }
+  .imb-n { width: 96px; flex: none; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .imb-n b { color: var(--text-dim); font-weight: 400; font-size: 11.5px; }
+  .per-sel { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .per-sel button { background: var(--panel); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .per-sel button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .az-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .az-row:last-child { border-bottom: none; }
+  .az-nome { flex: 1; font-size: 13px; }
+  .az-bar { width: 110px; flex: none; height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+  .az-bar i { display: block; height: 100%; background: var(--lime); }
+  .az-n { width: 92px; flex: none; text-align: right; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
   .inv-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .inv-row:last-child { border-bottom: none; }
   .inv-t { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -365,6 +390,43 @@
         <button class="btn-add" onclick="openServizioForm()">+ Nuovo servizio</button>
       </div>
       <div id="serviziList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Come sta andando</h2>
+      </div>
+      <div class="per-sel" id="dashPeriodo">
+        <button data-g="1">Oggi</button>
+        <button data-g="7" class="on">7 giorni</button>
+        <button data-g="30">30 giorni</button>
+        <button data-g="0">Sempre</button>
+      </div>
+      <div class="dash-grid" id="dashKpi"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Dove si fermano</h2></div>
+      <div class="item">
+        <p class="item-meta" style="margin-bottom:12px">Ogni gradino conta <b>persone diverse</b>, non tocchi. Il salto piu' grande fra due righe e' il punto su cui vale la pena lavorare.</p>
+        <div id="dashImbuto"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Cosa toccano</h2></div>
+      <div class="item">
+        <p class="item-meta" style="margin-bottom:10px">Ogni bottone, filtro e link dell'app. A sinistra i tocchi totali, a destra quante persone diverse.</p>
+        <div id="dashAzioni"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Link condivisi</h2></div>
+      <div class="item">
+        <p class="item-meta" style="margin-bottom:10px">I codici brevi generati dalle condivisioni e quante volte sono stati aperti. Un link con zero aperture e' stato mandato ma non ha portato nessuno.</p>
+        <div id="dashLink"></div>
+      </div>
     </div>
 
     <div class="section">
@@ -760,6 +822,10 @@
       renderWhitelist(wlRes.domini || []);
       renderWaitlist(attesaRes.lista || []);
       renderAttivita(attRes.servizi || []);
+      // La dashboard ha un periodo suo, quindi chiede i dati per conto proprio
+      // invece di stare nel blocco delle tredici: cambiando periodo non deve
+      // ricaricare tutto il pannello.
+      caricaDash();
       renderSegnalazioni(segRes.segnalazioni || []);
       renderTopBusiness(kpi.top_business || []);
       renderSponsorboard(boardRes.sponsorboard || []);
@@ -933,6 +999,113 @@
     // Quante PERSONE hanno aperto ogni scheda, quante l'hanno attivata, e quando e'
     // partito l'avviso. Senza questa vista "l'avviso e' stato mandato?" e "qualcuno
     // guarda?" erano due domande senza risposta.
+    // ===================== DASHBOARD =====================
+    // Il periodo lo sceglie chi guarda: "sempre" dice cosa funziona, "oggi" dice
+    // cosa sta succedendo adesso. Sono due domande diverse e una sola risposta
+    // non le copre entrambe.
+    let dashGiorni = 7;
+    let dashDati = null;
+
+    async function caricaDash() {
+      const box = document.getElementById("dashKpi");
+      if (box && !dashDati) box.innerHTML = '<div class="item-meta">Carico...</div>';
+      try {
+        const r = await api("admin/click?giorni=" + dashGiorni);
+        if (!r.ok) throw new Error("ko");
+        dashDati = await r.json();
+      } catch (e) {
+        if (box) box.innerHTML = '<div class="item-meta">Non ho caricato i dati di questo periodo.</div>';
+        return;
+      }
+      renderDash();
+    }
+    window.caricaDash = caricaDash;
+
+    function nDi(azione) {
+      const a = (dashDati?.azioni || []).find((x) => x.azione === azione);
+      return a ? a.persone : 0;
+    }
+    function tocchiDi(azione) {
+      const a = (dashDati?.azioni || []).find((x) => x.azione === azione);
+      return a ? a.tocchi : 0;
+    }
+
+    function renderDash() {
+      const kpi = document.getElementById("dashKpi");
+      if (!kpi || !dashDati) return;
+
+      const aperture   = nDi("apri_scheda");
+      const linkFornit = nDi("link_fornitore");
+      const condivisi  = nDi("condivisione");
+      const arrivi     = tocchiDi("apertura_link_corto");
+      const tocchiTot  = (dashDati.azioni || []).reduce((n, a) => n + a.tocchi, 0);
+      const personeTot = Math.max(...[0].concat((dashDati.azioni || []).map((a) => a.persone)));
+
+      const box = (n, l, s) => `<div class="dash-kpi"><div class="n">${n}</div><div class="l">${l}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+      kpi.innerHTML =
+        box(personeTot, "persone attive", "hanno toccato qualcosa nel periodo") +
+        box(tocchiTot, "interazioni", "ogni bottone, filtro e link") +
+        box(aperture, "hanno aperto una scheda") +
+        box(linkFornit, "sono usciti verso un fornitore") +
+        box(condivisi, "hanno condiviso") +
+        box(arrivi, "arrivi da link condiviso", "persone entrate dai vostri link");
+
+      // ---- imbuto ----
+      // Le tappe in ordine di percorso. Una tappa senza nessuno NON si nasconde:
+      // uno zero in mezzo all'imbuto e' l'informazione piu' utile che c'e'.
+      const TAPPE = [
+        ["Aprono l'app",        nDi("menu") || personeTot],
+        ["Aprono una scheda",   aperture],
+        ["Leggono le schede",   nDi("cambio_scheda")],
+        ["Aprono il tutorial",  nDi("apri_tutorial")],
+        ["Premono la CTA",      nDi("cta_principale")],
+        ["Vanno dal fornitore", linkFornit],
+      ];
+      const primo = TAPPE[0][1] || 1;
+      document.getElementById("dashImbuto").innerHTML = TAPPE.map(([l, n], i) => {
+        const perc = Math.round((n / primo) * 100);
+        const prima = i ? TAPPE[i - 1][1] : null;
+        const calo = prima && prima > n ? ` <b>−${Math.round(((prima - n) / prima) * 100)}%</b>` : "";
+        return `<div class="imb-row">
+          <div class="imb-lbl">${esc(l)}</div>
+          <div class="imb-bar"><i style="width:${Math.max(perc, n ? 2 : 0)}%"></i></div>
+          <div class="imb-n">${n}${calo}</div>
+        </div>`;
+      }).join("");
+
+      // ---- azioni ----
+      const az = dashDati.azioni || [];
+      const max = az.length ? az[0].tocchi : 1;
+      const NOMI = {
+        apri_scheda: "Apre una scheda", voto: "Vota", salva: "Salva nei preferiti",
+        cambio_scheda: "Cambia linguetta nella scheda", apri_tutorial: "Apre il tutorial",
+        cta_principale: "Preme la CTA principale", cta_secondaria: "Preme la CTA secondaria",
+        link_fornitore: "Esce verso il fornitore", condivisione: "Condivide",
+        apri_categorie: "Apre le categorie", filtro_categoria: "Filtra per categoria",
+        menu: "Naviga nel menu", ricerca: "Apre la ricerca", torna_directory: "Torna alla directory",
+        spunta_step: "Spunta uno step", apertura_link_corto: "Entra da un link condiviso",
+      };
+      document.getElementById("dashAzioni").innerHTML = az.length
+        ? az.map((a) => `<div class="az-row">
+            <div class="az-nome">${esc(NOMI[a.azione] || a.azione)}</div>
+            <div class="az-bar"><i style="width:${Math.round((a.tocchi / max) * 100)}%"></i></div>
+            <div class="az-n">${a.tocchi} <span class="item-meta">· ${a.persone} pers.</span></div>
+          </div>`).join("")
+        : '<div class="item-meta">Nessuna interazione in questo periodo.</div>';
+
+      // ---- link condivisi ----
+      const lk = dashDati.link_condivisi || [];
+      document.getElementById("dashLink").innerHTML = lk.length
+        ? lk.map((l) => `<div class="inv-row">
+            <div style="flex:1;min-width:0">
+              <div class="inv-t">${esc(l.servizio)}</div>
+              <div class="inv-s">t.me/cashlyhub_bot?start=${esc(l.codice)}</div>
+            </div>
+            <div class="imb-n">${l.aperture} <b>aperture</b></div>
+          </div>`).join("")
+        : '<div class="item-meta">Nessun link condiviso ancora.</div>';
+    }
+
     function renderAttivita(righe) {
       const el = document.getElementById("attList");
       if (!el) return;
@@ -2390,13 +2563,27 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
     }
 
     const ADTABS = [
+      { key: "dash", label: "Dashboard", titles: ["Come sta andando", "Dove si fermano", "Cosa toccano", "Link condivisi", "Attività per servizio"] },
       { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi", "Lista d'attesa"] },
       { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
       { key: "rubrica", label: "Rubrica", titles: ["Miei contatti"] },
-      { key: "stats", label: "Statistiche", titles: ["Attività per servizio", "Onboarding", "Top business", "Top Sponsorboard"] },
+      { key: "stats", label: "Statistiche", titles: ["Onboarding", "Top business", "Top Sponsorboard"] },
       { key: "affil", label: "Affiliazione", titles: ["Whitelist domini link referral"] },
     ];
+    (function () {
+      const sel = document.getElementById("dashPeriodo");
+      if (!sel) return;
+      sel.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-g]");
+        if (!b) return;
+        dashGiorni = parseInt(b.dataset.g);
+        [...sel.querySelectorAll("button")].forEach((x) => x.classList.toggle("on", x === b));
+        dashDati = null;
+        caricaDash();
+      });
+    })();
+
     function initAdminTabs() {
       const bar = document.getElementById("adtabs");
       if (!bar || bar.dataset.done) return;
