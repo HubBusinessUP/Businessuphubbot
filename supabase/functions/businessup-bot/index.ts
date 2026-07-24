@@ -1783,11 +1783,15 @@ async function apiAdminMacroCategorieList() {
 
 async function apiAdminMacroCategorieSave(body: any) {
   const { id, nome, ordine } = body
+  const inEvidenza = body?.in_evidenza === true
+  // La vetrina e' UNA. Si spegne prima l'altra, se no l'indice unico rifiuta il
+  // salvataggio e sembrerebbe un errore di rete invece di una regola.
+  if (inEvidenza) await supabase.from("macro_categorie").update({ in_evidenza: false }).eq("in_evidenza", true)
   if (id) {
-    const { error } = await supabase.from("macro_categorie").update({ nome, ordine }).eq("id", id)
+    const { error } = await supabase.from("macro_categorie").update({ nome, ordine, in_evidenza: inEvidenza }).eq("id", id)
     if (error) return json({ error: error.message }, 500)
   } else {
-    const { error } = await supabase.from("macro_categorie").insert({ nome, ordine: ordine ?? 0 })
+    const { error } = await supabase.from("macro_categorie").insert({ nome, ordine: ordine ?? 0, in_evidenza: inEvidenza })
     if (error) return json({ error: error.message }, 500)
   }
   return json({ ok: true })
@@ -2254,6 +2258,47 @@ async function apiOnboarding(telegramId: number, body: any) {
 // Tutto cio' che viene toccato, per azione e per servizio. Il periodo si sceglie:
 // "sempre" serve a capire cosa funziona, "ultimi 7 giorni" a capire cosa sta
 // succedendo adesso, e sono due domande diverse.
+// Chi ha disattivato il bot. Un dato che va guardato PRIMA di ogni invio: sono
+// persone che restano nei conteggi degli iscritti ma non ricevono piu' niente,
+// e un broadcast che le include mostra numeri di invio che non corrispondono a
+// nessuno che ha letto.
+async function apiAdminUsciti() {
+  const { data: righe } = await supabase.from("leads")
+    .select("telegram_id, nome, cognome, username, bloccato_at, referred_by, is_cliente")
+    .eq("attivo", false).order("bloccato_at", { ascending: false })
+  const usciti = righe ?? []
+  const { count: totali } = await supabase.from("leads")
+    .select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
+
+  // Chi li aveva invitati: un'uscita nella rete di qualcuno e' un'informazione
+  // che riguarda anche lui, non solo il totale.
+  const padriniIds = [...new Set(usciti.map((u: any) => u.referred_by).filter(Boolean))]
+  const { data: padrini } = padriniIds.length
+    ? await supabase.from("leads").select("telegram_id, nome, username").in("telegram_id", padriniIds)
+    : { data: [] as any[] }
+  const nomePadrino: Record<number, string> = {}
+  for (const p of padrini ?? []) {
+    nomePadrino[(p as any).telegram_id] = (p as any).nome || ((p as any).username ? "@" + (p as any).username : "—")
+  }
+
+  const settimana = new Date(Date.now() - 7 * 864e5).toISOString()
+  return json({
+    ok: true,
+    totale_iscritti: totali ?? 0,
+    usciti: usciti.length,
+    usciti_7gg: usciti.filter((u: any) => u.bloccato_at && u.bloccato_at >= settimana).length,
+    clienti_usciti: usciti.filter((u: any) => u.is_cliente).length,
+    elenco: usciti.slice(0, 40).map((u: any) => ({
+      telegram_id: u.telegram_id,
+      nome: [u.nome, u.cognome].filter(Boolean).join(" ") || (u.username ? "@" + u.username : "Utente " + u.telegram_id),
+      username: u.username || null,
+      quando: u.bloccato_at,
+      era_cliente: !!u.is_cliente,
+      invitato_da: u.referred_by ? (nomePadrino[u.referred_by] || String(u.referred_by)) : null,
+    })),
+  })
+}
+
 async function apiAdminClick(url: URL) {
   const giorni = parseInt(url.searchParams.get("giorni") || "0") || 0
   const da = giorni ? new Date(Date.now() - giorni * 864e5).toISOString() : null
@@ -3200,6 +3245,7 @@ serve(async (req) => {
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
+      if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()
       if (sub === "admin/servizi/avvisa" && req.method === "POST") return await apiAdminAvvisa(await req.json())
       if (sub === "admin/partner-richieste" && req.method === "GET") return await apiAdminPartnerList()
       if (sub === "admin/partner-decidi" && req.method === "POST") return await apiAdminPartnerDecidi(await req.json())

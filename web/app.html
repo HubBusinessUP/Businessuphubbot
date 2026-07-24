@@ -1500,7 +1500,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=139"></script>
+<script src="identikit.js?v=140"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1754,12 +1754,15 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // QUATTRO PILLOLE, PUNTO (Antonio). Tutte le categorie e le sotto-categorie
     // vivono nella tendina: una fila che cresce con il catalogo e' una fila che
     // prima o poi nessuno scorre fino in fondo.
-    // La macro in pillola e' la PIU' POPOLATA, non una scritta a mano: cosi' resta
-    // quella giusta anche quando il catalogo cambia.
+    // La macro in vetrina e' quella SEGNATA in admin, non la piu' popolata: la
+    // vetrina e' una scelta, e con il conteggio cambiava da sola appena un'altra
+    // macro superava di un servizio quella scelta. Il conteggio resta solo come
+    // rete di sicurezza, per non lasciare la fila vuota se nessuna e' segnata.
     var macroVive = MACRO.filter(function(m){ return CATS.some(function(c){ return c.macro_categoria_id === m.id; }); })
       .map(function(m){ return { m: m, n: conta(0, m.id) }; })
       .sort(function(a, b){ return b.n - a.n || a.m.nome.localeCompare(b.m.nome); });
-    var regina = macroVive.length ? macroVive[0].m : null;
+    var scelta = macroVive.filter(function(x){ return x.m.in_evidenza; })[0];
+    var regina = scelta ? scelta.m : (macroVive.length ? macroVive[0].m : null);
 
     // Niente pillola "Tutti" (Antonio). La via d'uscita dal filtro resta doppia e
     // sempre disponibile: la voce "Tutti i business" in cima alla tendina, e il
@@ -1767,9 +1770,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // si resterebbe chiusi dentro un filtro senza un modo ovvio per uscirne.
     var h = '';
     if (regina) {
-      // In vetrina la macro-categoria principale. Oggi si sceglie da sola: e' la
-      // piu' popolata, quindi resta quella giusta anche quando il catalogo cambia,
-      // senza che nessuno debba ricordarsi di aggiornare un nome scritto a mano.
+      // In vetrina la macro-categoria messa in evidenza dall'admin.
       h += '<button class="macro spot' + (FILTRO_MACRO === regina.id && !FILTRO_CAT && !COLLEZIONE ? ' on' : '') + '" data-macro="' + regina.id + '">'
          + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 14.6 9l6.9.4-5.3 4.4 1.7 6.7L12 16.8 6.1 20.5l1.7-6.7L2.5 9.4 9.4 9z"/></svg>'
          + esc(regina.nome) + '</button>';
@@ -3644,6 +3645,19 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     window.__openShare = openSheet;   // riusato dal bottone Condividi dentro ogni scheda
     var sb=document.getElementById('shareBtn');
     if(sb) sb.addEventListener('click', function(){ openSheet(); });
+
+    // AGGIORNA. Ricarica saltando la cache: dentro Telegram la webview resta viva
+    // anche per giorni e puo' servire una versione vecchia. Il marker in query e'
+    // l'unico modo affidabile per costringerla a rileggere tutto.
+    var rb = document.getElementById('refreshBtn');
+    if (rb) rb.addEventListener('click', function(){
+      rb.classList.add('gira');
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      try { traccia('aggiorna', null, null); } catch(e){}
+      // Un attimo prima di ricaricare: senza, la rotella non si vede nemmeno e
+      // sembra che il tocco non sia stato registrato.
+      setTimeout(function(){ location.replace(location.pathname + '?_=' + Date.now()); }, 260);
+    });
     // Il tasto "Invita" dell'Affiliazione apre lo STESSO menu: dentro Telegram navigator.share
     // proporrebbe solo Telegram, quindi servono i link diretti per ogni app.
     var ivb=document.getElementById('inviteBtn');

@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=139"></script>
+<script src="/identikit.js?v=140"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -422,6 +422,15 @@
     </div>
 
     <div class="section">
+      <div class="section-head"><h2>Chi ha disattivato il bot</h2></div>
+      <div class="item">
+        <p class="item-meta" style="margin-bottom:12px">Restano nel conteggio degli iscritti ma non ricevono piu' nulla. Guarda questo numero <b>prima</b> di ogni invio: un broadcast che li include mostra invii che non corrispondono a nessuno che ha letto.</p>
+        <div class="dash-grid" id="uscitiKpi" style="margin-bottom:12px"></div>
+        <div id="uscitiList"></div>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-head"><h2>Link condivisi</h2></div>
       <div class="item">
         <p class="item-meta" style="margin-bottom:10px">I codici brevi generati dalle condivisioni e quante volte sono stati aperti. Un link con zero aperture e' stato mandato ma non ha portato nessuno.</p>
@@ -467,6 +476,12 @@
       <input type="hidden" id="macroId" />
       <div class="field"><label>Nome</label><input id="macroNome" /></div>
       <div class="field"><label>Ordine</label><input id="macroOrdine" type="number" value="0" /></div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input id="macroEvidenza" type="checkbox" /> In vetrina nell'app
+        </label>
+        <p class="item-meta" style="margin-top:6px">E' la prima pillola della directory, quella con la stella. Una sola alla volta: segnandone un'altra questa si spegne.</p>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('macroOverlay')">Annulla</button>
         <button class="btn btn-primary" onclick="saveMacro()">Salva</button>
@@ -785,7 +800,7 @@
         "admin/affiliate-links", "admin/suggerimenti", "admin/segnalazioni",
         "admin/sponsorboard", "admin/crm", "admin/templates", "admin/partner-richieste",
         // NB: "admin/whitelist" e' la WHITElist dei domini, non la lista d'attesa.
-        "admin/whitelist", "admin/waitlist", "admin/attivita",
+        "admin/whitelist", "admin/waitlist", "admin/attivita", "admin/usciti",
       ];
       const esiti = await Promise.allSettled(ROTTE.map((r) => api(r).then(async (x) => {
         // Un 401 non e' "una chiamata andata storta": e' la chiave rifiutata, e va
@@ -802,7 +817,7 @@
         cadute.push(ROTTE[i].replace("admin/", ""));
         return {};
       });
-      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes, attRes] = dati;
+      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes, attRes, uscRes] = dati;
       if (chiaveRifiutata) { chiaveScaduta(); return; }
       avvisaCadute(cadute);
 
@@ -822,6 +837,7 @@
       renderWhitelist(wlRes.domini || []);
       renderWaitlist(attesaRes.lista || []);
       renderAttivita(attRes.servizi || []);
+      renderUsciti(uscRes);
       // La dashboard ha un periodo suo, quindi chiede i dati per conto proprio
       // invece di stare nel blocco delle tredici: cambiando periodo non deve
       // ricaricare tutto il pannello.
@@ -1104,6 +1120,33 @@
             <div class="imb-n">${l.aperture} <b>aperture</b></div>
           </div>`).join("")
         : '<div class="item-meta">Nessun link condiviso ancora.</div>';
+    }
+
+    // Chi ha bloccato il bot. Il tasso conta piu' del numero assoluto: cinque
+    // usciti su venti iscritti e cinque su cinquecento sono due situazioni
+    // diverse, e il numero da solo non le distingue.
+    function renderUsciti(d) {
+      const kpi = document.getElementById("uscitiKpi");
+      const el = document.getElementById("uscitiList");
+      if (!kpi || !el || !d) return;
+      const tot = d.totale_iscritti || 0;
+      const perc = tot ? Math.round((d.usciti / tot) * 100) : 0;
+      const box = (n, l, s) => `<div class="dash-kpi"><div class="n">${n}</div><div class="l">${l}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+      kpi.innerHTML =
+        box(d.usciti || 0, "hanno disattivato", tot ? `su ${tot} iscritti · ${perc}%` : "") +
+        box(d.usciti_7gg || 0, "negli ultimi 7 giorni") +
+        box(d.clienti_usciti || 0, "erano clienti", d.clienti_usciti ? "avevano attivato un business" : "");
+
+      const quando = (t) => t ? new Date(t).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—";
+      el.innerHTML = (d.elenco || []).length
+        ? (d.elenco || []).map((u) => `<div class="inv-row">
+            <div style="flex:1;min-width:0">
+              <div class="inv-t">${esc(u.nome)}${u.era_cliente ? ' <span class="badge fermo">era cliente</span>' : ""}</div>
+              <div class="inv-s">${u.invitato_da ? "invitato da " + esc(u.invitato_da) : "nessuno sponsor"}</div>
+            </div>
+            <div class="item-meta" style="flex:none">${quando(u.quando)}</div>
+          </div>`).join("")
+        : '<div class="item-meta">Nessuno ha disattivato il bot.</div>';
     }
 
     function renderAttivita(righe) {
@@ -1961,9 +2004,9 @@
       el.innerHTML = macroCategorie.map((m) => `
         <div class="item">
           <div class="item-head">
-            <div class="item-title">${m.nome}</div>
+            <div class="item-title">${esc(m.nome)}${m.in_evidenza ? ' <span class="badge attivo">in vetrina</span>' : ""}</div>
             <div class="item-actions">
-              <button class="icon-btn" onclick='openMacroForm(${JSON.stringify(m)})'>✎</button>
+              <button class="icon-btn" onclick='openMacroForm(${esc(JSON.stringify(m))})'>✎</button>
               <button class="icon-btn danger" onclick="deleteMacro(${m.id})">✕</button>
             </div>
           </div>
@@ -1976,6 +2019,7 @@
       document.getElementById("macroId").value = m?.id || "";
       document.getElementById("macroNome").value = m?.nome || "";
       document.getElementById("macroOrdine").value = m?.ordine ?? 0;
+      document.getElementById("macroEvidenza").checked = !!m?.in_evidenza;
       openModal("macroOverlay");
     }
 
@@ -1984,6 +2028,7 @@
         id: document.getElementById("macroId").value || undefined,
         nome: document.getElementById("macroNome").value.trim(),
         ordine: parseInt(document.getElementById("macroOrdine").value) || 0,
+        in_evidenza: document.getElementById("macroEvidenza").checked,
       };
       await api("admin/macro-categorie/save", { method: "POST", body: JSON.stringify(body) });
       closeModal("macroOverlay");
@@ -2582,7 +2627,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
     }
 
     const ADTABS = [
-      { key: "dash", label: "Dashboard", titles: ["Come sta andando", "Dove si fermano", "Cosa toccano", "Link condivisi", "Attività per servizio"] },
+      { key: "dash", label: "Dashboard", titles: ["Come sta andando", "Dove si fermano", "Cosa toccano", "Chi ha disattivato il bot", "Link condivisi", "Attività per servizio"] },
       { key: "catalogo", label: "Catalogo", titles: ["Macro categorie", "Categorie", "Servizi", "Lista d'attesa"] },
       { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
