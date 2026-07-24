@@ -1275,6 +1275,9 @@ async function apiAffiliazione(telegramId: number) {
     business_approvati: approvatiCount[i.telegram_id] ?? 0,
     iscritto_il: i.created_at || null,
     uscito: i.attivo === false,
+    // QUANDO ha bloccato: "e' uscito" senza data non dice se e' successo ieri o
+    // due mesi fa, e sono due situazioni diverse -- una si recupera, l'altra no.
+    uscito_il: i.bloccato_at || null,
     // Dati Telegram: bio da getChat; lingua/premium solo per chi ha fatto /start dopo il 16/07/26.
     tg_bio: i.tg_bio || "",
     lingua: i.lingua || "",

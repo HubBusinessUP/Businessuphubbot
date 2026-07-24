@@ -309,6 +309,7 @@
 
       <!-- Rete: card come nell'HUB, un ref per card -->
       <div class="grp">I tuoi iscritti</div>
+      <div id="reteUsciti" class="rete-usciti" style="display:none"></div>
       <div id="reteList"></div>
       <div style="height:16px"></div>
     </section>
@@ -1064,6 +1065,12 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .fitem.open .fchev{transform:rotate(180deg)}
 .fdrop{padding:0 16px 16px}
 /* Card della rete (Affiliazione): niente foto, nome+@nick a sinistra, icone a destra */
+.mfuori{font-size:12.5px;color:#E5484D;font-weight:600;margin-top:4px}
+.rete-usciti{margin:10px 16px 0;padding:11px 14px;background:var(--s0);border-radius:10.5px;
+  font-size:13.5px;color:#E5484D;font-weight:600;line-height:1.45}
+/* Smorzata ma LEGGIBILE: chi e' uscito resta una persona da poter ricontattare,
+   non uno scarto da nascondere. */
+.mcard.spento{opacity:.72}
 .mcard{display:flex;align-items:center;gap:12px;margin:10px 16px 0;padding:14px 16px;
   background:var(--s0);border:1px solid transparent;border-radius:10.5px}
 .mnm{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:16px;font-weight:600;letter-spacing:-.01em}
@@ -1493,7 +1500,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=138"></script>
+<script src="identikit.js?v=139"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3098,10 +3105,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var stato = m.uscito
       ? '<span class="mi st-out" aria-label="Uscito dalla rete">' + IC_OUT + '</span>'
       : '<span class="mi st-in" aria-label="Nella tua rete">' + IC_IN + '</span>';
-    return '<div class="mcard">'
+    // Chi ha bloccato il bot lo si legge a PAROLE, non solo da un'icona rossa da
+    // interpretare: e' l'informazione che cambia cosa fai con quella persona.
+    // La card intera si smorza, cosi' si distingue scorrendo senza leggere.
+    var fuori = m.uscito
+      ? '<div class="mfuori">Ha disattivato il bot' + (m.uscito_il ? ' &middot; ' + dataIt(m.uscito_il) : '') + '</div>'
+      : '';
+    return '<div class="mcard' + (m.uscito ? ' spento' : '') + '">'
       + '<div style="flex:1;min-width:0">'
       +   '<div class="mnm">' + esc(nomeFull) + (m.is_premium ? STELLA : '') + '</div>'
       +   '<div class="mnk">' + esc(nick) + '</div>'
+      +   fuori
       + '</div>'
       + '<div class="micons">' + msg + biz + stato + '</div>'
       + '</div>';
@@ -3117,6 +3131,16 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
       // I due KPI: diretti invitati da me, e rete completa a ogni livello (RPC ricorsiva lato DB).
       setTxt('kpiDiretti', iscritti);
+      // Quanti hanno bloccato il bot. Non si mostra a zero: un "0 usciti" fisso
+      // e' rumore, e a uno diventa una cosa che salta all'occhio.
+      var usciti = membri.filter(function(m){ return m.uscito; }).length;
+      var box = document.getElementById('reteUsciti');
+      if (box) {
+        box.style.display = usciti ? '' : 'none';
+        box.textContent = usciti === 1
+          ? '1 persona ha disattivato il bot: non riceve piu' + String.fromCharCode(39) + ' i messaggi.'
+          : usciti + ' persone hanno disattivato il bot: non ricevono piu' + String.fromCharCode(39) + ' i messaggi.';
+      }
       setTxt('reteTotale', rete.totale_count != null ? rete.totale_count : iscritti);
 
       // link invito reale. Il tasto Invita apre il menu di condivisione (vedi CONDIVIDI piu' sotto):
