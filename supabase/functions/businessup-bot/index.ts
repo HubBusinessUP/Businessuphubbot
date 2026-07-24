@@ -61,6 +61,14 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } })
 }
 
+// Testo dell'utente dentro un messaggio in HTML. Telegram accetta solo pochi tag
+// e un < non chiuso fa fallire l'INTERO invio con 400: senza questa, un business
+// chiamato "<Broker>" non avrebbe fatto arrivare nessuna notifica, e nessuno se ne
+// sarebbe accorto perche' l'errore resta nei log della funzione.
+function escHtml(x: unknown) {
+  return String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
 async function sendMessage(chatId: number, text: string, markup?: any, parseMode?: string) {
   const body: any = { chat_id: chatId, text }
   if (markup) body.reply_markup = markup
@@ -1584,22 +1592,65 @@ async function apiSuggerisci(telegramId: number, body: any) {
   if (lead?.sugg_bloccato) return json({ error: "funzione_bloccata" }, 403)
 
   const nome = String(body?.nome || "").trim()
-  const link = String(body?.link || "").trim()
   const categoriaId = parseInt(body?.categoria_id) || null
+  const categoriaProposta = String(body?.categoria_proposta || "").trim().slice(0, 60)
   const motivazione = String(body?.motivazione || "").trim()
-  if (!nome || !link || !categoriaId || !motivazione) return json({ error: "campi_obbligatori" }, 400)
+
+  // I link: si accetta la lista, e si tiene il primo anche nel campo singolo
+  // perche' l'admin e le proposte gia' arrivate lo leggono da li'.
+  const linksIn = Array.isArray(body?.links) ? body.links : []
+  const links = linksIn
+    .map((l: any) => ({ label: String(l?.label || "").trim().slice(0, 40), url: String(l?.url || "").trim().slice(0, 300) }))
+    .filter((l: any) => /^https?:\/\/.+\..+/.test(l.url))
+    .slice(0, 5)   // oltre cinque non e' piu' una proposta, e' un elenco
+  const link = links.length ? links[0].url : String(body?.link || "").trim()
+
+  // Serve una categoria: quella scelta OPPURE quella proposta. Senza, la
+  // candidatura arriva senza posto dove metterla e resta ferma.
+  if (!nome || !link || !motivazione) return json({ error: "campi_obbligatori" }, 400)
+  if (!categoriaId && !categoriaProposta) return json({ error: "categoria_richiesta" }, 400)
 
   const verificato = !!lead?.sondaggio_completato
   const refLinkUtente = verificato ? String(body?.ref_link_utente || "").trim() : ""
 
   const { error } = await supabase.from("suggerimenti").insert({
     telegram_id: telegramId, nome, link, categoria_id: categoriaId, motivazione,
+    categoria_proposta: categoriaProposta || null, links,
     ref_link_utente: refLinkUtente || null, stato: "in_revisione",
   })
   if (error) return json({ error: error.message }, 500)
 
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "suggerimento_inviato", dettaglio: nome })
-  await sendMessage(ADMIN_ID, `💡 Nuova candidatura per la Business List\n\n${nome}\n${link}\nPerché: ${motivazione}${refLinkUtente ? "\nRef link utente: " + refLinkUtente : ""}\n\nVai nell'admin per approvare o rifiutare.`)
+
+  // CHI l'ha proposto, non solo cosa. Prima arrivava una candidatura anonima e
+  // per rispondere bisognava cercarsi la persona nell'admin; adesso il nome e'
+  // gia' un link alla sua chat.
+  const { data: chi } = await supabase.from("leads")
+    .select("nome, cognome, username").eq("telegram_id", telegramId).maybeSingle()
+  const nomeChi = [(chi as any)?.nome, (chi as any)?.cognome].filter(Boolean).join(" ").trim()
+    || ((chi as any)?.username ? "@" + (chi as any).username : "Utente " + telegramId)
+  const mention = `<a href="tg://user?id=${telegramId}">${escHtml(nomeChi)}</a>`
+
+  const elencoLink = links.length
+    ? links.map((l: any) => (l.label ? `${escHtml(l.label)}: ` : "") + escHtml(l.url)).join("\n")
+    : escHtml(link)
+
+  const testo =
+    `💡 <b>Nuova candidatura</b>\n\n` +
+    `<b>${escHtml(nome)}</b>\n` +
+    elencoLink + `\n\n` +
+    `<b>Categoria:</b> ${categoriaProposta ? escHtml(categoriaProposta) + " (proposta nuova, da valutare)" : "gia' esistente"}\n` +
+    `<b>Perché:</b> ${escHtml(motivazione)}\n` +
+    (refLinkUtente ? `<b>Suo ref:</b> ${escHtml(refLinkUtente)}\n` : "") +
+    `\n<b>Da:</b> ${mention} · <code>${telegramId}</code>`
+
+  // Il bottone "Scrivigli" c'e' solo con lo username: senza, t.me non porta a
+  // niente e un bottone che non funziona e' peggio di un bottone che manca.
+  const tastiera: any[] = [[{ text: "Apri l'admin", web_app: { url: WEBAPP_URL + "/admin/?_=" + Date.now() } }]]
+  if ((chi as any)?.username) {
+    tastiera.unshift([{ text: "Scrivi a " + nomeChi.slice(0, 20), url: "https://t.me/" + (chi as any).username }])
+  }
+  await sendMessage(ADMIN_ID, testo, { inline_keyboard: tastiera }, "HTML")
   return json({ ok: true })
 }
 
