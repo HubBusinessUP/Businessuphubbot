@@ -1514,7 +1514,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=142"></script>
+<script src="identikit.js?v=143"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2178,6 +2178,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     var steps = Array.isArray(s.tutorial_steps) ? s.tutorial_steps : [];
+    // TUTORIAL PER TUTTI (Antonio). La porta alle istruzioni non dipende ne'
+    // dall'aver attivato ne' dall'anagrafica: chi arriva sulla scheda per capire
+    // COME si fa deve poterlo aprire. Prima il bottone stava solo nel ramo di chi
+    // aveva gia' attivato, quindi tutti gli altri non lo vedevano proprio. Si mostra
+    // ovunque ci sia davvero un tutorial (se no aprirebbe una schermata vuota).
+    var btnTut = steps.length
+      ? '<button class="cta-secondaria" data-tutorial="' + s.id + '">' + etichetta(s, 'tutorial') + '</button>'
+      : '';
     out = '';   // panoramica e caratteristiche stanno nelle SCHEDE, non qui: qui resta la CTA
     // La scheda e' "da compilare" solo se non c'e' PROPRIO niente: prima bastava
     // che mancassero panoramica e caratteristiche per dirlo anche a una scheda
@@ -2226,6 +2234,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // fornitore che abbiamo tolto, e niente lista d'attesa (lo sta gia' usando).
     if (mioAttivo && !d.attivo) {
       out += '<button class="cta-attiva" disabled>Non disponibile</button>';
+      out += btnTut;   // il servizio e' sospeso, ma le istruzioni restano consultabili
       return out;
     }
 
@@ -2239,6 +2248,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         out += '<button class="cta-attiva" data-wait="' + s.id + '">' + etichetta(s, 'waitlist') + '</button>';
         if (d.waitlist_count) out += '<div class="ssrc">' + d.waitlist_count + (d.waitlist_count === 1 ? ' persona lo aspetta.' : ' persone lo aspettano.') + '</div>';
       }
+      out += btnTut;   // in arrivo, ma chi vuole puo' gia' vedere i passi
       return out;
     }
 
@@ -2249,14 +2259,16 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // Resta spento solo se manca l'anagrafica, che il server rifiuterebbe con 403.
     out += '<button class="cta-attiva" data-attiva="' + s.id + '"'
       + (d.anagrafica_ok === false ? ' data-bloccato="1" disabled' : '') + '>' + etichetta(s, 'aggiungi') + '</button>';
+    // IL FIX: il tutorial e' consultabile subito, anche con "Aggiungi subito" spento
+    // perche' manca l'anagrafica. Cosi' chi non ha ancora i dati a posto puo'
+    // comunque leggere COME funziona, invece di trovarsi un solo bottone bloccato.
+    out += btnTut;
     out += '<div class="cons">Proseguendo accetti le <a data-disc="attivazione">condizioni</a>.'
       + ' Servizio di un fornitore terzo: di ogni conseguenza risponde lui.</div>';
     // Il gate dell'anagrafica scattava solo DOPO il tap, con un 403 muto: chi non
     // aveva compilato i dati ripremeva all'infinito senza sapere perche'.
     if (d.anagrafica_ok === false) {
-      out += '<div class="ssrc">Prima completa i tuoi dati nel Profilo.</div>';
-    } else if (steps.length) {
-      out += '<div class="ssrc">Poi ti guido passo passo: ' + steps.length + (steps.length === 1 ? ' passo.' : ' passi.') + '</div>';
+      out += '<div class="ssrc">Prima completa i tuoi dati nel Profilo per aggiungerlo.</div>';
     }
     if (d.ref_link && d.ref_fonte === 'sponsor') out += '<div class="ssrc">Il link e di chi ti ha invitato.</div>';
     return out;
