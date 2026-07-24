@@ -1750,10 +1750,9 @@ async function apiAdminServiziSave(body: any) {
   } else {
     const { error } = await supabase.from("servizi").insert(row)
     if (error) return json({ error: error.message }, 500)
-    // In background: ora la coda scorre TUTTI gli iscritti con le pause, e senza
-    // waitUntil la funzione verrebbe chiusa appena risponde all'admin, lasciando
-    // meta' delle persone senza avviso e nessuno a saperlo.
-    inBackground(notificaNuovoServizio(nome, categoria_id, tipo).catch((e) => console.error("notifica nuovo servizio:", e)))
+    // NIENTE invio automatico (Antonio): l'avviso va a tutti gli iscritti, e un
+     // messaggio a tutti non deve partire come effetto collaterale di un salvataggio.
+     // Si manda dal bottone "Invia avviso" nella scheda, quando si decide di mandarlo.
   }
   return json({ ok: true })
 }
@@ -2096,6 +2095,27 @@ async function apiOnboarding(telegramId: number, body: any) {
   return json({ ok: true })
 }
 
+// L'avviso "e' arrivato un nuovo X", mandato quando lo decide l'admin.
+async function apiAdminAvvisa(body: any) {
+  const id = parseInt(body?.servizio_id) || 0
+  if (!id) return json({ error: "servizio_richiesto" }, 400)
+  const { data: sv } = await supabase.from("servizi").select("nome, tipo, categoria_id, stato").eq("id", id).maybeSingle()
+  if (!sv) return json({ error: "not_found" }, 404)
+  // Un servizio ritirato non si annuncia: chi apre l'avviso non lo troverebbe.
+  if ((sv as any).stato === "fermo") return json({ error: "servizio_ritirato" }, 400)
+
+  const { count: quanti } = await supabase.from("leads")
+    .select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
+  // Si risponde SUBITO con il numero di destinatari e si manda in background: con
+  // qualche centinaio di persone e le pause anti-limite la coda dura minuti, e
+  // l'admin non puo' restare a guardare una rotella.
+  inBackground(
+    notificaNuovoServizio((sv as any).nome, (sv as any).categoria_id, (sv as any).tipo)
+      .catch((e) => console.error("avviso manuale:", e)),
+  )
+  return json({ ok: true, destinatari: quanti ?? 0 })
+}
+
 // Cosa e' successo su ogni servizio: aperture (persone distinte), attivazioni,
 // e quando e' partito l'ultimo avviso. Tutto in una chiamata sola.
 async function apiAdminAttivita() {
@@ -2103,6 +2123,8 @@ async function apiAdminAttivita() {
   const { data: aperture } = await supabase.from("eventi")
     .select("riferimento_id, telegram_id, created_at").eq("tipo", "scheda_aperta")
   const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id")
+  const { data: click } = await supabase.from("eventi")
+    .select("riferimento_id, telegram_id").eq("tipo", "link_aperto")
   const { data: avvisi } = await supabase.from("eventi")
     .select("dettaglio, created_at").eq("tipo", "notifica_servizio")
     .order("created_at", { ascending: false })
@@ -2118,6 +2140,14 @@ async function apiAdminAttivita() {
   }
   const att: Record<number, number> = {}
   for (const a of attivazioni ?? []) att[(a as any).servizio_id] = (att[(a as any).servizio_id] ?? 0) + 1
+  // Click sul link del fornitore, per PERSONE distinte come le aperture: e' la
+  // misura che conta, e mescolare due unita' diverse nella stessa riga confonde.
+  const clickPersone: Record<number, Set<number>> = {}
+  for (const c of click ?? []) {
+    const k = (c as any).riferimento_id
+    if (!k) continue
+    ;(clickPersone[k] ||= new Set()).add((c as any).telegram_id)
+  }
 
   const righe = (servizi ?? []).map((sv: any) => {
     // L'avviso si lega al servizio per NOME: la notifica non porta l'id, e
@@ -2129,6 +2159,7 @@ async function apiAdminAttivita() {
       aperture: perSvc[sv.id]?.persone.size ?? 0,
       ultima_apertura: perSvc[sv.id]?.ultima ?? null,
       attivazioni: att[sv.id] ?? 0,
+      click: clickPersone[sv.id]?.size ?? 0,
       avviso_inviato_at: (mio as any)?.created_at ?? null,
       avviso_esito: (mio as any)?.dettaglio?.split(" | ").slice(1).join(" | ") ?? null,
     }
@@ -2781,6 +2812,25 @@ serve(async (req) => {
       return await apiAttiva(tid, await req.json())
     }
 
+    // Click sul link del fornitore: si registra e basta. Una volta al giorno per
+    // persona, come le aperture: due unita' di misura diverse nella stessa vista
+    // non si possono confrontare.
+    if (sub === "click-link" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      const sid = parseInt((await req.json())?.servizio_id) || 0
+      if (!sid) return json({ error: "servizio_richiesto" }, 400)
+      const oggi = new Date(); oggi.setUTCHours(0, 0, 0, 0)
+      const { count } = await supabase.from("eventi")
+        .select("id", { count: "exact", head: true })
+        .eq("tipo", "link_aperto").eq("telegram_id", tid)
+        .eq("riferimento_id", sid).gte("created_at", oggi.toISOString())
+      if (!count) {
+        await supabase.from("eventi").insert({ tipo: "link_aperto", telegram_id: tid, riferimento_id: sid })
+      }
+      return json({ ok: true })
+    }
+
     if (sub === "step-progress" && req.method === "POST") {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
@@ -2934,6 +2984,7 @@ serve(async (req) => {
 
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
+      if (sub === "admin/servizi/avvisa" && req.method === "POST") return await apiAdminAvvisa(await req.json())
       if (sub === "admin/partner-richieste" && req.method === "GET") return await apiAdminPartnerList()
       if (sub === "admin/partner-decidi" && req.method === "POST") return await apiAdminPartnerDecidi(await req.json())
       if (sub === "admin/whitelist" && req.method === "GET") return await apiAdminWhitelistList()

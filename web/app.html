@@ -1475,7 +1475,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=130"></script>
+<script src="identikit.js?v=131"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2376,6 +2376,19 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }).join('') + '</div>';
   }
 
+  // Chi apre il link del fornitore. Va registrato QUI e non lato server del
+  // fornitore, che non ci appartiene: e' l'ultimo gesto che possiamo vedere prima
+  // che la persona esca da Cashly, ed e' quello che dice se una scheda converte.
+  function segnaClick(servizioId){
+    if (!servizioId) return;
+    fetch(API_URL + '/click-link', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
+      body: JSON.stringify({ servizio_id: servizioId }),
+      keepalive: true,   // la richiesta deve sopravvivere all'uscita dall'app
+    }).catch(function(){});
+  }
+
   function apriScheda(id){
     if (!id) return;
     SC_ID = id; SC_TAB = 'pan';
@@ -2664,6 +2677,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
 
     // Condividi dalla scheda: apre lo stesso menu dell'header.
+    // Ogni link esterno aperto da scheda o tutorial vale come click sul servizio.
+    var ext = t.closest('[data-ext]');
+    if (ext && SC_ID) segnaClick(SC_ID);
+
     var shb = t.closest('[data-share]');
     if (shb) {
       e.stopPropagation();

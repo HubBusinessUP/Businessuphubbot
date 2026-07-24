@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=130"></script>
+<script src="/identikit.js?v=131"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -537,6 +537,12 @@
       </div>
 
       <div class="field" style="border-top:1px solid var(--border);padding-top:14px">
+        <label>Avvisa gli iscritti</label>
+        <div class="item-meta" style="margin-bottom:8px">Manda a <b>tutti</b> il messaggio &laquo;e stato aggiunto un nuovo [tipo] in directory&raquo;. Non parte da solo quando salvi: parte solo da qui.</div>
+        <button class="btn btn-secondary btn-small" id="svcAvvisaBtn" onclick="avvisaServizio()">Invia avviso</button>
+      </div>
+
+      <div class="field" style="border-top:1px solid var(--border);padding-top:14px">
         <label>Etichette dei bottoni</label>
         <div class="item-meta" style="margin-bottom:8px">
           Lascia vuoto per usare il testo predefinito, quello scritto in grigio nel campo.
@@ -933,7 +939,8 @@
           </div>
           <div style="text-align:right;flex:none;min-width:120px">
             <div style="font-size:13px;font-weight:700">${r.aperture} <span class="item-meta" style="font-weight:400">aperture</span></div>
-            <div class="item-meta">${r.attivazioni} attivazioni${r.ultima_apertura ? " · " + quando(r.ultima_apertura) : ""}</div>
+            <div class="item-meta">${r.click} hanno aperto il link · ${r.attivazioni} attivazioni</div>
+            ${r.ultima_apertura ? `<div class="item-meta">ultima ${quando(r.ultima_apertura)}</div>` : ""}
           </div>
         </div>`;
       }).join("");
@@ -2245,6 +2252,40 @@
       el.style.color = n > 250 ? "#e0a640" : "";
     }
     window.contaParole = contaParole;
+
+    // L'avviso a TUTTI gli iscritti lo decide l'admin, non parte da solo salvando.
+    // Conferma con il numero esatto di destinatari: e' irreversibile e va detto
+    // PRIMA quante persone riceveranno il messaggio, non dopo.
+    async function avvisaServizio() {
+      const id = document.getElementById("svcId").value;
+      if (!id) { alert("Salva prima il servizio, poi manda l'avviso."); return; }
+      const nome = document.getElementById("svcNome").value.trim();
+      const btn = document.getElementById("svcAvvisaBtn");
+      let res, d;
+      try {
+        // Chiedo prima QUANTI sono, cosi' la conferma dice un numero vero.
+        const k = await (await api("admin/kpi")).json();
+        const quanti = k.totale ?? "tutti gli";
+        const ok = await askConfirm(`Mando l'avviso di "${nome}" a ${quanti} iscritti?
+
+Il messaggio parte subito e non si puo' annullare.`);
+        if (!ok) return;
+        btn.disabled = true; btn.textContent = "Invio...";
+        res = await api("admin/servizi/avvisa", { method: "POST", body: JSON.stringify({ servizio_id: parseInt(id) }) });
+        d = await res.json().catch(() => ({}));
+      } catch (e) { d = { error: e.message }; }
+      btn.disabled = false; btn.textContent = "Invia avviso";
+      if (!res || !res.ok || d.error) {
+        alert(d.error === "servizio_ritirato"
+          ? "Questo servizio e ritirato: chi apre l'avviso non lo troverebbe."
+          : "Non ha funzionato: " + (d.error || "errore"));
+        return;
+      }
+      alert(`Avviso in partenza verso ${d.destinatari} iscritti.
+
+L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
+    }
+    window.avvisaServizio = avvisaServizio;
 
     async function saveServizio() {
       const steps = [...document.querySelectorAll("#stepsEditor .step-row")]
