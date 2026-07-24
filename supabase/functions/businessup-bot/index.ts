@@ -1080,6 +1080,24 @@ async function avvisaWaitlist(servizioId: number, nomeServizio: string) {
 async function apiServizio(telegramId: number, servizioId: number) {
   const { data: servizio } = await supabase.from("servizi").select("*").eq("id", servizioId).maybeSingle()
   if (!servizio) return json({ error: "not_found" }, 404)
+
+  // Chi apre una scheda, una volta al giorno per persona. Registrare OGNI apertura
+  // gonfierebbe la tabella e direbbe un'altra cosa: interessa quante PERSONE hanno
+  // guardato, non quante volte hanno riaperto la stessa scheda scorrendo avanti e
+  // indietro. In background: e' una statistica, non deve rallentare la lettura.
+  inBackground((async () => {
+    const oggi = new Date(); oggi.setUTCHours(0, 0, 0, 0)
+    const { count } = await supabase.from("eventi")
+      .select("id", { count: "exact", head: true })
+      .eq("tipo", "scheda_aperta").eq("telegram_id", telegramId)
+      .eq("riferimento_id", servizioId).gte("created_at", oggi.toISOString())
+    if (!count) {
+      await supabase.from("eventi").insert({
+        tipo: "scheda_aperta", telegram_id: telegramId,
+        riferimento_id: servizioId, dettaglio: servizio.nome,
+      })
+    }
+  })().catch(() => {}))
   const { data: lead } = await supabase.from("leads").select("sondaggio_completato, is_cliente, anagrafica_manuale").eq("telegram_id", telegramId).maybeSingle()
   const { data: interesse } = await supabase.from("lead_servizi").select("id").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { data: mioLink } = await supabase.from("affiliate_link").select("ref_link, approvato").eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
@@ -1822,7 +1840,7 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number, 
   if (!destinatari.length) return
   const { data: cat } = await supabase.from("categorie").select("nome").eq("id", categoriaId).maybeSingle()
 
-  let inviati = 0
+  let inviati = 0, falliti = 0
   for (const tid of destinatari) {
     // Freno: Telegram limita a circa 30 messaggi al secondo e oltre quella soglia
     // inizia a rifiutare. Una pausa ogni 25 tiene la coda dentro il limite.
@@ -1841,9 +1859,18 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number, 
         "HTML",
       )
     } catch (e) {
+      falliti++
       console.error("notifica nuovo servizio fallita", tid, e)
     }
   }
+
+  // La traccia dell'invio. Senza, "l'ho mandato?" e' una domanda senza risposta:
+  // i messaggi partono da soli e in background, e non resta niente da guardare.
+  await supabase.from("eventi").insert({
+    tipo: "notifica_servizio",
+    dettaglio: `${nomeServizio} | ${destinatari.length - falliti}/${destinatari.length} inviati` +
+               (falliti ? ` | ${falliti} falliti` : ""),
+  }).then(() => {}, () => {})
 }
 
 async function apiAdminServiziDelete(body: any) {
@@ -2067,6 +2094,46 @@ async function apiOnboarding(telegramId: number, body: any) {
     await supabase.from("leads").update({ onboarding_choice: choice }).eq("telegram_id", telegramId)
   }
   return json({ ok: true })
+}
+
+// Cosa e' successo su ogni servizio: aperture (persone distinte), attivazioni,
+// e quando e' partito l'ultimo avviso. Tutto in una chiamata sola.
+async function apiAdminAttivita() {
+  const { data: servizi } = await supabase.from("servizi").select("id, nome").order("nome")
+  const { data: aperture } = await supabase.from("eventi")
+    .select("riferimento_id, telegram_id, created_at").eq("tipo", "scheda_aperta")
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id")
+  const { data: avvisi } = await supabase.from("eventi")
+    .select("dettaglio, created_at").eq("tipo", "notifica_servizio")
+    .order("created_at", { ascending: false })
+
+  const perSvc: Record<number, { persone: Set<number>; ultima: string | null }> = {}
+  for (const e of aperture ?? []) {
+    const k = (e as any).riferimento_id
+    if (!k) continue
+    if (!perSvc[k]) perSvc[k] = { persone: new Set(), ultima: null }
+    perSvc[k].persone.add((e as any).telegram_id)
+    const c = (e as any).created_at
+    if (!perSvc[k].ultima || c > perSvc[k].ultima!) perSvc[k].ultima = c
+  }
+  const att: Record<number, number> = {}
+  for (const a of attivazioni ?? []) att[(a as any).servizio_id] = (att[(a as any).servizio_id] ?? 0) + 1
+
+  const righe = (servizi ?? []).map((sv: any) => {
+    // L'avviso si lega al servizio per NOME: la notifica non porta l'id, e
+    // aggiungerlo ora non recupererebbe comunque quelli gia' partiti.
+    const mio = (avvisi ?? []).find((n: any) => String(n.dettaglio || "").startsWith(sv.nome + " |"))
+    return {
+      id: sv.id,
+      nome: sv.nome,
+      aperture: perSvc[sv.id]?.persone.size ?? 0,
+      ultima_apertura: perSvc[sv.id]?.ultima ?? null,
+      attivazioni: att[sv.id] ?? 0,
+      avviso_inviato_at: (mio as any)?.created_at ?? null,
+      avviso_esito: (mio as any)?.dettaglio?.split(" | ").slice(1).join(" | ") ?? null,
+    }
+  })
+  return json({ ok: true, servizi: righe })
 }
 
 async function apiAdminKpi() {
@@ -2785,10 +2852,20 @@ serve(async (req) => {
         // l'unica cosa che lo protegge: chi prova a indovinarla deve lasciare traccia e
         // deve rallentare. Un secondo di attesa rende inutile il tentativo a tappeto e
         // non da' fastidio a chi ha solo sbagliato a incollare.
-        await supabase.from("eventi").insert({
-          tipo: "admin_accesso_negato",
-          dettaglio: sub + " | chiave di " + provided.length + " caratteri",
-        }).then(() => {}, () => {})
+        // Una riga ogni cinque minuti per rotta, non una per tentativo. Una scheda
+        // rimasta aperta con una chiave vecchia ricontrolla da sola all'infinito:
+        // ne sono arrivate 27.000 in quattro giorni, che seppelliscono il segnale
+        // che questo log dovrebbe dare. Il segnale resta, il rumore no.
+        const dett = sub + " | chiave di " + provided.length + " caratteri"
+        const cinqueMin = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+        const { count: gia } = await supabase.from("eventi")
+          .select("id", { count: "exact", head: true })
+          .eq("tipo", "admin_accesso_negato").eq("dettaglio", dett)
+          .gte("created_at", cinqueMin)
+        if (!gia) {
+          await supabase.from("eventi").insert({ tipo: "admin_accesso_negato", dettaglio: dett })
+            .then(() => {}, () => {})
+        }
         await new Promise((r) => setTimeout(r, 1000))
         return json({ error: "unauthorized" }, 401)
       }
@@ -2856,6 +2933,7 @@ serve(async (req) => {
       if (sub === "admin/suggerimenti/delete" && req.method === "POST") return await apiAdminSuggerimentiDelete(await req.json())
 
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
+      if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/partner-richieste" && req.method === "GET") return await apiAdminPartnerList()
       if (sub === "admin/partner-decidi" && req.method === "POST") return await apiAdminPartnerDecidi(await req.json())
       if (sub === "admin/whitelist" && req.method === "GET") return await apiAdminWhitelistList()

@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=129"></script>
+<script src="/identikit.js?v=130"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -368,6 +368,14 @@
     </div>
 
     <div class="section">
+      <div class="section-head"><h2>Attività per servizio</h2></div>
+      <div class="item">
+        <p class="item-meta" style="margin-bottom:10px">Quante <b>persone diverse</b> hanno aperto ogni scheda (non quante volte), quante l'hanno attivata, e quando è partito l'avviso automatico. L'avviso parte salvando il servizio dall'admin, non modificandolo dal database.</p>
+        <div id="attList"></div>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-head"><h2>Lista d'attesa</h2></div>
       <div class="item">
         <p class="item-meta" style="margin-bottom:10px">Chi si è prenotato per un servizio non ancora attivo. Quando lo metti su Attivo, a queste persone parte un messaggio dal bot.</p>
@@ -709,7 +717,7 @@
         "admin/affiliate-links", "admin/suggerimenti", "admin/segnalazioni",
         "admin/sponsorboard", "admin/crm", "admin/templates", "admin/partner-richieste",
         // NB: "admin/whitelist" e' la WHITElist dei domini, non la lista d'attesa.
-        "admin/whitelist", "admin/waitlist",
+        "admin/whitelist", "admin/waitlist", "admin/attivita",
       ];
       const esiti = await Promise.allSettled(ROTTE.map((r) => api(r).then(async (x) => {
         // Un 401 non e' "una chiamata andata storta": e' la chiave rifiutata, e va
@@ -726,7 +734,7 @@
         cadute.push(ROTTE[i].replace("admin/", ""));
         return {};
       });
-      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes] = dati;
+      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes, attRes] = dati;
       if (chiaveRifiutata) { chiaveScaduta(); return; }
       avvisaCadute(cadute);
 
@@ -745,6 +753,7 @@
       renderDaValidare();
       renderWhitelist(wlRes.domini || []);
       renderWaitlist(attesaRes.lista || []);
+      renderAttivita(attRes.servizi || []);
       renderSegnalazioni(segRes.segnalazioni || []);
       renderTopBusiness(kpi.top_business || []);
       renderSponsorboard(boardRes.sponsorboard || []);
@@ -903,6 +912,33 @@
 
     // Chi aspetta cosa. Raggruppato per servizio: la domanda dell'admin non e' "chi si e'
     // prenotato" ma "se attivo questo, a quanti scrivo".
+    // Quante PERSONE hanno aperto ogni scheda, quante l'hanno attivata, e quando e'
+    // partito l'avviso. Senza questa vista "l'avviso e' stato mandato?" e "qualcuno
+    // guarda?" erano due domande senza risposta.
+    function renderAttivita(righe) {
+      const el = document.getElementById("attList");
+      if (!el) return;
+      if (!righe.length) { el.innerHTML = '<div class="item-meta">Nessun servizio.</div>'; return; }
+      const quando = (t) => t ? new Date(t + (String(t).endsWith("Z") ? "" : "Z")).toLocaleString("it-IT",
+        { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : null;
+      el.innerHTML = righe.map((r) => {
+        const avviso = r.avviso_inviato_at
+          ? `<span style="color:var(--lime)">inviato ${quando(r.avviso_inviato_at)}</span>` +
+            (r.avviso_esito ? ` <span class="item-meta">(${esc(r.avviso_esito)})</span>` : "")
+          : '<span class="item-meta">mai inviato</span>';
+        return `<div class="inv-row">
+          <div style="flex:1;min-width:0">
+            <div class="inv-t">${esc(r.nome)}</div>
+            <div class="inv-s">Avviso: ${avviso}</div>
+          </div>
+          <div style="text-align:right;flex:none;min-width:120px">
+            <div style="font-size:13px;font-weight:700">${r.aperture} <span class="item-meta" style="font-weight:400">aperture</span></div>
+            <div class="item-meta">${r.attivazioni} attivazioni${r.ultima_apertura ? " · " + quando(r.ultima_apertura) : ""}</div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
     function renderWaitlist(lista) {
       const el = document.getElementById("waitlistRows");
       if (!lista.length) { el.innerHTML = '<p class="empty">Nessuna prenotazione.</p>'; return; }
@@ -2305,7 +2341,7 @@
       { key: "coda", label: "Da validare", titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni"] },
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
       { key: "rubrica", label: "Rubrica", titles: ["Miei contatti"] },
-      { key: "stats", label: "Statistiche", titles: ["Onboarding", "Top business", "Top Sponsorboard"] },
+      { key: "stats", label: "Statistiche", titles: ["Attività per servizio", "Onboarding", "Top business", "Top Sponsorboard"] },
       { key: "affil", label: "Affiliazione", titles: ["Whitelist domini link referral"] },
     ];
     function initAdminTabs() {
