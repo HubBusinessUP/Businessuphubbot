@@ -214,6 +214,9 @@
     <button id="homeBtn" aria-label="Torna alla directory" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
     </button>
+    <button id="refreshBtn" aria-label="Aggiorna">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4.5V11h-6"/></svg>
+    </button>
     <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
   </div>
   <div class="body">
@@ -972,6 +975,17 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .hdr #homeBtn:active{transform:scale(.94)}
 .hdr #shareBtn{width:42px!important;height:42px!important;border-radius:999px!important;
   background:var(--s1)!important;border:1px solid transparent!important;color:var(--tx)!important}
+/* AGGIORNA. Stessa forma degli altri due tasti tondi, ma in grigio e non in
+   verde: e' una manutenzione, non un'azione da invitare a fare. */
+.hdr #refreshBtn{flex-shrink:0;width:42px;height:42px;border-radius:999px;background:var(--s1);
+  border:1px solid transparent;color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hdr #refreshBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hdr #refreshBtn:active{transform:scale(.94)}
+/* La rotella gira finche' la pagina non riparte: senza, il tocco non lascia
+   traccia e sembra non aver funzionato. */
+.hdr #refreshBtn.gira svg{animation:ruota .7s linear infinite}
+@keyframes ruota{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.hdr #refreshBtn.gira svg{animation:none;opacity:.5}}
 
 .macros{display:flex;gap:9px;overflow-x:auto;padding:16px 20px 0;scrollbar-width:none}
 .macros::-webkit-scrollbar{display:none}
@@ -1500,7 +1514,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=140"></script>
+<script src="identikit.js?v=141"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2771,7 +2785,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       ALLBIZ = [];
       // Le categorie arrivano tutte, anche quelle ancora senza business: servono al form "+".
       CATS = (d.categorie || []).map(function(c){ return { id: c.id, nome: c.nome, macro_categoria_id: c.macro_categoria_id }; });
-      MACRO = (d.macro_categorie || []).map(function(m){ return { id: m.id, nome: m.nome }; });
+      MACRO = (d.macro_categorie || []).map(function(m){ return { id: m.id, nome: m.nome, in_evidenza: !!m.in_evidenza }; });
       (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ ALLBIZ.push(s); }); });
       // L'ORDINE LO FANNO SOLO I VOTI (all-time), ed e' una scelta di ONESTA':
       // il numero mostrato sulla freccia deve spiegare l'ordine. Sommando anche i
