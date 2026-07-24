@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=132"></script>
+<script src="/identikit.js?v=133"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -811,6 +811,18 @@
         ". Quello che vedi sotto e' incompleto: ricarica prima di decidere qualcosa.";
     }
 
+    // Un valore da mettere DENTRO un onclick, cioe' dentro codice JS dentro un
+    // attributo HTML. Due passaggi, in quest'ordine:
+    //   JSON.stringify -> stringa JS valida, con barre rovesciate e apici gia' sistemati
+    //   esc            -> le virgolette diventano &quot;, che il parser HTML ridecodifica
+    //                     DOPO aver chiuso l'attributo, quindi non lo rompono.
+    // Cosi' non serve piu' inventarsi replace() a mano, che e' esattamente il modo
+    // in cui erano nati i buchi: esc() NON tocca la barra rovesciata, quindi un
+    // nome come  x\'-codice  usciva dalla stringa ed eseguiva.
+    function jsArg(v) {
+      return esc(JSON.stringify(String(v ?? "")));
+    }
+
     function esc(s) {
       return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
@@ -1046,7 +1058,7 @@
               <div class="item-title">${esc(s.nome)}</div>
               <div class="item-meta">${s.invitati} invitati · ${s.attivati} attivati</div>
             </div>
-            <button class="icon-btn" onclick="openMsgModal(${s.telegram_id}, '${esc(s.nome).replace(/'/g, "\\'")}')" title="Invia messaggio">✉</button>
+            <button class="icon-btn" onclick="openMsgModal(${s.telegram_id}, ${jsArg(s.nome)})" title="Invia messaggio">✉</button>
           </div>
         </div>
       `).join("");
@@ -1088,7 +1100,7 @@
       el.innerHTML = allTags.map((t) => {
         const [fg, bg] = tagColor(t);
         const active = crmTagFiltro === t;
-        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setCrmTag('${esc(t).replace(/'/g, "\\'")}')">🏷 ${esc(t)}</button>`;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setCrmTag(${jsArg(t)})">🏷 ${esc(t)}</button>`;
       }).join("") + (crmTagFiltro ? `<button class="tag-filter" onclick="setCrmTag('')">✕ tag</button>` : "");
     }
     function setCrmTag(t) { crmTagFiltro = (crmTagFiltro === t) ? "" : t; renderCrmTagChips(); renderCrm(); }
@@ -1116,7 +1128,7 @@
                 <option value="">Auto</option>
                 ${["lead", "attivato", "in_training", "attivo", "criticita"].map((s) => `<option value="${s}" ${c.override === s ? "selected" : ""}>${STADIO_LABEL[s]}</option>`).join("")}
               </select>
-              <button class="icon-btn" onclick="openMsgModal(${c.telegram_id}, '${esc(c.nome).replace(/'/g, "\\'")}')" title="Invia messaggio">✉</button>
+              <button class="icon-btn" onclick="openMsgModal(${c.telegram_id}, ${jsArg(c.nome)})" title="Invia messaggio">✉</button>
             </div>
           </div>
         </div>
@@ -1166,7 +1178,7 @@
           <div class="db-label">Follow-up inviati</div>
           ${d.followups.length ? d.followups.map((f) => `<div>Day ${f.giorno} — ${new Date(f.inviato_at).toLocaleDateString("it-IT")}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuno</span>'}
         </div>
-        <button class="btn btn-primary btn-small" onclick="closeModal('crmOverlay');openMsgModal(${telegramId}, '${esc(nome).replace(/'/g, "\\'")}')">✉ Invia messaggio</button>
+        <button class="btn btn-primary btn-small" onclick="closeModal('crmOverlay');openMsgModal(${telegramId}, ${jsArg(nome)})">✉ Invia messaggio</button>
       `;
       renderDetailTags();
     }
@@ -1180,7 +1192,7 @@
       el.innerHTML =
         `<div class="db-label">Tag</div>` +
         (crmDetailTags.length
-          ? `<div class="tag-row">${crmDetailTags.map((t) => tagChip(t, `removeDetailTag('${esc(t).replace(/'/g, "\\'")}')`)).join("")}</div>`
+          ? `<div class="tag-row">${crmDetailTags.map((t) => tagChip(t, `removeDetailTag(${jsArg(t)})`)).join("")}</div>`
           : `<span style="color:var(--text-dim)">Nessun tag</span>`) +
         `<div class="tag-add-row">
           <input id="crmTagInput" list="tagSuggest" placeholder="Aggiungi tag (es. Cliente, Caldo, VIP)" maxlength="24"
@@ -1249,7 +1261,7 @@
         const [fg, bg] = tagColor(t);
         const active = rubTagFiltro === t;
         const n = rubContatti.filter((c) => (c.tags || []).includes(t)).length;
-        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setRubTag('${esc(t).replace(/'/g, "\\'")}')">🏷 ${esc(t)} <b>${n}</b></button>`;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? `background:${bg};color:${fg}` : ""}" onclick="setRubTag(${jsArg(t)})">🏷 ${esc(t)} <b>${n}</b></button>`;
       }).join("");
       el.innerHTML = html;
     }
@@ -1322,7 +1334,7 @@
       el.innerHTML =
         `<div class="db-label">Tag</div>` +
         (rubDetailTags.length
-          ? `<div class="tag-row">${rubDetailTags.map((t) => tagChip(t, `removeRubTag('${esc(t).replace(/'/g, "\\'")}')`)).join("")}</div>`
+          ? `<div class="tag-row">${rubDetailTags.map((t) => tagChip(t, `removeRubTag(${jsArg(t)})`)).join("")}</div>`
           : `<span style="color:var(--text-dim)">Nessun tag</span>`) +
         `<div class="tag-add-row">
           <input id="rubTagInput" list="rubTagSuggest" placeholder="Aggiungi tag" maxlength="24"
@@ -1362,7 +1374,7 @@
       el.innerHTML = rubCartelle.map((t) => {
         const active = rubCartellaFiltro === t;
         const n = rubContatti.filter((c) => (c.cartelle || []).includes(t)).length;
-        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? "background:var(--amber);color:#111" : ""}" onclick="setRubCartella('${esc(t).replace(/'/g, "\\'")}')">📁 ${esc(t)} <b>${n}</b></button>`;
+        return `<button class="tag-filter${active ? " active" : ""}" style="${active ? "background:var(--amber);color:#111" : ""}" onclick="setRubCartella(${jsArg(t)})">📁 ${esc(t)} <b>${n}</b></button>`;
       }).join("") + (rubCartellaFiltro ? `<button class="tag-filter" onclick="setRubCartella('')">✕ cartella</button>` : "");
     }
     function setRubCartella(t) { rubCartellaFiltro = (rubCartellaFiltro === t) ? "" : t; renderRubCartelleChips(); renderRubrica(); bcRefreshTarget(); }
@@ -1374,7 +1386,7 @@
       el.innerHTML =
         `<div class="db-label">📁 Cartelle</div>` +
         (rubDetailCartelle.length
-          ? `<div class="tag-row">${rubDetailCartelle.map((t) => `<span class="tag-chip" style="background:rgba(232,179,76,0.16);color:var(--amber);border-color:var(--amber)">${esc(t)} <span class="tx" onclick="removeRubCartella('${esc(t).replace(/'/g, "\\'")}')">✕</span></span>`).join("")}</div>`
+          ? `<div class="tag-row">${rubDetailCartelle.map((t) => `<span class="tag-chip" style="background:rgba(232,179,76,0.16);color:var(--amber);border-color:var(--amber)">${esc(t)} <span class="tx" onclick="removeRubCartella(${jsArg(t)})">✕</span></span>`).join("")}</div>`
           : `<span style="color:var(--text-dim)">In nessuna cartella</span>`) +
         `<div class="tag-add-row">
           <input id="rubCartInput" list="rubTagSuggest" placeholder="Aggiungi a cartella (es. Clienti, Lead caldi)" maxlength="30"
@@ -1727,9 +1739,9 @@
         <div class="item">
           <div class="item-head">
             <div>
-              <div class="item-title">${l.utente_nome} <span class="badge ${l.approvato ? "approved" : "pending"}">${l.approvato ? "approvato" : "in attesa"}</span></div>
-              <div class="item-meta">${l.servizio_nome}</div>
-              <div class="link-preview">${l.ref_link}</div>
+              <div class="item-title">${esc(l.utente_nome)} <span class="badge ${l.approvato ? "approved" : "pending"}">${l.approvato ? "approvato" : "in attesa"}</span></div>
+              <div class="item-meta">${esc(l.servizio_nome)}</div>
+              <div class="link-preview">${esc(l.ref_link)}</div>
             </div>
             <div class="item-actions">
               ${l.approvato ? "" : `<button class="icon-btn" onclick="approveAffLink(${l.id})" title="Approva">✓</button>`}
@@ -1839,7 +1851,7 @@
               <div class="item-meta">${cat ? esc(cat.nome) : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}${attesa ? ` · <b>${attesa}</b> in lista d'attesa` : ""}</div>
             </div>
             <div class="item-actions">
-              <button class="icon-btn" onclick='openServizioForm(${JSON.stringify(s).replace(/'/g, "&apos;")})'>✎</button>
+              <button class="icon-btn" onclick="openServizioForm(${esc(JSON.stringify(s))})">✎</button>
               <button class="icon-btn danger" onclick="deleteServizio(${s.id})">✕</button>
             </div>
           </div>

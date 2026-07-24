@@ -384,6 +384,25 @@ async function setMenuButton(chatId: number) {
 async function handleStart(chatId: number, from: any, payload?: string) {
   setMenuButton(chatId).catch(() => {})
   let refBy: number | undefined
+  // Codice di una condivisione: si conta l'apertura e si risale a chi l'ha mandata,
+  // cosi' il link corto porta lo sponsor esattamente come faceva il ref lungo.
+  if (payload && !payload.startsWith("ref_")) {
+    const { data: corto } = await supabase.from("link_corti")
+      .select("codice, telegram_id, servizio_id, aperture").eq("codice", payload).maybeSingle()
+    if (corto) {
+      await supabase.from("link_corti")
+        .update({ aperture: ((corto as any).aperture || 0) + 1 }).eq("codice", payload)
+      await supabase.from("click").insert({
+        telegram_id: from?.id ?? null, azione: "apertura_link_corto",
+        riferimento: (corto as any).servizio_id, dettaglio: payload,
+      }).then(() => {}, () => {})
+      // Lo sponsor e' chi ha condiviso: si prosegue come se fosse arrivato il suo ref.
+      const { data: aut } = await supabase.from("leads")
+        .select("ref_code").eq("telegram_id", (corto as any).telegram_id).maybeSingle()
+      if ((aut as any)?.ref_code) payload = "ref_" + (aut as any).ref_code
+    }
+  }
+
   if (payload?.startsWith("ref_")) {
     const code = payload.slice(4)
     const { data: referrer } = await supabase.from("leads").select("telegram_id").eq("ref_code", code).maybeSingle()
@@ -729,6 +748,51 @@ async function handleUpdate(u: any) {
     const payload = text.startsWith("/start ") ? text.slice(7).trim() : ""
     await handleStart(chatId, from, payload)
   }
+}
+
+// ---------- LINK CORTI E CLICK ----------
+
+// Un codice breve per ogni condivisione. Sta DENTRO il link, quindi conta chi ci
+// arriva davvero -- non chi ha solo premuto "condividi", che non dice niente.
+// Sei caratteri: 2 miliardi di combinazioni, e un link che si legge a voce.
+const ALFABETO = "abcdefghijkmnpqrstuvwxyz23456789"   // niente l/o/0/1: si confondono
+function codiceBreve() {
+  const n = crypto.getRandomValues(new Uint8Array(6))
+  return Array.from(n, (x) => ALFABETO[x % ALFABETO.length]).join("")
+}
+
+async function apiLinkCorto(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id) || null
+  // Un codice per persona+servizio, non uno per ogni tocco su "condividi":
+  // altrimenti la stessa persona che condivide tre volte avrebbe tre statistiche
+  // separate della stessa cosa, e nessuna direbbe il totale.
+  const { data: gia } = await supabase.from("link_corti")
+    .select("codice").eq("telegram_id", telegramId)
+    .eq("servizio_id", servizioId).maybeSingle()
+  if (gia) return json({ ok: true, codice: (gia as any).codice })
+
+  for (let tentativo = 0; tentativo < 5; tentativo++) {
+    const codice = codiceBreve()
+    const { error } = await supabase.from("link_corti")
+      .insert({ codice, telegram_id: telegramId, servizio_id: servizioId })
+    if (!error) return json({ ok: true, codice })
+    // collisione: si riprova con un altro codice invece di fallire
+  }
+  return json({ error: "codice_non_generato" }, 500)
+}
+
+// Ogni cosa cliccabile lascia una riga. Non fallisce mai verso il client: una
+// statistica che rompe un bottone e' peggio della statistica che manca.
+async function apiClick(telegramId: number | null, body: any) {
+  const azione = String(body?.azione || "").slice(0, 40)
+  if (!azione) return json({ error: "azione_richiesta" }, 400)
+  await supabase.from("click").insert({
+    telegram_id: telegramId,
+    azione,
+    riferimento: parseInt(body?.riferimento) || null,
+    dettaglio: body?.dettaglio ? String(body.dettaglio).slice(0, 120) : null,
+  }).then(() => {}, () => {})
+  return json({ ok: true })
 }
 
 // ---------- API: MINI APP ----------
@@ -2095,6 +2159,52 @@ async function apiOnboarding(telegramId: number, body: any) {
   return json({ ok: true })
 }
 
+// Tutto cio' che viene toccato, per azione e per servizio. Il periodo si sceglie:
+// "sempre" serve a capire cosa funziona, "ultimi 7 giorni" a capire cosa sta
+// succedendo adesso, e sono due domande diverse.
+async function apiAdminClick(url: URL) {
+  const giorni = parseInt(url.searchParams.get("giorni") || "0") || 0
+  const da = giorni ? new Date(Date.now() - giorni * 864e5).toISOString() : null
+
+  let q = supabase.from("click").select("azione, riferimento, telegram_id, dettaglio, created_at")
+  if (da) q = q.gte("created_at", da)
+  const { data: righe } = await q
+
+  const perAzione: Record<string, { tocchi: number; persone: Set<number> }> = {}
+  const perServizio: Record<number, Record<string, number>> = {}
+  for (const c of righe ?? []) {
+    const a = (c as any).azione
+    ;(perAzione[a] ||= { tocchi: 0, persone: new Set() })
+    perAzione[a].tocchi++
+    if ((c as any).telegram_id) perAzione[a].persone.add((c as any).telegram_id)
+    const r = (c as any).riferimento
+    if (r) { (perServizio[r] ||= {})[a] = ((perServizio[r] || {})[a] || 0) + 1 }
+  }
+
+  // I link condivisi: quanti ne sono stati creati e quante volte sono stati aperti.
+  const { data: corti } = await supabase.from("link_corti")
+    .select("codice, telegram_id, servizio_id, aperture").order("aperture", { ascending: false }).limit(20)
+  const { data: nomi } = await supabase.from("servizi").select("id, nome")
+  const nomeDi: Record<number, string> = {}
+  for (const n of nomi ?? []) nomeDi[(n as any).id] = (n as any).nome
+
+  return json({
+    ok: true,
+    periodo: giorni ? `ultimi ${giorni} giorni` : "sempre",
+    azioni: Object.entries(perAzione)
+      .map(([azione, v]) => ({ azione, tocchi: v.tocchi, persone: v.persone.size }))
+      .sort((a, b) => b.tocchi - a.tocchi),
+    servizi: Object.entries(perServizio).map(([id, az]) => ({
+      id: Number(id), nome: nomeDi[Number(id)] || ("#" + id), azioni: az,
+    })).sort((a, b) => Object.values(b.azioni).reduce((x, y) => x + y, 0) -
+                       Object.values(a.azioni).reduce((x, y) => x + y, 0)),
+    link_condivisi: (corti ?? []).map((c: any) => ({
+      codice: c.codice, servizio: c.servizio_id ? (nomeDi[c.servizio_id] || "#" + c.servizio_id) : "Invito generico",
+      aperture: c.aperture,
+    })),
+  })
+}
+
 // L'avviso "e' arrivato un nuovo X", mandato quando lo decide l'admin.
 async function apiAdminAvvisa(body: any) {
   const id = parseInt(body?.servizio_id) || 0
@@ -2815,6 +2925,19 @@ serve(async (req) => {
     // Click sul link del fornitore: si registra e basta. Una volta al giorno per
     // persona, come le aperture: due unita' di misura diverse nella stessa vista
     // non si possono confrontare.
+    if (sub === "link-corto" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiLinkCorto(tid, await req.json())
+    }
+
+    if (sub === "click" && req.method === "POST") {
+      // Non richiede initData: deve funzionare anche dove non c'e'. Non scrive
+      // niente di sensibile, solo "qualcuno ha premuto qualcosa".
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      return await apiClick(tid, await req.json())
+    }
+
     if (sub === "click-link" && req.method === "POST") {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
@@ -2984,6 +3107,7 @@ serve(async (req) => {
 
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
+      if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/servizi/avvisa" && req.method === "POST") return await apiAdminAvvisa(await req.json())
       if (sub === "admin/partner-richieste" && req.method === "GET") return await apiAdminPartnerList()
       if (sub === "admin/partner-decidi" && req.method === "POST") return await apiAdminPartnerDecidi(await req.json())

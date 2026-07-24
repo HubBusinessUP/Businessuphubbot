@@ -1475,7 +1475,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=132"></script>
+<script src="identikit.js?v=133"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2379,6 +2379,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Chi apre il link del fornitore. Va registrato QUI e non lato server del
   // fornitore, che non ci appartiene: e' l'ultimo gesto che possiamo vedere prima
   // che la persona esca da Cashly, ed e' quello che dice se una scheda converte.
+  // TRACCIAMENTO. Una funzione sola per tutto: se ogni gesto avesse la sua
+  // chiamata, il giorno che cambia qualcosa (rotta, campi, silenziamento) ci sono
+  // dieci punti da toccare e uno resta indietro. keepalive: la richiesta deve
+  // sopravvivere all'uscita dall'app, che e' proprio quando si esce da un link.
+  function traccia(azione, riferimento, dettaglio){
+    try {
+      fetch(API_URL + '/click', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
+        body: JSON.stringify({ azione: azione, riferimento: riferimento || null, dettaglio: dettaglio || null }),
+        keepalive: true,
+      }).catch(function(){});
+    } catch(e){}
+  }
+
   function segnaClick(servizioId){
     if (!servizioId) return;
     fetch(API_URL + '/click-link', {
@@ -2679,7 +2694,33 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // Condividi dalla scheda: apre lo stesso menu dell'header.
     // Ogni link esterno aperto da scheda o tutorial vale come click sul servizio.
     var ext = t.closest('[data-ext]');
-    if (ext && SC_ID) segnaClick(SC_ID);
+    if (ext && SC_ID) { segnaClick(SC_ID); traccia('link_fornitore', SC_ID, (ext.textContent||'').trim().slice(0,40)); }
+
+    // Le altre cose che si toccano. Elencate una per una e non con un gestore
+    // generico su ogni click: un tracciamento che registra tutto registra anche
+    // lo scorrimento e il rumore, e poi i numeri non si leggono piu'.
+    var tr = t.closest('[data-open],[data-vote],.savebtn,[data-sctab],[data-tutorial],' +
+                       '.cta-attiva,.cta-secondaria,[data-catopen],[data-macro],.navb,#lenteBtn,#homeBtn,.stfatto');
+    if (tr) {
+      var a = tr.classList.contains('savebtn')      ? 'salva'
+            : tr.hasAttribute('data-vote')          ? 'voto'
+            : tr.hasAttribute('data-open')          ? 'apri_scheda'
+            : tr.hasAttribute('data-sctab')         ? 'cambio_scheda'
+            : tr.hasAttribute('data-tutorial')      ? 'apri_tutorial'
+            : tr.classList.contains('cta-attiva')   ? 'cta_principale'
+            : tr.classList.contains('cta-secondaria')? 'cta_secondaria'
+            : tr.hasAttribute('data-catopen')       ? 'apri_categorie'
+            : tr.hasAttribute('data-macro')         ? 'filtro_categoria'
+            : tr.classList.contains('navb')         ? 'menu'
+            : tr.id === 'lenteBtn'                  ? 'ricerca'
+            : tr.id === 'homeBtn'                   ? 'torna_directory'
+            : tr.classList.contains('stfatto')      ? 'spunta_step'
+            : 'altro';
+      var rif = parseInt(tr.getAttribute('data-open') || tr.getAttribute('data-vote')
+                      || tr.getAttribute('data-tutorial') || tr.getAttribute('data-id')) || SC_ID || null;
+      traccia(a, rif, (tr.getAttribute('data-sctab') || tr.getAttribute('data-macro')
+                    || tr.getAttribute('data-go') || (tr.textContent || '').trim().slice(0, 30)));
+    }
 
     var shb = t.closest('[data-share]');
     if (shb) {
@@ -2688,7 +2729,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       // descrizione di quel servizio; dall'header resta l'invito generico.
       var ctx = null;
       if (shb.closest('#scBody') && SC_ID && SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio) {
-        ctx = { nome: SCHEDE[SC_ID].servizio.nome, descrizione: SCHEDE[SC_ID].servizio.descrizione };
+        ctx = { id: SC_ID, nome: SCHEDE[SC_ID].servizio.nome, descrizione: SCHEDE[SC_ID].servizio.descrizione };
       }
       if (window.__openShare) window.__openShare(ctx);
       return;
@@ -3385,11 +3426,33 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // Il LINK resta quello di invito, cosi' chi entra finisce comunque nella rete
     // di chi ha condiviso -- cambia il messaggio, non la destinazione.
     var CONTESTO = null;
+    // Il link corto della condivisione, chiesto al server la prima volta e poi
+    // tenuto: e' sempre lo stesso per persona+servizio, quindi le aperture si
+    // sommano su un codice solo invece di sparpagliarsi su uno per ogni tocco.
+    var CORTI = {};
+    function linkCondivisione(){
+      var k = CONTESTO ? ('s' + (CONTESTO.id || 0)) : 'invito';
+      return CORTI[k] || REF_LINK;
+    }
+    function preparaLinkCorto(){
+      var k = CONTESTO ? ('s' + (CONTESTO.id || 0)) : 'invito';
+      if (CORTI[k]) return Promise.resolve(CORTI[k]);
+      return fetch(API_URL + '/link-corto', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
+        body: JSON.stringify({ servizio_id: CONTESTO ? CONTESTO.id : null }),
+      }).then(function(r){ return r.json(); }).then(function(d){
+        // Senza codice si ripiega sul link lungo: meglio un link che funziona e
+        // non si conta, che nessun link.
+        if (d && d.codice) CORTI[k] = 'https://t.me/cashlyhub_bot?start=' + d.codice;
+        return CORTI[k] || REF_LINK;
+      }).catch(function(){ return REF_LINK; });
+    }
     function testoCondivisione(){
       if (!CONTESTO) return TXT;
-      var t = CONTESTO.nome || '';
-      var d = (CONTESTO.descrizione || '').trim();
-      return t + (d ? '\n' + d : '') + '\n\nLo trovi su Cashly, la directory dei business online:';
+      // Una riga sola (Antonio). La descrizione la legge nella scheda: qui serve
+      // il motivo per cliccare, non un riassunto che ripete quello che trovera'.
+      return 'È stato aggiunto in Cashly: ' + (CONTESTO.nome || '');
     }
     function titoloCondivisione(){ return CONTESTO ? (CONTESTO.nome + ' su Cashly') : 'Cashly'; }
     function extOpen(u){ try{ if(tg&&tg.openLink) tg.openLink(u); else window.open(u,'_blank'); }catch(e){ window.open(u,'_blank'); } }
@@ -3418,8 +3481,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     document.body.appendChild(sheet);
     sheet.addEventListener('click', function(e){
       var b=e.target.closest && e.target.closest('[data-sh]'); if(!b) return;
-      var k=b.getAttribute('data-sh'), link=REF_LINK;
+      var k=b.getAttribute('data-sh'), link=linkCondivisione();
       var txt=testoCondivisione(), tit=titoloCondivisione();
+      if (k !== 'close') traccia('condivisione', CONTESTO ? CONTESTO.id : null, k);
       if(k==='close'){ sheet.style.display='none'; return; }
       if(k==='wa'){ extOpen('https://wa.me/?text='+encodeURIComponent(txt+' '+link)); }
       else if(k==='tg'){ tgOpen('https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent(txt)); }
@@ -3445,6 +3509,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (p) p.textContent = CONTESTO
         ? 'Parte il titolo, la descrizione e il tuo link di invito.'
         : 'Chi entra dal tuo link resta nella tua rete.';
+      preparaLinkCorto();   // pronto prima che scelga il canale
       if(tg&&tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(x){} }
       sheet.style.display='block';
     }
