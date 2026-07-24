@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=135"></script>
+<script src="/identikit.js?v=136"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1857,6 +1857,8 @@
             <div style="min-width:0">
               <div class="item-title">${esc(s.nome)} <span class="badge ${STATO_BADGE[s.stato] || "pending"}">${esc(STATO_LABEL[s.stato] || s.stato)}</span></div>
               <div class="item-meta">da ${esc(s.utente_nome)} (ID ${s.telegram_id}) · ${esc(s.categoria_nome)} · ${new Date(s.created_at).toLocaleDateString("it-IT")}</div>
+              ${s.caratteristiche ? `<div class="item-meta">Caratteristiche: ${esc(s.caratteristiche)}</div>` : ""}
+              ${s.categoria_proposta ? `<div class="item-meta" style="color:var(--amber)">Categoria nuova proposta: <b>${esc(s.categoria_proposta)}</b></div>` : ""}
               ${s.motivazione ? `<div class="item-meta">Perché: ${esc(s.motivazione)}</div>` : ""}
               ${s.link ? `<div class="link-preview">${esc(s.link)}</div>` : ""}
               ${s.ref_link_utente ? `<div class="link-preview">Ref utente: ${esc(s.ref_link_utente)}</div>` : ""}
@@ -1868,6 +1870,11 @@
           </div>
           ${s.stato === "in_revisione" ? `
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+            ${s.categoria_proposta && !s.categoria_id ? `<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--amber)"><input type="checkbox" id="creacat-${s.id}" checked /> Crea la categoria &laquo;${esc(s.categoria_proposta)}&raquo;</label>
+            <select id="macrocat-${s.id}" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:4px;font-size:12px;font-family:inherit">
+              <option value="">— Senza macro —</option>
+              ${macroCategorie.map((m) => `<option value="${m.id}">dentro ${esc(m.nome)}</option>`).join("")}
+            </select>` : ""}
             ${s.ref_link_utente ? `<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim)"><input type="checkbox" id="reward-${s.id}" checked /> Inserisci il link dell'utente come reward</label>` : ""}
             <button class="btn btn-primary btn-small" onclick="approvaSuggerimento(${s.id})">✓ APPROVA</button>
             <select id="causale-${s.id}" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:4px;font-size:12px;font-family:inherit">
@@ -1885,8 +1892,20 @@
     async function approvaSuggerimento(id) {
       if (!(await askConfirm("Approvare? Il business apparirà subito nella lista pubblica."))) return;
       const reward = document.getElementById(`reward-${id}`)?.checked || false;
-      const res = await api("admin/suggerimenti/approva", { method: "POST", body: JSON.stringify({ id, inserisci_link_utente: reward }) });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); alert("Errore: " + (e.error || res.status)); return; }
+      // Le due scelte sulla categoria proposta viaggiano con l'approvazione: se non
+      // arrivassero, il servizio nascerebbe senza categoria e sparirebbe dalla
+      // directory, che raggruppa per categoria.
+      const creaCat = document.getElementById(`creacat-${id}`)?.checked || false;
+      const macroId = document.getElementById(`macrocat-${id}`)?.value || null;
+      const res = await api("admin/suggerimenti/approva", { method: "POST",
+        body: JSON.stringify({ id, inserisci_link_utente: reward, crea_categoria: creaCat, macro_id: macroId }) });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        alert(e.error === "categoria_mancante"
+          ? "Manca la categoria: spunta «Crea la categoria» oppure assegnane una a mano dal Catalogo."
+          : "Errore: " + (e.error || res.status));
+        return;
+      }
       loadAll();
     }
 

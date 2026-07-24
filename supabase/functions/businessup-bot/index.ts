@@ -1595,6 +1595,7 @@ async function apiSuggerisci(telegramId: number, body: any) {
   const categoriaId = parseInt(body?.categoria_id) || null
   const categoriaProposta = String(body?.categoria_proposta || "").trim().slice(0, 60)
   const motivazione = String(body?.motivazione || "").trim()
+  const caratteristiche = String(body?.caratteristiche || "").trim().slice(0, 600)
 
   // I link: si accetta la lista, e si tiene il primo anche nel campo singolo
   // perche' l'admin e le proposte gia' arrivate lo leggono da li'.
@@ -1616,6 +1617,7 @@ async function apiSuggerisci(telegramId: number, body: any) {
   const { error } = await supabase.from("suggerimenti").insert({
     telegram_id: telegramId, nome, link, categoria_id: categoriaId, motivazione,
     categoria_proposta: categoriaProposta || null, links,
+    caratteristiche: caratteristiche || null,
     ref_link_utente: refLinkUtente || null, stato: "in_revisione",
   })
   if (error) return json({ error: error.message }, 500)
@@ -1641,6 +1643,7 @@ async function apiSuggerisci(telegramId: number, body: any) {
     elencoLink + `\n\n` +
     `<b>Categoria:</b> ${categoriaProposta ? escHtml(categoriaProposta) + " (proposta nuova, da valutare)" : "gia' esistente"}\n` +
     `<b>Perché:</b> ${escHtml(motivazione)}\n` +
+    (caratteristiche ? `<b>Caratteristiche:</b> ${escHtml(caratteristiche)}\n` : "") +
     (refLinkUtente ? `<b>Suo ref:</b> ${escHtml(refLinkUtente)}\n` : "") +
     `\n<b>Da:</b> ${mention} · <code>${telegramId}</code>`
 
@@ -1678,13 +1681,35 @@ async function apiAdminSuggerimentiList() {
 
 // Approva: crea il servizio in lista, opzionalmente inserisce il ref link dell'utente come reward, e lo avvisa.
 async function apiAdminSuggerimentoApprova(body: any) {
-  const { id, inserisci_link_utente } = body
+  const { id, inserisci_link_utente, crea_categoria, macro_id } = body
   const { data: sug } = await supabase.from("suggerimenti").select("*").eq("id", id).maybeSingle()
   if (!sug) return json({ error: "not_found" }, 404)
   if (sug.stato === "approvato") return json({ error: "gia_approvato" }, 409)
 
+  // La categoria proposta diventa reale solo QUI, approvando. Senza questo passo
+  // un servizio con la sola categoria suggerita nasceva con categoria_id null:
+  // finiva in database e spariva dalla directory, che raggruppa per categoria.
+  // Un business approvato e invisibile e' peggio di uno rifiutato.
+  let categoriaId = sug.categoria_id
+  if (!categoriaId && crea_categoria && sug.categoria_proposta) {
+    const nomeCat = String(sug.categoria_proposta).trim()
+    // Se una categoria con quel nome esiste gia' si riusa, non si duplica: due
+    // categorie identiche sono esattamente cio' che questo meccanismo deve evitare.
+    const { data: esistente } = await supabase.from("categorie")
+      .select("id").ilike("nome", nomeCat).maybeSingle()
+    if (esistente) categoriaId = (esistente as any).id
+    else {
+      const { data: creata, error: eCat } = await supabase.from("categorie")
+        .insert({ nome: nomeCat, macro_categoria_id: parseInt(macro_id) || null, ordine: 99 })
+        .select("id").single()
+      if (eCat) return json({ error: eCat.message }, 500)
+      categoriaId = (creata as any).id
+    }
+  }
+  if (!categoriaId) return json({ error: "categoria_mancante" }, 400)
+
   const { data: nuovo, error } = await supabase.from("servizi").insert({
-    nome: sug.nome, categoria_id: sug.categoria_id, descrizione: sug.motivazione,
+    nome: sug.nome, categoria_id: categoriaId, descrizione: sug.motivazione,
     link_principale: sug.link, stato: "attivo", tutorial_steps: [],
   }).select("id").single()
   if (error) return json({ error: error.message }, 500)
@@ -1701,7 +1726,7 @@ async function apiAdminSuggerimentoApprova(body: any) {
   }
 
   await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata approvata!</b>\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "🔎 Vedi nella lista", "/app.html")
-  notificaNuovoServizio(sug.nome, sug.categoria_id, null).catch((e) => console.error("notifica:", e))
+  notificaNuovoServizio(sug.nome, categoriaId, null).catch((e) => console.error("notifica:", e))
   return json({ ok: true, servizio_id: nuovo.id })
 }
 

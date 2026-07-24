@@ -1484,7 +1484,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=135"></script>
+<script src="identikit.js?v=136"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3165,6 +3165,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +       '<input class="pf-i" id="prCatNuova" type="text" maxlength="60" placeholder="es. Carte prepagate">'
       +       '<div class="pf-nota">La proponi, non la crei: se ha senso la aggiungo io alla directory.</div>'
       +     '</div>'
+      +     '<label class="pf-l" for="prCaratt">Caratteristiche</label>'
+      +     '<textarea class="pf-i" id="prCaratt" maxlength="600" placeholder="Quanto capitale serve, quanto costa, quanto tempo richiede, che rischi ha"></textarea>'
+      +     '<div class="pf-nota">Quello che sai. Se non sai qualcosa lascialo fuori: meglio poco e vero.</div>'
       +     '<label class="pf-l" for="prPerche">Perche lo consigli</label>'
       +     '<textarea class="pf-i" id="prPerche" maxlength="500" placeholder="Ci hai guadagnato? Da quanto lo usi? Cosa lo rende serio?"></textarea>'
       +     '<div id="prErr" style="display:none;font-size:13.5px;font-weight:600;color:#e2574a;margin-top:10px"></div>'
@@ -3242,7 +3245,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       riempiCategorie();
       form.style.display = ''; okBox.style.display = 'none';
       err.style.display = 'none';
-      ['prNome','prPerche','prCatNuova'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.value=''; e.classList.remove('err'); } });
+      ['prNome','prPerche','prCatNuova','prCaratt'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.value=''; e.classList.remove('err'); } });
       boxLink.innerHTML = ''; aggiungiRigaLink();
       catNuovaBox.style.display = 'none';
       sel.value = '';
@@ -3292,7 +3295,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           link: buoni[0],
           categoria_id: cat || null,
           categoria_proposta: catNuova || null,
-          motivazione: perche
+          motivazione: perche,
+          caratteristiche: document.getElementById('prCaratt').value.trim()
         })
       })
       .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
