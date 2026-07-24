@@ -1234,6 +1234,15 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .pr-x{flex:none;width:34px;height:34px;border-radius:9px;background:var(--s1);border:1px solid transparent;
   color:var(--mut);font-size:17px;line-height:1;cursor:pointer}
 .pf-nota{font-size:12.5px;color:var(--mut);margin:-4px 0 10px;line-height:1.45}
+.pf-nota.ok{color:var(--acc)}
+.pf-nota.nuova{color:#FF6B3D}
+/* Le categorie che esistono, toccabili. Il datalist da solo non si vede su
+   telefono -- si apre solo dopo che hai gia' cominciato a scrivere, quindi chi
+   non sa cosa c'e' non lo scopre mai. */
+.pf-sugg{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
+.pf-sugg button{background:var(--s1);border:1px solid transparent;border-radius:999px;
+  padding:6px 12px;color:var(--dim);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer}
+.pf-sugg button.on{background:var(--s2);color:var(--tx)}
 .pr-sel{width:100%;box-sizing:border-box;background:var(--s0);border:1px solid var(--line2);border-radius:9.5px;padding:13px;color:var(--tx);font-family:var(--sans);font-size:16px;font-weight:600;outline:none;appearance:none;-webkit-appearance:none}
 .pr-sel:focus{border-color:var(--acc)}
 textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
@@ -1484,7 +1493,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=137"></script>
+<script src="identikit.js?v=138"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3159,9 +3168,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +     '<div id="prLinks"></div>'
       +     '<button type="button" id="prAddLink" class="pr-piu">+ Aggiungi un altro link</button>'
       +     '<label class="pf-l" for="prCat">Categoria</label>'
-      +     '<input class="pf-i" id="prCat" type="text" maxlength="60" list="prCatElenco" autocomplete="off" placeholder="Scrivi o scegli">'
+      +     '<input class="pf-i" id="prCat" type="text" maxlength="60" list="prCatElenco" autocomplete="off" placeholder="Scrivi il nome, anche una categoria nuova">'
       +     '<datalist id="prCatElenco"></datalist>'
-      +     '<div class="pf-nota">Scrivi liberamente. Se la categoria non esiste la proponi, e se ha senso la aggiungo alla directory.</div>'
+      +     '<div class="pf-nota" id="prCatEsito">Non la trovi? Scrivila: la aggiungi tu.</div>'
+      +     '<div class="pf-sugg" id="prCatSugg"></div>'
       +     '<label class="pf-l" for="prCaratt">Caratteristiche</label>'
       +     '<textarea class="pf-i" id="prCaratt" maxlength="600" placeholder="Quanto capitale serve, quanto costa, quanto tempo richiede, che rischi ha"></textarea>'
       +     '<div class="pf-nota">Quello che sai. Se non sai qualcosa lascialo fuori: meglio poco e vero.</div>'
@@ -3192,7 +3202,42 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     function riempiCategorie(){
       var dl = document.getElementById('prCatElenco');
       if (dl) dl.innerHTML = CATS.map(function(c){ return '<option value="' + esc(c.nome) + '">'; }).join('');
+      var sg = document.getElementById('prCatSugg');
+      if (sg) sg.innerHTML = CATS.map(function(c){
+        return '<button type="button" data-cat="' + esc(c.nome) + '">' + esc(c.nome) + '</button>';
+      }).join('');
+      aggiornaEsitoCat();
     }
+
+    // Dice SUBITO cosa sta succedendo: stai scegliendo una che esiste, o ne stai
+    // creando una nuova. Senza questo si scrive nel vuoto e non si sa se ha
+    // funzionato -- che e' esattamente il motivo per cui sembrava impossibile.
+    function aggiornaEsitoCat(){
+      var campo = document.getElementById('prCat'), nota = document.getElementById('prCatEsito');
+      if (!campo || !nota) return;
+      var v = campo.value.trim().toLowerCase();
+      var esiste = v && CATS.some(function(c){ return (c.nome || '').trim().toLowerCase() === v; });
+      nota.className = 'pf-nota' + (v ? (esiste ? ' ok' : ' nuova') : '');
+      nota.textContent = !v ? 'Non la trovi? Scrivila: la aggiungi tu.'
+        : esiste ? 'Categoria esistente.'
+        : 'Categoria nuova: la aggiungi tu con questo business.';
+      var sg = document.getElementById('prCatSugg');
+      if (sg) [].forEach.call(sg.querySelectorAll('button'), function(b){
+        b.classList.toggle('on', (b.getAttribute('data-cat') || '').trim().toLowerCase() === v);
+      });
+    }
+
+    document.getElementById('prCat').addEventListener('input', aggiornaEsitoCat);
+    document.getElementById('prCatSugg').addEventListener('click', function(e){
+      var b = e.target.closest && e.target.closest('button[data-cat]');
+      if (!b) return;
+      var campo = document.getElementById('prCat');
+      // Ritoccare la stessa pillola la deseleziona: se no chi la tocca per sbaglio
+      // deve cancellare a mano un campo che non aveva scritto lui.
+      var era = campo.value.trim().toLowerCase() === (b.getAttribute('data-cat') || '').trim().toLowerCase();
+      campo.value = era ? '' : b.getAttribute('data-cat');
+      aggiornaEsitoCat();
+    });
 
     var boxLink = document.getElementById('prLinks');
     function aggiungiRigaLink(valore){
