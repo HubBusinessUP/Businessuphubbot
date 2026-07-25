@@ -1526,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=150"></script>
+<script src="identikit.js?v=151"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2112,7 +2112,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (s.requisiti) righe += srow('Cosa serve', s.requisiti, '', '');
       if (righe) out += '<div style="padding:8px 20px 0"><table class="pctab"><tbody>' + righe + '</tbody></table></div>';
     }
-    if (!out) return '<div class="vuoto" style="padding:18px 0">Caratteristiche ancora da compilare.</div>';
+    // Vuoto = niente linguetta. Prima si mostrava "da compilare", ma su un broker o
+    // un tool senza caratteristiche era una linguetta che apriva il nulla. Ora la
+    // scheda mostra Caratteristiche solo se c'e' davvero qualcosa da leggere.
+    if (!out) return '';
     return out;
   }
 
@@ -2409,18 +2412,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         + '<div class="scfondo">' + schedaContattoHtml() + '</div>';
     }
     var cf = scComeFunziona(d);
-    // La linguetta compare solo se c'e' qualcosa dentro: una scheda vuota che si
-    // puo' aprire e' peggio di una scheda che non c'e'.
+    var car = scCaratteristiche(d);
+    // Le linguette compaiono solo se c'e' qualcosa dentro: una linguetta vuota che
+    // si apre sul nulla e' peggio che non averla. Se la tab attiva sparisce, si
+    // torna in Panoramica per non restare su un pannello che non c'e' piu'.
     if (!cf && SC_TAB === 'cf') SC_TAB = 'pan';
+    if (!car && SC_TAB === 'car') SC_TAB = 'pan';
     return scTesta(d)
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
       +   (cf ? '<button class="sctab' + (SC_TAB === 'cf' ? ' on' : '') + '" data-sctab="cf">Come funziona</button>' : '')
-      +   '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>'
+      +   (car ? '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>' : '')
       + '</div>'
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
       + (cf ? '<div class="scpane"' + (SC_TAB === 'cf' ? '' : ' hidden') + ' data-pane="cf">' + cf + '</div>' : '')
-      + '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + scCaratteristiche(d) + '</div>'
+      + (car ? '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + car + '</div>' : '')
       + '<div class="scfondo">' + schedaHtml(d) + '</div>';
   }
 
