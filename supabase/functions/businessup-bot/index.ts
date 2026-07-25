@@ -2897,6 +2897,57 @@ async function apiAdminCrmDetail(telegramId: number) {
   const { count: invitati } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", telegramId)
   const { data: followups } = await supabase.from("followup_log").select("giorno, inviato_at").eq("telegram_id", telegramId).order("giorno")
 
+  // CRONOLOGIA COMPLETA: ogni tocco (tabella click) e ogni evento (tabella eventi)
+  // dell'utente, uniti in ordine di tempo. E' il "tutto quello che fa nell'app".
+  const { data: clicks } = await supabase.from("click")
+    .select("azione, riferimento, dettaglio, created_at")
+    .eq("telegram_id", telegramId).order("created_at", { ascending: false }).limit(400)
+  const { data: eventiU } = await supabase.from("eventi")
+    .select("tipo, dettaglio, riferimento_id, created_at")
+    .eq("telegram_id", telegramId).order("created_at", { ascending: false }).limit(400)
+
+  // Nomi dei servizi citati, per non mostrare id nudi.
+  const refIds = new Set<number>()
+  for (const c of (clicks ?? []) as any[]) { const n = parseInt(c.riferimento); if (n) refIds.add(n) }
+  for (const e of (eventiU ?? []) as any[]) { if (e.riferimento_id) refIds.add(e.riferimento_id) }
+  const { data: svc2 } = refIds.size ? await supabase.from("servizi").select("id, nome").in("id", [...refIds]) : { data: [] }
+  const svcNome: Record<number, string> = {}
+  for (const s of (svc2 ?? []) as any[]) svcNome[s.id] = s.nome
+
+  const AZIONE_LABEL: Record<string, string> = {
+    apri_scheda: "Ha aperto una scheda", menu: "Ha navigato il menu", apertura_link_corto: "Entrato da un link condiviso",
+    cambio_scheda: "Ha cambiato linguetta", apri_categorie: "Ha aperto le categorie", filtro_categoria: "Ha filtrato per categoria",
+    condivisione: "Ha condiviso", aggiorna: "Ha aggiornato la pagina", spunta_step: "Ha spuntato uno step",
+    richiedi_info: "Ha chiesto info", link_fornitore: "E' uscito verso il fornitore", cta_principale: "Ha premuto la CTA",
+    cta_secondaria: "Ha premuto la CTA secondaria", voto: "Ha votato", salva: "Ha salvato nei preferiti",
+    ricerca: "Ha aperto la ricerca", torna_directory: "E' tornato alla directory", apri_tutorial: "Ha aperto il tutorial",
+  }
+  // Solo eventi-utente comprensibili. scheda_aperta lo copre gia' apri_scheda (piu' fine),
+  // quindi non lo si ripete; il rumore interno (accessi admin ecc.) resta fuori.
+  const EVENTO_LABEL: Record<string, string> = {
+    start: "Ha aperto il bot", servizio_attivato: "Ha attivato un servizio",
+    waitlist: "Si e' messo in lista d'attesa", suggerimento_inviato: "Ha proposto un business",
+  }
+  const timeline = [
+    ...((clicks ?? []) as any[]).map((c) => {
+      const n = parseInt(c.riferimento)
+      return { quando: c.created_at, azione: AZIONE_LABEL[c.azione] || c.azione, target: (n && svcNome[n]) ? svcNome[n] : (c.dettaglio || "") }
+    }),
+    ...((eventiU ?? []) as any[]).filter((e) => EVENTO_LABEL[e.tipo]).map((e) => ({
+      quando: e.created_at, azione: EVENTO_LABEL[e.tipo],
+      target: (e.riferimento_id && svcNome[e.riferimento_id]) ? svcNome[e.riferimento_id] : (e.dettaglio || ""),
+    })),
+  ].sort((a, b) => (a.quando < b.quando ? 1 : -1)).slice(0, 250)
+
+  const cl = (clicks ?? []) as any[]
+  const attivita_riassunto = {
+    totale: timeline.length,
+    schede_aperte: cl.filter((c) => c.azione === "apri_scheda").length,
+    uscite_fornitore: cl.filter((c) => c.azione === "link_fornitore").length,
+    richieste_info: cl.filter((c) => c.azione === "richiedi_info").length,
+    ultima: timeline[0]?.quando || null,
+  }
+
   const stadi = await calcolaStadi([lead])
   return json({
     lead,
@@ -2907,6 +2958,8 @@ async function apiAdminCrmDetail(telegramId: number) {
     suggerimenti: sugg ?? [],
     invitati_count: invitati ?? 0,
     followups: followups ?? [],
+    timeline,
+    attivita_riassunto,
   })
 }
 

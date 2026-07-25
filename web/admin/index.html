@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=151"></script>
+<script src="/identikit.js?v=152"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -139,6 +139,13 @@
 
   .detail-block { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; }
   .detail-block .db-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; margin-bottom: 4px; }
+  /* Cronologia attivita' nell'app: lista scrollabile, una riga per tocco/evento */
+  .tl { max-height: 360px; overflow-y: auto; margin: 0 -4px; }
+  .tl-row { display: flex; align-items: baseline; gap: 9px; padding: 6px 4px; border-top: 1px solid var(--border); font-size: 13px; }
+  .tl-row:first-child { border-top: none; }
+  .tl-when { flex: none; width: 78px; font-size: 11.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .tl-act { flex: 1; min-width: 0; }
+  .tl-tgt { flex: none; max-width: 45%; color: var(--lime); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Tag contatti */
   .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
@@ -1440,6 +1447,14 @@
       renderCrm();
     }
 
+    // Data + ora compatte per la cronologia (fuso locale = quello di Antonio).
+    function fmtQuando(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      return d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" }) + " " +
+             d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+    }
+
     async function openCrmDetail(telegramId) {
       document.getElementById("crmModalTitle").textContent = "Caricamento...";
       document.getElementById("crmDetailBody").innerHTML = "";
@@ -1474,6 +1489,13 @@
         <div class="detail-block">
           <div class="db-label">Follow-up inviati</div>
           ${d.followups.length ? d.followups.map((f) => `<div>Day ${f.giorno} — ${new Date(f.inviato_at).toLocaleDateString("it-IT")}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuno</span>'}
+        </div>
+        <div class="detail-block">
+          <div class="db-label">Attività nell'app (${(d.attivita_riassunto && d.attivita_riassunto.totale) || 0})</div>
+          ${d.attivita_riassunto ? `<div class="item-meta" style="margin-bottom:10px">${d.attivita_riassunto.schede_aperte} schede aperte · ${d.attivita_riassunto.uscite_fornitore} uscite verso fornitore · ${d.attivita_riassunto.richieste_info} richieste info</div>` : ""}
+          ${d.timeline && d.timeline.length
+            ? `<div class="tl">${d.timeline.map((t) => `<div class="tl-row"><span class="tl-when">${fmtQuando(t.quando)}</span><span class="tl-act">${esc(t.azione)}</span>${t.target ? `<span class="tl-tgt">${esc(t.target)}</span>` : ""}</div>`).join("")}</div>`
+            : '<span style="color:var(--text-dim)">Nessuna attività registrata</span>'}
         </div>
         <button class="btn btn-primary btn-small" onclick="closeModal('crmOverlay');openMsgModal(${telegramId}, ${jsArg(nome)})">✉ Invia messaggio</button>
       `;
