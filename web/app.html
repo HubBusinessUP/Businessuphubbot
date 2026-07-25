@@ -1526,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=153"></script>
+<script src="identikit.js?v=154"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3716,7 +3716,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // ===== CONDIVIDI: menu con link diretti per app (WhatsApp/Telegram/X/Copia) + share di sistema =====
   // NB: dentro Telegram navigator.share spesso propone solo Telegram, quindi diamo i link diretti.
   (function(){
-    var TXT = "Entra in Cashly, la directory dei business online. Ti guida passo passo:";
+    var TXT = "Entra in Cashly, la directory dei business e tool online.";
     // Testo della condivisione. Aperto da una scheda porta con se' titolo e
     // descrizione: un link nudo in WhatsApp non dice niente e non lo apre nessuno.
     // Il LINK resta quello di invito, cosi' chi entra finisce comunque nella rete
@@ -3748,7 +3748,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (!CONTESTO) return TXT;
       // Una riga sola (Antonio). La descrizione la legge nella scheda: qui serve
       // il motivo per cliccare, non un riassunto che ripete quello che trovera'.
-      return 'È stato aggiunto in Cashly: ' + (CONTESTO.nome || '');
+      return 'Dai un\'occhiata a ' + (CONTESTO.nome || '') + ' su Cashly 👀';
     }
     function titoloCondivisione(){ return CONTESTO ? (CONTESTO.nome + ' su Cashly') : 'Cashly'; }
     function extOpen(u){ try{ if(tg&&tg.openLink) tg.openLink(u); else window.open(u,'_blank'); }catch(e){ window.open(u,'_blank'); } }
