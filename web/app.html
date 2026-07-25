@@ -1119,6 +1119,8 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;text-decoration:none}
 .sc-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .sc-btn:active{transform:scale(.98)}
+/* La chiamata all'azione in fondo alla Panoramica dei prodotti solo-contatto. */
+.scfin{margin:18px 0 2px;font-size:14.5px;font-weight:680;color:var(--acc);line-height:1.45}
 
 /* ===== SCHEDA PRODOTTO A TENDINA ===== */
 .fchev{width:17px;height:17px;flex-shrink:0;color:var(--mut);transition:transform .2s}
@@ -1524,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=144"></script>
+<script src="identikit.js?v=145"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2365,7 +2367,30 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (tu && tu.innerHTML) tu.innerHTML = tutorialScreenHtml(SCHEDE[id]);
   }
 
+  // Prodotti "solo contatto" (metodi tipo Bonus Matematico): non si attivano in app,
+  // si chiudono in chat. Un unico bottone Richiedi -> la mia chat, tracciato a parte
+  // come conversione. Niente Supporto: Richiedi E' gia' il contatto.
+  function schedaContattoHtml(){
+    return '<a class="cta-attiva" href="https://t.me/caliblackk" target="_blank" rel="noopener" data-contatto="1"'
+      + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px">'
+      + '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Richiedi</a>'
+      + '<div class="sc-azioni">'
+      +   '<button class="sc-btn" data-share="1">'
+      +     '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>'
+      + '</div>';
+  }
+
   function schedaScreenHtml(d){
+    var s0 = d.servizio || {};
+    // Scheda snella: solo Panoramica e il bottone Richiedi. La riga finale e' la
+    // chiamata all'azione dentro il testo (l'ha chiesta Antonio: "a fine testo").
+    if (s0.solo_contatto) {
+      return scTesta(d)
+        + '<div class="sctabs"><button class="sctab on" data-sctab="pan">Panoramica</button></div>'
+        + '<div class="scpane" data-pane="pan">' + scPanoramica(d)
+        +   '<p class="scfin">Richiedi Informazioni e tutorial attivazione</p></div>'
+        + '<div class="scfondo">' + schedaContattoHtml() + '</div>';
+    }
     var cf = scComeFunziona(d);
     // La linguetta compare solo se c'e' qualcosa dentro: una scheda vuota che si
     // puo' aprire e' peggio di una scheda che non c'e'.
@@ -2741,6 +2766,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           toast(msgErrore(code));
         })
         .then(function(){ delete STEP_IN_VOLO[chiave]; });
+      return;
+    }
+
+    // "Richiedi" (prodotti solo-contatto): e' la conversione vera di quei prodotti,
+    // quindi va contata a parte come 'richiedi_info'. Sta PRIMA del gestore data-ext,
+    // che altrimenti aprirebbe il link e uscirebbe senza registrare niente.
+    var req = t.closest('[data-contatto]');
+    if (req) {
+      e.preventDefault();
+      if (SC_ID) { try { traccia('richiedi_info', SC_ID, (SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio ? SCHEDE[SC_ID].servizio.nome : '')); } catch(x){} }
+      var uc = req.getAttribute('href');
+      try { if (tg && tg.openLink) tg.openLink(uc); else window.open(uc, '_blank'); } catch(x){ window.open(uc, '_blank'); }
       return;
     }
 
