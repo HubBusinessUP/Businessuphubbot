@@ -1526,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=147"></script>
+<script src="identikit.js?v=148"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2199,6 +2199,24 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       ? '<button class="cta-secondaria" data-tutorial="' + s.id + '">' + etichetta(s, 'tutorial') + '</button>'
       : '';
     out = '';   // panoramica e caratteristiche stanno nelle SCHEDE, non qui: qui resta la CTA
+
+    // BROKER (solo_link): un solo bottone diretto al link del fornitore, senza
+    // attivazione ne' gate anagrafica ne' tutorial. E' il click che porta
+    // l'iscrizione affiliata -- e oggi la gente lo usava -- quindi niente modulo
+    // davanti. Vale per tutti, anche per chi non ha ancora fatto niente.
+    if (s.solo_link) {
+      var urlB = d.ref_link || s.link_principale || '';
+      if (urlB) {
+        out += '<a class="cta-attiva" href="' + esc(urlB) + '" target="_blank" rel="noopener" data-broker="1"'
+          + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center">' + etichetta(s, 'attiva') + '</a>';
+        out += '<div class="cons">Servizio di un fornitore terzo: di ogni conseguenza risponde lui.</div>';
+        if (d.ref_link && d.ref_fonte === 'sponsor') out += '<div class="ssrc">Il link e di chi ti ha invitato.</div>';
+      } else {
+        out += '<button class="cta-attiva" disabled>Link non disponibile</button>';
+      }
+      return out;
+    }
+
     // La scheda e' "da compilare" solo se non c'e' PROPRIO niente: prima bastava
     // che mancassero panoramica e caratteristiche per dirlo anche a una scheda
     // con i requisiti scritti e il tutorial completo.
@@ -2778,6 +2796,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (SC_ID) { try { traccia('richiedi_info', SC_ID, (SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio ? SCHEDE[SC_ID].servizio.nome : '')); } catch(x){} }
       var uc = req.getAttribute('href');
       try { if (tg && tg.openLink) tg.openLink(uc); else window.open(uc, '_blank'); } catch(x){ window.open(uc, '_blank'); }
+      return;
+    }
+
+    // "Apri Broker" (servizi solo_link): conta come uscita verso il fornitore e apre
+    // il link. Come Richiedi, sta PRIMA di data-ext, che aprirebbe senza contare.
+    var brk = t.closest('[data-broker]');
+    if (brk) {
+      e.preventDefault();
+      if (SC_ID) { try { segnaClick(SC_ID); traccia('link_fornitore', SC_ID, (SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio ? SCHEDE[SC_ID].servizio.nome : '')); } catch(x){} }
+      var ub = brk.getAttribute('href');
+      try { if (tg && tg.openLink) tg.openLink(ub); else window.open(ub, '_blank'); } catch(x){ window.open(ub, '_blank'); }
       return;
     }
 
