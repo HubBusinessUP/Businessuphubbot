@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=146"></script>
+<script src="/identikit.js?v=147"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -173,6 +173,22 @@
   .dash-kpi .n { font-size: 25px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .dash-kpi .l { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
   .dash-kpi .s { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
+  /* Rete ad albero: righe annidate con rail verticale, si aprono al tocco */
+  .rt-wrap > .rt-kids { display: none; margin-left: 18px; padding-left: 15px; border-left: 2px solid var(--border); margin-top: 8px; }
+  .rt-wrap.open > .rt-kids { display: block; }
+  .rt-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; }
+  .rt-row.has { cursor: pointer; }
+  .rt-row.has:hover { background: var(--panel-2); }
+  .rt-av { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--panel-2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--lime); }
+  .rt-row.root .rt-av { background: var(--lime); color: #04210f; }
+  .rt-main { flex: 1; min-width: 0; }
+  .rt-nm { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rt-uh { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .rt-right { flex: none; display: flex; align-items: center; gap: 8px; }
+  .rt-cnt { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--text-dim); background: var(--panel-2); border: 1px solid var(--border); border-radius: 99px; padding: 3px 8px 3px 9px; }
+  .rt-cnt svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .18s; }
+  .rt-wrap.open > .rt-row .rt-cnt { color: var(--lime); }
+  .rt-wrap.open > .rt-row .rt-cnt svg { transform: rotate(90deg); }
   /* Imbuto: le barre sono proporzionali al primo gradino, cosi' il calo si VEDE
      invece di doverlo calcolare a mente. */
   .imb-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
@@ -271,6 +287,13 @@
     <div class="section">
       <div class="section-head"><h2>Top Sponsorboard</h2></div>
       <div id="sponsorboardList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Rete a livelli</h2></div>
+      <p class="item-meta" style="margin:-4px 0 12px">Tocca un nome con la freccia per aprire chi c'è sotto di lui. Il numero nel bottone tondo è quante persone in totale ha sotto.</p>
+      <div class="dash-grid" id="reteKpi" style="margin-bottom:12px"></div>
+      <div id="reteAlbero"></div>
     </div>
 
     <div class="section">
@@ -802,7 +825,7 @@
         "admin/affiliate-links", "admin/suggerimenti", "admin/segnalazioni",
         "admin/sponsorboard", "admin/crm", "admin/templates", "admin/partner-richieste",
         // NB: "admin/whitelist" e' la WHITElist dei domini, non la lista d'attesa.
-        "admin/whitelist", "admin/waitlist", "admin/attivita", "admin/usciti",
+        "admin/whitelist", "admin/waitlist", "admin/attivita", "admin/usciti", "admin/rete",
       ];
       const esiti = await Promise.allSettled(ROTTE.map((r) => api(r).then(async (x) => {
         // Un 401 non e' "una chiamata andata storta": e' la chiave rifiutata, e va
@@ -819,7 +842,7 @@
         cadute.push(ROTTE[i].replace("admin/", ""));
         return {};
       });
-      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes, attRes, uscRes] = dati;
+      const [kpi, macroRes, catRes, svcRes, linksRes, sugRes, segRes, boardRes, crmRes, tplRes, partnerRes, wlRes, attesaRes, attRes, uscRes, reteRes] = dati;
       if (chiaveRifiutata) { chiaveScaduta(); return; }
       avvisaCadute(cadute);
 
@@ -840,6 +863,7 @@
       renderWaitlist(attesaRes.lista || []);
       renderAttivita(attRes.servizi || []);
       renderUsciti(uscRes);
+      renderReteAlbero(reteRes);
       // La dashboard ha un periodo suo, quindi chiede i dati per conto proprio
       // invece di stare nel blocco delle tredici: cambiando periodo non deve
       // ricaricare tutto il pannello.
@@ -1156,6 +1180,55 @@
           </div>`).join("")
         : '<div class="item-meta">Nessuno ha disattivato il bot.</div>';
     }
+
+    // La rete ad ALBERO: chi ha invitato chi, a livelli. Si parte con la radice (tu)
+    // aperta sui diretti; i nodi con gente sotto hanno la freccia e si aprono al tocco.
+    function nSottoRete(kids, id) {
+      let tot = 0; const st = [id];
+      while (st.length) { const c = kids[st.pop()] || []; tot += c.length; c.forEach((k) => st.push(k.telegram_id)); }
+      return tot;
+    }
+    const RETE_PILL = { cliente: ["Cliente", "attivo"], profilo: ["Profilo", "lead"], iscritto: ["Iscritto", "lead"] };
+    function nodoReteHtml(n, kids, root) {
+      const figli = kids[n.telegram_id] || [];
+      const isRoot = n.telegram_id === root;
+      const uh = n.username ? "@" + esc(n.username) : "senza username";
+      const p = RETE_PILL[n.stato] || RETE_PILL.iscritto;
+      const cnt = figli.length
+        ? `<span class="rt-cnt">${nSottoRete(kids, n.telegram_id)}<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>` : "";
+      const ini = (n.nome || "?").trim().charAt(0).toUpperCase();
+      const row = `<div class="rt-row${figli.length ? " has" : ""}${isRoot ? " root" : ""}"${figli.length ? ' onclick="rtTog(this)"' : ""}>
+          <div class="rt-av">${esc(ini)}</div>
+          <div class="rt-main">
+            <div class="rt-nm">${esc(n.nome)}${isRoot ? ' &middot; <b style="color:var(--lime)">tu</b>' : ""}</div>
+            <div class="rt-uh">${uh}${n.servizi ? " &middot; " + n.servizi + " serv" : ""}</div>
+          </div>
+          <div class="rt-right"><span class="badge ${p[1]}">${p[0]}</span>${cnt}</div>
+        </div>`;
+      if (!figli.length) return `<div class="rt-node">${row}</div>`;
+      const inner = figli.map((f) => nodoReteHtml(f, kids, root)).join("");
+      return `<div class="rt-node"><div class="rt-wrap${isRoot ? " open" : ""}">${row}<div class="rt-kids">${inner}</div></div></div>`;
+    }
+    function renderReteAlbero(d) {
+      const box = document.getElementById("reteAlbero");
+      const kpi = document.getElementById("reteKpi");
+      if (!box || !d) return;
+      const nodi = d.nodi || [];
+      const root = d.root;
+      if (!nodi.length) { box.innerHTML = '<div class="item-meta">Rete vuota.</div>'; if (kpi) kpi.innerHTML = ""; return; }
+      const kids = {}, byId = {};
+      nodi.forEach((n) => { byId[n.telegram_id] = n; if (n.referred_by != null) (kids[n.referred_by] = kids[n.referred_by] || []).push(n); });
+      const rete = nodi.filter((n) => n.telegram_id !== root);
+      const diretti = (kids[root] || []).length;
+      const clienti = rete.filter((n) => n.stato === "cliente").length;
+      const kb = (n, l, s) => `<div class="dash-kpi"><div class="n">${n}</div><div class="l">${l}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+      if (kpi) kpi.innerHTML = kb(rete.length, "nella rete", "tutti i livelli") + kb(diretti, "diretti", "1&deg; livello") + kb(rete.length - diretti, "sotto altri", "2&deg;+ livello") + kb(clienti, "clienti");
+      box.innerHTML = byId[root] ? nodoReteHtml(byId[root], kids, root) : '<div class="item-meta">Radice non trovata.</div>';
+    }
+    window.rtTog = function (row) {
+      const wrap = row.closest(".rt-wrap");
+      if (wrap) { const on = wrap.classList.toggle("open"); row.classList.toggle("open", on); }
+    };
 
     function renderAttivita(righe) {
       const el = document.getElementById("attList");
@@ -2641,7 +2714,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
       { key: "contatti", label: "Contatti", titles: ["CRM contatti", "Broadcast"] },
       { key: "rubrica", label: "Rubrica", titles: ["Miei contatti"] },
       { key: "stats", label: "Statistiche", titles: ["Onboarding", "Top business", "Top Sponsorboard"] },
-      { key: "affil", label: "Affiliazione", titles: ["Whitelist domini link referral"] },
+      { key: "affil", label: "Affiliazione", titles: ["Rete a livelli", "Whitelist domini link referral"] },
     ];
     (function () {
       const sel = document.getElementById("dashPeriodo");

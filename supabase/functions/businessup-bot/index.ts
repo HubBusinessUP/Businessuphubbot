@@ -2373,6 +2373,39 @@ async function apiAdminUsciti() {
   })
 }
 
+// La rete completa dell'admin ad ALBERO, per la vista a livelli in pannello: ogni
+// nodo con il suo referred_by, cosi' il client puo' ricostruire chi sta sotto chi.
+// E' roba admin: la rotta e' dietro la chiave, e rete_albero e' service_role only.
+async function apiAdminRete() {
+  const root = ADMIN_ID
+  const { data: albero } = await supabase.rpc("rete_albero", { root_id: root })
+  const refById: Record<number, number | null> = { [root]: null }
+  for (const r of (albero ?? []) as any[]) refById[r.telegram_id] = r.referred_by
+  const ids = Object.keys(refById).map((k) => parseInt(k))
+
+  const { data: leads } = await supabase.from("leads")
+    .select("telegram_id, nome, cognome, username, is_cliente, sondaggio_completato, attivo, created_at")
+    .in("telegram_id", ids)
+
+  const { data: att } = ids.length
+    ? await supabase.from("lead_servizi").select("telegram_id").in("telegram_id", ids)
+    : { data: [] as any[] }
+  const svc: Record<number, number> = {}
+  for (const a of (att ?? []) as any[]) svc[a.telegram_id] = (svc[a.telegram_id] ?? 0) + 1
+
+  const nodi = ((leads ?? []) as any[]).map((l) => ({
+    telegram_id: l.telegram_id,
+    referred_by: refById[l.telegram_id] ?? null,
+    nome: [l.nome, l.cognome].filter(Boolean).join(" ").trim() || (l.username ? "@" + l.username : "Utente " + l.telegram_id),
+    username: l.username || "",
+    stato: l.is_cliente ? "cliente" : (l.sondaggio_completato ? "profilo" : "iscritto"),
+    attivo: l.attivo !== false,
+    servizi: svc[l.telegram_id] ?? 0,
+    iscritto: l.created_at || null,
+  }))
+  return json({ ok: true, root, nodi })
+}
+
 async function apiAdminClick(url: URL) {
   const giorni = parseInt(url.searchParams.get("giorni") || "0") || 0
   const da = giorni ? new Date(Date.now() - giorni * 864e5).toISOString() : null
@@ -3320,6 +3353,7 @@ serve(async (req) => {
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()
+      if (sub === "admin/rete" && req.method === "GET") return await apiAdminRete()
       if (sub === "admin/servizi/avvisa" && req.method === "POST") return await apiAdminAvvisa(await req.json())
       if (sub === "admin/partner-richieste" && req.method === "GET") return await apiAdminPartnerList()
       if (sub === "admin/partner-decidi" && req.method === "POST") return await apiAdminPartnerDecidi(await req.json())
