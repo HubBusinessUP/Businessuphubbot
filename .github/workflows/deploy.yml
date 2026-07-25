@@ -63,3 +63,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # GitHub Pages a volte impiega piu' di 10 minuti a pubblicare (default),
+          # e il deploy falliva per timeout anche col sito perfettamente a posto.
+          # Venti minuti reggono le lentezze senza cambiare nient'altro.
+          timeout: 1200000
