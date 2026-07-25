@@ -392,12 +392,16 @@ async function setMenuButton(chatId: number) {
 async function handleStart(chatId: number, from: any, payload?: string) {
   setMenuButton(chatId).catch(() => {})
   let refBy: number | undefined
+  // Se il link puntava a un business preciso, la Mini App si apre gia' su quella
+  // scheda invece che sul catalogo generico (era il buco: l'id veniva letto e buttato).
+  let schedaId: number | null = null
   // Codice di una condivisione: si conta l'apertura e si risale a chi l'ha mandata,
   // cosi' il link corto porta lo sponsor esattamente come faceva il ref lungo.
   if (payload && !payload.startsWith("ref_")) {
     const { data: corto } = await supabase.from("link_corti")
       .select("codice, telegram_id, servizio_id, aperture").eq("codice", payload).maybeSingle()
     if (corto) {
+      schedaId = (corto as any).servizio_id || null
       await supabase.from("link_corti")
         .update({ aperture: ((corto as any).aperture || 0) + 1 }).eq("codice", payload)
       await supabase.from("click").insert({
@@ -416,6 +420,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     const { data: referrer } = await supabase.from("leads").select("telegram_id").eq("ref_code", code).maybeSingle()
     if (referrer && referrer.telegram_id !== from.id) refBy = referrer.telegram_id
   }
+  // Deep-link diretto a una scheda: t.me/cashlyhub_bot?start=svc_<id> apre quel business.
+  if (payload?.startsWith("svc_")) { const sid = parseInt(payload.slice(4)); if (sid) schedaId = sid }
   // Chi entra senza link viene assegnato al Sistema (Founder): il legame sponsor è a vita e non cambia mai.
   if (!refBy && from.id !== ADMIN_ID) refBy = ADMIN_ID
 
@@ -457,7 +463,13 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
-  const btn = { inline_keyboard: [[{ text: "Crea il tuo hub", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
+  // Se il link portava a una scheda, la webview si apre gia' li'.
+  const appUrl = WEBAPP_URL + "/app.html?" + (schedaId ? "scheda=" + schedaId + "&" : "") + "_=" + Date.now()
+  const btn = { inline_keyboard: [[{ text: "Apri la Business List", web_app: { url: appUrl } }]] }
+  const testoBenvenuto =
+    `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
+    `Cashly è la directory dei business e tool online.\n` +
+    `Dai un'occhiata, bastano 30 secondi.`
 
   // Video di presentazione (se impostato dall'admin con /presentazione): appare sopra al benvenuto.
   const { data: vid } = await supabase.from("config").select("valore").eq("chiave", "welcome_video").maybeSingle()
@@ -465,24 +477,11 @@ async function handleStart(chatId: number, from: any, payload?: string) {
 
   if (welcomeVideo) {
     // Con video: didascalia breve (limite Telegram 1024 caratteri).
-    await sendVideo(
-      chatId,
-      welcomeVideo,
-      `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
-      `Benvenuto in <b>Cashly</b>, la directory dei business online.`,
-      btn,
-      "HTML",
-    )
+    await sendVideo(chatId, welcomeVideo, testoBenvenuto, btn, "HTML")
     return
   }
 
-  await sendMessage(
-    chatId,
-    `Ciao ${nomeBenvenuto || ""} 👋\n\n` +
-    `Benvenuto in <b>Cashly</b>, la directory dei business online.`,
-    btn,
-    "HTML",
-  )
+  await sendMessage(chatId, testoBenvenuto, btn, "HTML")
 }
 
 // Invia un contenuto (testo/foto/video/gif) a una chat, riusando il file_id salvato.

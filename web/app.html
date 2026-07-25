@@ -1526,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=152"></script>
+<script src="identikit.js?v=153"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2390,8 +2390,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Prodotti "solo contatto" (metodi tipo Bonus Matematico): non si attivano in app,
   // si chiudono in chat. Un unico bottone Richiedi -> la mia chat, tracciato a parte
   // come conversione. Niente Supporto: Richiedi E' gia' il contatto.
-  function schedaContattoHtml(){
-    return '<a class="cta-attiva" href="https://t.me/caliblackk" target="_blank" rel="noopener" data-contatto="1"'
+  function schedaContattoHtml(nome){
+    // Testo gia' pronto nella chat: cosi' Antonio sa subito DA QUALE prodotto arriva
+    // la richiesta e l'utente non scrive a freddo. Prima la chat si apriva vuota.
+    var pre = nome ? ('?text=' + encodeURIComponent('Ciao, vorrei info su ' + nome)) : '';
+    return '<a class="cta-attiva" href="https://t.me/caliblackk' + pre + '" target="_blank" rel="noopener" data-contatto="1"'
       + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px">'
       + '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Richiedi</a>'
       + '<div class="sc-azioni">'
@@ -2409,7 +2412,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         + '<div class="sctabs"><button class="sctab on" data-sctab="pan">Panoramica</button></div>'
         + '<div class="scpane" data-pane="pan">' + scPanoramica(d)
         +   '<p class="scfin">Richiedi Informazioni e tutorial attivazione</p></div>'
-        + '<div class="scfondo">' + schedaContattoHtml() + '</div>';
+        + '<div class="scfondo">' + schedaContattoHtml(s0.nome) + '</div>';
     }
     var cf = scComeFunziona(d);
     var car = scCaratteristiche(d);
@@ -2872,7 +2875,24 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (r) apriScheda(parseInt(r.getAttribute('data-open')));
   });
 
-  fetch(API_URL + "/business-list", { headers: HDRS, cache: "no-store" })
+  // La scheda da aprire subito, se il link portava a un business preciso (?scheda=<id>).
+  var SCHEDA_URL = 0;
+  try { SCHEDA_URL = parseInt(new URLSearchParams(location.search).get('scheda')) || 0; } catch(e){}
+
+  // Scheletro di caricamento della home: senza, se la fetch e' lenta o cade (webview
+  // Telegram su dati mobili, cold-start della function) lo schermo resta bianco ed e'
+  // indistinguibile da "app vuota" -> la gente esce. Ora si vede che sta caricando.
+  function skeletonLista(){
+    var box = document.getElementById('listaReale');
+    if (!box) return;
+    var r = '';
+    for (var i = 0; i < 6; i++) r += '<div class="skel" style="height:66px;border-radius:14px;margin:10px 16px 0"></div>';
+    box.innerHTML = r;
+  }
+
+  function caricaBusinessList(){
+    skeletonLista();
+    fetch(API_URL + "/business-list", { headers: HDRS, cache: "no-store" })
     .then(function(r){ return r.json(); })
     .then(function(d){
       ALLBIZ = [];
@@ -2905,8 +2925,22 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       // arrivano da questa fetch, e le due chiamate sono indipendenti. Disegnarlo di la'
       // mostrerebbe zero a intermittenza, a seconda di quale risposta arriva prima.
       renderCollezioni();
+      // Se il link portava a un business preciso, aprilo direttamente sulla sua scheda
+      // invece di lasciare la persona sul catalogo a cercarselo. Una volta sola.
+      if (SCHEDA_URL) { var sid = SCHEDA_URL; SCHEDA_URL = 0; setTimeout(function(){ apriScheda(sid); }, 60); }
     })
-    .catch(function(){});
+    .catch(function(){
+      // Errore VISIBILE con "Riprova": prima il catch era muto e una fetch caduta
+      // sembrava una app vuota.
+      var box = document.getElementById('listaReale');
+      if (!box) return;
+      box.innerHTML = '<div class="vuoto" style="padding:30px 22px;text-align:center">Non sono riuscito a caricare la lista.<br>'
+        + '<button class="cta-secondaria" id="retryBL" style="margin-top:14px;max-width:220px;display:inline-block">Riprova</button></div>';
+      var rb = document.getElementById('retryBL');
+      if (rb) rb.addEventListener('click', caricaBusinessList);
+    });
+  }
+  caricaBusinessList();
 
   // ---- ME: profilo (business attivi) ----
   // ---- PROFILO ----
