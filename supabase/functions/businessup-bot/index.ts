@@ -2701,6 +2701,48 @@ async function apiAdminKpi() {
   })
 }
 
+// Presenza in tempo reale: chi e' dentro l'app adesso + le ultime entrate. Endpoint
+// leggero apposta, cosi' la Panoramica lo puo' aggiornare spesso senza ricaricare i KPI.
+async function apiAdminPresenza() {
+  const oraFa = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const inizioOggi = new Date(); inizioOggi.setUTCHours(0, 0, 0, 0)
+
+  // Ultimo evento di presenza per utente (ultima ora): se e' un'entrata recente e' "online".
+  const { data: pres } = await supabase.from("click")
+    .select("telegram_id, azione, created_at")
+    .in("azione", ["app_entrata", "app_uscita"]).gte("created_at", oraFa)
+    .order("created_at", { ascending: false })
+  const ultimo: Record<number, { azione: string; quando: string }> = {}
+  for (const c of (pres ?? []) as any[]) {
+    if (c.telegram_id && !ultimo[c.telegram_id]) ultimo[c.telegram_id] = { azione: c.azione, quando: c.created_at }
+  }
+  const sogliaOnline = new Date(Date.now() - 25 * 60 * 1000).toISOString()
+  const onlineIds = Object.keys(ultimo).map(Number).filter((id) => ultimo[id].azione === "app_entrata" && ultimo[id].quando >= sogliaOnline)
+
+  const { count: sessioniOggi } = await supabase.from("click")
+    .select("id", { count: "exact", head: true }).eq("azione", "app_entrata").gte("created_at", inizioOggi.toISOString())
+
+  const { data: entrate } = await supabase.from("click")
+    .select("telegram_id, created_at").eq("azione", "app_entrata").gte("created_at", inizioOggi.toISOString())
+    .order("created_at", { ascending: false }).limit(15)
+
+  const ids = new Set<number>(onlineIds)
+  for (const e of (entrate ?? []) as any[]) if (e.telegram_id) ids.add(e.telegram_id)
+  const { data: leadsN } = ids.size
+    ? await supabase.from("leads").select("telegram_id, nome, username").in("telegram_id", [...ids])
+    : { data: [] as any[] }
+  const nomeMap: Record<number, string> = {}
+  for (const l of (leadsN ?? []) as any[]) nomeMap[l.telegram_id] = l.nome || (l.username ? "@" + l.username : "Utente " + l.telegram_id)
+  const nomeOf = (id: number) => nomeMap[id] || ("Utente " + id)
+
+  return json({
+    online: onlineIds.length,
+    sessioni_oggi: sessioniOggi ?? 0,
+    online_list: onlineIds.sort((a, b) => (ultimo[a].quando < ultimo[b].quando ? 1 : -1)).slice(0, 12).map((id) => ({ nome: nomeOf(id), quando: ultimo[id].quando })),
+    ultime: ((entrate ?? []) as any[]).map((e) => ({ nome: nomeOf(e.telegram_id), quando: e.created_at })),
+  })
+}
+
 async function apiAdminSponsorboard() {
   const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, referred_by, is_cliente")
   const perSponsor: Record<number, { invitati: number; attivati: number }> = {}
@@ -3525,6 +3567,7 @@ serve(async (req) => {
       if (sub === "admin/suggerimenti/delete" && req.method === "POST") return await apiAdminSuggerimentiDelete(await req.json())
 
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
+      if (sub === "admin/presenza" && req.method === "GET") return await apiAdminPresenza()
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()

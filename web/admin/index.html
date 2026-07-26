@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=166"></script>
+<script src="/identikit.js?v=167"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1171,8 +1171,49 @@
         + (onb.tot ? `<div style="border-top:1px solid rgba(255,255,255,.07);margin-top:2px;padding-top:12px">` + acqRow("Crea profilo subito", onb.profilo, "#A78BFA") + `</div>` : "")
         + `</div></div>`;
 
-      box.innerHTML = `<div class="bt-kpis">${kpis}</div>${panoChart(k.serie)}${funnel}<div class="bt-two">${topCard}${acqCard}</div>`;
+      box.innerHTML = `<div id="panoPresenza"></div><div class="bt-kpis">${kpis}</div>${panoChart(k.serie)}${funnel}<div class="bt-two">${topCard}${acqCard}</div>`;
+      caricaPresenza();
     }
+
+    // "Adesso nell'app": chi e' dentro ora + ultime entrate. Si aggiorna da solo ogni 45s
+    // finche' sei sulla Panoramica (endpoint leggero admin/presenza).
+    function tempoFa(iso) {
+      if (!iso) return "";
+      const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+      if (min < 1) return "ora";
+      if (min < 60) return min + " min fa";
+      const h = Math.floor(min / 60);
+      if (h < 24) return h + "h fa";
+      return fmtQuando(iso);
+    }
+    async function caricaPresenza() {
+      if (!document.getElementById("panoPresenza")) return;
+      let d;
+      try { const r = await api("admin/presenza"); if (!r.ok) return; d = await r.json(); } catch (e) { return; }
+      const box = document.getElementById("panoPresenza");
+      if (!box) return;
+      const online = d.online_list || [];
+      const onlineHtml = online.length
+        ? online.map((u) => `<div class="bt-rank"><span style="width:7px;height:7px;border-radius:50%;background:#34D399;flex:none"></span><span class="nm">${esc(u.nome)}</span><span class="vv" style="color:#64748B;font-weight:500">${tempoFa(u.quando)}</span></div>`).join("")
+        : '<div class="bt-sub" style="padding:8px 6px">Nessuno dentro l\'app adesso.</div>';
+      const ultime = (d.ultime || []).slice(0, 8);
+      const ultimeHtml = ultime.length
+        ? ultime.map((u) => `<div class="bt-rank"><span class="rk" style="color:#7C3AED">→</span><span class="nm">${esc(u.nome)}</span><span class="vv" style="color:#64748B;font-weight:500">${tempoFa(u.quando)}</span></div>`).join("")
+        : '<div class="bt-sub" style="padding:8px 6px">Ancora nessuna entrata oggi.</div>';
+      box.innerHTML = `<div class="bt-card"><div class="bt-h"><b>Adesso nell'app</b><span class="bt-hint">si aggiorna da solo</span></div><div class="bt-body">`
+        + `<div style="display:flex;gap:26px;margin-bottom:14px">`
+        +   `<div><div style="font-size:26px;font-weight:700;color:#34D399;line-height:1">${d.online || 0}</div><div class="bt-sub">dentro adesso</div></div>`
+        +   `<div><div style="font-size:26px;font-weight:700;color:#A78BFA;line-height:1">${d.sessioni_oggi || 0}</div><div class="bt-sub">sessioni oggi</div></div>`
+        + `</div>`
+        + `<div class="bt-two" style="gap:10px">`
+        +   `<div><div class="bt-sub" style="margin-bottom:4px">Online ora</div>${onlineHtml}</div>`
+        +   `<div><div class="bt-sub" style="margin-bottom:4px">Ultime entrate</div>${ultimeHtml}</div>`
+        + `</div></div></div>`;
+    }
+    setInterval(function () {
+      const act = document.querySelector("#adtabs .adtab.active");
+      if (act && act.dataset.k === "dash") caricaPresenza();
+    }, 45000);
 
     // Onboarding: % di chi crea subito il profilo vs chi esplora prima.
     function renderOnboarding(o) {
