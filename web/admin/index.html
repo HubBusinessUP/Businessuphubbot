@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=154"></script>
+<script src="/identikit.js?v=155"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -68,6 +68,7 @@
   .badge.attivo { background: var(--lime-dim); color: var(--lime); }
   .badge.pausa { background: rgba(232,179,76,0.14); color: var(--amber); }
   .badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
+  .badge.bozza { background: var(--panel-2); color: var(--text-dim); }
   /* Flag di stato: lo stato corrente e' l'unico acceso ed e' disabilitato, cosi' si
      legge a colpo d'occhio dov'e' il servizio e si clicca solo per spostarlo. */
   .flagrow { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
@@ -563,6 +564,7 @@
         <div class="field"><label>Tipo</label><input id="svcTipo" placeholder="es: swap, bonus, prop" /></div>
         <div class="field"><label>Stato</label>
           <select id="svcStato">
+            <option value="bozza">Bozza (non pubblicato)</option>
             <option value="attivo">Attivo</option>
             <option value="pausa">In arrivo</option>
             <option value="fermo">Ritirato</option>
@@ -2036,7 +2038,7 @@
     }
 
     async function approvaSuggerimento(id) {
-      if (!(await askConfirm("Approvare? Il business apparirà subito nella lista pubblica."))) return;
+      if (!(await askConfirm("Approvare? Finisce nel Catalogo come BOZZA (non pubblica): la compili e la pubblichi tu quando è pronta."))) return;
       const reward = document.getElementById(`reward-${id}`)?.checked || false;
       // Le due scelte sulla categoria proposta viaggiano con l'approvazione: se non
       // arrivassero, il servizio nascerebbe senza categoria e sparirebbe dalla
@@ -2052,6 +2054,7 @@
           : "Errore: " + (e.error || res.status));
         return;
       }
+      alert("Aggiunto al Catalogo come Bozza. Vai in Catalogo → Servizi per compilarlo, poi mettilo su Attivo per pubblicarlo.");
       loadAll();
     }
 
@@ -2169,7 +2172,7 @@
     // Il DB conserva i valori storici (attivo/pausa/fermo), ma admin e utenti devono
     // leggere la stessa parola: prima l'admin vedeva "pausa" dove l'utente leggeva
     // "in arrivo", e nessuno dei due sapeva cosa vedesse l'altro.
-    const SVC_STATO_LABEL = { attivo: "Attivo", pausa: "In arrivo", fermo: "Ritirato" };
+    const SVC_STATO_LABEL = { bozza: "Bozza", attivo: "Attivo", pausa: "In arrivo", fermo: "Ritirato" };
 
     function renderServizi() {
       const el = document.getElementById("serviziList");
@@ -2179,7 +2182,7 @@
         const attesa = s.in_attesa || 0;
         // Il flag: tre bottoni, quello acceso e' lo stato corrente. Cambia SOLO lo stato,
         // non ripassa dal form completo (che riscriverebbe tutorial, risorse e descrizione).
-        const flag = ["attivo", "pausa", "fermo"].map((v) => `
+        const flag = ["bozza", "attivo", "pausa", "fermo"].map((v) => `
           <button class="flagbtn ${s.stato === v ? "on " + v : ""}"
                   onclick="flaggaServizio(${s.id}, '${v}')"
                   ${s.stato === v ? "disabled" : ""}>${SVC_STATO_LABEL[v]}</button>`).join("");

@@ -974,7 +974,7 @@ async function apiBusinessList(telegramId?: number | null) {
   const { data: categorie } = await supabase.from("categorie").select("*").order("ordine")
   // "fermo" = ritirato: resta in archivio con voti e storico, ma sparisce dall'app.
   // E' l'unico modo di togliere un business senza cancellarlo.
-  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, logo_url, logo_pieno, in_evidenza, voti_base").neq("stato", "fermo").order("created_at", { ascending: false })
+  const { data: servizi } = await supabase.from("servizi").select("id, nome, categoria_id, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, created_at, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, logo_url, logo_pieno, in_evidenza, voti_base").not("stato", "in", "(fermo,bozza)").order("created_at", { ascending: false })
 
   // Voti per servizio: la posizione in classifica è determinata dal numero di voti.
   const { data: voti } = await supabase.from("voti").select("servizio_id, telegram_id")
@@ -1797,9 +1797,12 @@ async function apiAdminSuggerimentoApprova(body: any) {
   }
   if (!categoriaId) return json({ error: "categoria_mancante" }, 400)
 
+  // Nasce come BOZZA: entra nel catalogo admin ma NON in directory. Antonio la
+  // compila (panoramica, logo, CTA, categoria...) e la pubblica quando e' pronta.
+  // Prima nasceva "attivo" e finiva subito online mezza vuota.
   const { data: nuovo, error } = await supabase.from("servizi").insert({
     nome: sug.nome, categoria_id: categoriaId, descrizione: sug.motivazione,
-    link_principale: sug.link, stato: "attivo", tutorial_steps: [],
+    link_principale: sug.link, stato: "bozza", tutorial_steps: [],
   }).select("id").single()
   if (error) return json({ error: error.message }, 500)
 
@@ -1814,8 +1817,10 @@ async function apiAdminSuggerimentoApprova(body: any) {
     reward = true
   }
 
-  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata approvata!</b>\n\nIl business è ora nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "🔎 Vedi nella lista", "/app.html")
-  notificaNuovoServizio(sug.nome, categoriaId, null).catch((e) => console.error("notifica:", e))
+  // Al proponente: accettata, la pubblichiamo a breve. NON diciamo "e' gia' nella
+  // lista" (e' una bozza) e NON avvisiamo tutti gli iscritti: quello lo fa Antonio
+  // quando la scheda e' completa, dal tasto "Invia avviso".
+  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata accettata!</b>\n\nLa prepariamo e la pubblichiamo a breve nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`)
   return json({ ok: true, servizio_id: nuovo.id })
 }
 
@@ -1992,7 +1997,9 @@ async function apiAdminServiziSave(body: any) {
 
 // Flag rapido dello stato dalla lista admin. Deliberatamente separato dal salvataggio
 // completo: cambiare stato non deve poter riscrivere tutorial, risorse o descrizione.
-const STATI_SERVIZIO = ["attivo", "pausa", "fermo"]
+// bozza = business creato ma NON ancora pubblicato: sta nel catalogo admin, si
+// compila con calma, e non appare in directory finche' non lo si mette Attivo.
+const STATI_SERVIZIO = ["bozza", "attivo", "pausa", "fermo"]
 
 async function apiAdminServiziStato(body: any) {
   const id = parseInt(body?.id) || 0
