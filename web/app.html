@@ -1526,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=157"></script>
+<script src="identikit.js?v=158"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3732,7 +3732,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var CORTI = {};
     function linkCondivisione(){
       var k = CONTESTO ? ('s' + (CONTESTO.id || 0)) : 'invito';
-      return CORTI[k] || REF_LINK;
+      if (CORTI[k]) return CORTI[k];
+      // Condivisione di un TOOL: se il link corto tracciato non e' ancora pronto
+      // (fetch non tornata), NON si ripiega sulla home ma su un deep-link diretto
+      // alla scheda (start=svc_<id>, gestito da handleStart). Cosi' un link di un
+      // tool apre SEMPRE quel tool. L'invito generico resta il ref (home).
+      if (CONTESTO && CONTESTO.id) return 'https://t.me/cashlyhub_bot?start=svc_' + CONTESTO.id;
+      return REF_LINK;
     }
     function preparaLinkCorto(){
       var k = CONTESTO ? ('s' + (CONTESTO.id || 0)) : 'invito';

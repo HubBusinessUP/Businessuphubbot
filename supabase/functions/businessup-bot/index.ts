@@ -2438,6 +2438,31 @@ async function apiAdminClick(url: URL) {
   const nomeDi: Record<number, string> = {}
   for (const n of nomi ?? []) nomeDi[(n as any).id] = (n as any).nome
 
+  // CHI ha aperto ogni link condiviso: dal log click (apertura_link_corto,
+  // dettaglio = codice del link). Cosi' non c'e' solo "quante aperture" ma i nomi.
+  const codici = (corti ?? []).map((c: any) => c.codice)
+  const { data: aperture } = codici.length
+    ? await supabase.from("click").select("telegram_id, dettaglio, created_at")
+        .eq("azione", "apertura_link_corto").in("dettaglio", codici)
+        .order("created_at", { ascending: false }).limit(500)
+    : { data: [] as any[] }
+  const apreIds = [...new Set(((aperture ?? []) as any[]).map((a) => a.telegram_id).filter(Boolean))]
+  const { data: apreLeads } = apreIds.length
+    ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", apreIds)
+    : { data: [] as any[] }
+  const utDi: Record<number, { nome: string; username: string }> = {}
+  for (const l of (apreLeads ?? []) as any[]) {
+    utDi[l.telegram_id] = {
+      nome: [l.nome, l.cognome].filter(Boolean).join(" ").trim() || (l.username ? "@" + l.username : "Utente " + l.telegram_id),
+      username: l.username || "",
+    }
+  }
+  const apritoriDi: Record<string, any[]> = {}
+  for (const a of (aperture ?? []) as any[]) {
+    if (!a.telegram_id) continue
+    ;(apritoriDi[a.dettaglio] ||= []).push({ ...(utDi[a.telegram_id] || { nome: "Utente " + a.telegram_id, username: "" }), quando: a.created_at })
+  }
+
   return json({
     ok: true,
     periodo: giorni ? `ultimi ${giorni} giorni` : "sempre",
@@ -2451,6 +2476,7 @@ async function apiAdminClick(url: URL) {
     link_condivisi: (corti ?? []).map((c: any) => ({
       codice: c.codice, servizio: c.servizio_id ? (nomeDi[c.servizio_id] || "#" + c.servizio_id) : "Invito generico",
       aperture: c.aperture,
+      apritori: (apritoriDi[c.codice] || []).slice(0, 25),
     })),
   })
 }

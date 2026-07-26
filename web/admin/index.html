@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=157"></script>
+<script src="/identikit.js?v=158"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1153,12 +1153,17 @@
       // ---- link condivisi ----
       const lk = dashDati.link_condivisi || [];
       document.getElementById("dashLink").innerHTML = lk.length
-        ? lk.map((l) => `<div class="inv-row">
-            <div style="flex:1;min-width:0">
-              <div class="inv-t">${esc(l.servizio)}</div>
-              <div class="inv-s">t.me/cashlyhub_bot?start=${esc(l.codice)}</div>
+        ? lk.map((l) => `<div class="inv-row" style="flex-direction:column;align-items:stretch;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div class="inv-t">${esc(l.servizio)}</div>
+                <div class="inv-s">t.me/cashlyhub_bot?start=${esc(l.codice)}</div>
+              </div>
+              <div class="imb-n">${l.aperture} <b>aperture</b></div>
             </div>
-            <div class="imb-n">${l.aperture} <b>aperture</b></div>
+            ${(l.apritori && l.apritori.length)
+              ? `<div class="tl" style="max-height:240px">${l.apritori.map((a) => `<div class="tl-row"><span class="tl-when">${fmtQuando(a.quando)}</span><span class="tl-act">${a.username ? `<a href="https://t.me/${esc(a.username)}" target="_blank" style="color:var(--blue)">${esc(a.nome)}</a>` : esc(a.nome)}</span></div>`).join("")}</div>`
+              : `<div class="item-meta">Nessuno identificato tra chi l'ha aperto.</div>`}
           </div>`).join("")
         : '<div class="item-meta">Nessun link condiviso ancora.</div>';
     }
