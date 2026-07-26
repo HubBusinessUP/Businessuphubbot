@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=164"></script>
+<script src="/identikit.js?v=165"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -302,6 +302,43 @@
     #daValidareList .item, #affLinksList .item, #segnalazioniList .item,
     #macroList .item, #categorieList .item { margin-bottom: 0; }
   }
+
+  /* ===== Panoramica: dashboard stile "Bonus Time" (card navy) ===== */
+  #panoDash { display: flex; flex-direction: column; gap: 14px; }
+  .bt-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .bt-card, .bt-kpi { background: #0C1220; border: 1px solid rgba(255,255,255,.07); border-radius: 14px; }
+  .bt-kpi { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .bt-kpi .bt-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .bt-kpi .bt-lab { font-size: 11px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+  .bt-kpi .bt-ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .bt-kpi .bt-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .bt-kpi .bt-val { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .bt-kpi .bt-sub { font-size: 11px; color: #64748B; margin-top: 5px; }
+  .bt-h { padding: 14px 18px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .bt-h b { font-size: 13px; font-weight: 700; color: #F8FAFC; }
+  .bt-h .bt-hint { font-size: 11.5px; color: #64748B; font-weight: 400; }
+  .bt-body { padding: 12px 18px 16px; }
+  .bt-fun { display: flex; flex-direction: column; gap: 10px; }
+  .bt-fun-row { display: grid; grid-template-columns: 128px 1fr 82px; align-items: center; gap: 10px; }
+  .bt-fun-row .fl { font-size: 12.5px; color: #CBD5E1; }
+  .bt-fun-bar { height: 22px; border-radius: 7px; background: rgba(255,255,255,.05); overflow: hidden; }
+  .bt-fun-bar i { display: block; height: 100%; border-radius: 7px; }
+  .bt-fun-row .fv { font-size: 12px; font-weight: 700; text-align: right; color: #94A3B8; }
+  .bt-fun-row .fv b { color: #F8FAFC; }
+  .bt-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .bt-rank { display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: 8px; }
+  .bt-rank .rk { font-size: 12px; font-weight: 800; color: #475569; width: 16px; text-align: center; flex: none; }
+  .bt-rank .nm { flex: 1; font-size: 12.5px; color: #CBD5E1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bt-rank .nm small { color: #64748B; font-weight: 400; }
+  .bt-rank .vv { font-size: 12px; font-weight: 700; flex: none; }
+  .bt-leg { display: flex; gap: 16px; padding: 0 18px 12px; font-size: 11.5px; color: #94A3B8; }
+  .bt-leg span { display: inline-flex; align-items: center; gap: 6px; }
+  .bt-leg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  @media (max-width: 560px) {
+    .bt-kpis { grid-template-columns: 1fr 1fr; }
+    .bt-two { grid-template-columns: 1fr; }
+    .bt-fun-row { grid-template-columns: 96px 1fr 62px; }
+  }
 </style>
 </head>
 <body>
@@ -348,6 +385,13 @@
         </div>
       </div>
       <div class="pending-row" id="pendingRow"></div>
+
+    <!-- Panoramica: dashboard riepilogo (stile Bonus Time). L'h2 serve alla mappatura
+         dei tab; e' nascosto perche' il titolo dell'area e' gia' nella topbar. -->
+    <div class="section" id="secPano">
+      <div class="section-head" style="display:none"><h2>Panoramica</h2></div>
+      <div id="panoDash"></div>
+    </div>
 
     <div class="section">
       <div class="section-head"><h2>Da validare</h2></div>
@@ -1041,7 +1085,93 @@
       const codaTot = (k.pending_suggerimenti || 0) + (k.pending_links || 0) + (k.pending_partner || 0) + (k.segnalazioni_aperte || 0);
       const codaB = document.getElementById("adtabCoda");
       if (codaB) { codaB.textContent = codaTot; codaB.style.display = codaTot ? "" : "none"; }
+      renderPanoramica(k);
       renderOnboarding(k.onboarding);
+    }
+
+    // ===== Panoramica: dashboard riepilogo in stile "Bonus Time" (card navy) =====
+    const PANO_IC = {
+      users: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/>',
+      plus: '<path d="M12 5v14M5 12h14"/>',
+      star: '<path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z"/>',
+      trend: '<path d="M3 17l6-6 4 4 7-7"/><path d="M21 8v6M21 8h-6"/>',
+      down: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.2 2.8-5.5 6.5-5.5c1 0 1.9.16 2.7.45"/><path d="M14.5 15h6"/>',
+      inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 6h13l3.5 6v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/>',
+    };
+    function panoKpi(lab, val, color, bg, ico, sub) {
+      return `<div class="bt-kpi"><div class="bt-top"><span class="bt-lab">${lab}</span>`
+        + `<div class="bt-ico" style="background:${bg};color:${color}"><svg viewBox="0 0 24 24">${ico}</svg></div></div>`
+        + `<div><div class="bt-val" style="color:${color}">${val}</div>${sub ? `<div class="bt-sub">${sub}</div>` : ""}</div></div>`;
+    }
+    function panoChart(serie) {
+      const wrap = (inner) => `<div class="bt-card"><div class="bt-h"><b>Andamento 30 giorni</b><span class="bt-hint">al giorno</span></div>`
+        + `<div class="bt-leg"><span><i style="background:#7C3AED"></i>Nuovi utenti</span><span><i style="background:#34D399"></i>Attivazioni</span></div>${inner}</div>`;
+      if (!serie || !serie.length) return wrap('<div class="bt-body" style="color:#64748B;font-size:12px">Ancora nessun dato.</div>');
+      const VW = 300, VH = 100, px = 3, pt = 8, pb = 6, n = serie.length;
+      let maxV = 1;
+      serie.forEach((p) => { maxV = Math.max(maxV, p.nuovi || 0, p.attiv || 0); });
+      const pts = (key) => serie.map((p, i) => {
+        const x = px + (i / Math.max(n - 1, 1)) * (VW - px * 2);
+        const y = (VH - pb) - ((p[key] || 0) / maxV) * (VH - pb - pt);
+        return x.toFixed(1) + "," + y.toFixed(1);
+      }).join(" ");
+      const lineN = pts("nuovi"), lineA = pts("attiv");
+      const area = `${px},${VH - pb} ${lineN} ${VW - px},${VH - pb}`;
+      const d0 = (serie[0].d || "").slice(5), d1 = (serie[n - 1].d || "").slice(5);
+      const svg = `<svg viewBox="0 0 ${VW} ${VH}" width="100%" height="150" preserveAspectRatio="none" style="display:block">`
+        + `<line x1="${px}" y1="${VH - pb}" x2="${VW - px}" y2="${VH - pb}" stroke="rgba(255,255,255,.08)" stroke-width="1" vector-effect="non-scaling-stroke"/>`
+        + `<polyline points="${area}" fill="rgba(124,58,237,.10)" stroke="none"/>`
+        + `<polyline points="${lineA}" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity=".85" vector-effect="non-scaling-stroke"/>`
+        + `<polyline points="${lineN}" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`
+        + `</svg>`;
+      const assi = `<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#64748B;margin-top:6px"><span>${d0}</span><span style="color:#475569">picco ${maxV}/g</span><span>${d1}</span></div>`;
+      return wrap(`<div class="bt-body" style="padding-top:0">${svg}${assi}</div>`);
+    }
+    function renderPanoramica(k) {
+      const box = document.getElementById("panoDash");
+      if (!box || !k) return;
+      const codaTot = (k.pending_suggerimenti || 0) + (k.pending_links || 0) + (k.pending_partner || 0) + (k.segnalazioni_aperte || 0);
+      const kpis = panoKpi("Utenti totali", k.totale || 0, "#34D399", "rgba(52,211,153,.12)", PANO_IC.users, "iscritti al bot")
+        + panoKpi("Nuovi 7 giorni", "+" + (k.nuovi_7gg || 0), "#A78BFA", "rgba(124,58,237,.14)", PANO_IC.plus, (k.nuovi_oggi || 0) + " oggi")
+        + panoKpi("Clienti attivi", k.clienti || 0, "#34D399", "rgba(52,211,153,.12)", PANO_IC.star, "hanno attivato")
+        + panoKpi("Tasso attivazione", (k.tasso_attivazione || 0) + "%", "#A78BFA", "rgba(124,58,237,.14)", PANO_IC.trend, "su tutti gli iscritti")
+        + panoKpi("Churn 7 giorni", k.churn_7gg || 0, "#F87171", "rgba(239,68,68,.12)", PANO_IC.down, "hanno bloccato il bot")
+        + panoKpi("In coda", codaTot, "#F59E0B", "rgba(245,158,11,.12)", PANO_IC.inbox, "da validare");
+
+      const f = k.funnel || {};
+      const funMax = Math.max(f.start || 0, 1);
+      const funRow = (lab, val, col) => {
+        const pct = Math.round(((val || 0) / funMax) * 100);
+        return `<div class="bt-fun-row"><div class="fl">${lab}</div><div class="bt-fun-bar"><i style="width:${Math.max(pct, 2)}%;background:${col}"></i></div><div class="fv"><b>${val || 0}</b> · ${pct}%</div></div>`;
+      };
+      const funnel = `<div class="bt-card"><div class="bt-h"><b>Come si muovono</b><span class="bt-hint">persone diverse a ogni gradino</span></div><div class="bt-body bt-fun">`
+        + funRow("Start bot", f.start, "#4A90E2")
+        + funRow("Profilo creato", f.profilo, "#4A90E2")
+        + funRow("Scheda aperta", f.scheda, "#A78BFA")
+        + funRow("Uscita → fornitore", f.uscita, "#F59E0B")
+        + funRow("Attivazione", f.attivazione, "#34D399")
+        + `</div></div>`;
+
+      const top = (k.top_business || []).slice(0, 5);
+      const topHtml = top.length ? top.map((b, i) =>
+        `<div class="bt-rank"><span class="rk">${i + 1}</span><span class="nm">${esc(b.nome || "")}</span><span class="vv" style="color:#A78BFA">${b.voti || 0} voti</span></div>`
+      ).join("") : '<div class="bt-sub" style="padding:8px 6px">Ancora nessun tool.</div>';
+      const topCard = `<div class="bt-card"><div class="bt-h"><b>Top tool</b><span class="bt-hint">per voti</span></div><div class="bt-body" style="padding-top:6px">${topHtml}</div></div>`;
+
+      const acq = k.acquisizione || { invito: 0, diretto: 0 };
+      const acqTot = (acq.invito || 0) + (acq.diretto || 0) || 1;
+      const acqRow = (lab, val, col) => {
+        const pct = Math.round(((val || 0) / acqTot) * 100);
+        return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:#94A3B8">${lab}</span><span style="font-weight:700;color:#F8FAFC">${val || 0} · ${pct}%</span></div><div class="bt-fun-bar" style="height:8px"><i style="width:${pct}%;background:${col}"></i></div></div>`;
+      };
+      const onb = k.onboarding || {};
+      const acqCard = `<div class="bt-card"><div class="bt-h"><b>Da dove arrivano</b><span class="bt-hint">${acqTot} ingressi</span></div><div class="bt-body">`
+        + acqRow("Da un invito", acq.invito, "#34D399")
+        + acqRow("Diretti", acq.diretto, "#64748B")
+        + (onb.tot ? `<div style="border-top:1px solid rgba(255,255,255,.07);margin-top:2px;padding-top:12px">` + acqRow("Crea profilo subito", onb.profilo, "#A78BFA") + `</div>` : "")
+        + `</div></div>`;
+
+      box.innerHTML = `<div class="bt-kpis">${kpis}</div>${panoChart(k.serie)}${funnel}<div class="bt-two">${topCard}${acqCard}</div>`;
     }
 
     // Onboarding: % di chi crea subito il profilo vs chi esplora prima.
@@ -2836,7 +2966,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
     const ADTABS = [
       { key: "dash", label: "Panoramica", title: "Panoramica", sub: "Il colpo d'occhio su come si muove tutto",
         icon: '<path d="M3 13h8V3H3zM13 21h8v-8h-8zM13 3v6h8V3zM3 21h8v-6H3z"/>',
-        titles: ["Come sta andando", "Dove si fermano", "Cosa toccano", "Chi ha disattivato il bot", "Link condivisi", "Attività per servizio", "Onboarding", "Top business", "Top Sponsorboard"] },
+        titles: ["Panoramica", "Come sta andando", "Dove si fermano", "Cosa toccano", "Chi ha disattivato il bot", "Link condivisi", "Attività per servizio", "Onboarding", "Top business", "Top Sponsorboard"] },
       { key: "tool", label: "Tool", title: "Tool", sub: "Catalogo e statistiche di ogni prodotto",
         icon: '<path d="M12 3 3 7.5v9L12 21l9-4.5v-9zM3 7.5l9 4.5 9-4.5M12 12v9"/>',
         titles: ["Servizi", "Macro categorie", "Categorie", "Lista d'attesa"] },
@@ -2874,6 +3004,11 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         const h2 = sec.querySelector("h2");
         sec.dataset.adtab = (h2 && map[h2.textContent.trim()]) || "tool";
       });
+      // La nuova Panoramica (#secPano) sostituisce le vecchie sezioni dash: le archiviamo
+      // (restano nel DOM e continuano a caricarsi, ma non compaiono in nessun tab).
+      main.querySelectorAll(":scope > .section").forEach((sec) => {
+        if (sec.dataset.adtab === "dash" && sec.id !== "secPano") sec.dataset.adtab = "_arch";
+      });
       // Riordina le sezioni nell'ordine delle aree: dentro un'area seguono l'ordine di `titles`,
       // cosi' il pannello non e' piu' sparso ma raggruppato in modo prevedibile.
       ADTABS.forEach((t) => t.titles.forEach((ti) => {
@@ -2894,6 +3029,9 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         const ttl = document.getElementById("admAreaTitle"); if (ttl) ttl.textContent = t.title;
         const sub = document.getElementById("admAreaSub"); if (sub) sub.textContent = t.sub;
       }
+      // Su Panoramica i KPI del topbar sono ridondanti (li ha gia' la dashboard): nascosti.
+      const kg = document.querySelector(".adm-topbar .kpi-grid");
+      if (kg) kg.style.display = (k === "dash") ? "none" : "";
       window.scrollTo({ top: 0 });
     }
     window.switchAdminTab = switchAdminTab;

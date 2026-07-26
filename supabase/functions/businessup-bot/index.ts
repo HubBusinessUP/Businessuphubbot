@@ -2631,7 +2631,7 @@ async function apiAdminKpi() {
   const votiCount: Record<number, number> = {}
   for (const v of voti ?? []) votiCount[(v as any).servizio_id] = (votiCount[(v as any).servizio_id] ?? 0) + 1
 
-  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, created_at")
+  const { data: attivazioni } = await supabase.from("lead_servizi").select("servizio_id, created_at, telegram_id")
   const attCount: Record<number, number> = {}
   const attRecenti: Record<number, number> = {}
   for (const a of attivazioni ?? []) {
@@ -2647,6 +2647,40 @@ async function apiAdminKpi() {
     attivazioni_7gg: attRecenti[parseInt(id)] ?? 0,
   })).sort((a, b) => b.voti - a.voti || b.attivazioni - a.attivazioni).slice(0, 5)
 
+  // ===== Dati per la Panoramica (dashboard) =====
+  // Serie 30 giorni: nuovi iscritti e attivazioni al giorno (per il grafico a linea).
+  const giorni: string[] = []
+  for (let i = 29; i >= 0; i--) giorni.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10))
+  const { data: leadRows } = await supabase.from("leads").select("created_at, referred_by, attivo, bloccato_at")
+  const nuoviGiorno: Record<string, number> = {}
+  let acqInvito = 0, acqDiretto = 0, churn7 = 0, churnTot = 0
+  const settimanaFa = new Date(Date.now() - 7 * 864e5).toISOString()
+  for (const l of leadRows ?? []) {
+    const g = ((l as any).created_at || "").slice(0, 10)
+    if (g) nuoviGiorno[g] = (nuoviGiorno[g] ?? 0) + 1
+    if ((l as any).referred_by) acqInvito++; else acqDiretto++
+    if ((l as any).attivo === false) { churnTot++; if (((l as any).bloccato_at || "") >= settimanaFa) churn7++ }
+  }
+  const attivGiorno: Record<string, number> = {}
+  for (const a of attivazioni ?? []) {
+    const g = ((a as any).created_at || "").slice(0, 10)
+    if (g) attivGiorno[g] = (attivGiorno[g] ?? 0) + 1
+  }
+  const serie = giorni.map((g) => ({ d: g, nuovi: nuoviGiorno[g] ?? 0, attiv: attivGiorno[g] ?? 0 }))
+
+  // Funnel "come si muovono": persone DISTINTE a ogni gradino.
+  const { data: evFun } = await supabase.from("eventi").select("telegram_id, tipo").in("tipo", ["scheda_aperta", "link_aperto"])
+  const setScheda = new Set<number>(), setUscita = new Set<number>()
+  for (const e of evFun ?? []) {
+    if ((e as any).tipo === "scheda_aperta") setScheda.add((e as any).telegram_id)
+    else setUscita.add((e as any).telegram_id)
+  }
+  const setAttiv = new Set<number>()
+  for (const a of attivazioni ?? []) setAttiv.add((a as any).telegram_id)
+  const funnel = { start: totale ?? 0, profilo: onbTot, scheda: setScheda.size, uscita: setUscita.size, attivazione: setAttiv.size }
+
+  const tassoAttivazione = (totale ?? 0) ? Math.round((setAttiv.size * 1000) / (totale ?? 1)) / 10 : 0
+
   return json({
     totale: totale ?? 0,
     nuovi_oggi: nuoviOggi ?? 0,
@@ -2658,6 +2692,12 @@ async function apiAdminKpi() {
     pending_partner: pendingPartner ?? 0,
     onboarding: { profilo: onbProfilo ?? 0, esplora: onbEsplora ?? 0, tot: onbTot, profilo_pct: onbProfiloPct, esplora_pct: onbEsploraPct },
     top_business: topBusiness,
+    serie,
+    funnel,
+    acquisizione: { invito: acqInvito, diretto: acqDiretto },
+    churn_7gg: churn7,
+    churn_tot: churnTot,
+    tasso_attivazione: tassoAttivazione,
   })
 }
 
