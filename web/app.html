@@ -1541,7 +1541,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=161"></script>
+<script src="identikit.js?v=162"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2985,22 +2985,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       CATS = (d.categorie || []).map(function(c){ return { id: c.id, nome: c.nome, macro_categoria_id: c.macro_categoria_id }; });
       MACRO = (d.macro_categorie || []).map(function(m){ return { id: m.id, nome: m.nome, in_evidenza: !!m.in_evidenza }; });
       (d.categorie || []).forEach(function(c){ (c.servizi || []).forEach(function(s){ ALLBIZ.push(s); }); });
-      // L'ORDINE LO FANNO SOLO I VOTI (all-time), ed e' una scelta di ONESTA':
-      // il numero mostrato sulla freccia deve spiegare l'ordine. Sommando anche i
-      // salvataggi (che non si vedono) un "0" poteva stare sopra un "3", e chi guarda
-      // avrebbe concluso che i contatori dell'app non sono affidabili.
-      // I salvataggi restano un segnale privato: utili in admin, non muovono la lista.
-      // Niente classifica "del giorno": il voto ha UNIQUE(utente,servizio), quindi e' uno
-      // STOCK e non un flusso — esauriti i voti possibili, "oggi" resterebbe a zero per sempre.
-      // A PARI MERITO l'ordine era quello del backend, cioe' congelato: con quasi tutto a zero
-      // e' il caso NORMALE, non un caso limite, e chi era ultimo restava ultimo per sempre.
-      // Ora ruota: seme stabile per giornata -> ordine fermo mentre navighi, diverso domani.
-      var _seme = (function(){ var d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); })();
-      function _turno(id){ var x=Math.sin(_seme*9301 + (id||0)*49297)*233280; return x-Math.floor(x); }
+      // ORDINE DIRECTORY: prima i VOTI (decrescente), a parita' l'ULTIMO INSERITO prima.
+      // Il numero sulla freccia deve spiegare l'ordine, per questo pesano solo i voti e
+      // non i salvataggi (che non si vedono): un "0" sopra un "3" farebbe sembrare i
+      // contatori sballati. I salvataggi restano un segnale privato, utile solo in admin.
+      // A pari voti NON si ruota piu' a caso (confondeva): vince chi e' stato inserito piu'
+      // di recente (created_at), cosi' la classifica e' stabile e prevedibile.
       function _punti(s){ return (s.voti||0); }
       ALLBIZ.sort(function(a,b){
         var d=_punti(b)-_punti(a);
-        return d ? d : (_turno(a.id)-_turno(b.id));
+        if (d) return d;
+        var qa=a.created_at||'', qb=b.created_at||'';
+        return qa < qb ? 1 : (qa > qb ? -1 : (b.id||0)-(a.id||0));   // piu' recente prima; id come ultimo criterio
       });
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
       (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
