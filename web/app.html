@@ -774,6 +774,11 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sctit{flex:1;min-width:0}
 .sctit h1{margin:0;font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.25;color:var(--tx)}
 .sctit p{margin:5px 0 0;font-size:15px;font-weight:400;line-height:1.4;color:var(--dim)}
+/* Tag categorie (macro > sotto) sotto l'intestazione della scheda. Chip sobri, un
+   solo livello di elevazione, niente bordo tinto: seguono le regole di design. */
+.sccat{display:flex;flex-wrap:wrap;gap:7px;padding:2px 20px 4px}
+.sccat-chip{font-size:12px;font-weight:600;color:var(--dim);background:var(--s1);border-radius:999px;padding:5px 11px;white-space:nowrap}
+.sccat-chip b{color:var(--mut);font-weight:700;margin:0 1px}
 
 /* Le due schede. Sottolineatura e non pillole: qui non sono filtri, sono pagine
    dello stesso documento, e devono pesare meno delle categorie in home. */
@@ -1526,7 +1531,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=158"></script>
+<script src="identikit.js?v=159"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1682,8 +1687,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (fuoriVetrina && s.in_evidenza) return false;
       if (COLLEZIONE === 'salvati' && !SAVED[s.id]) return false;
       if (COLLEZIONE === 'votati'  && !VOTED[s.id]) return false;
-      if (FILTRO_MACRO && !CATS.some(function(c){ return c.id === s.categoria_id && c.macro_categoria_id === FILTRO_MACRO; })) return false;
-      if (FILTRO_CAT && s.categoria_id !== FILTRO_CAT) return false;
+      if (FILTRO_MACRO && !svcInMacro(s, FILTRO_MACRO)) return false;
+      if (FILTRO_CAT && !svcInCat(s, FILTRO_CAT)) return false;
       if (!q) return true;
       // la ricerca guarda anche la descrizione: non e' mostrata, ma serve a trovare
       return ((s.nome || '') + ' ' + (s.descrizione || '')).toLowerCase().indexOf(q) >= 0;
@@ -1852,10 +1857,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (dd) dd.classList.toggle('scelta', !!(FILTRO_CAT || FILTRO_MACRO));
   }
 
+  // Categorie MULTIPLE per servizio: un tool puo' stare in piu' categorie/macro.
+  // svcCats ripiega sulla singola categoria_id per i vecchi servizi.
+  function svcCats(s){ return (s && s.categorie_ids && s.categorie_ids.length) ? s.categorie_ids : (s && s.categoria_id ? [s.categoria_id] : []); }
+  function svcInCat(s, catId){ return svcCats(s).indexOf(catId) !== -1; }
+  function svcInMacro(s, macroId){
+    return svcCats(s).some(function(cid){ var c = CATS.filter(function(x){ return x.id === cid; })[0]; return c && c.macro_categoria_id === macroId; });
+  }
   function conta(catId, macroId){
     return ALLBIZ.filter(function(s){
-      if (catId) return s.categoria_id === catId;
-      if (macroId) return CATS.some(function(c){ return c.id === s.categoria_id && c.macro_categoria_id === macroId; });
+      if (catId) return svcInCat(s, catId);
+      if (macroId) return svcInMacro(s, macroId);
       return true;
     }).length;
   }
@@ -2011,10 +2023,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
   function scTesta(d){
     var s = d.servizio || {};
+    // Le categorie (macro > sotto) del prodotto, come chip sotto il titolo. Possono
+    // essere piu' d'una: un tool sta anche in piu' macro contemporaneamente.
+    var cats = Array.isArray(d.categorie) ? d.categorie : [];
+    var chips = cats.length
+      ? '<div class="sccat">' + cats.map(function(c){
+          return '<span class="sccat-chip">' + (c.macro_nome ? esc(c.macro_nome) + ' <b>&rsaquo;</b> ' : '') + esc(c.nome) + '</span>';
+        }).join('') + '</div>'
+      : '';
     return '<div class="sctesta">' + logoHtml(s)
       + '<div class="sctit"><h1>' + esc(s.nome || '') + '</h1>'
       + (s.descrizione ? '<p>' + esc(s.descrizione) + '</p>' : '')
-      + '</div></div>';
+      + '</div></div>' + chips;
   }
 
   function scPanoramica(d){

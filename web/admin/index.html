@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=158"></script>
+<script src="/identikit.js?v=159"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -69,6 +69,13 @@
   .badge.pausa { background: rgba(232,179,76,0.14); color: var(--amber); }
   .badge.fermo { background: rgba(226,87,74,0.12); color: var(--coral); }
   .badge.bozza { background: var(--panel-2); color: var(--text-dim); }
+  /* Checklist categorie multiple nel form servizio */
+  .cat-check { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 6px; max-height: 230px; overflow-y: auto; }
+  .cat-macro { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); font-weight: 700; padding: 9px 6px 3px; }
+  .cat-macro:first-child { padding-top: 3px; }
+  .cat-opt { display: flex; align-items: center; gap: 9px; padding: 7px 6px; border-radius: 5px; font-size: 13.5px; cursor: pointer; }
+  .cat-opt:hover { background: var(--panel-2); }
+  .cat-opt input { width: 16px; height: 16px; accent-color: var(--lime); flex: none; margin: 0; }
   /* Flag di stato: lo stato corrente e' l'unico acceso ed e' disabilitato, cosi' si
      legge a colpo d'occhio dov'e' il servizio e si clicca solo per spostarlo. */
   .flagrow { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
@@ -559,7 +566,7 @@
         </label>
         <div class="item-meta">Lascialo spento per un logo largo: riempiendo se ne vedrebbe solo la parte centrale.</div>
       </div>
-      <div class="field"><label>Categoria</label><select id="svcCategoria"></select></div>
+      <div class="field"><label>Categorie <span style="color:var(--text-dim);font-weight:400;text-transform:none">— puoi sceglierne più di una; la prima è la principale</span></label><div id="svcCategorie" class="cat-check"></div></div>
       <div class="row2">
         <div class="field"><label>Tipo</label><input id="svcTipo" placeholder="es: swap, bonus, prop" /></div>
         <div class="field"><label>Stato</label>
@@ -2499,12 +2506,20 @@
       document.getElementById("svcTempoReq").value = s?.tempo_richiesto || "";
       document.getElementById("svcEsperienza").value = s?.esperienza_richiesta || "";
 
-      const catSelect = document.getElementById("svcCategoria");
-      // Il placeholder evita che un servizio nuovo prenda in silenzio la prima categoria
-      // dell'elenco solo perche' nessuno ha toccato la select.
-      catSelect.innerHTML = '<option value="">— Scegli categoria —</option>'
-        + categorie.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
-      catSelect.value = s?.categoria_id || "";
+      // Categorie MULTIPLE: checklist raggruppato per macro. Si pre-selezionano quelle
+      // gia' assegnate (categorie_ids; per i servizi vecchi la singola categoria_id).
+      const catBox = document.getElementById("svcCategorie");
+      const gia = (s && Array.isArray(s.categorie_ids) && s.categorie_ids.length) ? s.categorie_ids : (s?.categoria_id ? [s.categoria_id] : []);
+      const setGia = new Set(gia.map(Number));
+      const optCat = (c) => `<label class="cat-opt"><input type="checkbox" class="svcCat" value="${c.id}" ${setGia.has(c.id) ? "checked" : ""}> ${esc(c.nome)}</label>`;
+      let ch = "";
+      macroCategorie.forEach((m) => {
+        const figlie = categorie.filter((c) => c.macro_categoria_id === m.id);
+        if (figlie.length) ch += `<div class="cat-macro">${esc(m.nome)}</div>` + figlie.map(optCat).join("");
+      });
+      const orfane = categorie.filter((c) => !macroCategorie.some((m) => m.id === c.macro_categoria_id));
+      if (orfane.length) ch += `<div class="cat-macro">Altro</div>` + orfane.map(optCat).join("");
+      catBox.innerHTML = ch || '<div class="item-meta">Nessuna categoria. Creane una nel Catalogo.</div>';
 
       // SVUOTARE PRIMA. Senza questa riga ogni apertura della scheda aggiungeva gli
       // step a quelli gia' a schermo: al secondo giro comparivano doppi, al terzo
@@ -2674,7 +2689,8 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         id: document.getElementById("svcId").value || undefined,
         nome: document.getElementById("svcNome").value.trim(),
         logo_url: document.getElementById("svcLogo").value.trim(),
-        categoria_id: parseInt(document.getElementById("svcCategoria").value),
+        categorie_ids: [].map.call(document.querySelectorAll('#svcCategorie .svcCat:checked'), function (el) { return parseInt(el.value); }).filter(Boolean),
+        categoria_id: (document.querySelector('#svcCategorie .svcCat:checked') ? parseInt(document.querySelector('#svcCategorie .svcCat:checked').value) : null),
         tipo: document.getElementById("svcTipo").value.trim(),
         stato: document.getElementById("svcStato").value,
         descrizione: document.getElementById("svcDescrizione").value.trim(),
@@ -2706,7 +2722,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         tutorial_steps: steps,
         risorse,
       };
-      if (!body.categoria_id) { alert("Scegli una categoria."); return; }
+      if (!body.categorie_ids || !body.categorie_ids.length) { alert("Scegli almeno una categoria."); return; }
 
       // Anche da qui il passaggio ad Attivo fa partire l'invio: la conferma va chiesta
       // prima, non dopo, ed e' l'unico punto in cui l'admin vede a quanti scrivera'.

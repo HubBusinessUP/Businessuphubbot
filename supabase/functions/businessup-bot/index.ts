@@ -994,8 +994,21 @@ async function apiBusinessList(telegramId?: number | null) {
     salvatiCount[(p as any).servizio_id] = (salvatiCount[(p as any).servizio_id] ?? 0) + 1
   }
 
+  // Categorie MULTIPLE per servizio (many-to-many). categorie_ids porta TUTTE le
+  // categorie del servizio: il filtro della directory le usa tutte, cosi' un tool in
+  // "Broker" e "Crypto" compare filtrando entrambe. La posizione nella lista resta
+  // sotto la categoria primaria (categoria_id), quindi ogni servizio appare una volta.
+  const { data: svcCat } = await supabase.from("servizio_categorie").select("servizio_id, categoria_id")
+  const catDiServizio: Record<number, number[]> = {}
+  for (const r of (svcCat ?? []) as any[]) (catDiServizio[r.servizio_id] ||= []).push(r.categoria_id)
+
   const serviziConVoti = (servizi ?? [])
-    .map((s: any) => ({ ...s, voti: (votiCount[s.id] ?? 0) + (s.voti_base ?? 0), salvati: salvatiCount[s.id] ?? 0 }))
+    .map((s: any) => ({
+      ...s,
+      voti: (votiCount[s.id] ?? 0) + (s.voti_base ?? 0),
+      salvati: salvatiCount[s.id] ?? 0,
+      categorie_ids: (catDiServizio[s.id] && catDiServizio[s.id].length) ? catDiServizio[s.id] : (s.categoria_id ? [s.categoria_id] : []),
+    }))
     .sort((a: any, b: any) => b.voti - a.voti || (a.created_at < b.created_at ? 1 : -1))
 
   let mieiPreferiti: number[] = []
@@ -1200,8 +1213,23 @@ async function apiServizio(telegramId: number, servizioId: number) {
   const { count: attiviCount } = await supabase.from("lead_servizi")
     .select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
 
+  // Categorie MULTIPLE del servizio con la loro macro, per i tag in cima alla scheda.
+  const { data: scRows } = await supabase.from("servizio_categorie").select("categoria_id").eq("servizio_id", servizioId)
+  let catIds = ((scRows ?? []) as any[]).map((r) => r.categoria_id)
+  if (!catIds.length && servizio.categoria_id) catIds = [servizio.categoria_id]
+  let categorieScheda: any[] = []
+  if (catIds.length) {
+    const { data: cats } = await supabase.from("categorie").select("id, nome, macro_categoria_id").in("id", catIds)
+    const macroIds = [...new Set(((cats ?? []) as any[]).map((c) => c.macro_categoria_id).filter(Boolean))]
+    const { data: macros } = macroIds.length ? await supabase.from("macro_categorie").select("id, nome").in("id", macroIds) : { data: [] as any[] }
+    const macroNome: Record<number, string> = {}
+    for (const m of (macros ?? []) as any[]) macroNome[m.id] = m.nome
+    categorieScheda = ((cats ?? []) as any[]).map((c) => ({ id: c.id, nome: c.nome, macro_id: c.macro_categoria_id, macro_nome: macroNome[c.macro_categoria_id] || "" }))
+  }
+
   return json({
     servizio,
+    categorie: categorieScheda,
     attivo,
     gia_interessato: !!interesse,
     in_waitlist: !!inAttesa,
@@ -1919,7 +1947,14 @@ async function apiAdminServiziList() {
   const { data: att } = await supabase.from("waitlist").select("servizio_id").is("avvisato_at", null)
   const inAttesa: Record<number, number> = {}
   for (const w of att ?? []) inAttesa[(w as any).servizio_id] = (inAttesa[(w as any).servizio_id] ?? 0) + 1
-  const servizi = (data ?? []).map((s: any) => ({ ...s, in_attesa: inAttesa[s.id] ?? 0 }))
+  // Le categorie multiple di ciascun servizio, per pre-selezionarle nel form.
+  const { data: svcCat } = await supabase.from("servizio_categorie").select("servizio_id, categoria_id")
+  const catDi: Record<number, number[]> = {}
+  for (const r of (svcCat ?? []) as any[]) (catDi[r.servizio_id] ||= []).push(r.categoria_id)
+  const servizi = (data ?? []).map((s: any) => ({
+    ...s, in_attesa: inAttesa[s.id] ?? 0,
+    categorie_ids: (catDi[s.id] && catDi[s.id].length) ? catDi[s.id] : (s.categoria_id ? [s.categoria_id] : []),
+  }))
   return json({ servizi })
 }
 
@@ -1948,8 +1983,12 @@ async function applicaCambioStato(id: number, nome: string, prima: string, dopo:
 }
 
 async function apiAdminServiziSave(body: any) {
-  const { id, nome, categoria_id, tipo, descrizione, panoramica, come_funziona, cta, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse, longevita, attivo_da, logo_url, voci, budget_nota, costi_nota, in_evidenza, voti_base, logo_pieno } = body
-  const row: Record<string, unknown> = { nome, categoria_id: categoria_id || null, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
+  const { id, nome, categoria_id, categorie_ids, tipo, descrizione, panoramica, come_funziona, cta, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps, tempo_stimato, difficolta, budget_minimo, rischio_livello, tempo_richiesto, esperienza_richiesta, risorse, longevita, attivo_da, logo_url, voci, budget_nota, costi_nota, in_evidenza, voti_base, logo_pieno } = body
+  // Categorie multiple: la PRIMA scelta e' la primaria (posizione in directory +
+  // retrocompatibilita'); tutte finiscono nella tabella di collegamento piu' sotto.
+  const catsIn: number[] = Array.isArray(categorie_ids) ? categorie_ids.map((x: any) => parseInt(x)).filter(Boolean) : []
+  const primaria = catsIn.length ? catsIn[0] : (categoria_id || null)
+  const row: Record<string, unknown> = { nome, categoria_id: primaria, tipo, descrizione, requisiti, costi, split_percent, prezzo, stato, ordine, link_principale, tutorial_steps: tutorial_steps ?? [], tempo_stimato, difficolta,
     budget_minimo: budget_minimo || null, rischio_livello: rischio_livello || null, tempo_richiesto: tempo_richiesto || null, esperienza_richiesta: esperienza_richiesta || null, risorse: risorse ?? [], logo_url: logo_url || null }
   // longevita e attivo_da NON sono nel form dell'admin: scriverli sempre significherebbe
   // azzerarli a ogni salvataggio (undefined -> null). Si toccano solo se arrivano davvero.
@@ -1978,6 +2017,7 @@ async function apiAdminServiziSave(body: any) {
   }
   if (longevita !== undefined) row.longevita = longevita || null
   if (attivo_da !== undefined) row.attivo_da = attivo_da || null
+  let servizioId = id
   if (id) {
     // Leggi lo stato PRIMA di scrivere: il passaggio a "attivo" e' cio' che fa partire
     // le notifiche a chi era in lista d'attesa.
@@ -1986,11 +2026,19 @@ async function apiAdminServiziSave(body: any) {
     if (error) return json({ error: error.message }, 500)
     if (prima) await applicaCambioStato(id, nome || prima.nome, prima.stato, stato)
   } else {
-    const { error } = await supabase.from("servizi").insert(row)
+    const { data: nuovo, error } = await supabase.from("servizi").insert(row).select("id").single()
     if (error) return json({ error: error.message }, 500)
+    servizioId = (nuovo as any).id
     // NIENTE invio automatico (Antonio): l'avviso va a tutti gli iscritti, e un
      // messaggio a tutti non deve partire come effetto collaterale di un salvataggio.
      // Si manda dal bottone "Invia avviso" nella scheda, quando si decide di mandarlo.
+  }
+  // Sincronizza le categorie (many-to-many). Si tocca SOLO se il form le manda: un
+  // admin vecchio in cache non manderebbe categorie_ids, e cancellarle tutte in quel
+  // caso lascerebbe il servizio senza categorie -> sparirebbe dalla directory.
+  if (servizioId && catsIn.length) {
+    await supabase.from("servizio_categorie").delete().eq("servizio_id", servizioId)
+    await supabase.from("servizio_categorie").insert(catsIn.map((cid) => ({ servizio_id: servizioId, categoria_id: cid })))
   }
   return json({ ok: true })
 }
