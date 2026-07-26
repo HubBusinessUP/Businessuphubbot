@@ -2743,6 +2743,63 @@ async function apiAdminPresenza() {
   })
 }
 
+// Scheda-tool: tutte le statistiche di un singolo servizio (per il pannello admin).
+async function apiAdminServizioStats(servizioId: number) {
+  if (!servizioId) return json({ error: "id_mancante" }, 400)
+  const { data: svc } = await supabase.from("servizi").select("id, nome, stato, logo_url, logo_pieno, voti_base").eq("id", servizioId).maybeSingle()
+  if (!svc) return json({ error: "not_found" }, 404)
+  const setteFa = new Date(Date.now() - 7 * 864e5).toISOString()
+
+  const { count: voti } = await supabase.from("voti").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
+  const { count: salvataggi } = await supabase.from("preferiti").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
+  const { count: waitlist } = await supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId).is("avvisato_at", null)
+  const { count: segnalazioni } = await supabase.from("segnalazioni").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId).eq("stato", "aperta")
+  const { count: affiliati } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId).eq("approvato", true)
+
+  const { data: att } = await supabase.from("lead_servizi").select("created_at").eq("servizio_id", servizioId)
+  let attTot = 0, att7 = 0
+  const attGiorno: Record<string, number> = {}
+  for (const a of (att ?? []) as any[]) { attTot++; const g = (a.created_at || "").slice(0, 10); if (g) attGiorno[g] = (attGiorno[g] ?? 0) + 1; if (a.created_at >= setteFa) att7++ }
+
+  const { data: evS } = await supabase.from("eventi").select("telegram_id, created_at").eq("tipo", "scheda_aperta").eq("riferimento_id", servizioId)
+  const { data: evL } = await supabase.from("eventi").select("telegram_id").eq("tipo", "link_aperto").eq("riferimento_id", servizioId)
+  const apSet = new Set<number>(); const apGiorno: Record<string, number> = {}
+  for (const e of (evS ?? []) as any[]) { apSet.add(e.telegram_id); const g = (e.created_at || "").slice(0, 10); if (g) apGiorno[g] = (apGiorno[g] ?? 0) + 1 }
+  const uscSet = new Set<number>(); for (const e of (evL ?? []) as any[]) uscSet.add(e.telegram_id)
+
+  const giorni: string[] = []
+  for (let i = 29; i >= 0; i--) giorni.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10))
+  const serie = giorni.map((g) => ({ d: g, aperture: apGiorno[g] ?? 0, attiv: attGiorno[g] ?? 0 }))
+
+  const { data: tp } = await supabase.from("tutorial_progress").select("ultimo_step, completato").eq("servizio_id", servizioId)
+  let tutTot = 0, tutCompl = 0; const perStep: Record<number, number> = {}
+  for (const t of (tp ?? []) as any[]) { tutTot++; if (t.completato) tutCompl++; const st = t.ultimo_step || 0; perStep[st] = (perStep[st] ?? 0) + 1 }
+  const maxStep = Math.max(0, ...Object.keys(perStep).map(Number))
+  const stepFunnel: { step: number; arrivati: number }[] = []
+  for (let k = 1; k <= maxStep; k++) { let c = 0; for (const s in perStep) if (Number(s) >= k) c += perStep[s]; stepFunnel.push({ step: k, arrivati: c }) }
+
+  const { data: corti } = await supabase.from("link_corti").select("telegram_id, aperture").eq("servizio_id", servizioId)
+  let condivisioni = 0, apertureLink = 0; const perSharer: Record<number, number> = {}
+  for (const c of (corti ?? []) as any[]) { condivisioni++; apertureLink += (c.aperture || 0); if (c.telegram_id) perSharer[c.telegram_id] = (perSharer[c.telegram_id] ?? 0) + (c.aperture || 0) }
+  const topSharerIds = Object.keys(perSharer).map(Number).sort((a, b) => perSharer[b] - perSharer[a]).slice(0, 5)
+  const { data: sharerLeads } = topSharerIds.length ? await supabase.from("leads").select("telegram_id, nome, username").in("telegram_id", topSharerIds) : { data: [] as any[] }
+  const nomeMap: Record<number, string> = {}
+  for (const l of (sharerLeads ?? []) as any[]) nomeMap[l.telegram_id] = l.nome || (l.username ? "@" + l.username : "Utente " + l.telegram_id)
+  const topSharer = topSharerIds.map((id) => ({ nome: nomeMap[id] || ("Utente " + id), aperture: perSharer[id] }))
+
+  return json({
+    servizio: { id: svc.id, nome: svc.nome, stato: svc.stato, logo_url: (svc as any).logo_url, logo_pieno: (svc as any).logo_pieno },
+    voti: voti ?? 0, voti_base: (svc as any).voti_base ?? 0, salvataggi: salvataggi ?? 0,
+    waitlist: waitlist ?? 0, segnalazioni: segnalazioni ?? 0, affiliati: affiliati ?? 0,
+    aperture_persone: apSet.size, uscite_persone: uscSet.size,
+    attivazioni: attTot, attivazioni_7gg: att7,
+    conversione: apSet.size ? Math.round((attTot * 1000) / apSet.size) / 10 : 0,
+    serie,
+    tutorial: { totale: tutTot, completati: tutCompl, steps: stepFunnel },
+    viralita: { condivisioni, aperture_link: apertureLink, top_sharer: topSharer },
+  })
+}
+
 async function apiAdminSponsorboard() {
   const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, foto_url, referred_by, is_cliente")
   const perSponsor: Record<number, { invitati: number; attivati: number }> = {}
@@ -3568,6 +3625,7 @@ serve(async (req) => {
 
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
       if (sub === "admin/presenza" && req.method === "GET") return await apiAdminPresenza()
+      if (sub === "admin/servizio-stats" && req.method === "GET") return await apiAdminServizioStats(parseInt(url.searchParams.get("id") || "0"))
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()

@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=167"></script>
+<script src="/identikit.js?v=168"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -622,6 +622,17 @@
       <div id="suggerimentiList"></div>
     </div>
     </main>
+  </div>
+
+  <!-- Modal statistiche servizio -->
+  <div class="overlay" id="svcStatsOverlay">
+    <div class="modal" style="max-width:820px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px">
+        <h3 id="svcStatsTitle" style="margin:0">Statistiche</h3>
+        <button class="icon-btn" onclick="closeModal('svcStatsOverlay')" aria-label="Chiudi">✕</button>
+      </div>
+      <div id="svcStatsBody"></div>
+    </div>
   </div>
 
   <!-- Modal Macro Categoria -->
@@ -2457,6 +2468,7 @@
               <div class="item-meta">${cat ? esc(cat.nome) : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}${attesa ? ` · <b>${attesa}</b> in lista d'attesa` : ""}</div>
             </div>
             <div class="item-actions">
+              <button class="icon-btn" onclick="openServizioStats(${s.id})" title="Statistiche"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 20V10M10 20V4M16 20v-7M20 20H3"/></svg></button>
               <button class="icon-btn" onclick="openServizioForm(${esc(JSON.stringify(s))})">✎</button>
               <button class="icon-btn danger" onclick="deleteServizio(${s.id})">✕</button>
             </div>
@@ -2466,6 +2478,64 @@
       `;
       }).join("");
     }
+
+    // ===== Scheda-tool: tutte le statistiche del singolo servizio (stile Bonus Time) =====
+    function statChart(serie) {
+      const wrap = (inner) => `<div class="bt-card"><div class="bt-h"><b>Andamento 30 giorni</b><span class="bt-hint">al giorno</span></div><div class="bt-leg"><span><i style="background:#7C3AED"></i>Aperture</span><span><i style="background:#34D399"></i>Attivazioni</span></div>${inner}</div>`;
+      if (!serie || !serie.length) return wrap('<div class="bt-body" style="color:#64748B;font-size:12px">Ancora nessun dato.</div>');
+      const VW = 300, VH = 100, px = 3, pt = 8, pb = 6, n = serie.length;
+      let maxV = 1; serie.forEach((p) => { maxV = Math.max(maxV, p.aperture || 0, p.attiv || 0); });
+      const pts = (k) => serie.map((p, i) => {
+        const x = px + (i / Math.max(n - 1, 1)) * (VW - px * 2);
+        const y = (VH - pb) - ((p[k] || 0) / maxV) * (VH - pb - pt);
+        return x.toFixed(1) + "," + y.toFixed(1);
+      }).join(" ");
+      const lineA = pts("aperture"), lineB = pts("attiv"), area = `${px},${VH - pb} ${lineA} ${VW - px},${VH - pb}`;
+      const d0 = (serie[0].d || "").slice(5), d1 = (serie[n - 1].d || "").slice(5);
+      const svg = `<svg viewBox="0 0 ${VW} ${VH}" width="100%" height="130" preserveAspectRatio="none" style="display:block"><line x1="${px}" y1="${VH - pb}" x2="${VW - px}" y2="${VH - pb}" stroke="rgba(255,255,255,.08)" stroke-width="1" vector-effect="non-scaling-stroke"/><polyline points="${area}" fill="rgba(124,58,237,.10)" stroke="none"/><polyline points="${lineB}" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity=".85" vector-effect="non-scaling-stroke"/><polyline points="${lineA}" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+      const assi = `<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#64748B;margin-top:6px"><span>${d0}</span><span style="color:#475569">picco ${maxV}/g</span><span>${d1}</span></div>`;
+      return wrap(`<div class="bt-body" style="padding-top:0">${svg}${assi}</div>`);
+    }
+    function renderServizioStats(d) {
+      const s = d.servizio || {};
+      document.getElementById("svcStatsTitle").textContent = s.nome || "Statistiche";
+      const stat = (lab, val, color, sub) => `<div class="bt-kpi" style="padding:13px 14px;gap:7px"><div class="bt-lab">${lab}</div><div class="bt-val" style="font-size:20px;color:${color || "#F8FAFC"}">${val}</div>${sub ? `<div class="bt-sub">${sub}</div>` : ""}</div>`;
+      const grid = `<div class="bt-kpis">`
+        + stat("Aperture", d.aperture_persone || 0, "#A78BFA", "persone diverse")
+        + stat("Uscite → fornitore", d.uscite_persone || 0, "#F59E0B", d.aperture_persone ? Math.round((d.uscite_persone || 0) * 100 / d.aperture_persone) + "% di chi apre" : "")
+        + stat("Voti", (d.voti || 0) + (d.voti_base ? ` <span style="font-size:12px;color:#64748B">(+${d.voti_base})</span>` : ""), "#34D399")
+        + stat("Salvataggi", d.salvataggi || 0, "#34D399", "segnale privato")
+        + stat("Attivazioni", d.attivazioni || 0, "#34D399", "+" + (d.attivazioni_7gg || 0) + " in 7gg")
+        + stat("Conversione", (d.conversione || 0) + "%", "#A78BFA", "apre → attiva")
+        + stat("In waitlist", d.waitlist || 0, "#F59E0B", "domanda in attesa")
+        + stat("Segnalazioni", d.segnalazioni || 0, d.segnalazioni ? "#F87171" : "#34D399", d.affiliati ? d.affiliati + " affiliati" : "")
+        + `</div>`;
+      const tut = d.tutorial || { steps: [] };
+      const tmax = Math.max(1, tut.totale || 0, ...((tut.steps || []).map((x) => x.arrivati)));
+      const tutHtml = (tut.steps && tut.steps.length)
+        ? `<div class="bt-card"><div class="bt-h"><b>Funnel tutorial</b><span class="bt-hint">${tut.completati || 0}/${tut.totale || 0} completato</span></div><div class="bt-body bt-fun">`
+          + tut.steps.map((x) => { const pct = Math.round((x.arrivati * 100) / tmax); return `<div class="bt-fun-row"><div class="fl">Step ${x.step}</div><div class="bt-fun-bar"><i style="width:${Math.max(pct, 2)}%;background:#7C3AED"></i></div><div class="fv"><b>${x.arrivati}</b></div></div>`; }).join("")
+          + `</div></div>`
+        : "";
+      const v = d.viralita || { top_sharer: [] };
+      const sharerHtml = (v.top_sharer && v.top_sharer.length)
+        ? v.top_sharer.map((u, i) => `<div class="bt-rank"><span class="rk">${i + 1}</span><span class="nm">${esc(u.nome)}</span><span class="vv" style="color:#A78BFA">${u.aperture} aperture</span></div>`).join("")
+        : '<div class="bt-sub" style="padding:8px 6px">Ancora nessuna condivisione.</div>';
+      const viralHtml = `<div class="bt-card"><div class="bt-h"><b>Viralità</b><span class="bt-hint">quanto gira fuori dall'app</span></div><div class="bt-body">`
+        + `<div style="display:flex;gap:26px;margin-bottom:12px"><div><div style="font-size:22px;font-weight:700;color:#F8FAFC;line-height:1">${v.condivisioni || 0}</div><div class="bt-sub">condivisioni</div></div><div><div style="font-size:22px;font-weight:700;color:#34D399;line-height:1">${v.aperture_link || 0}</div><div class="bt-sub">aperture da link</div></div></div>`
+        + `<div class="bt-sub" style="margin-bottom:4px">Chi lo condivide di più</div>${sharerHtml}</div></div>`;
+      document.getElementById("svcStatsBody").innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${grid}${statChart(d.serie)}${tutHtml}${viralHtml}</div>`;
+    }
+    async function openServizioStats(id) {
+      document.getElementById("svcStatsTitle").textContent = "Caricamento…";
+      document.getElementById("svcStatsBody").innerHTML = '<div class="bt-sub" style="padding:22px 4px">Carico le statistiche…</div>';
+      openModal("svcStatsOverlay");
+      let d;
+      try { const r = await api("admin/servizio-stats?id=" + id); d = await r.json(); if (!r.ok || d.error) throw 0; }
+      catch (e) { document.getElementById("svcStatsBody").innerHTML = '<div class="bt-sub" style="padding:22px 4px;color:var(--coral)">Non riesco a caricare le statistiche.</div>'; return; }
+      renderServizioStats(d);
+    }
+    window.openServizioStats = openServizioStats;
 
     // Cambio stato a un click. Il passaggio ad "Attivo" fa partire messaggi Telegram a
     // tutta la lista d'attesa: e' irreversibile, quindi si chiede conferma dicendo a
