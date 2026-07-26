@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=163"></script>
+<script src="/identikit.js?v=164"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -194,7 +194,7 @@
   /* Tag contatti */
   .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
   .tag-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; white-space: nowrap; }
-  .tag-chip .tx { cursor: pointer; opacity: 0.7; font-weight: 800; }
+  .tag-chip .tx { cursor: pointer; opacity: 0.7; font-weight: 800; padding: 2px 5px; margin: -2px -3px -2px 0; }
   .tag-chip .tx:hover { opacity: 1; }
   .tag-filter { font-size: 11.5px; font-weight: 700; padding: 6px 10px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; white-space: nowrap; }
   .tag-filter.active { border-color: transparent; }
@@ -268,13 +268,39 @@
   @media (max-width: 560px) {
     .page { padding: 16px 12px 60px; }
     .row-flex { flex-wrap: wrap; }
+    .item-head { flex-wrap: wrap; }               /* le azioni ✓/✕ scendono su riga propria invece di schiacciare il testo */
     .item-actions { width: 100%; margin-top: 8px; justify-content: flex-end; }
     .item-actions select { flex: 1; }
+    .row2 { grid-template-columns: 1fr; }          /* coppie di campi impilate: niente input strizzati nel modale Servizio */
     .modal { max-height: 92vh; padding: 16px; border-radius: 4px; }
     .adtabs { gap: 6px; }
     .adtab { padding: 8px 12px; font-size: 12px; }
     h2 { font-size: 16px; }
-    .chip { padding: 6px 9px; font-size: 11.5px; }
+    .chip, .tag-filter { padding: 7px 10px; font-size: 11.5px; min-height: 34px; display: inline-flex; align-items: center; }
+    .imb-lbl { width: 104px; font-size: 12px; }    /* funnel: piu' spazio alla barra, che e' il punto */
+    .imb-n { width: 68px; }
+    .az-n { white-space: nowrap; }
+    .rt-wrap > .rt-kids { margin-left: 8px; padding-left: 8px; }   /* rete: meno rientro per livello */
+    #reteAlbero { overflow-x: auto; }              /* catene profonde scrollano nel box, non sulla pagina */
+  }
+
+  /* ===== Web / desktop: usare bene lo spazio, non stirare liste corte ===== */
+  @media (min-width: 900px) {
+    .dash-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 220px)); }   /* i KPI a numero singolo restano compatti */
+    .az-bar { width: auto; flex: 0 1 260px; }
+    #onboardingBox { max-width: 560px; }
+    #reteAlbero { max-width: 700px; }
+    #crmList, #crmSearch, #crmChips, #crmTagChips, #rubList { max-width: 780px; }
+    .adm-main .section textarea { max-width: 680px; }
+    /* Liste di card corte -> griglia multi-colonna invece di barre larghissime e vuote */
+    #topBusinessList, #sponsorboardList, #attList, #uscitiList,
+    #daValidareList, #affLinksList, #segnalazioniList,
+    #macroList, #categorieList {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; align-items: start;
+    }
+    #topBusinessList .item, #sponsorboardList .item, #attList .item, #uscitiList .item,
+    #daValidareList .item, #affLinksList .item, #segnalazioniList .item,
+    #macroList .item, #categorieList .item { margin-bottom: 0; }
   }
 </style>
 </head>
@@ -817,6 +843,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
     const tgA = window.Telegram && window.Telegram.WebApp;
+    const tg = tgA;   // alias: alcuni handler (inviaContatto/bcStart) usano `tg`, senza questo davano ReferenceError
     try { tgA && tgA.ready(); tgA && tgA.expand(); } catch (e) {}
     // Dentro Telegram i confirm() nativi sono disabilitati: usa il popup di Telegram, altrimenti quello del browser.
     function askConfirm(msg) {
@@ -973,8 +1000,10 @@
         box.id = "cadute";
         box.style.cssText = "background:var(--panel);border:1px solid #b45309;border-radius:4px;" +
           "padding:11px 13px;margin-bottom:14px;font-size:13px;line-height:1.5";
-        const app = document.getElementById("app");
-        app.insertBefore(box, app.firstChild);
+        // Va dentro .adm-main (il contenuto), non in #app: da desktop #app e' flex-row
+        // [sidebar | main] e il banner in #app diventerebbe una colonnina a sinistra.
+        const main = document.querySelector(".adm-main") || document.getElementById("app");
+        main.insertBefore(box, main.firstChild);
       }
       box.textContent = "Non ho caricato: " + cadute.join(", ") +
         ". Quello che vedi sotto e' incompleto: ricarica prima di decidere qualcosa.";
@@ -1479,7 +1508,7 @@
       let list = contatti;
       if (crmFiltro !== "tutti") list = list.filter((c) => c.stadio === crmFiltro);
       if (crmTagFiltro) list = list.filter((c) => (c.tags || []).includes(crmTagFiltro));
-      if (term) list = list.filter((c) => c.nome.toLowerCase().includes(term) || c.username.toLowerCase().includes(term));
+      if (term) list = list.filter((c) => (c.nome || "").toLowerCase().includes(term) || (c.username || "").toLowerCase().includes(term));
       if (!list.length) { el.innerHTML = '<p class="empty">Nessun contatto.</p>'; return; }
       el.innerHTML = list.slice(0, 50).map((c) => `
         <div class="item">
@@ -1909,7 +1938,9 @@
       const n = document.getElementById("bcCount");
       if (!t || !n) return;
       const count = rubTagFiltro ? rubContatti.filter((c) => (c.tags || []).includes(rubTagFiltro)).length : rubContatti.length;
-      t.textContent = rubTagFiltro ? ("tag «" + rubTagFiltro + "»") : "tutti";
+      // Il broadcast dal tuo account filtra SOLO per tag: se e' selezionata una cartella
+      // (senza tag) l'invio va comunque a TUTTI. Lo diciamo per non ingannare.
+      t.textContent = rubTagFiltro ? ("tag «" + rubTagFiltro + "»") : (rubCartellaFiltro ? "tutti (la cartella non filtra l'invio)" : "tutti");
       n.textContent = count;
     }
     async function bcStart() {
@@ -2173,7 +2204,7 @@
           <div class="item-head">
             <div class="item-title">${esc(m.nome)}${m.in_evidenza ? ' <span class="badge attivo">in vetrina</span>' : ""}</div>
             <div class="item-actions">
-              <button class="icon-btn" onclick='openMacroForm(${esc(JSON.stringify(m))})'>✎</button>
+              <button class="icon-btn" onclick="openMacroForm(${esc(JSON.stringify(m))})">✎</button>
               <button class="icon-btn danger" onclick="deleteMacro(${m.id})">✕</button>
             </div>
           </div>
@@ -2217,11 +2248,11 @@
         <div class="item">
           <div class="item-head">
             <div>
-              <div class="item-title">${c.nome}</div>
-              <div class="item-meta">${macro ? macro.nome : "Nessuna macro"} ${c.descrizione ? "· " + c.descrizione : ""}</div>
+              <div class="item-title">${esc(c.nome)}</div>
+              <div class="item-meta">${macro ? esc(macro.nome) : "Nessuna macro"} ${c.descrizione ? "· " + esc(c.descrizione) : ""}</div>
             </div>
             <div class="item-actions">
-              <button class="icon-btn" onclick='openCategoriaForm(${JSON.stringify(c)})'>✎</button>
+              <button class="icon-btn" onclick="openCategoriaForm(${esc(JSON.stringify(c))})">✎</button>
               <button class="icon-btn danger" onclick="deleteCategoria(${c.id})">✕</button>
             </div>
           </div>
@@ -2251,7 +2282,7 @@
         <div class="item">
           <div class="item-head">
             <div>
-              <div class="item-title">${s.nome} <span class="badge ${s.stato}">${SVC_STATO_LABEL[s.stato] || s.stato}</span></div>
+              <div class="item-title">${esc(s.nome)} <span class="badge ${s.stato}">${SVC_STATO_LABEL[s.stato] || s.stato}</span></div>
               <div class="item-meta">${cat ? esc(cat.nome) : "—"} ${s.split_percent ? `· Split ${s.split_percent}%` : ""}${attesa ? ` · <b>${attesa}</b> in lista d'attesa` : ""}</div>
             </div>
             <div class="item-actions">
