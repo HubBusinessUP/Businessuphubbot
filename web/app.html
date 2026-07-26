@@ -1526,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=156"></script>
+<script src="identikit.js?v=157"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2020,8 +2020,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function scPanoramica(d){
     var s = d.servizio || {};
     var t = s.panoramica || s.descrizione || '';
-    if (!t) return '<div class="vuoto" style="padding:18px 0">Panoramica ancora da scrivere.</div>';
-    return '<div class="spanor">' + esc(t) + '</div>'
+    // Video demo in cima alla Panoramica (se il servizio ne ha uno): un video mostra
+    // in 20 secondi quello che il testo spiega in 200 parole.
+    var video = s.media_url ? ('<div style="margin-bottom:16px">' + mediaHtml(s.media_url) + '</div>') : '';
+    if (!t && !video) return '<div class="vuoto" style="padding:18px 0">Panoramica ancora da scrivere.</div>';
+    return video
+      + (t ? '<div class="spanor">' + esc(t) + '</div>' : '')
       + (s.requisiti ? '<div class="seyeb" style="margin-top:20px">Cosa serve per iniziare</div>'
                      + '<div class="sreq">' + esc(s.requisiti) + '</div>' : '');
   }
