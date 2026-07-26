@@ -1209,6 +1209,16 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sw[disabled]{cursor:default}
 @media (prefers-reduced-motion:reduce){.sw,.sw::after{transition:none}}
 .vuoto{padding:30px 18px;text-align:center;color:var(--mut);font-size:14px;line-height:1.6}
+/* Empty-state di una categoria ancora senza prodotti: invito a proporne il primo.
+   Minimal, icona a linea, un solo bottone accento. Nessun riquadro tinto. */
+.hero-vuoto{display:flex;flex-direction:column;align-items:center;text-align:center;padding:46px 26px 42px}
+.hero-vuoto .hv-ico{width:60px;height:60px;border-radius:16px;background:var(--s1);display:flex;align-items:center;justify-content:center;color:var(--mut);margin-bottom:16px}
+.hero-vuoto .hv-ico svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hero-vuoto h3{margin:0;font-size:18.5px;font-weight:750;letter-spacing:-.01em;color:var(--tx)}
+.hero-vuoto p{margin:6px 0 0;font-size:14px;line-height:1.5;color:var(--dim);max-width:260px}
+.hero-vuoto .hv-cta{margin-top:22px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:730;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hero-vuoto .hv-cta:active{transform:scale(.97)}
+.hero-vuoto .hv-cta svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
 
 /* Utenti Cashly attivi: blocco a parte, viola. Gli altri dati li dichiara il fornitore,
@@ -1531,7 +1541,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=160"></script>
+<script src="identikit.js?v=161"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1706,6 +1716,45 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     box.innerHTML = '<div class="pp-et">In primo piano</div>' + rowHtml(s, 0);
   }
 
+  // Empty-state di una categoria/macro ancora senza prodotti: invece del muro
+  // "nessun business", un invito a proporre il primo (con la categoria gia' pronta).
+  function heroVuotoHtml(){
+    var catNome = '', prefill = '';
+    if (FILTRO_CAT) {
+      var c = CATS.filter(function(x){ return x.id === FILTRO_CAT; })[0];
+      catNome = c ? c.nome : ''; prefill = catNome;
+    } else if (FILTRO_MACRO) {
+      var m = MACRO.filter(function(x){ return x.id === FILTRO_MACRO; })[0];
+      catNome = m ? m.nome : '';
+      // La macro non e' una categoria: pre-compilo solo se ha un'unica figlia (e' lei).
+      var figlie = CATS.filter(function(x){ return x.macro_categoria_id === FILTRO_MACRO; });
+      prefill = (figlie.length === 1) ? figlie[0].nome : '';
+    }
+    var p = catNome
+      ? 'In «' + esc(catNome) + '» non c\'è ancora niente. Sii il primo a proporne uno.'
+      : 'Non c\'è ancora niente qui. Sii il primo a proporne uno.';
+    return '<div class="hero-vuoto">'
+      + '<div class="hv-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div>'
+      + '<h3>Ancora nessun prodotto</h3>'
+      + '<p>' + p + '</p>'
+      + '<button type="button" class="hv-cta" data-proponi="' + esc(prefill) + '">'
+      +   '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Proponi un business</button>'
+      + '</div>';
+  }
+  // Il bottone dell'empty-state riusa il foglio "Proponi": preme il FAB (che lo apre)
+  // e pre-compila la categoria corrente. Delegato, perche' l'hero si ridisegna spesso.
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-proponi]');
+    if (!b) return;
+    var cat = b.getAttribute('data-proponi') || '';
+    var fab = document.getElementById('proponiFab');
+    if (fab) fab.click();
+    if (cat) {
+      var pc = document.getElementById('prCat');
+      if (pc) { pc.value = cat; pc.dispatchEvent(new Event('input', { bubbles: true })); }
+    }
+  });
+
   var ULTIMA_Q = '';
   function renderFeeds(){
     var host = document.getElementById('listaReale');
@@ -1716,6 +1765,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var animare = (FILTRO_Q === ULTIMA_Q);
     ULTIMA_Q = FILTRO_Q;
     if (!lista.length) {
+      renderPrimoPiano();   // con un filtro attivo svuota la vetrina: niente card sopra il vuoto
+      var qAtt = !!(FILTRO_Q && FILTRO_Q.trim());
+      // Categoria o macro selezionata e vuota (senza ricerca in corso): invito a
+      // proporre il primo prodotto. Con una ricerca attiva resta il "nessun risultato".
+      if ((FILTRO_CAT || FILTRO_MACRO) && !qAtt && !COLLEZIONE) {
+        host.innerHTML = heroVuotoHtml();
+        return;
+      }
       host.innerHTML = ALLBIZ.length
         ? '<div class="vuoto">Nessun business con questi filtri.</div>'
         : '<div class="vuoto">Lista svuotata.<br>In attesa del primo prodotto reale.</div>';
