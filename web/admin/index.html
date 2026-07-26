@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=165"></script>
+<script src="/identikit.js?v=166"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1714,7 +1714,7 @@
         </div>
         <div class="detail-block">
           <div class="db-label">Attività nell'app (${(d.attivita_riassunto && d.attivita_riassunto.totale) || 0})</div>
-          ${d.attivita_riassunto ? `<div class="item-meta" style="margin-bottom:10px">${d.attivita_riassunto.schede_aperte} schede aperte · ${d.attivita_riassunto.uscite_fornitore} uscite verso fornitore · ${d.attivita_riassunto.richieste_info} richieste info</div>` : ""}
+          ${d.attivita_riassunto ? `<div class="item-meta" style="margin-bottom:10px">${d.attivita_riassunto.sessioni || 0} sessioni · ${d.attivita_riassunto.schede_aperte} schede aperte · ${d.attivita_riassunto.uscite_fornitore} uscite verso fornitore · ${d.attivita_riassunto.richieste_info} richieste info</div>` : ""}
           ${d.timeline && d.timeline.length
             ? `<div class="tl">${d.timeline.map((t) => `<div class="tl-row"><span class="tl-when">${fmtQuando(t.quando)}</span><span class="tl-act">${esc(t.azione)}</span>${t.target ? `<span class="tl-tgt">${esc(t.target)}</span>` : ""}</div>`).join("")}</div>`
             : '<span style="color:var(--text-dim)">Nessuna attività registrata</span>'}

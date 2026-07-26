@@ -3041,6 +3041,7 @@ async function apiAdminCrmDetail(telegramId: number) {
     richiedi_info: "Ha chiesto info", link_fornitore: "E' uscito verso il fornitore", cta_principale: "Ha premuto la CTA",
     cta_secondaria: "Ha premuto la CTA secondaria", voto: "Ha votato", salva: "Ha salvato nei preferiti",
     ricerca: "Ha aperto la ricerca", torna_directory: "E' tornato alla directory", apri_tutorial: "Ha aperto il tutorial",
+    app_entrata: "È entrato nell'app", app_uscita: "È uscito dall'app",
   }
   // Solo eventi-utente comprensibili. scheda_aperta lo copre gia' apri_scheda (piu' fine),
   // quindi non lo si ripete; il rumore interno (accessi admin ecc.) resta fuori.
@@ -3062,6 +3063,7 @@ async function apiAdminCrmDetail(telegramId: number) {
   const cl = (clicks ?? []) as any[]
   const attivita_riassunto = {
     totale: timeline.length,
+    sessioni: cl.filter((c) => c.azione === "app_entrata").length,
     schede_aperte: cl.filter((c) => c.azione === "apri_scheda").length,
     uscite_fornitore: cl.filter((c) => c.azione === "link_fornitore").length,
     richieste_info: cl.filter((c) => c.azione === "richiedi_info").length,

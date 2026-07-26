@@ -1541,7 +1541,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 </style>
 
 <style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=165"></script>
+<script src="identikit.js?v=166"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2601,6 +2601,23 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       keepalive: true,   // la richiesta deve sopravvivere all'uscita dall'app
     }).catch(function(){});
   }
+
+  // ===== Presenza: entrata / uscita dall'app =====
+  // "entra" = app in primo piano (apertura o ritorno), "esce" = va in background o si chiude.
+  // traccia() usa keepalive, quindi la segnalazione di uscita sopravvive alla chiusura della webview.
+  (function(){
+    var inApp = document.visibilityState !== 'hidden';
+    if (inApp) traccia('app_entrata');            // apertura
+    function segna(dentro){
+      if (dentro === inApp) return;               // solo sui cambi reali (niente doppioni)
+      inApp = dentro;
+      traccia(dentro ? 'app_entrata' : 'app_uscita');
+    }
+    document.addEventListener('visibilitychange', function(){
+      segna(document.visibilityState === 'visible');
+    });
+    window.addEventListener('pagehide', function(){ segna(false); });   // chiusura definitiva
+  })();
 
   function apriScheda(id){
     if (!id) return;
