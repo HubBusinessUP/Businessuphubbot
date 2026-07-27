@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=170"></script>
+<script src="/identikit.js?v=171"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -1733,6 +1733,17 @@
       document.getElementById("crmModalTitle").textContent = nome;
       crmDetailId = telegramId;
       crmDetailTags = Array.isArray(d.lead.tags) ? d.lead.tags.slice() : [];
+      // Scheda KPI personale: gli accessi/attività dell'utente in cima, stile Bonus Time.
+      const ar = d.attivita_riassunto || {};
+      const pk = (lab, val, color, sub) => `<div class="bt-kpi" style="padding:13px 14px;gap:6px"><div class="bt-lab">${lab}</div><div class="bt-val" style="font-size:20px;color:${color}">${val}</div>${sub ? `<div class="bt-sub">${sub}</div>` : ""}</div>`;
+      const kpiPersonali = `<div class="bt-kpis" style="margin:2px 0 16px">`
+        + pk("Sessioni", ar.sessioni || 0, "#34D399", "accessi all'app")
+        + pk("Ultimo accesso", ar.ultima_entrata ? tempoFa(ar.ultima_entrata) : "—", "#A78BFA", "")
+        + pk("Schede aperte", ar.schede_aperte || 0, "#A78BFA", "")
+        + pk("Uscite → fornitore", ar.uscite_fornitore || 0, "#F59E0B", "")
+        + pk("Richieste info", ar.richieste_info || 0, "#F59E0B", "")
+        + pk("Business attivati", (d.business_attivati || []).length, "#34D399", "")
+        + `</div>`;
       document.getElementById("crmDetailBody").innerHTML = `
         <div class="detail-block">
           <div class="db-label">Profilo</div>
@@ -1740,6 +1751,7 @@
           ${d.lead.username ? ` <a href="https://t.me/${esc(d.lead.username)}" target="_blank" style="color:var(--blue);font-size:12px">@${esc(d.lead.username)}</a>` : ""}
           <div class="item-meta" style="margin-top:6px">Iscritto il ${new Date(d.lead.created_at).toLocaleDateString("it-IT")}${d.sponsor ? " · Sponsor: " + esc(d.sponsor.nome) : " · Diretto (nessuno sponsor)"} · ${d.invitati_count} invitati</div>
         </div>
+        ${kpiPersonali}
         <div class="detail-block" id="crmTagBlock"></div>
         <datalist id="tagSuggest">${allTags.map((t) => `<option value="${esc(t)}"></option>`).join("")}</datalist>
         <div class="detail-block">
@@ -1759,8 +1771,7 @@
           ${d.followups.length ? d.followups.map((f) => `<div>Day ${f.giorno} — ${new Date(f.inviato_at).toLocaleDateString("it-IT")}</div>`).join("") : '<span style="color:var(--text-dim)">Nessuno</span>'}
         </div>
         <div class="detail-block">
-          <div class="db-label">Attività nell'app (${(d.attivita_riassunto && d.attivita_riassunto.totale) || 0})</div>
-          ${d.attivita_riassunto ? `<div class="item-meta" style="margin-bottom:10px">${d.attivita_riassunto.sessioni || 0} sessioni · ${d.attivita_riassunto.schede_aperte} schede aperte · ${d.attivita_riassunto.uscite_fornitore} uscite verso fornitore · ${d.attivita_riassunto.richieste_info} richieste info</div>` : ""}
+          <div class="db-label">Cronologia — ogni entrata e uscita (${(d.attivita_riassunto && d.attivita_riassunto.totale) || 0})</div>
           ${d.timeline && d.timeline.length
             ? `<div class="tl">${d.timeline.map((t) => `<div class="tl-row"><span class="tl-when">${fmtQuando(t.quando)}</span><span class="tl-act">${esc(t.azione)}</span>${t.target ? `<span class="tl-tgt">${esc(t.target)}</span>` : ""}</div>`).join("")}</div>`
             : '<span style="color:var(--text-dim)">Nessuna attività registrata</span>'}

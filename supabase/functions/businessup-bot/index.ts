@@ -3166,6 +3166,7 @@ async function apiAdminCrmDetail(telegramId: number) {
     schede_aperte: cl.filter((c) => c.azione === "apri_scheda").length,
     uscite_fornitore: cl.filter((c) => c.azione === "link_fornitore").length,
     richieste_info: cl.filter((c) => c.azione === "richiedi_info").length,
+    ultima_entrata: (cl.find((c) => c.azione === "app_entrata") as any)?.created_at || null,
     ultima: timeline[0]?.quando || null,
   }
 
