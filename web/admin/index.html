@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=168"></script>
+<script src="/identikit.js?v=169"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -938,7 +938,7 @@
       }
       localStorage.setItem("bu_admin_key", ADMIN_KEY);
       document.getElementById("gate").style.display = "none";
-      document.getElementById("app").style.display = "block";
+      document.getElementById("app").style.display = "";   // vuoto = lascia decidere al CSS (flex desktop / block mobile)
       initAdminTabs();
       // Senza catch, un errore qui dentro moriva in console e l'admin restava vuoto
       // con l'aria di non avere dati, invece che di non essere riuscito a prenderli.
@@ -3158,7 +3158,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
           if (r.status === 401 || r.status === 403) { chiaveScaduta(); return; }
           if (!r.ok) { mostraGate("Il server non risponde. Riprova fra poco."); return; }
           document.getElementById("gate").style.display = "none";
-          document.getElementById("app").style.display = "block";
+          document.getElementById("app").style.display = "";   // vuoto = lascia decidere al CSS (flex desktop / block mobile)
           initAdminTabs();
           loadAll().catch((e) => avvisaCadute(["tutto (" + (e && e.message || "errore") + ")"]));
         })
