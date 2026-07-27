@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=169"></script>
+<script src="/identikit.js?v=170"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -48,44 +48,38 @@
   .stat-box .value { font-size: 22px; font-weight: 700; }
 
   .section { margin-bottom: 28px; }
-  /* ===== Guscio responsive: sidebar da web, nav compatta da mobile ===== */
-  .adm-side { position: sticky; top: 0; z-index: 20; background: var(--ink); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 0 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
-  .adm-brand { order: 0; flex: 1 1 auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  /* ===== Guscio: barra orizzontale in alto con tab sottolineate (come il mockup), uguale web e mobile ===== */
+  .page#app { max-width: 1180px; }
+  .adm-side { position: sticky; top: 0; z-index: 20; background: rgba(13,14,21,.94); backdrop-filter: blur(8px); display: grid; grid-template-columns: 1fr auto; grid-template-areas: "brand foot" "nav nav"; align-items: center; column-gap: 12px; row-gap: 6px; padding: 12px 0 0; margin: -8px 0 18px; border-bottom: 1px solid var(--border); }
+  .adm-brand { grid-area: brand; display: flex; align-items: center; gap: 10px; min-width: 0; }
   .adm-logo { width: 34px; height: 34px; flex: none; border-radius: 9px; background: var(--lime); color: #04210f; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; }
   .adm-brandtx { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
   .adm-brandtx b { font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
   .adm-brandtx small { font-size: 11.5px; font-weight: 600; color: var(--text-dim); }
-  .adm-side-foot { order: 1; flex: 0 0 auto; display: flex; gap: 8px; }
-  .adm-sidebtn { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); text-decoration: none; font-family: inherit; font-size: 13px; font-weight: 700; padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+  .adm-side-foot { grid-area: foot; display: flex; gap: 8px; }
+  .adm-sidebtn { display: inline-flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); text-decoration: none; font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
   .adm-sidebtn:hover { color: var(--text); }
   .adm-sidebtn svg { width: 16px; height: 16px; flex: none; }
   .adm-sidebtn .lbl { display: none; }
 
-  .adtabs { order: 2; flex: 1 1 100%; display: flex; gap: 8px; overflow-x: auto; min-width: 0; padding: 2px 0; }
-  .adtab { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); font-family: inherit; font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  /* Nav = tab sottolineate orizzontali */
+  .adtabs { grid-area: nav; display: flex; gap: 2px; overflow-x: auto; min-width: 0; }
+  .adtab { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-dim); font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 15px 12px; cursor: pointer; white-space: nowrap; }
+  .adtab:hover { color: var(--text); }
   .adtab .adtab-ic { width: 17px; height: 17px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
   .adtab .adtab-cnt { font-size: 11px; font-weight: 800; background: var(--coral); color: #fff; border-radius: 20px; padding: 1px 7px; min-width: 19px; text-align: center; }
-  .adtab.active { background: var(--blue); color: #fff; border-color: transparent; }
+  .adtab.active { color: var(--text); border-bottom-color: var(--blue); }
 
-  .adm-topbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+  .adm-topbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
   .adm-topttl .title { margin-bottom: 2px; }
   .adm-topttl .subtitle { margin-bottom: 0; }
   .adm-topbar .kpi-grid { width: 100%; margin-bottom: 0; }
 
-  @media (min-width: 900px) {
-    .page#app { max-width: 1280px; display: flex; align-items: flex-start; gap: 30px; padding: 26px 32px 70px; }
-    .adm-side { display: flex; flex-direction: column; align-items: stretch; width: 240px; flex: none; position: sticky; top: 26px; gap: 18px; padding: 0; margin: 0; border-bottom: none; background: none; min-height: calc(100vh - 60px); }
-    .adm-brand { padding: 2px 4px; }
-    .adtabs { order: 0; flex: 0 0 auto; flex-direction: column; gap: 5px; overflow: visible; padding: 0; }
-    .adtab { width: 100%; padding: 11px 14px; font-size: 14px; border-radius: 9px; }
-    .adtab .adtab-cnt { margin-left: auto; }
-    .adm-side-foot { order: 0; margin-top: auto; flex-direction: column; }
-    .adm-sidebtn { width: 100%; padding: 10px 13px; }
+  @media (min-width: 720px) {
     .adm-sidebtn .lbl { display: inline; }
-    .adm-main { flex: 1; min-width: 0; }
     .adm-topbar { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
     .adm-topttl { flex: 0 1 auto; }
-    .adm-topbar .kpi-grid { flex: 1 1 auto; width: auto; max-width: 680px; }
+    .adm-topbar .kpi-grid { flex: 1 1 auto; width: auto; max-width: 720px; }
   }
   .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .section-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); font-weight: 700; }
