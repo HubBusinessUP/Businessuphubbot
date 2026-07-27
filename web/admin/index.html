@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=171"></script>
+<script src="/identikit.js?v=172"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -174,6 +174,18 @@
   .chip { font-size: 12px; font-weight: 700; padding: 7px 11px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
   .chip.active { background: var(--blue-dim); color: var(--blue); border-color: transparent; }
   .search-inline { width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 4px; font-size: 13.5px; margin-bottom: 10px; font-family: inherit; }
+
+  /* Utenti: master-detail (lista a sinistra, scheda a destra su web) */
+  .crm-split { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+  .crm-empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 44px 18px; border: 1px dashed var(--border); border-radius: 12px; }
+  .crm-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .crm-detail-head b { font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  #crmList .item.crm-sel { border-color: var(--blue); background: var(--blue-dim); }
+  @media (min-width: 900px) {
+    .crm-split { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 18px; }
+    .crm-left #crmList, .crm-left #crmSearch, .crm-left #crmChips, .crm-left #crmTagChips { max-width: none; }
+    .crm-right { position: sticky; top: 92px; max-height: calc(100vh - 110px); overflow-y: auto; }
+  }
 
   .detail-block { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; }
   .detail-block .db-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; margin-bottom: 4px; }
@@ -421,10 +433,15 @@
 
     <div class="section">
       <div class="section-head"><h2>CRM contatti</h2></div>
-      <div class="chip-row" id="crmChips"></div>
-      <div class="chip-row" id="crmTagChips" style="margin-top:-2px"></div>
-      <input class="search-inline" id="crmSearch" placeholder="Cerca per nome o username..." oninput="renderCrm()" />
-      <div id="crmList"></div>
+      <div class="crm-split">
+        <div class="crm-left">
+          <div class="chip-row" id="crmChips"></div>
+          <div class="chip-row" id="crmTagChips" style="margin-top:-2px"></div>
+          <input class="search-inline" id="crmSearch" placeholder="Cerca per nome o username..." oninput="renderCrm()" />
+          <div id="crmList"></div>
+        </div>
+        <div class="crm-right" id="crmDetailPanel"><div class="crm-empty">Seleziona un contatto per aprire la scheda.</div></div>
+      </div>
     </div>
 
     <div class="section">
@@ -1687,7 +1704,7 @@
       if (term) list = list.filter((c) => (c.nome || "").toLowerCase().includes(term) || (c.username || "").toLowerCase().includes(term));
       if (!list.length) { el.innerHTML = '<p class="empty">Nessun contatto.</p>'; return; }
       el.innerHTML = list.slice(0, 50).map((c) => `
-        <div class="item">
+        <div class="item${c.telegram_id === crmDetailId ? " crm-sel" : ""}" data-tid="${c.telegram_id}">
           <div class="row-flex">
             <div class="avatar-sm">${c.foto_url ? `<img src="${esc(c.foto_url)}" alt="" />` : esc((c.nome || "?")[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0;cursor:pointer" onclick="openCrmDetail(${c.telegram_id})">
@@ -1724,11 +1741,22 @@
     }
 
     async function openCrmDetail(telegramId) {
-      document.getElementById("crmModalTitle").textContent = "Caricamento...";
-      document.getElementById("crmDetailBody").innerHTML = "";
-      openModal("crmOverlay");
+      // Su web (>=900px) la scheda si apre nel pannello a destra (2 colonne); su mobile nel modale.
+      const panel = document.getElementById("crmDetailPanel");
+      const suPannello = window.matchMedia("(min-width: 900px)").matches && !!panel;
+      if (suPannello) {
+        panel.innerHTML = '<div class="crm-empty">Caricamento…</div>';
+      } else {
+        document.getElementById("crmModalTitle").textContent = "Caricamento...";
+        document.getElementById("crmDetailBody").innerHTML = "";
+        openModal("crmOverlay");
+      }
       const d = await (await api(`admin/crm-detail?id=${telegramId}`)).json();
-      if (d.error) { document.getElementById("crmModalTitle").textContent = "Errore"; return; }
+      if (d.error) {
+        if (suPannello) panel.innerHTML = '<div class="crm-empty" style="color:var(--coral)">Errore nel caricare la scheda.</div>';
+        else document.getElementById("crmModalTitle").textContent = "Errore";
+        return;
+      }
       const nome = [d.lead.nome, d.lead.cognome].filter(Boolean).join(" ") || d.lead.username || `ID ${telegramId}`;
       document.getElementById("crmModalTitle").textContent = nome;
       crmDetailId = telegramId;
@@ -1744,7 +1772,7 @@
         + pk("Richieste info", ar.richieste_info || 0, "#F59E0B", "")
         + pk("Business attivati", (d.business_attivati || []).length, "#34D399", "")
         + `</div>`;
-      document.getElementById("crmDetailBody").innerHTML = `
+      const detailHtml = `
         <div class="detail-block">
           <div class="db-label">Profilo</div>
           <span class="badge ${d.stadio}">${STADIO_LABEL[d.stadio] || d.stadio}</span>
@@ -1778,8 +1806,25 @@
         </div>
         <button class="btn btn-primary btn-small" onclick="closeModal('crmOverlay');openMsgModal(${telegramId}, ${jsArg(nome)})">✉ Invia messaggio</button>
       `;
+      if (suPannello) {
+        panel.innerHTML = `<div class="crm-detail-head"><b>${esc(nome)}</b><button class="icon-btn" onclick="chiudiCrmDetail()" title="Chiudi">✕</button></div>` + detailHtml;
+        markCrmSelezionato(telegramId);
+      } else {
+        document.getElementById("crmModalTitle").textContent = nome;
+        document.getElementById("crmDetailBody").innerHTML = detailHtml;
+      }
       renderDetailTags();
     }
+    function chiudiCrmDetail() {
+      const p = document.getElementById("crmDetailPanel");
+      if (p) p.innerHTML = '<div class="crm-empty">Seleziona un contatto per aprire la scheda.</div>';
+      crmDetailId = null;
+      markCrmSelezionato(null);
+    }
+    function markCrmSelezionato(id) {
+      document.querySelectorAll("#crmList .item").forEach((el) => el.classList.toggle("crm-sel", String(el.dataset.tid) === String(id)));
+    }
+    window.chiudiCrmDetail = chiudiCrmDetail;
 
     // ---- Tag: editor nella scheda contatto ----
     let crmDetailId = null;
