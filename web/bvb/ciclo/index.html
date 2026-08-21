@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cashly · Ciclo</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05070A;--line:#1C222C;--txt:#ECEFF3;--mut:#78818F;--gold:#C9A24A;--gold2:#F2D89B;--grn:#4ADE95}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:16px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.wrap{width:100%;max-width:420px}
+.card{position:relative;background:radial-gradient(560px 260px at 50% -60px,rgba(201,162,74,.16),transparent 68%),linear-gradient(170deg,#0C1016,#080B0F);border:1px solid var(--line);border-radius:20px;padding:34px 24px 28px;overflow:hidden;text-align:center}
+.card:before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 1px,transparent 1px 8px);pointer-events:none}
+.brand{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.rule{height:1px;margin:16px 0 30px;background:linear-gradient(90deg,transparent,rgba(201,162,74,.5) 20%,rgba(242,216,155,.7) 50%,rgba(201,162,74,.5) 80%,transparent)}
+.k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.8px;color:var(--mut);text-transform:uppercase}
+.amt{font-family:'Space Grotesk',sans-serif;font-size:66px;font-weight:700;color:var(--gold2);letter-spacing:-2.5px;line-height:1;margin:14px 0 12px;text-shadow:0 0 36px rgba(201,162,74,.3)}
+.roi{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--grn);border:1px solid rgba(74,222,149,.3);background:rgba(74,222,149,.08);padding:5px 12px;border-radius:20px}
+.who{margin-top:28px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut);letter-spacing:1px}
+.who b{color:var(--txt);font-weight:500}
+.btns{display:flex;gap:9px;margin-top:16px}
+button{flex:1;background:var(--gold);color:#080B0F;border:0;border-radius:11px;padding:14px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+</style></head><body>
+<div class="wrap">
+<div class="card">
+  <div class="brand">Cashly · Broker vs Broker</div>
+  <div class="rule"></div>
+  <div class="k">Guadagno ciclo <span id="ncic"></span></div>
+  <div class="amt" id="big">—</div>
+  <div class="roi" id="roi">—</div>
+  <div class="who"><b id="who">—</b> · <span id="dt">—</span></div>
+</div>
+<div class="btns">
+  <button onclick="condividi()">Condividi</button>
+  <button class="ghost" onclick="alert('Fai uno screenshot per salvare.')">Salva</button>
+</div>
+</div>
+<script>
+const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
+const P=new URLSearchParams(location.search);
+const API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/cicli';
+const E=n=>'€ '+Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const E0=n=>'€ '+Math.round(n).toLocaleString('it-IT');
+const PC=n=>(n>=0?'+':'')+n.toFixed(2).replace('.',',')+'%';
+let TESTO='';
+async function carica(){
+ const t=P.get('t')||''; if(!t) return;
+ const r=await fetch(API+'?t='+encodeURIComponent(t)); const d=await r.json();
+ const c=(d.cicli||[]); if(!c.length) return;
+ const u=c[c.length-1], netto=u.lordo-u.fee, roi=u.capitale?netto/u.capitale*100:0;
+ let cum=0; c.forEach(x=>cum+=x.lordo-x.fee);
+ ncic.textContent='#'+u.n;
+ big.textContent=E(netto);
+ roi_el().textContent=PC(roi);
+ who.textContent=d.cliente?.nome||'';
+ dt.textContent=new Date(u.data).toLocaleDateString('it-IT');
+ TESTO='Ho guadagnato '+E(netto)+' con la strategia di hedging Broker vs Broker.\n\nRendimento '+PC(roi)+'\nTotale ad oggi '+E0(cum);
+}
+function roi_el(){return document.getElementById('roi');}
+function condividi(){const u='https://t.me/share/url?url='+encodeURIComponent(TESTO);
+ if(tg) tg.openTelegramLink(u); else window.open(u,'_blank');}
+carica();
+</script></body></html>
