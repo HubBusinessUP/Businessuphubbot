@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Dashboard Investimenti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0C10;
+    --panel:#12151B;
+    --panel-2:#161A21;
+    --border:#232833;
+    --text:#EDEFF2;
+    --muted:#8B93A1;
+    --gold:#D4A24C;
+    --gold-bright:#F0C674;
+    --green:#4ADE95;
+    --red:#F2645A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:28px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  /* header */
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:2.5px;
+    color:var(--gold);
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .goldline{
+    height:2px;margin:10px 0 22px 0;border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--gold) 15%,var(--gold-bright) 50%,var(--gold) 85%,transparent);
+    background-size:200% 100%;
+    animation:sheen 4s linear infinite;
+  }
+  @keyframes sheen{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+  .header-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;margin-bottom:24px;}
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;font-weight:600;color:var(--muted);
+    margin:2px 0 0 0;letter-spacing:.3px;
+  }
+  .hero-num{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:56px;font-weight:700;line-height:1;
+    display:flex;align-items:baseline;gap:14px;
+  }
+  .hero-num .badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;font-weight:700;
+    background:rgba(74,222,149,.12);color:var(--green);
+    padding:6px 12px;border-radius:6px;
+  }
+  .hero-num .badge.neg{background:rgba(242,100,90,.12);color:var(--red);}
+  .meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;
+  }
+  .card .label{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .card .val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;margin-top:6px;}
+
+  /* panel */
+  .panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:20px;margin-bottom:22px;
+  }
+  .panel h2{
+    font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;
+    color:var(--muted);margin:0 0 14px 0;letter-spacing:.5px;text-transform:uppercase;
+  }
+  canvas{max-height:280px;}
+  .chart-box{position:relative;width:100%;height:280px;}
+  .chart-box.short{height:250px;}
+  .chart-svg{width:100%;height:100%;overflow:visible;}
+  .grid-line{stroke:#1a1e26;stroke-width:1;}
+  .axis-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;fill:#8B93A1;}
+  .bar-el{fill:#C99A2E;}
+  .bar-el.forecast-bar{fill:#4B5563;}
+  .bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;fill:#0A0C10;}
+  .bar-label.outside{fill:#EDEFF2;}
+  .line-el{fill:none;stroke:#FFC700;stroke-width:2.5;}
+  .area-el{fill:rgba(255,199,0,0.10);stroke:none;}
+  .point-el{fill:#FFC700;}
+  .line-forecast{fill:none;stroke:#94A3B8;stroke-width:2.5;stroke-dasharray:6,4;}
+  .point-forecast{fill:#94A3B8;}
+  .line-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:#EDEFF2;}
+  .line-label.muted{fill:#8B93A1;}
+  .forecast-note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .chart-legend{display:flex;gap:18px;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+  .chart-legend span{cursor:pointer;user-select:none;transition:opacity .15s;padding:2px 4px;border-radius:4px;}
+  .chart-legend span:hover{background:rgba(255,255,255,0.06);}
+  .chart-legend span.legend-dim{opacity:0.28;}
+  .registro-toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;}
+  .registro-toolbar select{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 10px;border-radius:7px;
+  }
+  .chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  .swatch.bar{background:#C99A2E;}
+  .swatch.line{background:#FFC700;}
+  .swatch.forecast{background:#4B5563;}
+  .swatch.line-forecast-sw{background:#94A3B8;}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  thead th{
+    text-align:right;color:var(--muted);font-weight:500;font-size:10.5px;
+    letter-spacing:1px;text-transform:uppercase;padding:0 8px 10px 8px;border-bottom:1px solid var(--border);
+  }
+  thead th:first-child, thead th:nth-child(3){text-align:left;}
+  tbody td{padding:9px 8px;border-bottom:1px solid #1a1e26;text-align:right;}
+  tbody td:first-child, tbody td:nth-child(3){text-align:left;}
+  tbody tr:hover{background:rgba(212,162,76,.04);}
+  input.cell{
+    width:100%;background:transparent;border:none;color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:right;padding:2px;border-radius:4px;
+  }
+  input.cell:focus{outline:1px solid var(--gold);background:var(--panel-2);}
+  td:first-child input, td:nth-child(3) input{text-align:left;}
+  .gainpos{color:var(--green);}
+  .gainneg{color:var(--red);}
+  .del-btn{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:2px 6px;border-radius:5px;
+  }
+  .del-btn:hover{color:var(--red);background:rgba(242,100,90,.1);}
+
+  .add-row{
+    display:flex;justify-content:flex-end;gap:10px;margin-top:14px;
+  }
+  button.primary{
+    background:var(--gold);color:#12100a;border:none;border-radius:7px;
+    padding:9px 16px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;
+    cursor:pointer;
+  }
+  button.primary:hover{background:var(--gold-bright);}
+  .save-note{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right;margin-top:8px;min-height:14px;}
+  .save-all-bar{position:sticky;bottom:0;display:flex;justify-content:center;padding:14px 0;margin-top:24px;background:linear-gradient(to top, var(--bg) 60%, transparent);}
+  .save-all-bar button{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;padding:12px 28px;border-radius:8px;border:none;cursor:pointer;background:var(--gold);color:#12151B;box-shadow:0 4px 14px rgba(0,0,0,.25);}
+  .save-all-bar button:active{transform:translateY(1px);}
+
+  /* tab bar business */
+  .tabbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;align-items:center;}
+  .tabbtn{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
+    background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    padding:8px 14px;border-radius:8px;cursor:pointer;
+  }
+  .tabbtn:hover{color:var(--text);border-color:#333a46;}
+  .tabbtn.active{background:var(--gold);color:#12100a;border-color:var(--gold);}
+  .tabbtn.addbtn{border-style:dashed;}
+  .tab-item{display:flex;align-items:center;gap:1px;background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .tab-item .tabbtn{border:none;border-radius:0;background:transparent;}
+  .tab-item.active-item{border-color:var(--gold);}
+  .tab-icon-btn[disabled]{cursor:default;}
+  .tab-item .tabbtn.active{border-radius:0;background:var(--gold);color:#12100a;}
+  .tab-icon-btn{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;
+    padding:0 8px;align-self:stretch;
+  }
+  .tab-icon-btn:hover{color:var(--text);background:rgba(255,255,255,0.06);}
+  .tab-icon-btn.danger:hover{color:var(--red);background:rgba(242,100,90,0.1);}
+  .tab-icon-btn.armed{color:var(--red);background:rgba(242,100,90,0.15);}
+  .tab-rename-input{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
+    background:var(--panel-2);border:1px solid var(--gold);color:var(--text);
+    padding:8px 10px;border-radius:0;width:140px;
+  }
+  .hidden{display:none !important;}
+  .newbiz-form{display:flex;gap:8px;align-items:center;margin-bottom:22px;}
+  .newbiz-form input, .newbiz-form select{
+    background:var(--panel);border:1px solid var(--border);color:var(--text);
+    font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;border-radius:8px;
+  }
+  .biz-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;margin-bottom:22px;}
+  .biz-header h1{margin:2px 0 0 0;font-size:15px;font-weight:600;color:var(--muted);font-family:'Space Grotesk',sans-serif;letter-spacing:.3px;}
+  .capital-input-row{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
+  .capital-input-row input{
+    width:110px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;padding:5px 8px;border-radius:6px;text-align:right;
+  }
+  .swatch.total{background:var(--text);}
+
+  /* ---------- Telegram Mini App / mobile ---------- */
+  html,body{-webkit-text-size-adjust:100%;}
+  body.tg{padding:12px 12px calc(24px + env(safe-area-inset-bottom)) 12px;}
+  @media (max-width:820px){
+    body{padding:14px 12px calc(24px + env(safe-area-inset-bottom)) 12px;}
+    .stats{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .hero-num{font-size:38px;gap:10px;}
+    .hero-num .badge{font-size:15px;padding:5px 9px;}
+    .header-row{gap:12px;}
+    .meta{text-align:left;}
+    .panel{padding:14px 12px;}
+    .chart-box{height:230px;}
+    .chart-box.short{height:210px;}
+    .chart-legend{flex-wrap:wrap;gap:10px;font-size:10.5px;}
+    table{font-size:12px;}
+    .panel table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;}
+    .card .val{font-size:19px;}
+    .tabbar{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;}
+  }
+  @media (max-width:480px){
+    .stats{grid-template-columns:1fr 1fr;}
+    .hero-num{font-size:32px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span class="dot"></span>DASHBOARD INVESTIMENTI</div>
+  <div class="goldline"></div>
+
+  <div class="tabbar" id="tabbar"></div>
+  <div class="newbiz-form hidden" id="newBizForm">
+    <input type="text" id="newBizName" placeholder="Nome del nuovo business (es. Copytrading)">
+    <select id="newBizType">
+      <option value="simple">Formato semplice (data, gain, nota)</option>
+      <option value="full">Formato completo, come Broker Vs Broker (cicli, capitale, spese, grafici)</option>
+    </select>
+    <button class="primary" id="newBizConfirm">Crea</button>
+  </div>
+
+  <div id="tabAll" class="hidden">
+    <div class="header-row">
+      <div>
+        <h1>Gain Totale — tutti i business</h1>
+        <div class="hero-num">
+          <span id="allHeroTotal">€ 0</span>
+          <span class="badge" id="allHeroPct">0%</span>
+        </div>
+      </div>
+      <div class="meta"><div id="allMeta">—</div></div>
+    </div>
+    <div class="stats">
+      <div class="card"><div class="label">Capitale investito totale</div><div class="val" id="allStatCapInvestito">€ 0</div></div>
+      <div class="card"><div class="label">Capitale Totale (investito + gain)</div><div class="val" id="allStatCapTotale">€ 0</div></div>
+      <div class="card"><div class="label">ROI totale</div><div class="val" id="allStatRoi">0%</div></div>
+      <div class="card"><div class="label">Business attivi</div><div class="val" id="allStatCount">0</div></div>
+    </div>
+    <div class="panel">
+      <h2>Riepilogo per business</h2>
+      <table>
+        <thead><tr><th>Business</th><th>Capitale investito</th><th>Gain Totale</th><th>ROI %</th></tr></thead>
+        <tbody id="tbodyAllBiz"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>Capitale Totale nel tempo</h2>
+      <div class="chart-box" id="chartBoxCapTotale"></div>
+      <div class="chart-legend" id="legendCapTotale"></div>
+    </div>
+    <div class="panel">
+      <h2>Gain cumulato — confronto mese per mese</h2>
+      <div class="chart-box" id="chartBoxAll"></div>
+      <div class="chart-legend" id="legendAll"></div>
+    </div>
+  </div>
+
+  <div id="tabGrid">
+
+  <div class="header-row">
+    <div>
+      <h1>Gain Totale cumulato</h1>
+      <div class="hero-num">
+        <span id="heroTotal">€ 0</span>
+        <span class="badge" id="heroPct">0%</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div id="cycleCount">0 cicli registrati</div>
+      <div id="lastDate">—</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="card"><div class="label">Media Gain Lordo</div><div class="val" id="statMediaGain">€ 0</div></div>
+    <div class="card"><div class="label">Media Profitto/ciclo</div><div class="val" id="statMediaProfitto">€ 0</div></div>
+    <div class="card"><div class="label">Capitale investito</div><div class="val" id="statCapitale">€ 0</div></div>
+    <div class="card"><div class="label">Spese totali</div><div class="val" id="statSpese">€ 0</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Andamento cicli</h2>
+    <div class="chart-box" id="chartBox"></div>
+    <div class="chart-legend">
+      <span onclick="toggleChartFilter('grid:cicli','bar')" data-legend-chart="grid:cicli" data-legend-series="bar"><i class="swatch bar"></i>Gain ciclo</span>
+      <span onclick="toggleChartFilter('grid:cicli','line')" data-legend-chart="grid:cicli" data-legend-series="line"><i class="swatch line"></i>Gain Totale</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Andamento mese per mese</h2>
+    <div class="chart-box short" id="chartBoxMonthly"></div>
+    <div class="chart-legend">
+      <span onclick="toggleChartFilter('grid:monthly','bar')" data-legend-chart="grid:monthly" data-legend-series="bar"><i class="swatch bar"></i>Gain ciclo (mese)</span>
+      <span onclick="toggleChartFilter('grid:monthly','line')" data-legend-chart="grid:monthly" data-legend-series="line"><i class="swatch line"></i>Gain Totale (fine mese)</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Gain Totale cumulato — previsione 12 mesi vs realtà</h2>
+    <div class="chart-box" id="chartBoxCumulative"></div>
+    <div class="chart-legend">
+      <span onclick="toggleChartFilter('grid:cumulative','real')" data-legend-chart="grid:cumulative" data-legend-series="real"><i class="swatch line"></i>Realtà cumulata</span>
+      <span onclick="toggleChartFilter('grid:cumulative','forecast')" data-legend-chart="grid:cumulative" data-legend-series="forecast"><i class="swatch line-forecast-sw"></i>Previsionale cumulato</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>ROI mensile</h2>
+    <div class="chart-box short" id="chartBoxRoi"></div>
+    <div class="chart-legend">
+      <span onclick="toggleChartFilter('grid:roi','real')" data-legend-chart="grid:roi" data-legend-series="real"><i class="swatch line"></i>ROI cumulato reale</span>
+      <span onclick="toggleChartFilter('grid:roi','forecast')" data-legend-chart="grid:roi" data-legend-series="forecast"><i class="swatch line-forecast-sw"></i>ROI cumulato previsionale (12 mesi)</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Previsionale vs Realtà — gain per mese</h2>
+    <div class="chart-box short" id="chartBoxForecast"></div>
+    <div class="chart-legend">
+      <span onclick="toggleChartFilter('grid:forecastbar','real')" data-legend-chart="grid:forecastbar" data-legend-series="real"><i class="swatch bar"></i>Realtà</span>
+      <span onclick="toggleChartFilter('grid:forecastbar','forecast')" data-legend-chart="grid:forecastbar" data-legend-series="forecast"><i class="swatch forecast"></i>Previsionale</span>
+    </div>
+    <table style="margin-top:14px;">
+      <thead>
+        <tr><th>Mese</th><th>Previsionale</th><th>Prev. cumulato</th><th>Realtà</th><th>Realtà cumulata</th><th>Delta cum.</th></tr>
+      </thead>
+      <tbody id="tbodyForecast"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Registro cicli</h2>
+    <div class="registro-toolbar">
+      <select id="registroMeseGrid"></select>
+      <select id="registroAnnoGrid"></select>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Ciclo</th><th>Capitale</th><th>Data</th><th>Gain Lordo</th><th>Spese</th><th>Gain ciclo</th><th>Gain Totale</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="add-row">
+      <button class="primary" id="addBtn">+ Nuovo ciclo</button>
+    </div>
+    <div class="save-note" id="saveNote">&nbsp;</div>
+  </div>
+
+  </div>
+
+  <div id="bizPanels"></div>
+
+  <div class="save-all-bar">
+    <button id="saveAllBtn" type="button">💾 Salva tutto</button>
+  </div>
+  <div class="save-note" id="storageModeNote" style="text-align:center;margin-top:-8px;"></div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'grid-tracker-cycles';
+const STORAGE_KEY_FORECAST = 'grid-tracker-forecast';
+let rows = [];
+let forecastMap = {}; // { 'YYYY-MM': valorePrevisionale mensile (non cumulato) }
+
+// window.storage esiste solo quando questo file gira come "artifact" dentro
+// Claude (claude.ai / app). Se il file viene scaricato e aperto da solo
+// (doppio click, file:// nel browser, ecc.) window.storage non c'è, quindi
+// qui usiamo localStorage del browser come ripiego automatico: i dati
+// restano salvati sullo stesso browser/dispositivo con cui apri il file.
+const DATA_NS = 'bvb-antonio-2026-08:';   // namespace dati: cambiarlo azzera la dashboard
+const LS_PREFIX = 'grid-tracker:' + DATA_NS;
+
+/* ---- Telegram Mini App ---- */
+const TG = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+const TG_CLOUD = (TG && TG.CloudStorage && typeof TG.CloudStorage.getItem === 'function') ? TG.CloudStorage : null;
+const CHUNK = 3800;   // limite Telegram: 4096 caratteri per valore
+
+// CloudStorage accetta solo [A-Za-z0-9_-], max 128 caratteri
+function cloudKey(key){
+  return ('bvb_' + key).replace(/[^A-Za-z0-9_-]/g,'_').slice(0,120);
+}
+function cloudGetRaw(k){
+  return new Promise(res=>{ try{ TG_CLOUD.getItem(k,(e,v)=>res(e?null:v)); }catch(e){ res(null); } });
+}
+function cloudSetRaw(k,v){
+  return new Promise(res=>{ try{ TG_CLOUD.setItem(k,v,()=>res(true)); }catch(e){ res(false); } });
+}
+function cloudDelRaw(k){
+  return new Promise(res=>{ try{ TG_CLOUD.removeItem(k,()=>res(true)); }catch(e){ res(false); } });
+}
+// valori lunghi spezzati su piu' chiavi: <key>_n = numero di chunk, <key>_0..N
+async function cloudGet(key){
+  const base = cloudKey(key);
+  const nRaw = await cloudGetRaw(base+'_n');
+  if(nRaw===null || nRaw==='') return null;
+  const n = parseInt(nRaw,10);
+  if(!(n>0)) return null;
+  let out='';
+  for(let i=0;i<n;i++){
+    const part = await cloudGetRaw(base+'_'+i);
+    if(part===null) return null;
+    out += part;
+  }
+  return out;
+}
+async function cloudSet(key, value){
+  const base = cloudKey(key);
+  const str = String(value);
+  const parts = [];
+  for(let i=0;i<str.length;i+=CHUNK) parts.push(str.slice(i,i+CHUNK));
+  if(parts.length===0) parts.push('');
+  const oldN = parseInt(await cloudGetRaw(base+'_n')||'0',10);
+  for(let i=0;i<parts.length;i++) await cloudSetRaw(base+'_'+i, parts[i]);
+  for(let i=parts.length;i<oldN;i++) await cloudDelRaw(base+'_'+i);
+  await cloudSetRaw(base+'_n', String(parts.length));
+  return true;
+}
+async function cloudDel(key){
+  const base = cloudKey(key);
+  const n = parseInt(await cloudGetRaw(base+'_n')||'0',10);
+  for(let i=0;i<n;i++) await cloudDelRaw(base+'_'+i);
+  await cloudDelRaw(base+'_n');
+  return true;
+}
+
+const hasAppStorage = (typeof window !== 'undefined' && !!window.storage);
+let storageBackend = TG_CLOUD ? 'cloud' : (hasAppStorage ? 'app' : 'local');
+async function storageGet(key){
+  key = DATA_NS + key;
+  if(storageBackend==='cloud'){
+    try{
+      const v = await cloudGet(key);
+      if(v!==null) return {key, value:v, shared:false};
+      // niente sul cloud: provo a recuperare da localStorage e migro
+      const legacy = localStorage.getItem(LS_PREFIX+key);
+      if(legacy!==null){ await cloudSet(key, legacy); return {key, value:legacy, shared:false}; }
+      return null;
+    }catch(e){ storageBackend = 'local'; }
+  }
+  if(storageBackend==='app'){
+    try{ return await window.storage.get(key, false); }
+    catch(e){ storageBackend = 'local'; /* fallback silenzioso al prossimo giro */ }
+  }
+  const raw = localStorage.getItem(LS_PREFIX+key);
+  return raw===null ? null : {key, value:raw, shared:false};
+}
+async function storageSet(key, value){
+  key = DATA_NS + key;
+  if(storageBackend==='cloud'){
+    try{
+      await cloudSet(key, value);
+      try{ localStorage.setItem(LS_PREFIX+key, value); }catch(e2){}   // copia locale di sicurezza
+      return {key, value, shared:false};
+    }catch(e){ storageBackend = 'local'; }
+  }
+  if(storageBackend==='app'){
+    try{ return await window.storage.set(key, value, false); }
+    catch(e){ storageBackend = 'local'; }
+  }
+  localStorage.setItem(LS_PREFIX+key, value);
+  return {key, value, shared:false};
+}
+async function storageDelete(key){
+  key = DATA_NS + key;
+  if(storageBackend==='cloud'){
+    try{
+      await cloudDel(key);
+      try{ localStorage.removeItem(LS_PREFIX+key); }catch(e2){}
+      return {key, deleted:true, shared:false};
+    }catch(e){ storageBackend = 'local'; }
+  }
+  if(storageBackend==='app'){
+    try{ return await window.storage.delete(key, false); }
+    catch(e){ storageBackend = 'local'; }
+  }
+  localStorage.removeItem(LS_PREFIX+key);
+  return {key, deleted:true, shared:false};
+}
+
+/* ---- Isolamento serie nei grafici (click sulla legenda) ---- */
+let chartFilter = {}; // chartId -> chiave serie isolata, o assente = mostra tutto
+
+function toggleChartFilter(chartId, seriesKey){
+  if(chartFilter[chartId] === seriesKey) delete chartFilter[chartId];
+  else chartFilter[chartId] = seriesKey;
+  rerenderChartById(chartId);
+}
+
+function isSeriesVisible(chartId, seriesKey){
+  const f = chartFilter[chartId];
+  return !f || f === seriesKey;
+}
+
+function legendSpanClass(chartId, seriesKey){
+  return isSeriesVisible(chartId, seriesKey) ? '' : ' legend-dim';
+}
+
+// Aggiorna lo stato "attenuato" delle legende statiche (quelle già presenti
+// nell'HTML, non ricostruite ad ogni render) in base al filtro corrente.
+function applyLegendDimState(chartId){
+  document.querySelectorAll(`[data-legend-chart="${chartId}"]`).forEach(span=>{
+    const series = span.dataset.legendSeries;
+    span.classList.toggle('legend-dim', !isSeriesVisible(chartId, series));
+  });
+}
+
+// Richiama la funzione di render giusta per un dato chartId dopo un click sulla legenda
+function rerenderChartById(chartId){
+  const parts = chartId.split(':');
+  const ns = parts[0];
+  if(ns==='grid'){
+    const kind = parts[1];
+    if(kind==='cicli') renderChart(computed());
+    else if(kind==='monthly') renderChartMonthly(computed());
+    else if(kind==='roi') renderRoi(computed());
+    else if(kind==='cumulative' || kind==='forecastbar') renderForecast(computed());
+  } else if(ns==='all'){
+    renderAllBusinesses();
+  } else if(ns==='bizf'){
+    renderBizFullPanel(parts[1]);
+  }
+}
+
+/* ---- Filtro mese/anno nei registri (per non avere elenchi infiniti) ---- */
+const MONTH_NAMES_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+function defaultRegistroFilter(){
+  const d = new Date();
+  return { month: String(d.getMonth()+1).padStart(2,'0'), year: String(d.getFullYear()) };
+}
+let registroFilterGrid = defaultRegistroFilter();
+let registroFilterBiz = {};      // id business "semplice" -> {month,year}
+let registroFilterBizFull = {};  // id business "completo" -> {month,year}
+
+// Markup dei <option> del menu "mese" (fisso: Tutti i mesi + i 12 mesi)
+function monthSelectOptionsHTML(){
+  let html = `<option value="all">Tutti i mesi</option>`;
+  MONTH_NAMES_IT.forEach((name,i)=>{
+    html += `<option value="${String(i+1).padStart(2,'0')}">${name}</option>`;
+  });
+  return html;
+}
+
+// Popola il <select> "anno" con "Tutti gli anni" + gli anni presenti nei dati,
+// mantenendo la selezione corrente.
+function populateYearSelect(selectEl, years, selectedValue){
+  let html = `<option value="all">Tutti gli anni</option>`;
+  years.forEach(y=>{ html += `<option value="${y}">${y}</option>`; });
+  if(selectedValue!=='all' && !years.includes(selectedValue)){
+    html += `<option value="${selectedValue}">${selectedValue}</option>`;
+  }
+  selectEl.innerHTML = html;
+  selectEl.value = selectedValue;
+}
+
+function getYearsFromRows(rowsArr, dateField){
+  dateField = dateField || 'data';
+  const years = new Set();
+  rowsArr.forEach(r=>{ if(r[dateField]) years.add(r[dateField].slice(0,4)); });
+  return Array.from(years).sort();
+}
+
+// true se la riga rientra nel filtro mese/anno corrente ('all'/'all' = mostra tutto)
+function rowMatchesMonthYear(row, filter, dateField){
+  dateField = dateField || 'data';
+  if(filter.month==='all' && filter.year==='all') return true;
+  if(!row[dateField]) return false;
+  const y = row[dateField].slice(0,4);
+  const m = row[dateField].slice(5,7);
+  const monthOk = filter.month==='all' || filter.month===m;
+  const yearOk = filter.year==='all' || filter.year===y;
+  return monthOk && yearOk;
+}
+
+const seed = [
+  // Broker vs Broker — cicli personali Antonio Mazzone (C1)
+  // conti: TotalFX 5008233 + RoboForex 27447042 · fee 50% del profitto
+  {capitale:0,    data:'2026-07-27', gainLordo:60,    spese:30},
+  {capitale:0,    data:'2026-07-30', gainLordo:17,    spese:0},
+  {capitale:0,    data:'2026-07-30', gainLordo:272,   spese:136},
+  {capitale:0,    data:'2026-07-31', gainLordo:191,   spese:96},
+  {capitale:0,    data:'2026-08-05', gainLordo:290,   spese:145},
+  {capitale:0,    data:'2026-08-07', gainLordo:0,     spese:0},
+  {capitale:0,    data:'2026-08-10', gainLordo:433,   spese:216},
+  {capitale:0,    data:'2026-08-12', gainLordo:240,   spese:120},
+  {capitale:0,    data:'2026-08-14', gainLordo:201,   spese:100.5},
+  {capitale:6000, data:'2026-08-19', gainLordo:207.2, spese:103.6},
+  {capitale:6000, data:'2026-08-19', gainLordo:322,   spese:161},
+  {capitale:6000, data:'2026-08-20', gainLordo:446,   spese:223},
+];
+
+function fmtEur(n){
+  return '€ ' + Math.round(n).toLocaleString('it-IT');
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('it-IT',{day:'numeric',month:'numeric',year:'2-digit'});
+}
+
+const API_BASE = 'https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2';
+function tokenApp(){
+  const p = new URLSearchParams(location.search);
+  return p.get('t') || '';
+}
+async function datiDalBot(){
+  const t = tokenApp();
+  const init = (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) || '';
+  if(!t && !init) return null;
+  try{
+    const url = API_BASE + '/api/cicli' + (t ? ('?t=' + encodeURIComponent(t)) : '');
+    const r = await fetch(url, { headers: init && !t ? { 'x-init-data': init } : {} });
+    if(!r.ok) return null;
+    const d = await r.json();
+    if(!d || !Array.isArray(d.cicli)) return null;
+    if(d.cliente && d.cliente.nome){
+      window.CLIENTE = d.cliente;
+      document.title = 'Cashly · ' + d.cliente.nome;
+    }
+    return d.cicli.map(c=>({ id:'db_'+c.n, capitale:c.capitale, data:c.data, gainLordo:c.lordo, spese:c.fee }));
+  }catch(e){ return null; }
+}
+async function loadData(){
+  const dal = await datiDalBot();
+  if(dal && dal.length){ rows = dal; return; }
+  try{
+    const res = await storageGet(STORAGE_KEY);
+    if(res && res.value){
+      rows = JSON.parse(res.value);
+      return;
+    }
+  }catch(e){ /* no data yet */ }
+  rows = seed.map((r,i)=>({id:cryptoId(), ...r}));
+  await saveData(false);
+}
+
+function cryptoId(){
+  return 'c_' + Math.random().toString(36).slice(2,10);
+}
+
+// Aggiunge n mesi a una chiave 'YYYY-MM'
+function addMonths(key, n){
+  const [y,m] = key.split('-').map(Number);
+  const d = new Date(y, (m-1)+n, 1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function labelFromKey(key){
+  const [y,m] = key.split('-').map(Number);
+  const d = new Date(y, m-1, 1);
+  const s = d.toLocaleDateString('it-IT',{month:'short',year:'2-digit'});
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function daysInMonth(key){
+  const [y,m] = key.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+// Valori di default per il previsionale: il capitale di riferimento non è
+// fisso — è l'ultimo capitale realmente usato nei cicli registrati (che
+// finora è salito da 2000 a 4000, 6000, 8000), quindi si aggiorna da solo
+// man mano che aggiungi cicli con capitale più alto. Se in futuro deciderai
+// di aumentarlo ancora (non sappiamo quando o di quanto), basta modificare
+// a mano i mesi interessati: ogni cella resta editabile.
+const CICLI_MESE = 9;
+const TASSO_CICLO = 0.05;
+
+function getCapitaleRiferimento(){
+  return rows.length ? (Number(rows[rows.length-1].capitale) || 2000) : 2000;
+}
+
+function cicliMeseProrata(key, isFirstMonth){
+  if(!isFirstMonth) return CICLI_MESE;
+  const giorniAttivi = daysInMonth(key) - 29 + 1;
+  return Math.max(1, Math.round(CICLI_MESE * giorniAttivi / daysInMonth(key)));
+}
+
+// Calcola il previsionale di default per ogni mese usando il capitale attuale.
+function simulateDefaultForecast(keys){
+  const capRif = getCapitaleRiferimento();
+  return keys.map((key,i)=>{
+    const cicli = cicliMeseProrata(key, i===0);
+    const gain = Math.round(capRif * TASSO_CICLO * cicli);
+    return { key, cicli, gain, capitaleRiferimento: capRif };
+  });
+}
+
+function getForecastMonthKeys(){
+  const monthly = aggregateByMonth(computed());
+  const now = new Date();
+  const currentKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const startKey = monthly.length ? monthly[0].key : currentKey;
+  const keys = [];
+  for(let i=0;i<12;i++) keys.push(addMonths(startKey, i));
+  return keys;
+}
+
+async function loadForecast(){
+  try{
+    const res = await storageGet(STORAGE_KEY_FORECAST);
+    if(res && res.value) forecastMap = JSON.parse(res.value);
+    else forecastMap = {};
+  }catch(e){ forecastMap = {}; }
+
+  // precompila i mesi mancanti con i valori di default calcolati sul capitale attuale
+  const keys = getForecastMonthKeys();
+  const plan = simulateDefaultForecast(keys);
+  let changed = false;
+  plan.forEach(p=>{
+    if(!(p.key in forecastMap)){
+      forecastMap[p.key] = p.gain;
+      changed = true;
+    }
+  });
+  if(changed) await saveForecast();
+}
+
+async function saveForecast(){
+  try{
+    await storageSet(STORAGE_KEY_FORECAST, JSON.stringify(forecastMap));
+  }catch(e){ /* ignora errori di salvataggio previsionale */ }
+}
+
+async function saveData(showNote=true){
+  const note = document.getElementById('saveNote');
+  try{
+    await storageSet(STORAGE_KEY, JSON.stringify(rows));
+    if(showNote){
+      note.textContent = 'Salvato';
+      setTimeout(()=>{ if(note.textContent==='Salvato') note.innerHTML='&nbsp;'; }, 1500);
+    }
+  }catch(e){
+    note.textContent = 'Errore nel salvataggio';
+  }
+}
+
+function computed(){
+  return computeCyclesGeneric(rows);
+}
+
+// Versione parametrica di computed(): calcola gain ciclo e gain totale cumulato
+// per un array di cicli qualsiasi (usata sia dal business principale che dai
+// business "completi" creati dall'utente).
+function computeCyclesGeneric(rawRows){
+  let cum = 0;
+  return rawRows.map((r,i)=>{
+    const gainCiclo = (Number(r.gainLordo)||0) - (Number(r.spese)||0);
+    cum += gainCiclo;
+    return {...r, idx:i+1, gainCiclo, gainTotale:cum};
+  });
+}
+
+function render(){
+  const c = computed();
+
+  // toolbar filtro mese/anno
+  const selMese = document.getElementById('registroMeseGrid');
+  const selAnno = document.getElementById('registroAnnoGrid');
+  if(selMese.innerHTML==='') selMese.innerHTML = monthSelectOptionsHTML();
+  selMese.value = registroFilterGrid.month;
+  populateYearSelect(selAnno, getYearsFromRows(c), registroFilterGrid.year);
+
+  // table (filtrata per mese/anno selezionati)
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid)).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.idx}</td>
+      <td><input class="cell" type="number" data-id="${r.id}" data-field="capitale" value="${r.capitale}"></td>
+      <td><input class="cell" type="date" data-id="${r.id}" data-field="data" value="${r.data||''}"></td>
+      <td><input class="cell" type="number" data-id="${r.id}" data-field="gainLordo" value="${r.gainLordo}"></td>
+      <td><input class="cell" type="number" data-id="${r.id}" data-field="spese" value="${r.spese}"></td>
+      <td class="${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
+      <td class="${r.gainTotale>=0?'gainpos':'gainneg'}">${fmtEur(r.gainTotale)}</td>
+      <td><button class="del-btn" data-id="${r.id}" title="Elimina ciclo">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('input.cell').forEach(inp=>{
+    inp.addEventListener('change', onCellChange);
+  });
+  tbody.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', onDelete);
+  });
+
+  // hero + stats
+  const last = c[c.length-1];
+  const totalGain = last ? last.gainTotale : 0;
+  const currentCapitale = last ? Number(last.capitale) : 0;
+  const pct = currentCapitale ? (totalGain/currentCapitale*100) : 0;
+
+  document.getElementById('heroTotal').textContent = fmtEur(totalGain);
+  const badge = document.getElementById('heroPct');
+  badge.textContent = (pct>=0?'+':'') + pct.toFixed(2) + '%';
+  badge.className = 'badge' + (pct<0 ? ' neg' : '');
+
+  document.getElementById('cycleCount').textContent = c.length + (c.length===1 ? ' ciclo registrato' : ' cicli registrati');
+  document.getElementById('lastDate').textContent = last ? 'Ultimo: ' + fmtDate(last.data) : '—';
+
+  const mediaGain = c.length ? c.reduce((s,r)=>s+Number(r.gainLordo||0),0)/c.length : 0;
+  const mediaProfitto = c.length ? c.reduce((s,r)=>s+r.gainCiclo,0)/c.length : 0;
+  const speseTot = c.reduce((s,r)=>s+Number(r.spese||0),0);
+
+  document.getElementById('statMediaGain').textContent = fmtEur(mediaGain);
+  document.getElementById('statMediaProfitto').textContent = fmtEur(mediaProfitto);
+  document.getElementById('statCapitale').textContent = fmtEur(currentCapitale);
+  document.getElementById('statSpese').textContent = fmtEur(speseTot);
+
+  renderChart(c);
+  renderChartMonthly(c);
+  renderRoi(c);
+  renderForecast(c);
+}
+
+function monthLabel(iso){
+  if(!iso) return 'N/D';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return 'N/D';
+  const s = d.toLocaleDateString('it-IT',{month:'short',year:'2-digit'});
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+function aggregateByMonth(c){
+  const map = new Map(); // key -> {gainCiclo, gainTotale, capSum, capCount}
+  c.forEach(r=>{
+    const key = r.data ? r.data.slice(0,7) : 'N/D'; // YYYY-MM
+    if(!map.has(key)) map.set(key, {key, label: monthLabel(r.data), gainCiclo:0, gainTotale:r.gainTotale, capSum:0, capCount:0, capitaleFine:0});
+    const m = map.get(key);
+    m.gainCiclo += r.gainCiclo;
+    m.gainTotale = r.gainTotale; // ultimo valore del mese = cumulato a fine mese
+    m.capSum += Number(r.capitale)||0;
+    m.capCount += 1;
+    m.capitaleFine = Number(r.capitale)||0; // capitale in uso all'ultimo ciclo del mese
+  });
+  const keys = Array.from(map.keys()).sort();
+  return keys.map(k=>{
+    const m = map.get(k);
+    m.capitaleMedio = m.capCount ? m.capSum / m.capCount : 0;
+    return m;
+  });
+}
+
+// Piano ROI a 12 mesi: reale (dove ci sono dati) + previsionale cumulato,
+// quest'ultimo calcolato sul capitale attualmente investito (dinamico:
+// si aggiorna da solo se in futuro alzi il capitale nei cicli registrati).
+function computeRoiPlan(c){
+  const monthly = aggregateByMonth(c);
+  const actualByKey = {};
+  monthly.forEach(m=>{ actualByKey[m.key] = m; });
+
+  const keys = getForecastMonthKeys();
+  const capRif = getCapitaleRiferimento();
+
+  let cumForecast = 0;
+  let actualEnded = false;
+
+  return keys.map(key=>{
+    const forecastVal = Number(forecastMap[key]) || 0;
+    cumForecast += forecastVal;
+    const roiCumPrevisionale = capRif ? (cumForecast / capRif * 100) : 0;
+
+    const m = actualByKey[key];
+    let roiMensileReale = null, roiCumulatoReale = null;
+    if(m && !actualEnded){
+      roiMensileReale = m.capitaleMedio ? (m.gainCiclo / m.capitaleMedio * 100) : 0;
+      roiCumulatoReale = m.capitaleFine ? (m.gainTotale / m.capitaleFine * 100) : 0;
+    } else if(!m){
+      actualEnded = true; // interrompe la linea reale al primo mese senza dati
+    }
+
+    return { key, label: labelFromKey(key), roiMensileReale, roiCumulatoReale, roiCumPrevisionale };
+  });
+}
+
+function renderRoi(c){
+  const plan = computeRoiPlan(c);
+  const labels = plan.map(p=>p.label);
+  const realCumValues = plan.map(p=>p.roiCumulatoReale);
+  const forecastCumValues = plan.map(p=>p.roiCumPrevisionale);
+  document.getElementById('chartBoxRoi').innerHTML = buildRoiChartSVG(labels, realCumValues, forecastCumValues);
+}
+
+// Linea ROI cumulato reale (si interrompe quando finiscono i dati) +
+// linea previsionale cumulata su 12 mesi — nessun istogramma, solo linee.
+function buildRoiChartSVG(labels, realCumValues, forecastCumValues){
+  const W = 900, H = 260;
+  const pad = {left:46, right:16, top:24, bottom:36};
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const n = labels.length;
+
+  const allVals = [...realCumValues.filter(v=>v!==null), ...forecastCumValues, 0];
+  let maxV = Math.max(...allVals);
+  let minV = Math.min(...allVals);
+  if(maxV === minV){ maxV += 1; minV -= 1; }
+  const padSpan = (maxV-minV)*0.15;
+  maxV += padSpan; minV -= padSpan;
+  const span = maxV - minV;
+  const yFor = v => pad.top + innerH - ((v - minV) / span) * innerH;
+
+  const slot = innerW / n;
+
+  let grid = '';
+  const steps = 4;
+  for(let s=0;s<=steps;s++){
+    const v = minV + (span/steps)*s;
+    const y = yFor(v);
+    grid += `<line class="grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${W-pad.right}" y2="${y.toFixed(1)}"></line>`;
+    grid += `<text class="axis-label" x="${pad.left-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v)}%</text>`;
+  }
+
+  let xLabels = '';
+  const realPts = [];
+  const forecastPts = [];
+  for(let i=0;i<n;i++){
+    const cx = pad.left + slot*i + slot/2;
+    if(realCumValues[i]!==null) realPts.push([cx, yFor(realCumValues[i]), realCumValues[i]]);
+    forecastPts.push([cx, yFor(forecastCumValues[i]), forecastCumValues[i]]);
+    xLabels += `<text class="axis-label" x="${cx.toFixed(1)}" y="${H-pad.bottom+18}" text-anchor="middle">${labels[i]}</text>`;
+  }
+
+  const realPath = realPts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const realDots = realPts.map(p=>`<circle class="point-el" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5"></circle>`).join('');
+  const forecastPath = forecastPts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const forecastDots = forecastPts.map(p=>`<circle class="point-forecast" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"></circle>`).join('');
+
+  // Etichette: dove esiste anche il dato reale, quella delle due linee più in alto in
+  // quel punto va sopra e l'altra va sotto (mai sullo stesso lato) — così restano
+  // leggibili anche quando le due linee sono vicine tra loro. Il previsionale mostra
+  // l'etichetta solo ogni 2 mesi (più l'ultimo) per non affollare 12 punti.
+  const LABEL_OFFSET = 11;
+  const realLabels = realPts.map(p=>{
+    const [rx, ry, rv] = p;
+    const fMatch = forecastPts.find(fp=>fp[0]===rx);
+    const y = fMatch ? (ry <= fMatch[1] ? ry-LABEL_OFFSET : ry+LABEL_OFFSET) : ry-LABEL_OFFSET;
+    return `<text class="line-label" x="${rx.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${rv.toFixed(1)}%</text>`;
+  }).join('');
+
+  const forecastLabels = forecastPts.map((p,i)=>{
+    if(i % 2 !== 0 && i !== forecastPts.length-1) return '';
+    const [fx, fy, fv] = p;
+    const rMatch = realPts.find(rp=>rp[0]===fx);
+    const y = rMatch ? (fy <= rMatch[1] ? fy-LABEL_OFFSET : fy+LABEL_OFFSET) : fy+LABEL_OFFSET;
+    return `<text class="line-label muted" x="${fx.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${fv.toFixed(1)}%</text>`;
+  }).join('');
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}
+    <path class="line-forecast" d="${forecastPath}"></path>
+    ${forecastDots}
+    ${forecastLabels}
+    <path class="line-el" d="${realPath}"></path>
+    ${realDots}
+    ${realLabels}
+    ${xLabels}
+  </svg>`;
+}
+
+function renderChartMonthly(c){
+  const monthly = aggregateByMonth(c);
+  const labels = monthly.map(m=>m.label);
+  const gainCiclo = monthly.map(m=>m.gainCiclo);
+  const gainTotale = monthly.map(m=>m.gainTotale);
+  document.getElementById('chartBoxMonthly').innerHTML = buildComboChartSVG(labels, gainCiclo, gainTotale, chartFilter['grid:monthly']);
+  applyLegendDimState('grid:monthly');
+}
+
+function renderChart(c){
+  const labels = c.map(r=>fmtDate(r.data));
+  const gainCiclo = c.map(r=>r.gainCiclo);
+  const gainTotale = c.map(r=>r.gainTotale);
+  document.getElementById('chartBox').innerHTML = buildComboChartSVG(labels, gainCiclo, gainTotale, chartFilter['grid:cicli']);
+  applyLegendDimState('grid:cicli');
+}
+
+// Grafico combo (barre + linea) disegnato in SVG puro, nessuna libreria esterna.
+// filter: 'bar' | 'line' | null — se impostato, disegna solo quella serie.
+function buildComboChartSVG(labels, barData, lineData, filter){
+  const W = 900, H = 280;
+  const pad = {left:46, right:16, top:16, bottom:36};
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const n = labels.length;
+  const showBar = !filter || filter==='bar';
+  const showLine = !filter || filter==='line';
+
+  if(n === 0){
+    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <text x="${W/2}" y="${H/2}" text-anchor="middle" class="axis-label">Nessun dato ancora</text>
+    </svg>`;
+  }
+
+  const allVals = [...(showBar?barData:[]), ...(showLine?lineData:[]), 0];
+  let maxV = Math.max(...allVals);
+  let minV = Math.min(...allVals);
+  if(maxV === minV){ maxV += 1; minV -= 1; }
+  const span = maxV - minV;
+  const yFor = v => pad.top + innerH - ((v - minV) / span) * innerH;
+  const zeroY = yFor(0);
+
+  const slot = innerW / n;
+  const barW = Math.max(22, slot * 0.5);
+
+  // barre
+  let bars = '';
+  const points = [];
+  for(let i=0;i<n;i++){
+    const cx = pad.left + slot*i + slot/2;
+    if(showBar){
+      const bv = barData[i];
+      const by = yFor(bv);
+      const rectY = Math.min(by, zeroY);
+      const rectH = Math.max(1, Math.abs(by - zeroY));
+      bars += `<rect class="bar-el" x="${(cx-barW/2).toFixed(1)}" y="${rectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${rectH.toFixed(1)}" rx="3"></rect>`;
+
+      // etichetta valore: dentro la barra se c'è spazio, altrimenti appena sopra
+      const label = Math.round(bv).toLocaleString('it-IT');
+      const fitsInside = rectH > 16;
+      const labelY = fitsInside ? (rectY + rectH/2 + 3.5) : (rectY - 5);
+      const labelClass = fitsInside ? 'bar-label' : 'bar-label outside';
+      bars += `<text class="${labelClass}" x="${cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${label}</text>`;
+    }
+    points.push([cx, yFor(lineData[i])]);
+  }
+
+  // linea + area
+  let linePath = '', areaPath = '', dots = '';
+  if(showLine){
+    linePath = points.map((p,i)=> (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${(pad.top+innerH).toFixed(1)} L${points[0][0].toFixed(1)},${(pad.top+innerH).toFixed(1)} Z`;
+    dots = points.map(p=>`<circle class="point-el" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"></circle>`).join('');
+  }
+
+  // griglia orizzontale (4 linee) + etichette valore
+  let grid = '';
+  const steps = 4;
+  for(let s=0;s<=steps;s++){
+    const v = minV + (span/steps)*s;
+    const y = yFor(v);
+    grid += `<line class="grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${W-pad.right}" y2="${y.toFixed(1)}"></line>`;
+    grid += `<text class="axis-label" x="${pad.left-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('it-IT')}</text>`;
+  }
+
+  // etichette asse X (mostra al massimo ~8 per non affollare)
+  let xLabels = '';
+  const stride = Math.max(1, Math.ceil(n/8));
+  for(let i=0;i<n;i+=stride){
+    const cx = pad.left + slot*i + slot/2;
+    xLabels += `<text class="axis-label" x="${cx.toFixed(1)}" y="${H-pad.bottom+18}" text-anchor="middle">${labels[i]}</text>`;
+  }
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}
+    <path class="area-el" d="${areaPath}"></path>
+    ${bars}
+    <path class="line-el" d="${linePath}"></path>
+    ${dots}
+    ${xLabels}
+  </svg>`;
+}
+
+function computeForecastPlan(c){
+  const monthly = aggregateByMonth(c);
+  const actualByKey = {};
+  monthly.forEach(m=>{ actualByKey[m.key] = m.gainCiclo; });
+
+  const keys = getForecastMonthKeys();
+  let cumForecast = 0;
+  let cumActual = 0;
+  let actualEnded = false;
+
+  return keys.map(key=>{
+    const forecastVal = Number(forecastMap[key]) || 0;
+    cumForecast += forecastVal;
+
+    const hasActual = Object.prototype.hasOwnProperty.call(actualByKey, key);
+    let actualVal = null, actualCum = null;
+    if(hasActual && !actualEnded){
+      actualVal = actualByKey[key];
+      cumActual += actualVal;
+      actualCum = cumActual;
+    } else if(!hasActual){
+      actualEnded = true; // interrompe la linea "realtà" al primo mese senza dati
+    }
+
+    return {
+      key,
+      label: labelFromKey(key),
+      forecast: forecastVal,
+      forecastCum: cumForecast,
+      actual: actualVal,
+      actualCum: actualCum
+    };
+  });
+}
+
+function renderForecast(c){
+  const plan = computeForecastPlan(c);
+  const capRifEl = document.getElementById('noteCapRif');
+  if(capRifEl) capRifEl.textContent = fmtEur(getCapitaleRiferimento());
+  const labels = plan.map(m=>m.label);
+  const forecastSeries = plan.map(m=>m.forecast);
+  const actualSeries = plan.map(m=> m.actual===null ? 0 : m.actual);
+  const hasActual = plan.map(m=> m.actual!==null);
+
+  document.getElementById('chartBoxForecast').innerHTML = buildGroupedBarSVG(labels, actualSeries, forecastSeries, hasActual, chartFilter['grid:forecastbar']);
+  applyLegendDimState('grid:forecastbar');
+
+  const forecastCumSeries = plan.map(m=>m.forecastCum);
+  const actualCumSeries = plan.map(m=> m.actualCum);
+  document.getElementById('chartBoxCumulative').innerHTML = buildDualLineSVG(labels, actualCumSeries, forecastCumSeries, chartFilter['grid:cumulative']);
+  applyLegendDimState('grid:cumulative');
+
+  const tbody = document.getElementById('tbodyForecast');
+  tbody.innerHTML = '';
+  plan.forEach(m=>{
+    const realtaCell = m.actual===null ? '<span style="color:var(--muted)">—</span>' : fmtEur(m.actual);
+    const realtaCumCell = m.actualCum===null ? '<span style="color:var(--muted)">—</span>' : fmtEur(m.actualCum);
+    let deltaCell = '<span style="color:var(--muted)">—</span>';
+    if(m.actualCum!==null){
+      const delta = m.actualCum - m.forecastCum;
+      deltaCell = `<span class="${delta>=0?'gainpos':'gainneg'}">${delta>=0?'+':''}${fmtEur(delta)}</span>`;
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.label}</td>
+      <td><input class="cell" type="number" data-month="${m.key}" value="${m.forecast}"></td>
+      <td>${fmtEur(m.forecastCum)}</td>
+      <td>${realtaCell}</td>
+      <td>${realtaCumCell}</td>
+      <td>${deltaCell}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('input.cell').forEach(inp=>{
+    inp.addEventListener('change', onForecastChange);
+  });
+}
+
+async function onForecastChange(e){
+  const month = e.target.dataset.month;
+  forecastMap[month] = Number(e.target.value) || 0;
+  await saveForecast();
+  render();
+}
+
+// Grafico a due linee (Realtà cumulata vs Previsionale cumulato) su 12 mesi.
+// filter: 'real' | 'forecast' | null — se impostato, disegna solo quella linea.
+function buildDualLineSVG(labels, actualCum, forecastCum, filter){
+  const W = 900, H = 280;
+  const pad = {left:50, right:16, top:20, bottom:36};
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const n = labels.length;
+  const showReal = !filter || filter==='real';
+  const showForecast = !filter || filter==='forecast';
+
+  const allVals = [...(showForecast?forecastCum:[]), ...(showReal?actualCum.filter(v=>v!==null):[]), 0];
+  let maxV = Math.max(...allVals);
+  let minV = Math.min(...allVals);
+  if(maxV === minV){ maxV += 1; minV -= 1; }
+  const span = maxV - minV;
+  const yFor = v => pad.top + innerH - ((v - minV) / span) * innerH;
+
+  const slot = innerW / (n - 1 || 1);
+  const xFor = i => pad.left + slot*i;
+
+  let grid = '';
+  const steps = 4;
+  for(let s=0;s<=steps;s++){
+    const v = minV + (span/steps)*s;
+    const y = yFor(v);
+    grid += `<line class="grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${W-pad.right}" y2="${y.toFixed(1)}"></line>`;
+    grid += `<text class="axis-label" x="${pad.left-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('it-IT')}</text>`;
+  }
+
+  const LABEL_OFFSET = 11; // distanza minima punto-etichetta, garantisce sempre spazio tra le due etichette
+
+  // linea previsionale (tutti i 12 mesi)
+  let fPath = '', fDots = '', fLabels = '';
+  const fPoints = forecastCum.map((v,i)=>[xFor(i), yFor(v)]);
+  if(showForecast){
+    fPath = fPoints.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    fDots = fPoints.map(p=>`<circle class="point-forecast" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"></circle>`).join('');
+  }
+
+  // linea realtà (si interrompe al primo mese senza dati)
+  let aPath = '', aDots = '', aLabels = '';
+  const aPointsIdx = [];
+  for(let i=0;i<n;i++){
+    if(actualCum[i]===null) break;
+    aPointsIdx.push(i);
+  }
+  if(showReal && aPointsIdx.length){
+    const aPoints = aPointsIdx.map(i=>[xFor(i), yFor(actualCum[i])]);
+    aPath = aPoints.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    aDots = aPoints.map(p=>`<circle class="point-el" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5"></circle>`).join('');
+  }
+
+  // Etichette: dove esistono entrambe le linee, quella visivamente più in alto va
+  // sopra al suo punto e l'altra sotto (mai sullo stesso lato), così restano sempre
+  // leggibili anche quando i due valori sono vicini. Dove c'è solo il previsionale
+  // (mesi futuri senza dati reali) l'etichetta sta sopra per default.
+  if(showForecast){
+    fPoints.forEach((p,i)=>{
+      const hasActual = showReal && actualCum[i]!==null;
+      let y;
+      if(hasActual){
+        const ay = yFor(actualCum[i]);
+        y = p[1] <= ay ? p[1]-LABEL_OFFSET : p[1]+LABEL_OFFSET;
+      } else {
+        y = p[1]-LABEL_OFFSET;
+      }
+      fLabels += `<text class="line-label muted" x="${p[0].toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${Math.round(forecastCum[i]).toLocaleString('it-IT')}</text>`;
+    });
+  }
+  if(showReal){
+    aPointsIdx.forEach((idx,k)=>{
+      const ay = yFor(actualCum[idx]);
+      const fy = yFor(forecastCum[idx]);
+      const y = (showForecast && ay<=fy) ? ay-LABEL_OFFSET : (showForecast ? ay+LABEL_OFFSET : ay-LABEL_OFFSET);
+      aLabels += `<text class="line-label" x="${xFor(idx).toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${Math.round(actualCum[idx]).toLocaleString('it-IT')}</text>`;
+    });
+  }
+
+  let xLabels = '';
+  for(let i=0;i<n;i++){
+    xLabels += `<text class="axis-label" x="${xFor(i).toFixed(1)}" y="${H-pad.bottom+18}" text-anchor="middle">${labels[i]}</text>`;
+  }
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}
+    <path class="line-forecast" d="${fPath}"></path>
+    ${fDots}
+    ${fLabels}
+    <path class="line-el" d="${aPath}"></path>
+    ${aDots}
+    ${aLabels}
+    ${xLabels}
+  </svg>`;
+}
+
+// Grafico a barre affiancate (Realtà vs Previsionale) per confronto mensile
+function buildGroupedBarSVG(labels, seriesActual, seriesForecast, hasActual){
+  const W = 900, H = 250;
+  const pad = {left:46, right:16, top:16, bottom:36};
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const n = labels.length;
+  hasActual = hasActual || labels.map(()=>true);
+
+  if(n === 0){
+    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <text x="${W/2}" y="${H/2}" text-anchor="middle" class="axis-label">Nessun dato ancora</text>
+    </svg>`;
+  }
+
+  const allVals = [...seriesActual, ...seriesForecast, 0];
+  let maxV = Math.max(...allVals);
+  let minV = Math.min(...allVals);
+  if(maxV === minV){ maxV += 1; minV -= 1; }
+  const span = maxV - minV;
+  const yFor = v => pad.top + innerH - ((v - minV) / span) * innerH;
+  const zeroY = yFor(0);
+
+  const slot = innerW / n;
+  const groupW = Math.min(90, slot * 0.68);
+  const barW = groupW / 2 - 2;
+
+  let grid = '';
+  const steps = 4;
+  for(let s=0;s<=steps;s++){
+    const v = minV + (span/steps)*s;
+    const y = yFor(v);
+    grid += `<line class="grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${W-pad.right}" y2="${y.toFixed(1)}"></line>`;
+    grid += `<text class="axis-label" x="${pad.left-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('it-IT')}</text>`;
+  }
+
+  let bars = '';
+  let xLabels = '';
+  for(let i=0;i<n;i++){
+    const cx = pad.left + slot*i + slot/2;
+    const groupLeft = cx - groupW/2;
+
+    // realtà — disegnata solo se il mese ha dati effettivi
+    if(hasActual[i]){
+      const av = seriesActual[i];
+      const ay = yFor(av);
+      const aRectY = Math.min(ay, zeroY);
+      const aRectH = Math.max(1, Math.abs(ay - zeroY));
+      bars += `<rect class="bar-el" x="${groupLeft.toFixed(1)}" y="${aRectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${aRectH.toFixed(1)}" rx="3"></rect>`;
+      const aLabel = Math.round(av).toLocaleString('it-IT');
+      const aFits = aRectH > 16;
+      bars += `<text class="${aFits?'bar-label':'bar-label outside'}" x="${(groupLeft+barW/2).toFixed(1)}" y="${(aFits ? aRectY+aRectH/2+3.5 : aRectY-5).toFixed(1)}" text-anchor="middle">${aLabel}</text>`;
+    }
+
+    // previsionale — sempre presente, è la proiezione automatica
+    const fv = seriesForecast[i];
+    const fy = yFor(fv);
+    const fRectY = Math.min(fy, zeroY);
+    const fRectH = Math.max(1, Math.abs(fy - zeroY));
+    const fx = groupLeft + barW + 4;
+    bars += `<rect class="bar-el forecast-bar" x="${fx.toFixed(1)}" y="${fRectY.toFixed(1)}" width="${barW.toFixed(1)}" height="${fRectH.toFixed(1)}" rx="3"></rect>`;
+    const fLabel = Math.round(fv).toLocaleString('it-IT');
+    const fFits = fRectH > 16;
+    bars += `<text class="bar-label outside" x="${(fx+barW/2).toFixed(1)}" y="${(fFits ? fRectY+fRectH/2+3.5 : fRectY-5).toFixed(1)}" text-anchor="middle">${fLabel}</text>`;
+
+    xLabels += `<text class="axis-label" x="${cx.toFixed(1)}" y="${H-pad.bottom+18}" text-anchor="middle">${labels[i]}</text>`;
+  }
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}
+    ${bars}
+    ${xLabels}
+  </svg>`;
+}
+
+async function onCellChange(e){
+  const id = e.target.dataset.id;
+  const field = e.target.dataset.field;
+  const row = rows.find(r=>r.id===id);
+  if(!row) return;
+  row[field] = (field==='data') ? e.target.value : Number(e.target.value);
+  await saveData();
+  render();
+}
+
+async function onDelete(e){
+  const id = e.target.dataset.id;
+  rows = rows.filter(r=>r.id!==id);
+  await saveData();
+  render();
+}
+
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  const last = rows[rows.length-1];
+  rows.push({
+    id:cryptoId(),
+    capitale: last ? last.capitale : 2000,
+    data: new Date().toISOString().slice(0,10),
+    gainLordo: 0,
+    spese: 0
+  });
+  await saveData();
+  render();
+});
+
+/* ============================================================
+   MULTI-BUSINESS: gestione di business aggiuntivi (es. Copytrading)
+   accanto al business principale, con vista riepilogativa combinata.
+   ============================================================ */
+const STORAGE_KEY_BUSINESSES = 'businesses-list';
+const STORAGE_KEY_GRID_NAME = 'grid-tab-name';
+const STORAGE_KEY_GRID_DELETED = 'grid-tab-deleted';
+const STORAGE_KEY_TAB_ORDER = 'tab-order-v2';
+const BIZ_COLORS = ['#4ADE95', '#3D8BFF', '#F2645A', '#C084FC', '#FB923C', '#38BDF8'];
+
+let businesses = [];       // [{id, name, type}] — type: 'simple' | 'full'
+let bizEntries = {};       // id -> [{id, data, gain, nota}]  (tipo simple)
+let bizFullRows = {};      // id -> [{id, capitale, data, gainLordo, spese}]  (tipo full)
+let bizCapital = {};       // id -> number
+let activeTab = 'grid';    // 'grid' | 'all' | <bizId>
+let gridTabName = 'Broker Vs Broker';
+let gridDeleted = false;   // true se la scheda principale è stata eliminata dall'utente
+let tabOrder = [];         // ordine delle schede "contenuto" (grid + business), 'all' esclusa
+
+function slugId(name){
+  return 'biz_' + name.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,24) + '_' + Math.random().toString(36).slice(2,6);
+}
+
+function bizType(id){
+  const b = businesses.find(x=>x.id===id);
+  return b ? (b.type||'simple') : 'simple';
+}
+
+async function loadBusinesses(){
+  try{
+    const res = await storageGet(STORAGE_KEY_GRID_NAME);
+    if(res && res.value) gridTabName = JSON.parse(res.value);
+  }catch(e){ /* usa il default */ }
+
+  try{
+    const res = await storageGet(STORAGE_KEY_GRID_DELETED);
+    gridDeleted = (res && res.value) ? JSON.parse(res.value) : false;
+  }catch(e){ gridDeleted = false; }
+
+  try{
+    const res = await storageGet(STORAGE_KEY_BUSINESSES);
+    businesses = (res && res.value) ? JSON.parse(res.value) : [];
+  }catch(e){ businesses = []; }
+
+  for(const b of businesses){
+    if(!b.type) b.type = 'simple'; // retrocompatibilità con business creati prima di questa funzione
+    if(b.type === 'full'){
+      try{
+        const r = await storageGet('bizfull-cycles:'+b.id);
+        bizFullRows[b.id] = (r && r.value) ? JSON.parse(r.value) : [];
+      }catch(e){ bizFullRows[b.id] = []; }
+    } else {
+      try{
+        const r = await storageGet('biz-entries:'+b.id);
+        bizEntries[b.id] = (r && r.value) ? JSON.parse(r.value) : [];
+      }catch(e){ bizEntries[b.id] = []; }
+    }
+    try{
+      const r = await storageGet('biz-capital:'+b.id);
+      bizCapital[b.id] = (r && r.value) ? Number(JSON.parse(r.value)) : 0;
+    }catch(e){ bizCapital[b.id] = 0; }
+  }
+
+  try{
+    const res = await storageGet(STORAGE_KEY_TAB_ORDER);
+    tabOrder = (res && res.value) ? JSON.parse(res.value) : [];
+  }catch(e){ tabOrder = []; }
+  normalizeTabOrder();
+}
+
+// Le schede "contenuto" ordinabili sono: 'all' (Tutti i business) + tutti i
+// business esistenti + grid (se non eliminata) — di default 'all' sta per
+// prima, seguita dai business e infine dalla scheda principale. Filtra
+// tabOrder tenendo solo id validi, mantenendo l'ordine salvato, e aggiunge
+// in coda eventuali id nuovi non ancora ordinati ('all' va sempre messa
+// all'inizio se manca, così un utente esistente la ritrova comunque per prima).
+function normalizeTabOrder(){
+  const validIds = businesses.map(b=>b.id).concat(gridDeleted ? [] : ['grid']);
+  const validSet = new Set(validIds.concat(['all']));
+  const cleaned = tabOrder.filter(id=>validSet.has(id));
+  if(!cleaned.includes('all')) cleaned.unshift('all');
+  validIds.forEach(id=>{ if(!cleaned.includes(id)) cleaned.push(id); });
+  tabOrder = cleaned;
+}
+
+async function saveGridTabName(){
+  try{ await storageSet(STORAGE_KEY_GRID_NAME, JSON.stringify(gridTabName)); }catch(e){}
+}
+async function saveGridDeleted(){
+  try{ await storageSet(STORAGE_KEY_GRID_DELETED, JSON.stringify(gridDeleted)); }catch(e){}
+}
+async function saveTabOrder(){
+  try{ await storageSet(STORAGE_KEY_TAB_ORDER, JSON.stringify(tabOrder)); }catch(e){}
+}
+async function saveBusinessesList(){
+  try{ await storageSet(STORAGE_KEY_BUSINESSES, JSON.stringify(businesses)); }catch(e){}
+}
+async function saveBizEntries(id){
+  try{ await storageSet('biz-entries:'+id, JSON.stringify(bizEntries[id]||[])); }catch(e){}
+}
+async function saveBizFullRows(id){
+  try{ await storageSet('bizfull-cycles:'+id, JSON.stringify(bizFullRows[id]||[])); }catch(e){}
+}
+async function saveBizCapital(id){
+  try{ await storageSet('biz-capital:'+id, JSON.stringify(bizCapital[id]||0)); }catch(e){}
+}
+
+// Salvataggio globale: forza prima la conferma di eventuali campi aperti
+// (un input modificato ma non ancora "confermato" con invio/tab/click fuori
+// non ha ancora scritto nulla nello storage), poi riscrive su storage tutti
+// i dati dell'app. Usato dal pulsante "Salva tutto" fisso in fondo alla pagina.
+async function saveEverything(){
+  const btn = document.getElementById('saveAllBtn');
+  const active = document.activeElement;
+  if(active && (active.tagName==='INPUT' || active.tagName==='SELECT')){
+    active.dispatchEvent(new Event('change', {bubbles:true}));
+    active.blur();
+  }
+  await new Promise(r=>setTimeout(r, 0));
+  try{
+    await Promise.all([
+      saveData(false),
+      saveForecast(),
+      saveGridTabName(),
+      saveGridDeleted(),
+      saveTabOrder(),
+      saveBusinessesList(),
+      ...businesses.map(b=> b.type==='full' ? saveBizFullRows(b.id) : saveBizEntries(b.id)),
+      ...businesses.map(b=> saveBizCapital(b.id))
+    ]);
+    if(btn){
+      const old = btn.textContent;
+      btn.textContent = '✓ Salvato';
+      setTimeout(()=>{ btn.textContent = old; }, 1500);
+    }
+  }catch(e){
+    if(btn) btn.textContent = 'Errore nel salvataggio';
+  }
+}
+
+async function addBusiness(name, type){
+  const id = slugId(name);
+  businesses.push({id, name, type});
+  bizCapital[id] = 0;
+  await saveBusinessesList();
+  await saveBizCapital(id);
+  if(type === 'full'){
+    bizFullRows[id] = [];
+    await saveBizFullRows(id);
+    buildBizFullPanelDOM(id);
+  } else {
+    bizEntries[id] = [];
+    await saveBizEntries(id);
+    buildBizPanelDOM(id);
+  }
+  tabOrder.push(id);
+  await saveTabOrder();
+  renderTabs();
+  setActiveTab(id);
+}
+
+// Elimina una scheda qualsiasi (grid o business), previa conferma gestita
+// dal pulsante stesso (vedi buildTabItem).
+async function deleteTab(id){
+  if(id==='grid') await deleteGridTab();
+  else await deleteBusiness(id);
+}
+
+// Elimina la scheda principale (grid): svuota i dati e la nasconde dalla
+// tab bar, esattamente come per gli altri business.
+async function deleteGridTab(){
+  rows = [];
+  forecastMap = {};
+  try{ await storageDelete(STORAGE_KEY); }catch(e){}
+  try{ await storageDelete(STORAGE_KEY_FORECAST); }catch(e){}
+  gridDeleted = true;
+  await saveGridDeleted();
+  tabOrder = tabOrder.filter(t=>t!=='grid');
+  await saveTabOrder();
+  if(activeTab==='grid') activeTab = tabOrder[0] || 'all';
+  renderTabs();
+  setActiveTab(activeTab);
+}
+
+async function deleteBusiness(id){
+  businesses = businesses.filter(x=>x.id!==id);
+  delete bizEntries[id];
+  delete bizFullRows[id];
+  delete bizCapital[id];
+  await saveBusinessesList();
+  try{ await storageDelete('biz-entries:'+id); }catch(e){}
+  try{ await storageDelete('bizfull-cycles:'+id); }catch(e){}
+  try{ await storageDelete('biz-capital:'+id); }catch(e){}
+  const panel = document.getElementById('tabBiz-'+id);
+  if(panel) panel.remove();
+  tabOrder = tabOrder.filter(t=>t!==id);
+  await saveTabOrder();
+  if(activeTab===id) activeTab = tabOrder[0] || 'all';
+  renderTabs();
+  setActiveTab(activeTab);
+}
+
+async function addBizEntry(id){
+  bizEntries[id] = bizEntries[id] || [];
+  bizEntries[id].push({id: cryptoId(), data: new Date().toISOString().slice(0,10), gain: 0, nota: ''});
+  await saveBizEntries(id);
+  renderBizPanel(id);
+}
+async function deleteBizEntry(id, entryId){
+  bizEntries[id] = (bizEntries[id]||[]).filter(e=>e.id!==entryId);
+  await saveBizEntries(id);
+  renderBizPanel(id);
+}
+async function updateBizEntry(id, entryId, field, value){
+  const e = (bizEntries[id]||[]).find(x=>x.id===entryId);
+  if(!e) return;
+  e[field] = field==='gain' ? (Number(value)||0) : value;
+  await saveBizEntries(id);
+  renderBizPanel(id);
+}
+async function updateBizCapital(id, value){
+  bizCapital[id] = Number(value)||0;
+  await saveBizCapital(id);
+  renderBizPanel(id);
+  if(activeTab==='all') renderAllBusinesses();
+}
+
+async function renameTab(id, newName){
+  if(id==='grid'){
+    gridTabName = newName;
+    await saveGridTabName();
+  } else {
+    const b = businesses.find(x=>x.id===id);
+    if(b){
+      b.name = newName;
+      await saveBusinessesList();
+      const nameEl = document.getElementById('bizName-'+id);
+      if(nameEl) nameEl.textContent = newName;
+    }
+  }
+  renderTabs();
+  if(activeTab==='all') renderAllBusinesses();
+}
+
+// Tab bar: Tutti i business (non rinominabile né eliminabile, ma riordinabile
+// con le frecce ‹ › — di default è la prima) + business principale
+// (rinominabile ed eliminabile) + un tab per ogni business (rinominabile ed
+// eliminabile, ordine personalizzabile con le frecce ‹ › ) + "+ Nuovo business"
+function renderTabs(){
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = '';
+  normalizeTabOrder();
+  tabOrder.forEach((id,idx)=>{
+    const isAll = id==='all';
+    const opts = {editable:!isAll, deletable:!isAll, reorderable:true, isFirst: idx===0, isLast: idx===tabOrder.length-1};
+    if(id==='grid'){
+      bar.appendChild(buildTabItem('grid', gridTabName, opts));
+    } else if(isAll){
+      bar.appendChild(buildTabItem('all', 'Tutti i business', opts));
+    } else {
+      const b = businesses.find(x=>x.id===id);
+      if(b) bar.appendChild(buildTabItem(b.id, b.name, opts));
+    }
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tabbtn addbtn';
+  addBtn.id = 'tabAddBiz';
+  addBtn.textContent = '+ Nuovo business';
+  addBtn.addEventListener('click', ()=>{
+    document.getElementById('newBizForm').classList.toggle('hidden');
+  });
+  bar.appendChild(addBtn);
+
+  updateTabActiveStyles();
+}
+
+function buildTabItem(id, name, opts){
+  const item = document.createElement('span');
+  item.className = 'tab-item';
+  item.dataset.tab = id;
+
+  if(opts.reorderable){
+    const leftBtn = document.createElement('button');
+    leftBtn.className = 'tab-icon-btn';
+    leftBtn.textContent = '‹';
+    leftBtn.title = 'Sposta scheda a sinistra';
+    if(opts.isFirst){ leftBtn.disabled = true; leftBtn.style.opacity = '0.25'; }
+    leftBtn.addEventListener('click', e=>{ e.stopPropagation(); moveTab(id, -1); });
+    item.appendChild(leftBtn);
+  }
+
+  const btn = document.createElement('button');
+  btn.className = 'tabbtn';
+  btn.dataset.tab = id;
+  btn.textContent = name;
+  btn.addEventListener('click', ()=> setActiveTab(id));
+  item.appendChild(btn);
+
+  if(opts.reorderable){
+    const rightBtn = document.createElement('button');
+    rightBtn.className = 'tab-icon-btn';
+    rightBtn.textContent = '›';
+    rightBtn.title = 'Sposta scheda a destra';
+    if(opts.isLast){ rightBtn.disabled = true; rightBtn.style.opacity = '0.25'; }
+    rightBtn.addEventListener('click', e=>{ e.stopPropagation(); moveTab(id, 1); });
+    item.appendChild(rightBtn);
+  }
+
+  if(opts.editable){
+    const editBtn = document.createElement('button');
+    editBtn.className = 'tab-icon-btn';
+    editBtn.textContent = '✎';
+    editBtn.title = 'Rinomina scheda';
+    editBtn.addEventListener('click', e=>{ e.stopPropagation(); startRenameTab(id, item, btn, name); });
+    item.appendChild(editBtn);
+  }
+  if(opts.deletable){
+    const delBtn = document.createElement('button');
+    delBtn.className = 'tab-icon-btn danger';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Elimina scheda';
+    delBtn.dataset.armed = 'false';
+    delBtn.addEventListener('click', e=>{
+      e.stopPropagation();
+      if(delBtn.dataset.armed === 'true'){
+        deleteTab(id);
+      } else {
+        delBtn.dataset.armed = 'true';
+        delBtn.textContent = 'Conferma';
+        delBtn.classList.add('armed');
+        setTimeout(()=>{
+          if(delBtn.dataset.armed === 'true'){
+            delBtn.dataset.armed = 'false';
+            delBtn.textContent = '✕';
+            delBtn.classList.remove('armed');
+          }
+        }, 2500);
+      }
+    });
+    item.appendChild(delBtn);
+  }
+
+  return item;
+}
+
+// Scambia la scheda id con la vicina immediata nella direzione indicata
+// (-1 = sinistra, +1 = destra) e persiste il nuovo ordine.
+async function moveTab(id, direction){
+  const idx = tabOrder.indexOf(id);
+  if(idx===-1) return;
+  const newIdx = idx + direction;
+  if(newIdx<0 || newIdx>=tabOrder.length) return;
+  const tmp = tabOrder[idx];
+  tabOrder[idx] = tabOrder[newIdx];
+  tabOrder[newIdx] = tmp;
+  await saveTabOrder();
+  renderTabs();
+}
+
+function startRenameTab(id, item, btn, currentName){
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentName;
+  input.className = 'tab-rename-input';
+  item.replaceChild(input, btn);
+  input.focus();
+  input.select();
+  let done = false;
+  const commit = async ()=>{
+    if(done) return;
+    done = true;
+    const val = input.value.trim();
+    if(val && val !== currentName) await renameTab(id, val);
+    else renderTabs();
+  };
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter') commit();
+    if(e.key==='Escape'){ done = true; renderTabs(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+function updateTabActiveStyles(){
+  document.querySelectorAll('.tab-item, .tabbtn[data-tab]').forEach(el=>{
+    const isActive = el.dataset.tab === activeTab;
+    el.classList.toggle('active-item', isActive);
+    if(el.classList.contains('tabbtn')) el.classList.toggle('active', isActive);
+    else { const b = el.querySelector('.tabbtn'); if(b) b.classList.toggle('active', isActive); }
+  });
+}
+
+function setActiveTab(tab){
+  activeTab = tab;
+  document.getElementById('tabGrid').classList.toggle('hidden', tab!=='grid');
+  document.getElementById('tabAll').classList.toggle('hidden', tab!=='all');
+  businesses.forEach(b=>{
+    const el = document.getElementById('tabBiz-'+b.id);
+    if(el) el.classList.toggle('hidden', tab!==b.id);
+  });
+  document.getElementById('newBizForm').classList.add('hidden');
+  updateTabActiveStyles();
+  if(tab==='all') renderAllBusinesses();
+  else if(tab!=='grid') {
+    if(bizType(tab)==='full') renderBizFullPanel(tab);
+    else renderBizPanel(tab);
+  }
+}
+
+// Crea il DOM di un pannello business generico (una volta sola, poi si aggiorna via renderBizPanel)
+function buildBizPanelDOM(id){
+  const b = businesses.find(x=>x.id===id);
+  if(!b) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'tabBiz-'+id;
+  wrap.className = 'hidden';
+  wrap.innerHTML = `
+    <div class="eyebrow" style="margin-bottom:16px;"><span class="dot"></span><span id="bizName-${id}">${b.name}</span></div>
+    <div class="header-row">
+      <div>
+        <h1>Gain Totale</h1>
+        <div class="hero-num">
+          <span id="bizGainTot-${id}">€ 0</span>
+          <span class="badge" id="bizRoiBadge-${id}">0%</span>
+        </div>
+      </div>
+      <div class="capital-input-row">
+        Capitale investito:
+        <input type="number" id="bizCap-${id}" value="${bizCapital[id]||0}">
+      </div>
+    </div>
+    <div class="stats">
+      <div class="card"><div class="label">Voci registrate</div><div class="val" id="bizCount-${id}">0</div></div>
+      <div class="card"><div class="label">Media per voce</div><div class="val" id="bizAvg-${id}">€ 0</div></div>
+    </div>
+    <div class="panel">
+      <h2>Andamento cumulato</h2>
+      <div class="chart-box" id="bizChart-${id}"></div>
+    </div>
+    <div class="panel">
+      <h2>Registro</h2>
+      <div class="registro-toolbar">
+        <select id="registroMese-${id}">${monthSelectOptionsHTML()}</select>
+        <select id="registroAnno-${id}"></select>
+      </div>
+      <table>
+        <thead><tr><th>Data</th><th>Gain</th><th>Nota</th><th></th></tr></thead>
+        <tbody id="bizTbody-${id}"></tbody>
+      </table>
+      <div class="add-row"><button class="primary" id="bizAddBtn-${id}">+ Nuova voce</button></div>
+    </div>
+  `;
+  document.getElementById('bizPanels').appendChild(wrap);
+
+  document.getElementById('bizCap-'+id).addEventListener('change', e=> updateBizCapital(id, e.target.value));
+  document.getElementById('bizAddBtn-'+id).addEventListener('click', ()=> addBizEntry(id));
+  registroFilterBiz[id] = registroFilterBiz[id] || defaultRegistroFilter();
+  document.getElementById('registroMese-'+id).addEventListener('change', e=>{ registroFilterBiz[id].month = e.target.value; renderBizPanel(id); });
+  document.getElementById('registroAnno-'+id).addEventListener('change', e=>{ registroFilterBiz[id].year = e.target.value; renderBizPanel(id); });
+}
+
+function renderBizPanel(id){
+  const entries = (bizEntries[id]||[]).slice().sort((a,b)=> (a.data||'').localeCompare(b.data||''));
+  let cum = 0;
+  const withCum = entries.map(e=>{ cum += Number(e.gain)||0; return {...e, cum}; });
+
+  const gainTot = cum;
+  const cap = bizCapital[id]||0;
+  const roi = cap ? (gainTot/cap*100) : 0;
+
+  document.getElementById('bizGainTot-'+id).textContent = fmtEur(gainTot);
+  const badge = document.getElementById('bizRoiBadge-'+id);
+  badge.textContent = (roi>=0?'+':'') + roi.toFixed(2) + '%';
+  badge.className = 'badge' + (roi<0 ? ' neg' : '');
+  document.getElementById('bizCount-'+id).textContent = entries.length;
+  document.getElementById('bizAvg-'+id).textContent = fmtEur(entries.length ? gainTot/entries.length : 0);
+
+  const filter = registroFilterBiz[id] = registroFilterBiz[id] || defaultRegistroFilter();
+  const selAnno = document.getElementById('registroAnno-'+id);
+  populateYearSelect(selAnno, getYearsFromRows(withCum), filter.year);
+  document.getElementById('registroMese-'+id).value = filter.month;
+
+  const tbody = document.getElementById('bizTbody-'+id);
+  tbody.innerHTML = '';
+  withCum.filter(e=>rowMatchesMonthYear(e, filter)).forEach(e=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="cell" type="date" value="${e.data||''}" data-field="data"></td>
+      <td><input class="cell" type="number" value="${e.gain}" data-field="gain"></td>
+      <td><input class="cell" type="text" value="${e.nota||''}" data-field="nota" style="text-align:left;"></td>
+      <td><button class="del-btn">✕</button></td>
+    `;
+    tr.querySelectorAll('input.cell').forEach(inp=>{
+      inp.addEventListener('change', ()=> updateBizEntry(id, e.id, inp.dataset.field, inp.value));
+    });
+    tr.querySelector('.del-btn').addEventListener('click', ()=> deleteBizEntry(id, e.id));
+    tbody.appendChild(tr);
+  });
+
+  // grafico cumulato (singola linea)
+  const labels = withCum.map(e=>fmtDate(e.data));
+  const values = withCum.map(e=>e.cum);
+  document.getElementById('bizChart-'+id).innerHTML = buildSingleLineSVG(labels, values, BIZ_COLORS[businesses.findIndex(b=>b.id===id) % BIZ_COLORS.length]);
+}
+
+/* ---- Business "completo" (stesso formato di Broker Vs Broker: cicli,
+   capitale, spese, gain lordo, grafico cicli + mensile) ---- */
+
+function buildBizFullPanelDOM(id){
+  const b = businesses.find(x=>x.id===id);
+  if(!b) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'tabBiz-'+id;
+  wrap.className = 'hidden';
+  wrap.innerHTML = `
+    <div class="eyebrow" style="margin-bottom:16px;"><span class="dot"></span><span id="bizName-${id}">${b.name}</span></div>
+    <div class="header-row">
+      <div>
+        <h1>Gain Totale</h1>
+        <div class="hero-num">
+          <span id="bizfGainTot-${id}">€ 0</span>
+          <span class="badge" id="bizfRoiBadge-${id}">0%</span>
+        </div>
+      </div>
+      <div class="capital-input-row">
+        Capitale investito:
+        <input type="number" id="bizfCap-${id}" value="${bizCapital[id]||0}">
+      </div>
+    </div>
+    <div class="stats">
+      <div class="card"><div class="label">Media Gain Lordo</div><div class="val" id="bizfMediaGain-${id}">€ 0</div></div>
+      <div class="card"><div class="label">Media Profitto/ciclo</div><div class="val" id="bizfMediaProfitto-${id}">€ 0</div></div>
+      <div class="card"><div class="label">Cicli registrati</div><div class="val" id="bizfCount-${id}">0</div></div>
+      <div class="card"><div class="label">Spese totali</div><div class="val" id="bizfSpese-${id}">€ 0</div></div>
+    </div>
+    <div class="panel">
+      <h2>Andamento cicli</h2>
+      <div class="chart-box" id="bizfChart-${id}"></div>
+      <div class="chart-legend">
+        <span onclick="toggleChartFilter('bizf:${id}:cicli','bar')" data-legend-chart="bizf:${id}:cicli" data-legend-series="bar"><i class="swatch bar"></i>Gain ciclo</span>
+        <span onclick="toggleChartFilter('bizf:${id}:cicli','line')" data-legend-chart="bizf:${id}:cicli" data-legend-series="line"><i class="swatch line"></i>Gain Totale</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Andamento mese per mese</h2>
+      <div class="chart-box short" id="bizfChartMonthly-${id}"></div>
+      <div class="chart-legend">
+        <span onclick="toggleChartFilter('bizf:${id}:monthly','bar')" data-legend-chart="bizf:${id}:monthly" data-legend-series="bar"><i class="swatch bar"></i>Gain ciclo (mese)</span>
+        <span onclick="toggleChartFilter('bizf:${id}:monthly','line')" data-legend-chart="bizf:${id}:monthly" data-legend-series="line"><i class="swatch line"></i>Gain Totale (fine mese)</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Registro cicli</h2>
+      <div class="registro-toolbar">
+        <select id="registroMeseF-${id}">${monthSelectOptionsHTML()}</select>
+        <select id="registroAnnoF-${id}"></select>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Ciclo</th><th>Capitale</th><th>Data</th><th>Gain Lordo</th><th>Spese</th><th>Gain ciclo</th><th>Gain Totale</th><th></th></tr>
+        </thead>
+        <tbody id="bizfTbody-${id}"></tbody>
+      </table>
+      <div class="add-row"><button class="primary" id="bizfAddBtn-${id}">+ Nuovo ciclo</button></div>
+    </div>
+  `;
+  document.getElementById('bizPanels').appendChild(wrap);
+
+  document.getElementById('bizfCap-'+id).addEventListener('change', e=> updateBizCapital(id, e.target.value));
+  document.getElementById('bizfAddBtn-'+id).addEventListener('click', ()=> addBizFullRow(id));
+  registroFilterBizFull[id] = registroFilterBizFull[id] || defaultRegistroFilter();
+  document.getElementById('registroMeseF-'+id).addEventListener('change', e=>{ registroFilterBizFull[id].month = e.target.value; renderBizFullPanel(id); });
+  document.getElementById('registroAnnoF-'+id).addEventListener('change', e=>{ registroFilterBizFull[id].year = e.target.value; renderBizFullPanel(id); });
+}
+
+async function addBizFullRow(id){
+  bizFullRows[id] = bizFullRows[id] || [];
+  const rowsArr = bizFullRows[id];
+  const last = rowsArr[rowsArr.length-1];
+  rowsArr.push({
+    id: cryptoId(),
+    capitale: last ? last.capitale : 2000,
+    data: new Date().toISOString().slice(0,10),
+    gainLordo: 0,
+    spese: 0
+  });
+  await saveBizFullRows(id);
+  renderBizFullPanel(id);
+}
+async function deleteBizFullRow(id, rowId){
+  bizFullRows[id] = (bizFullRows[id]||[]).filter(r=>r.id!==rowId);
+  await saveBizFullRows(id);
+  renderBizFullPanel(id);
+}
+async function updateBizFullRow(id, rowId, field, value){
+  const r = (bizFullRows[id]||[]).find(x=>x.id===rowId);
+  if(!r) return;
+  r[field] = (field==='data') ? value : Number(value);
+  await saveBizFullRows(id);
+  renderBizFullPanel(id);
+}
+
+function renderBizFullPanel(id){
+  const c = computeCyclesGeneric(bizFullRows[id]||[]);
+  const last = c[c.length-1];
+  const gainTot = last ? last.gainTotale : 0;
+  const cap = bizCapital[id]||0;
+  const roi = cap ? (gainTot/cap*100) : 0;
+
+  document.getElementById('bizfGainTot-'+id).textContent = fmtEur(gainTot);
+  const badge = document.getElementById('bizfRoiBadge-'+id);
+  badge.textContent = (roi>=0?'+':'') + roi.toFixed(2) + '%';
+  badge.className = 'badge' + (roi<0 ? ' neg' : '');
+
+  const mediaGain = c.length ? c.reduce((s,r)=>s+Number(r.gainLordo||0),0)/c.length : 0;
+  const mediaProfitto = c.length ? c.reduce((s,r)=>s+r.gainCiclo,0)/c.length : 0;
+  const speseTot = c.reduce((s,r)=>s+Number(r.spese||0),0);
+  document.getElementById('bizfMediaGain-'+id).textContent = fmtEur(mediaGain);
+  document.getElementById('bizfMediaProfitto-'+id).textContent = fmtEur(mediaProfitto);
+  document.getElementById('bizfCount-'+id).textContent = c.length;
+  document.getElementById('bizfSpese-'+id).textContent = fmtEur(speseTot);
+
+  const filter = registroFilterBizFull[id] = registroFilterBizFull[id] || defaultRegistroFilter();
+  const selAnnoF = document.getElementById('registroAnnoF-'+id);
+  populateYearSelect(selAnnoF, getYearsFromRows(c), filter.year);
+  document.getElementById('registroMeseF-'+id).value = filter.month;
+
+  const tbody = document.getElementById('bizfTbody-'+id);
+  tbody.innerHTML = '';
+  c.filter(r=>rowMatchesMonthYear(r, filter)).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.idx}</td>
+      <td><input class="cell" type="number" data-field="capitale" value="${r.capitale}"></td>
+      <td><input class="cell" type="date" data-field="data" value="${r.data||''}"></td>
+      <td><input class="cell" type="number" data-field="gainLordo" value="${r.gainLordo}"></td>
+      <td><input class="cell" type="number" data-field="spese" value="${r.spese}"></td>
+      <td class="${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
+      <td class="${r.gainTotale>=0?'gainpos':'gainneg'}">${fmtEur(r.gainTotale)}</td>
+      <td><button class="del-btn" title="Elimina ciclo">✕</button></td>
+    `;
+    tr.querySelectorAll('input.cell').forEach(inp=>{
+      inp.addEventListener('change', ()=> updateBizFullRow(id, r.id, inp.dataset.field, inp.value));
+    });
+    tr.querySelector('.del-btn').addEventListener('click', ()=> deleteBizFullRow(id, r.id));
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('bizfChart-'+id).innerHTML = buildComboChartSVG(
+    c.map(r=>fmtDate(r.data)), c.map(r=>r.gainCiclo), c.map(r=>r.gainTotale), chartFilter['bizf:'+id+':cicli']
+  );
+  applyLegendDimState('bizf:'+id+':cicli');
+
+  const monthly = aggregateByMonth(c);
+  document.getElementById('bizfChartMonthly-'+id).innerHTML = buildComboChartSVG(
+    monthly.map(m=>m.label), monthly.map(m=>m.gainCiclo), monthly.map(m=>m.gainTotale), chartFilter['bizf:'+id+':monthly']
+  );
+  applyLegendDimState('bizf:'+id+':monthly');
+}
+
+// Grafico a singola linea generico, colore parametrico
+function buildSingleLineSVG(labels, values, color){
+  const W = 900, H = 280;
+  const pad = {left:54, right:16, top:20, bottom:36};
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const n = labels.length;
+
+  if(n === 0){
+    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <text x="${W/2}" y="${H/2}" text-anchor="middle" class="axis-label">Nessun dato ancora</text>
+    </svg>`;
+  }
+
+  const allVals = [...values, 0];
+  let maxV = Math.max(...allVals);
+  let minV = Math.min(...allVals);
+  if(maxV === minV){ maxV += 1; minV -= 1; }
+  const span = maxV - minV;
+  const yFor = v => pad.top + innerH - ((v - minV) / span) * innerH;
+  // margine ai due lati per non far coincidere il primo/ultimo punto con l'asse
+  const EDGE_INSET = n > 1 ? Math.min(28, innerW*0.08) : 0;
+  const usableW = Math.max(1, innerW - EDGE_INSET*2);
+  const slot = usableW / (n-1 || 1);
+  const xFor = i => pad.left + EDGE_INSET + slot*i;
+
+  let grid = '';
+  for(let s=0;s<=4;s++){
+    const v = minV + (span/4)*s;
+    const y = yFor(v);
+    grid += `<line class="grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${W-pad.right}" y2="${y.toFixed(1)}"></line>`;
+    grid += `<text class="axis-label" x="${pad.left-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('it-IT')}</text>`;
+  }
+
+  const pts = values.map((v,i)=>[xFor(i), yFor(v)]);
+  const path = pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const dots = pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="${color}"></circle>`).join('');
+  const lbls = pts.map((p,i)=>`<text class="line-label" x="${p[0].toFixed(1)}" y="${(p[1]-11).toFixed(1)}" text-anchor="middle">${Math.round(values[i]).toLocaleString('it-IT')}</text>`).join('');
+
+  let xLabels = '';
+  for(let i=0;i<n;i++){
+    xLabels += `<text class="axis-label" x="${xFor(i).toFixed(1)}" y="${H-pad.bottom+18}" text-anchor="middle">${labels[i]}</text>`;
+  }
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5"></path>
+    ${dots}
+    ${lbls}
+    ${xLabels}
+  </svg>`;
+}
+
+// Aggrega voci generiche {data, gain} per mese (stesso schema di aggregateByMonth)
+function aggregateGenericByMonth(entries){
+  const map = new Map();
+  entries.slice().sort((a,b)=>(a.data||'').localeCompare(b.data||'')).forEach(e=>{
+    const key = e.data ? e.data.slice(0,7) : 'N/D';
+    if(!map.has(key)) map.set(key, {key, label: monthLabel(e.data), gain:0});
+    map.get(key).gain += Number(e.gain)||0;
+  });
+  const keys = Array.from(map.keys()).sort();
+  return keys.map(k=>map.get(k));
+}
+
+function renderAllBusinesses(){
+  const gridMonthly = aggregateByMonth(computed());
+  const gridGainTot = gridMonthly.length ? gridMonthly[gridMonthly.length-1].gainTotale : 0;
+  const gridCap = getCapitaleRiferimento();
+
+  const series = [{ id:'grid', name:gridTabName, color:'#D4A24C',
+    gainTot: gridGainTot, cap: gridCap,
+    monthly: gridMonthly.map(m=>({key:m.key, label:m.label, gain:m.gainCiclo, cum:m.gainTotale})) }];
+
+  businesses.forEach((b,idx)=>{
+    let monthly;
+    if(b.type === 'full'){
+      const c = computeCyclesGeneric(bizFullRows[b.id]||[]);
+      monthly = aggregateByMonth(c).map(m=>({key:m.key, label:m.label, gain:m.gainCiclo, cum:m.gainTotale}));
+    } else {
+      const entries = bizEntries[b.id]||[];
+      const monthlyRaw = aggregateGenericByMonth(entries);
+      let cum = 0;
+      monthly = monthlyRaw.map(m=>{ cum += m.gain; return {...m, cum}; });
+    }
+    const gainTot = monthly.length ? monthly[monthly.length-1].cum : 0;
+    series.push({ id:b.id, name:b.name, color: BIZ_COLORS[idx % BIZ_COLORS.length],
+      gainTot, cap: bizCapital[b.id]||0, monthly });
+  });
+
+  // riepilogo tabella
+  const tbody = document.getElementById('tbodyAllBiz');
+  tbody.innerHTML = '';
+  let totGain = 0, totCap = 0;
+  series.forEach(s=>{
+    totGain += s.gainTot; totCap += s.cap;
+    const roi = s.cap ? (s.gainTot/s.cap*100) : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s.name}</td><td>${fmtEur(s.cap)}</td><td class="${s.gainTot>=0?'gainpos':'gainneg'}">${fmtEur(s.gainTot)}</td><td>${roi.toFixed(2)}%</td>`;
+    tbody.appendChild(tr);
+  });
+  const totRoi = totCap ? (totGain/totCap*100) : 0;
+  const capTotale = totCap + totGain;
+  const trTot = document.createElement('tr');
+  trTot.style.borderTop = '2px solid #232833';
+  trTot.innerHTML = `<td style="font-weight:600;">Totale</td><td style="font-weight:600;">${fmtEur(totCap)}</td><td style="font-weight:600;" class="${totGain>=0?'gainpos':'gainneg'}">${fmtEur(totGain)}</td><td style="font-weight:600;">${totRoi.toFixed(2)}%</td>`;
+  tbody.appendChild(trTot);
+
+  document.getElementById('allHeroTotal').textContent = fmtEur(totGain);
+  const heroBadge = document.getElementById('allHeroPct');
+  heroBadge.textContent = (totRoi>=0?'+':'') + totRoi.toFixed(2) + '%';
+  heroBadge.className = 'badge' + (totRoi<0 ? ' neg' : '');
+  document.getElementById('allMeta').textContent = series.length + ' business attivi';
+
+  document.getElementById('allStatCapInvestito').textContent = fmtEur(totCap);
+  document.getElementById('allStatCapTotale').textContent = fmtEur(capTotale);
+  const roiStatEl = document.getElementById('allStatRoi');
+  roiStatEl.textContent = (totRoi>=0?'+':'') + totRoi.toFixed(2) + '%';
+  roiStatEl.className = 'val ' + (totRoi>=0?'gainpos':'gainneg');
+  document.getElementById('allStatCount').textContent = series.length;
+
+  // legenda (cliccabile: isola una singola serie nel grafico corrispondente)
+  const buildAllLegend = (chartId) => series.map(s=>
+      `<span class="${legendSpanClass(chartId, s.id)}" onclick="toggleChartFilter('${chartId}','${s.id}')" data-legend-chart="${chartId}" data-legend-series="${s.id}"><i class="swatch" style="background:${s.color}"></i>${s.name}</span>`
+    ).join('') +
+    `<span class="${legendSpanClass(chartId, 'total')}" onclick="toggleChartFilter('${chartId}','total')" data-legend-chart="${chartId}" data-legend-series="total"><i class="swatch total"></i>Totale</span>`;
+
+  document.getElementById('legendAll').innerHTML = buildAllLegend('all:gain');
+
+  // timeline combinata (unione di tutti i mesi)
+  const monthsSet = new Set();
+  series.forEach(s=> s.monthly.forEach(m=> monthsSet.add(m.key)));
+  const months = Array.from(monthsSet).sort();
+  const labels = months.map(k=>labelFromKey(k));
+
+  const seriesValues = series.map(s=>{
+    const byKey = {};
+    s.monthly.forEach(m=>{ byKey[m.key] = m.cum; });
+    let last = 0;
+    return months.map(k=>{
+      if(k in byKey) last = byKey[k];
+      return last;
+    });
+  });
+  const totalValues = months.map((_,i)=> seriesValues.reduce((sum,vals)=>sum+vals[i],0));
+
+  document.getElementById('chartBoxAll').innerHTML = buildMultiLineSVG(labels, series.map((s,i)=>({id:s.id, name:s.name, color:s.color, values:seriesValues[i]})), totalValues, 'all:gain');
+
+  // Capitale Totale nel tempo: una linea per ogni business (capitale investito
+  // + gain cumulato di quel business, mese per mese) più la linea totale.
+  const capTimelinePerSeries = series.map((s,i)=> seriesValues[i].map(v => s.cap + v));
+  const capTotaleTimeline = months.map((_,i)=> totCap + totalValues[i]);
+  document.getElementById('chartBoxCapTotale').innerHTML = buildMultiLineSVG(
+    labels,
+    series.map((s,i)=>({id:s.id, name:s.name, color:s.color, values:capTimelinePerSeries[i]})),
+    capTotaleTimeline,
+    'all:captot'
+  );
+  document.getElementById('legendCapTotale').innerHTML = buildAllLegend('all:captot');
+}
+
+// Grafico multi-linea: una linea per business + una linea totale tratteggiata.
+// chartId: se passato, permette di isolare una singola serie tramite click
+// sulla legenda (vedi toggleChartFilter/isSeriesVisible). Le serie sono
+// identificate da s.id; la linea totale dall'id speciale 'total'.
+function buildMultiLineSVG(labels, seriesList, totalValues, chartId){
+  const W = 900, H = 300;
+  const pad = {left:54, right:16, top:20, bottom:36};
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const n = labels.length;
+
+  if(n === 0){
+    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <text x="${W/2}" y="${H/2}" text-anchor="middle" class="axis-label">Nessun dato ancora</text>
+    </svg>`;
+  }
+
+  const showTotal = !chartId || isSeriesVisible(chartId, 'total');
+  const visibleSeries = chartId ? seriesList.filter(s=> isSeriesVisible(chartId, s.id)) : seriesList;
+
+  const allVals = [...visibleSeries.flatMap(s=>s.values), ...(showTotal?totalValues:[]), 0];
+  let maxV = Math.max(...allVals);
+  let minV = Math.min(...allVals);
+  if(maxV === minV){ maxV += 1; minV -= 1; }
+  const span = maxV - minV;
+  const yFor = v => pad.top + innerH - ((v - minV) / span) * innerH;
+  // margine ai due lati per non far coincidere il primo/ultimo punto con l'asse
+  const EDGE_INSET = n > 1 ? Math.min(28, innerW*0.08) : 0;
+  const usableW = Math.max(1, innerW - EDGE_INSET*2);
+  const slot = usableW / (n-1 || 1);
+  const xFor = i => pad.left + EDGE_INSET + slot*i;
+
+  let grid = '';
+  for(let s=0;s<=4;s++){
+    const v = minV + (span/4)*s;
+    const y = yFor(v);
+    grid += `<line class="grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${W-pad.right}" y2="${y.toFixed(1)}"></line>`;
+    grid += `<text class="axis-label" x="${pad.left-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('it-IT')}</text>`;
+  }
+
+  let lines = '';
+  visibleSeries.forEach(s=>{
+    const pts = s.values.map((v,i)=>[xFor(i), yFor(v)]);
+    const path = pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    const dots = pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${s.color}"></circle>`).join('');
+    lines += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.2"></path>${dots}`;
+  });
+
+  let totLine = '';
+  if(showTotal){
+    const totPts = totalValues.map((v,i)=>[xFor(i), yFor(v)]);
+    const totPath = totPts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    const totDots = totPts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="#EDEFF2"></circle>`).join('');
+    const totLabels = totPts.map((p,i)=>`<text class="line-label" x="${p[0].toFixed(1)}" y="${(p[1]-11).toFixed(1)}" text-anchor="middle">${Math.round(totalValues[i]).toLocaleString('it-IT')}</text>`).join('');
+    totLine = `<path d="${totPath}" fill="none" stroke="#EDEFF2" stroke-width="2.5" stroke-dasharray="7,4"></path>${totDots}${totLabels}`;
+  }
+
+  let xLabels = '';
+  for(let i=0;i<n;i++){
+    xLabels += `<text class="axis-label" x="${xFor(i).toFixed(1)}" y="${H-pad.bottom+18}" text-anchor="middle">${labels[i]}</text>`;
+  }
+
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}
+    ${lines}
+    ${totLine}
+    ${xLabels}
+  </svg>`;
+}
+
+document.getElementById('newBizConfirm').addEventListener('click', async ()=>{
+  const input = document.getElementById('newBizName');
+  const typeSel = document.getElementById('newBizType');
+  const name = input.value.trim();
+  if(!name) return;
+  const type = typeSel.value;
+  input.value = '';
+  await addBusiness(name, type);
+});
+
+document.getElementById('registroMeseGrid').addEventListener('change', e=>{ registroFilterGrid.month = e.target.value; render(); });
+document.getElementById('registroAnnoGrid').addEventListener('change', e=>{ registroFilterGrid.year = e.target.value; render(); });
+
+document.getElementById('saveAllBtn').addEventListener('click', saveEverything);
+(function showStorageMode(){
+  const el = document.getElementById('storageModeNote');
+  if(!el) return;
+  if(storageBackend==='cloud') el.textContent = 'Salvataggio: Telegram Cloud (sincronizzato su tutti i tuoi dispositivi)';
+  else if(storageBackend==='app') el.textContent = 'Salvataggio: memoria di Claude (sincronizzato con questa chat)';
+  else el.textContent = 'Salvataggio: solo in questo browser';
+})();
+
+/* ---- init Telegram Mini App ---- */
+(function initTelegram(){
+  if(!TG) return;
+  document.body.classList.add('tg');
+  try{ TG.ready(); }catch(e){}
+  try{ TG.expand(); }catch(e){}
+  try{ if(TG.disableVerticalSwipes) TG.disableVerticalSwipes(); }catch(e){}
+  try{ TG.setHeaderColor('#0A0C10'); TG.setBackgroundColor('#0A0C10'); }catch(e){}
+  try{ TG.enableClosingConfirmation(); }catch(e){}
+  // pulsante nativo di Telegram per salvare tutto
+  try{
+    if(TG.MainButton){
+      TG.MainButton.setParams({text:'SALVA TUTTO', color:'#D4A24C', text_color:'#0A0C10'});
+      TG.MainButton.onClick(()=>{
+        saveEverything();
+        try{ TG.HapticFeedback.notificationOccurred('success'); }catch(e){}
+      });
+      TG.MainButton.show();
+    }
+  }catch(e){}
+})();
+
+(async function init(){
+  await loadData();
+  await loadForecast();
+  await loadBusinesses();
+  businesses.forEach(b=> b.type==='full' ? buildBizFullPanelDOM(b.id) : buildBizPanelDOM(b.id));
+  renderTabs();
+  setActiveTab(gridDeleted ? (tabOrder[0] || 'all') : 'grid');
+  render();
+})();
+</script>
+</body>
+</html>
