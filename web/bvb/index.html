@@ -9,15 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0A0C10;
-    --panel:#12151B;
-    --panel-2:#161A21;
-    --border:#232833;
+    --bg:#080B0D;
+    --panel:#0F1417;
+    --panel-2:#131A1D;
+    --border:#1B242A;
     --text:#EDEFF2;
     --muted:#8B93A1;
-    --gold:#D4A24C;
-    --gold-bright:#F0C674;
-    --green:#4ADE95;
+    --gold:#0d9e88;
+    --gold-bright:#14c9ac;
+    --green:#14c9ac;
     --red:#F2645A;
   }
   *{box-sizing:border-box;}
@@ -29,7 +29,7 @@
     padding:28px;
     min-height:100vh;
   }
-  .wrap{max-width:1100px;margin:0 auto;}
+  .wrap{max-width:720px;margin:0 auto;}
 
   /* header */
   .eyebrow{
@@ -42,11 +42,11 @@
     align-items:center;
     gap:10px;
   }
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
   .goldline{
     height:2px;margin:10px 0 22px 0;border-radius:2px;
-    background:linear-gradient(90deg,transparent,var(--gold) 15%,var(--gold-bright) 50%,var(--gold) 85%,transparent);
+    background:var(--panel);
     background-size:200% 100%;
     animation:sheen 4s linear infinite;
   }
@@ -73,7 +73,7 @@
   .meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
 
   /* stat cards */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
   .card{
     background:var(--panel);border:1px solid var(--border);border-radius:10px;
     padding:14px 16px;
@@ -98,7 +98,7 @@
   .axis-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;fill:#8B93A1;}
   .bar-el{fill:#C99A2E;}
   .bar-el.forecast-bar{fill:#4B5563;}
-  .bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;fill:#0A0C10;}
+  .bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;fill:#080B0D;}
   .bar-label.outside{fill:#EDEFF2;}
   .line-el{fill:none;stroke:#FFC700;stroke-width:2.5;}
   .area-el{fill:rgba(255,199,0,0.10);stroke:none;}
@@ -112,7 +112,7 @@
   .chart-legend span{cursor:pointer;user-select:none;transition:opacity .15s;padding:2px 4px;border-radius:4px;}
   .chart-legend span:hover{background:rgba(255,255,255,0.06);}
   .chart-legend span.legend-dim{opacity:0.28;}
-  .registro-toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;}
+  .registro-toolbar{display:flex;gap:8px;margin-bottom:12px;}
   .registro-toolbar select{
     background:var(--panel-2);border:1px solid var(--border);color:var(--text);
     font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 10px;border-radius:7px;
@@ -157,7 +157,7 @@
   }
   button.primary:hover{background:var(--gold-bright);}
   .save-note{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right;margin-top:8px;min-height:14px;}
-  .save-all-bar{position:sticky;bottom:0;display:flex;justify-content:center;padding:14px 0;margin-top:24px;background:linear-gradient(to top, var(--bg) 60%, transparent);}
+  .save-all-bar{position:sticky;bottom:0;display:flex;justify-content:center;padding:14px 0;margin-top:24px;background:var(--panel);}
   .save-all-bar button{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;padding:12px 28px;border-radius:8px;border:none;cursor:pointer;background:var(--gold);color:#12151B;box-shadow:0 4px 14px rgba(0,0,0,.25);}
   .save-all-bar button:active{transform:translateY(1px);}
 
@@ -208,7 +208,7 @@
   body.tg{padding:12px 12px calc(24px + env(safe-area-inset-bottom)) 12px;}
   @media (max-width:820px){
     body{padding:14px 12px calc(24px + env(safe-area-inset-bottom)) 12px;}
-    .stats{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .stats{grid-template-columns:repeat(3,1fr);gap:8px;}
     .hero-num{font-size:38px;gap:10px;}
     .hero-num .badge{font-size:15px;padding:5px 9px;}
     .header-row{gap:12px;}
@@ -223,18 +223,56 @@
     .tabbar{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;}
   }
   @media (max-width:480px){
-    .stats{grid-template-columns:1fr 1fr;}
+    .stats{grid-template-columns:repeat(3,1fr);}
     .hero-num{font-size:32px;}
   }
+
+  .hero{position:relative;text-align:center;padding:26px 16px 22px;margin-bottom:20px;border-radius:16px;background:var(--panel);border:1px solid var(--gold);overflow:hidden;}
+  .hero:before{content:"";position:absolute;inset:0;pointer-events:none;}
+  .hero-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.6px;color:var(--muted);text-transform:uppercase;}
+  .hero .hero-num{font-family:'Space Grotesk',sans-serif;font-size:clamp(42px,12vw,68px);font-weight:700;line-height:1;
+    color:var(--gold-bright);letter-spacing:-2px;margin:12px 0 10px;display:block;}
+  .hero-badge .badge{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:6px 14px;border-radius:22px;
+    background:rgba(74,222,149,.12);color:var(--green);border:1px solid rgba(74,222,149,.3);display:inline-block;}
+  .hero-badge .badge.neg{background:rgba(242,100,90,.12);color:var(--red);border-color:rgba(242,100,90,.3);}
+  .hero-meta{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.6px;}
+  .stats{grid-template-columns:repeat(3,1fr);}
+  @media(max-width:620px){
+    body{padding:12px;}
+    .hero{padding:22px 12px 18px;border-radius:16px;}
+    .stats{grid-template-columns:repeat(3,1fr);gap:7px;}
+    .card{padding:10px 8px;}
+    .card .label{font-size:8.5px;letter-spacing:.8px;}
+    .card .val{font-size:15px;}
+    .panel{padding:13px 11px;border-radius:14px;}
+    .panel h2{font-size:12px;}
+    table{font-size:11.5px;}
+    th,td{padding:7px 4px;}
+  }
+  @media(max-width:380px){
+    .stats{grid-template-columns:repeat(3,1fr);gap:6px;}
+    .card .val{font-size:13.5px;}
+  }
+  table{width:100%;table-layout:fixed;border-collapse:collapse;}
+  th,td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:11px 10px;}
+  th:nth-child(1),td.c-n{width:10%;text-align:left;}
+  th:nth-child(2),td.c-d{width:26%;text-align:left;}
+  th:nth-child(3),td.c-c{width:30%;text-align:right;}
+  th:nth-child(4),td.c-g{width:34%;text-align:right;font-weight:600;font-size:14px;}
+  th:nth-child(3),th:nth-child(4){text-align:right;}
+  td.c-n{color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  td.c-d{color:var(--muted);}
+  td.c-c{color:var(--muted);}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.018);}
+  .add-row{display:none;}
+  .registro-toolbar{display:flex;gap:8px;margin-bottom:14px;}
+  .registro-toolbar select{flex:1;width:100%;max-width:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="eyebrow"><span class="dot"></span>DASHBOARD INVESTIMENTI</div>
-  <div class="goldline"></div>
 
-  <div class="tabbar" id="tabbar"></div>
   <div class="newbiz-form hidden" id="newBizForm">
     <input type="text" id="newBizName" placeholder="Nome del nuovo business (es. Copytrading)">
     <select id="newBizType">
@@ -282,25 +320,17 @@
 
   <div id="tabGrid">
 
-  <div class="header-row">
-    <div>
-      <h1>Gain Totale cumulato</h1>
-      <div class="hero-num">
-        <span id="heroTotal">€ 0</span>
-        <span class="badge" id="heroPct">0%</span>
-      </div>
-    </div>
-    <div class="meta">
-      <div id="cycleCount">0 cicli registrati</div>
-      <div id="lastDate">—</div>
-    </div>
+  <div class="hero">
+    <div class="hero-lbl">Profitto netto accumulato</div>
+    <div class="hero-num"><span id="heroTotal">€ 0</span></div>
+    <div class="hero-badge"><span class="badge" id="heroPct">0%</span></div>
+    <div class="hero-meta"><span id="cycleCount">0 cicli</span> · <span id="lastDate">—</span></div>
   </div>
 
   <div class="stats">
-    <div class="card"><div class="label">Media Gain Lordo</div><div class="val" id="statMediaGain">€ 0</div></div>
-    <div class="card"><div class="label">Media Profitto/ciclo</div><div class="val" id="statMediaProfitto">€ 0</div></div>
-    <div class="card"><div class="label">Capitale investito</div><div class="val" id="statCapitale">€ 0</div></div>
-    <div class="card"><div class="label">Spese totali</div><div class="val" id="statSpese">€ 0</div></div>
+    <div class="card"><div class="label">Cicli totali</div><div class="val" id="statCicli">0</div></div>
+    <div class="card"><div class="label">Media profitto</div><div class="val" id="statMediaProfitto">€ 0</div></div>
+    <div class="card"><div class="label">Media tempo per ciclo</div><div class="val" id="statTempo">—</div></div>
   </div>
 
   <div class="panel">
@@ -321,14 +351,7 @@
     </div>
   </div>
 
-  <div class="panel">
-    <h2>Gain Totale cumulato — previsione 12 mesi vs realtà</h2>
-    <div class="chart-box" id="chartBoxCumulative"></div>
-    <div class="chart-legend">
-      <span onclick="toggleChartFilter('grid:cumulative','real')" data-legend-chart="grid:cumulative" data-legend-series="real"><i class="swatch line"></i>Realtà cumulata</span>
-      <span onclick="toggleChartFilter('grid:cumulative','forecast')" data-legend-chart="grid:cumulative" data-legend-series="forecast"><i class="swatch line-forecast-sw"></i>Previsionale cumulato</span>
-    </div>
-  </div>
+  
 
   <div class="panel">
     <h2>ROI mensile</h2>
@@ -339,20 +362,7 @@
     </div>
   </div>
 
-  <div class="panel">
-    <h2>Previsionale vs Realtà — gain per mese</h2>
-    <div class="chart-box short" id="chartBoxForecast"></div>
-    <div class="chart-legend">
-      <span onclick="toggleChartFilter('grid:forecastbar','real')" data-legend-chart="grid:forecastbar" data-legend-series="real"><i class="swatch bar"></i>Realtà</span>
-      <span onclick="toggleChartFilter('grid:forecastbar','forecast')" data-legend-chart="grid:forecastbar" data-legend-series="forecast"><i class="swatch forecast"></i>Previsionale</span>
-    </div>
-    <table style="margin-top:14px;">
-      <thead>
-        <tr><th>Mese</th><th>Previsionale</th><th>Prev. cumulato</th><th>Realtà</th><th>Realtà cumulata</th><th>Delta cum.</th></tr>
-      </thead>
-      <tbody id="tbodyForecast"></tbody>
-    </table>
-  </div>
+  
 
   <div class="panel">
     <h2>Registro cicli</h2>
@@ -363,7 +373,7 @@
     <table>
       <thead>
         <tr>
-          <th>Ciclo</th><th>Capitale</th><th>Data</th><th>Gain Lordo</th><th>Spese</th><th>Gain ciclo</th><th>Gain Totale</th><th></th>
+          <th>#</th><th>Data</th><th>Capitale</th><th>Netto</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -378,10 +388,6 @@
 
   <div id="bizPanels"></div>
 
-  <div class="save-all-bar">
-    <button id="saveAllBtn" type="button">💾 Salva tutto</button>
-  </div>
-  <div class="save-note" id="storageModeNote" style="text-align:center;margin-top:-8px;"></div>
 
 </div>
 
@@ -647,7 +653,7 @@ async function datiDalBot(){
       window.CLIENTE = d.cliente;
       document.title = 'Cashly · ' + d.cliente.nome;
     }
-    return d.cicli.map(c=>({ id:'db_'+c.n, capitale:c.capitale, data:c.data, gainLordo:c.lordo, spese:c.fee }));
+    return d.cicli.map(c=>({ id:'db_'+c.n, capitale:c.capitale, data:c.data, avvio:c.avvio||null, gainLordo:c.lordo, spese:c.fee }));
   }catch(e){ return null; }
 }
 async function loadData(){
@@ -795,14 +801,10 @@ function render(){
   c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid)).forEach(r=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${r.idx}</td>
-      <td><input class="cell" type="number" data-id="${r.id}" data-field="capitale" value="${r.capitale}"></td>
-      <td><input class="cell" type="date" data-id="${r.id}" data-field="data" value="${r.data||''}"></td>
-      <td><input class="cell" type="number" data-id="${r.id}" data-field="gainLordo" value="${r.gainLordo}"></td>
-      <td><input class="cell" type="number" data-id="${r.id}" data-field="spese" value="${r.spese}"></td>
-      <td class="${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
-      <td class="${r.gainTotale>=0?'gainpos':'gainneg'}">${fmtEur(r.gainTotale)}</td>
-      <td><button class="del-btn" data-id="${r.id}" title="Elimina ciclo">✕</button></td>
+      <td class="c-n">${r.idx}</td>
+      <td class="c-d">${fmtDate(r.data)}</td>
+      <td class="c-c">${fmtEur(r.capitale)}</td>
+      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -832,10 +834,22 @@ function render(){
   const mediaProfitto = c.length ? c.reduce((s,r)=>s+r.gainCiclo,0)/c.length : 0;
   const speseTot = c.reduce((s,r)=>s+Number(r.spese||0),0);
 
-  document.getElementById('statMediaGain').textContent = fmtEur(mediaGain);
-  document.getElementById('statMediaProfitto').textContent = fmtEur(mediaProfitto);
-  document.getElementById('statCapitale').textContent = fmtEur(currentCapitale);
-  document.getElementById('statSpese').textContent = fmtEur(speseTot);
+  const durate = c.filter(r=>r.avvio && r.data).map(r=>new Date(r.data)-new Date(r.avvio)).filter(x=>x>0);
+  const mediaMs = durate.length ? durate.reduce((a,b)=>a+b,0)/durate.length : 0;
+  const tempoTxt = (()=>{ if(!mediaMs) return '—';
+    const h=Math.floor(mediaMs/36e5);
+    if(h<1) return Math.max(1,Math.round(mediaMs/6e4))+' min';
+    if(h<24) return h+(h===1?' ora':' ore');
+    const g=Math.floor(h/24), r=h%24;
+    return g+(g===1?' giorno':' giorni')+(r>=2?' e '+r+'h':''); })();
+
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  set('statCicli', String(c.length));
+  set('statMediaProfitto', fmtEur(mediaProfitto));
+  set('statTempo', tempoTxt);
+  set('statCapitale', fmtEur(currentCapitale));
+  set('statMediaGain', fmtEur(mediaGain));
+  set('statSpese', fmtEur(speseTot));
 
   renderChart(c);
   renderChartMonthly(c);
@@ -1384,7 +1398,7 @@ const STORAGE_KEY_BUSINESSES = 'businesses-list';
 const STORAGE_KEY_GRID_NAME = 'grid-tab-name';
 const STORAGE_KEY_GRID_DELETED = 'grid-tab-deleted';
 const STORAGE_KEY_TAB_ORDER = 'tab-order-v2';
-const BIZ_COLORS = ['#4ADE95', '#3D8BFF', '#F2645A', '#C084FC', '#FB923C', '#38BDF8'];
+const BIZ_COLORS = ['#14c9ac', '#3D8BFF', '#F2645A', '#C084FC', '#FB923C', '#38BDF8'];
 
 let businesses = [];       // [{id, name, type}] — type: 'simple' | 'full'
 let bizEntries = {};       // id -> [{id, data, gain, nota}]  (tipo simple)
@@ -1626,6 +1640,7 @@ async function renameTab(id, newName){
 // eliminabile, ordine personalizzabile con le frecce ‹ › ) + "+ Nuovo business"
 function renderTabs(){
   const bar = document.getElementById('tabbar');
+  if(!bar) return;
   bar.innerHTML = '';
   normalizeTabOrder();
   tabOrder.forEach((id,idx)=>{
@@ -2106,7 +2121,7 @@ function renderAllBusinesses(){
   const gridGainTot = gridMonthly.length ? gridMonthly[gridMonthly.length-1].gainTotale : 0;
   const gridCap = getCapitaleRiferimento();
 
-  const series = [{ id:'grid', name:gridTabName, color:'#D4A24C',
+  const series = [{ id:'grid', name:gridTabName, color:'#0d9e88',
     gainTot: gridGainTot, cap: gridCap,
     monthly: gridMonthly.map(m=>({key:m.key, label:m.label, gain:m.gainCiclo, cum:m.gainTotale})) }];
 
@@ -2280,7 +2295,7 @@ document.getElementById('newBizConfirm').addEventListener('click', async ()=>{
 document.getElementById('registroMeseGrid').addEventListener('change', e=>{ registroFilterGrid.month = e.target.value; render(); });
 document.getElementById('registroAnnoGrid').addEventListener('change', e=>{ registroFilterGrid.year = e.target.value; render(); });
 
-document.getElementById('saveAllBtn').addEventListener('click', saveEverything);
+
 (function showStorageMode(){
   const el = document.getElementById('storageModeNote');
   if(!el) return;
@@ -2296,18 +2311,11 @@ document.getElementById('saveAllBtn').addEventListener('click', saveEverything);
   try{ TG.ready(); }catch(e){}
   try{ TG.expand(); }catch(e){}
   try{ if(TG.disableVerticalSwipes) TG.disableVerticalSwipes(); }catch(e){}
-  try{ TG.setHeaderColor('#0A0C10'); TG.setBackgroundColor('#0A0C10'); }catch(e){}
-  try{ TG.enableClosingConfirmation(); }catch(e){}
+  try{ TG.setHeaderColor('#080B0D'); TG.setBackgroundColor('#080B0D'); }catch(e){}
+  try{ }catch(e){}
   // pulsante nativo di Telegram per salvare tutto
   try{
-    if(TG.MainButton){
-      TG.MainButton.setParams({text:'SALVA TUTTO', color:'#D4A24C', text_color:'#0A0C10'});
-      TG.MainButton.onClick(()=>{
-        saveEverything();
-        try{ TG.HapticFeedback.notificationOccurred('success'); }catch(e){}
-      });
-      TG.MainButton.show();
-    }
+
   }catch(e){}
 })();
 
