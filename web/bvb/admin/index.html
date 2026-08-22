@@ -35,6 +35,12 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
 .box .row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--mut)}
 .box .row b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
 .empty{text-align:center;color:var(--mut);font-size:13px;padding:26px 10px}
+
+  .live{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:2px;color:#78818F;text-transform:uppercase;margin-bottom:14px}
+  .live i{width:8px;height:8px;border-radius:50%;background:#14c9ac;display:inline-block;
+    animation:pulse 1.9s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(20,201,172,.55)}70%{box-shadow:0 0 0 9px rgba(20,201,172,0)}100%{box-shadow:0 0 0 0 rgba(20,201,172,0)}}
 </style></head><body>
 <div class="wrap" id="app"><div class="empty">Carico i dati…</div></div>
 <script>
@@ -79,7 +85,7 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   const gs=[...gg.entries()].sort();
   let cc=0; const giorni=gs.map(([k,v])=>{cc+=v.mio;return {k,...v,cum:cc};});
 
-  let h='';
+  let h='<div class="live"><i></i>Dati aggiornati in tempo reale</div>';
   h+='<div class="hero"><div class="lbl">Il tuo netto</div>'+
      '<div class="num">'+U0(mio)+'</div>'+
      '<div class="badge">'+U0(feeTot)+' incassati</div>'+
