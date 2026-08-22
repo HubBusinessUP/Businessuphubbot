@@ -237,6 +237,19 @@
     background:rgba(74,222,149,.12);color:var(--green);border:1px solid rgba(74,222,149,.3);display:inline-block;}
   .hero-badge .badge.neg{background:rgba(242,100,90,.12);color:var(--red);border-color:rgba(242,100,90,.3);}
   #shareBar{text-align:center;margin:6px 0 26px;}
+  #shareSheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:99;
+    align-items:flex-end;justify-content:center;}
+  #shareSheet .sheet{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--border);
+    border-radius:18px 18px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));}
+  #shareSheet .sh-t{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.4px;
+    color:var(--muted);text-transform:uppercase;text-align:center;margin-bottom:16px;}
+  #shareSheet .sh-g{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  #shareSheet .sh-g button{background:var(--panel-2);border:1px solid var(--border);border-radius:13px;
+    padding:14px 6px;color:var(--text);font-family:Inter,sans-serif;font-size:11.5px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:7px;}
+  #shareSheet .sh-g button span{font-size:22px;line-height:1;}
+  #shareSheet .sh-x{width:100%;margin-top:14px;background:transparent;border:1px solid var(--border);
+    border-radius:11px;padding:12px;color:var(--muted);font-family:Inter,sans-serif;font-size:13px;cursor:pointer;}
   #btnShare{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;
     padding:10px 18px;font-family:Inter,sans-serif;font-size:12.5px;cursor:pointer;}
   #btnShare:active{color:var(--gold-bright);border-color:var(--gold);}
@@ -2352,38 +2365,85 @@ document.getElementById('registroAnnoGrid').addEventListener('change', e=>{ regi
 </script>
 
 <script>
+let FILE_IMG=null, TESTO_SHARE='';
+
+function apriFoglio(){ document.getElementById('shareSheet').style.display='flex'; }
+function chiudiFoglio(){ document.getElementById('shareSheet').style.display='none'; }
+
 async function condividiTotale(){
  const btn=document.getElementById('btnShare');
  const tot=(document.getElementById('heroTotal')||{}).textContent?.trim()||'';
  const pct=(document.getElementById('heroPct')||{}).textContent?.trim()||'';
  const nc=(document.getElementById('cycleCount')||{}).textContent?.trim()||'';
  const dt=(document.getElementById('lastDate')||{}).textContent?.trim()||'';
- let testo='Ho guadagnato '+tot+' con la strategia di hedging Broker vs Broker.';
- if(pct && pct!=='0%') testo+='\n\nRendimento '+pct;
- if(nc) testo+='\n'+nc;
- const link='https://t.me/share/url?url='+encodeURIComponent(testo);
- const apriTesto=()=>{ if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openTelegramLink) Telegram.WebApp.openTelegramLink(link); else window.open(link,'_blank'); };
+ TESTO_SHARE='Ho guadagnato '+tot+' con la strategia di hedging Broker vs Broker.';
+ if(pct && pct!=='0%') TESTO_SHARE+='\n\nRendimento '+pct;
+ if(nc) TESTO_SHARE+='\n'+nc;
 
  document.getElementById('scNum').textContent=tot;
  document.getElementById('scPct').textContent=pct;
  document.getElementById('scMeta').textContent=nc+(dt?' · '+dt:'');
 
- if(typeof html2canvas!=='function'){ apriTesto(); return; }
- try{
-  btn.textContent='Preparo…';
-  const card=document.getElementById('shareCard');
-  card.style.left='0'; card.style.top='-3000px';
-  const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
-  card.style.left='-9999px'; card.style.top='0';
-  const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
-  const file=new File([blob],'cashly-risultato.png',{type:'image/png'});
-  btn.textContent='Condividi il risultato';
-  if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:testo}); return; }
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download='cashly-risultato.png'; a.click();
-  setTimeout(apriTesto,700);
- }catch(e){ btn.textContent='Condividi il risultato'; apriTesto(); }
+ // provo subito la condivisione del sistema con l'immagine
+ if(typeof html2canvas==='function'){
+  try{
+   btn.textContent='Preparo…';
+   const card=document.getElementById('shareCard');
+   card.style.left='0'; card.style.top='-3000px';
+   const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
+   card.style.left='-9999px'; card.style.top='0';
+   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+   FILE_IMG=new File([blob],'cashly-risultato.png',{type:'image/png'});
+   btn.textContent='Condividi il risultato';
+   if(navigator.canShare && navigator.canShare({files:[FILE_IMG]})){
+    await navigator.share({files:[FILE_IMG],text:TESTO_SHARE});
+    return;
+   }
+  }catch(e){ btn.textContent='Condividi il risultato'; }
+ }
+ // altrimenti apro il menu con le app
+ apriFoglio();
+}
+
+function condividiSu(app){
+ const t=encodeURIComponent(TESTO_SHARE);
+ const url={
+  telegram:'https://t.me/share/url?url='+t,
+  whatsapp:'https://wa.me/?text='+t,
+  x:'https://twitter.com/intent/tweet?text='+t,
+  facebook:'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent('https://cashlypro.com')+'&quote='+t
+ }[app];
+ if(app==='telegram' && window.Telegram?.WebApp?.openTelegramLink) Telegram.WebApp.openTelegramLink(url);
+ else if(window.Telegram?.WebApp?.openLink) Telegram.WebApp.openLink(url);
+ else window.open(url,'_blank');
+ chiudiFoglio();
+}
+
+async function salvaImmagine(){
+ if(!FILE_IMG) return;
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(FILE_IMG); a.download='cashly-risultato.png'; a.click();
+ chiudiFoglio();
+}
+
+async function copiaTesto(){
+ try{ await navigator.clipboard.writeText(TESTO_SHARE); }catch(e){}
+ chiudiFoglio();
 }
 </script>
+<div id="shareSheet" onclick="if(event.target===this)chiudiFoglio()">
+ <div class="sheet">
+  <div class="sh-t">Condividi su</div>
+  <div class="sh-g">
+   <button onclick="condividiSu('telegram')"><span>✈️</span>Telegram</button>
+   <button onclick="condividiSu('whatsapp')"><span>💬</span>WhatsApp</button>
+   <button onclick="condividiSu('x')"><span>𝕏</span>X</button>
+   <button onclick="condividiSu('facebook')"><span>f</span>Facebook</button>
+   <button onclick="salvaImmagine()"><span>🖼</span>Salva immagine</button>
+   <button onclick="copiaTesto()"><span>📋</span>Copia testo</button>
+  </div>
+  <button class="sh-x" onclick="chiudiFoglio()">Chiudi</button>
+ </div>
+</div>
 </body>
 </html>
