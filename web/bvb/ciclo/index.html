@@ -1,7 +1,30 @@
 <!DOCTYPE html><html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cashly · Ciclo</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js">
+async function inviaInChat(){
+ try{
+  const img=await fai();
+  const r=await fetch(APIS,{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({t:new URLSearchParams(location.search).get('t')||'',img:img,testo:TESTO})});
+  const j=await r.json();
+  return !!j.ok;
+ }catch(e){ return false; }
+}
+
+async function conImmagine(app){
+ chiudi();
+ const ok=await inviaInChat();
+ if(!ok){ avvisa("Non riesco a preparare l'immagine."); return; }
+ if(app==='telegram'){
+  avvisa("Immagine pronta in chat: tienila premuta e inoltrala.");
+  setTimeout(()=>{ if(window.Telegram?.WebApp) Telegram.WebApp.close(); },1500);
+  return;
+ }
+ avvisa("Immagine pronta in chat.\nTienila premuta, scegli Condividi e poi l'app che vuoi.");
+ setTimeout(()=>{ if(window.Telegram?.WebApp) Telegram.WebApp.close(); },2200);
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -153,6 +176,7 @@ carica();
  <div class="in">
   <div class="t">Condividi su</div>
   <div class="g">
+   <button onclick="conImmagine('telegram')"><span>🖼</span>Foto in chat</button>
    <button onclick="su('telegram')"><span>✈️</span>Telegram</button>
    <button onclick="su('whatsapp')"><span>💬</span>WhatsApp</button>
    <button onclick="su('x')"><span>𝕏</span>X</button>
