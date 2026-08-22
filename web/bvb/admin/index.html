@@ -1,0 +1,170 @@
+<!DOCTYPE html><html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dashboard admin</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080B0D;--panel:#0F1417;--line:#1B242A;--txt:#ECEFF3;--mut:#78818F;--tl:#0d9e88;--tl2:#14c9ac;--red:#F2645A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:14px;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto}
+.hero{text-align:center;padding:24px 14px 20px;margin-bottom:16px;border-radius:16px;background:var(--panel);border:1px solid var(--tl)}
+.hero .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.6px;color:var(--mut);text-transform:uppercase}
+.hero .num{font-family:'Space Grotesk',sans-serif;font-size:clamp(38px,11vw,58px);font-weight:700;color:var(--tl2);letter-spacing:-2px;line-height:1;margin:12px 0 10px}
+.hero .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut)}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(20,201,172,.12);color:var(--tl2);border:1px solid rgba(20,201,172,.3)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px}
+.card .k{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
+.card .v{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-top:5px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px}
+.panel h2{font-size:12.5px;font-weight:600;margin-bottom:12px;letter-spacing:.2px}
+svg{display:block;width:100%;height:auto}
+table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px}
+th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.1px;color:var(--mut);text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-weight:500}
+td{padding:10px 6px;border-bottom:1px solid rgba(27,36,42,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){text-align:right}
+tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
+.q{color:var(--tl2);font-weight:600;font-family:'IBM Plex Mono',monospace}
+.mut{color:var(--mut)}
+.cli{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;background:rgba(255,255,255,.012)}
+.cli .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.cli .nm{font-weight:600;font-size:14px}
+.cli .st{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:12px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase}
+.cli .st.on{color:var(--tl2);border-color:rgba(20,201,172,.35);background:rgba(20,201,172,.1)}
+.cli .st.ko{color:var(--red);border-color:rgba(242,100,90,.35);background:rgba(242,100,90,.1)}
+.cli .row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--mut)}
+.cli .row b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
+.empty{text-align:center;color:var(--mut);font-size:13px;padding:26px 10px}
+</style></head><body>
+<div class="wrap" id="app"><div class="empty">Carico i dati…</div></div>
+<script>
+const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
+const P=new URLSearchParams(location.search);
+const API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/admin';
+const U=n=>Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+const U0=n=>Math.round(Number(n||0)).toLocaleString('it-IT')+' USDT';
+const E0=n=>'€ '+Math.round(Number(n||0)).toLocaleString('it-IT');
+const MM=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const dBrev=s=>{if(!s)return '—';const d=new Date(s);return d.getDate()+' '+MM[d.getMonth()];};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function area(v,lab){
+ if(v.length<2) return '';
+ const W=680,H=190,pd={l:56,r:14,t:14,b:26};
+ const mx=Math.max(...v)*1.1||1, iw=W-pd.l-pd.r, ih=H-pd.t-pd.b;
+ const X=i=>pd.l+i*iw/(v.length-1), Y=x=>pd.t+ih-(x/mx)*ih;
+ let g='';
+ for(let i=0;i<=4;i++){const y=pd.t+ih*i/4;
+  g+='<line x1="'+pd.l+'" y1="'+y+'" x2="'+(W-pd.r)+'" y2="'+y+'" stroke="#1B242A"/>'+
+     '<text x="'+(pd.l-8)+'" y="'+(y+4)+'" fill="#78818F" font-size="10" text-anchor="end" font-family="monospace">'+Math.round(mx-mx*i/4)+'</text>';}
+ const d=v.map((x,i)=>(i?'L':'M')+X(i).toFixed(0)+' '+Y(x).toFixed(0)).join(' ');
+ const a='M'+pd.l+' '+(pd.t+ih)+' '+v.map((x,i)=>'L'+X(i).toFixed(0)+' '+Y(x).toFixed(0)).join(' ')+' L'+(W-pd.r)+' '+(pd.t+ih)+' Z';
+ let pts='';
+ v.forEach((x,i)=>{pts+='<circle cx="'+X(i).toFixed(0)+'" cy="'+Y(x).toFixed(0)+'" r="2.6" fill="#14c9ac"/>';});
+ let lb='';
+ if(lab&&lab.length===v.length){
+  const step=Math.ceil(v.length/6);
+  lab.forEach((t,i)=>{if(i%step===0||i===v.length-1)
+   lb+='<text x="'+X(i).toFixed(0)+'" y="'+(H-8)+'" fill="#78818F" font-size="10" text-anchor="middle" font-family="monospace">'+esc(t)+'</text>';});
+ }
+ return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="height:190px">'+
+  '<defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">'+
+  '<stop offset="0%" stop-color="#14c9ac" stop-opacity=".28"/><stop offset="100%" stop-color="#14c9ac" stop-opacity="0"/>'+
+  '</linearGradient></defs>'+g+
+  '<path d="'+a+'" fill="url(#gr)"/><path d="'+d+'" fill="none" stroke="#14c9ac" stroke-width="2.2" stroke-linejoin="round"/>'+pts+lb+'</svg>';
+}
+
+function statoCls(s){ return s==='attivo'?'on' : (s==='bannato'||s==='sospeso')?'ko' : ''; }
+
+async function carica(){
+ const t=P.get('t')||'';
+ const app=document.getElementById('app');
+ if(!t){ app.innerHTML='<div class="empty">Link non valido.</div>'; return; }
+ let d;
+ try{
+  const r=await fetch(API+'?t='+encodeURIComponent(t));
+  if(!r.ok){ app.innerHTML='<div class="empty">Accesso non valido.</div>'; return; }
+  d=await r.json();
+ }catch(e){ app.innerHTML='<div class="empty">Dati non raggiungibili. Riprova.</div>'; return; }
+
+ const cicli=d.cicli||[], reti=d.reti||[], clienti=d.clienti||[];
+ const cap=d.capitale||{totale:0,inCorso:0};
+ const netto=cicli.reduce((a,c)=>a+Number(c.mio||0),0);
+ const profitto=cicli.reduce((a,c)=>a+Number(c.profitto||0),0);
+ const attivi=clienti.filter(c=>c.stato!=='bannato'&&c.stato!=='sospeso').length;
+
+ let cum=0; const serie=cicli.map(c=>{cum+=Number(c.mio||0);return Math.round(cum*100)/100;});
+ const lab=cicli.map(c=>dBrev(c.data));
+
+ let h='';
+
+ h+='<div class="hero">'+
+   '<div class="lbl">Tuo netto accumulato</div>'+
+   '<div class="num">'+U0(netto)+'</div>'+
+   '<div class="badge">'+E0(cap.totale)+' in gestione</div>'+
+   '<div class="meta" style="margin-top:12px">'+cicli.length+(cicli.length===1?' ciclo chiuso':' cicli chiusi')+' · '+clienti.length+(clienti.length===1?' cliente':' clienti')+'</div>'+
+  '</div>';
+
+ h+='<div class="stats">'+
+   '<div class="card"><div class="k">Capitale gestito</div><div class="v">'+E0(cap.totale)+'</div></div>'+
+   '<div class="card"><div class="k">In corso ora</div><div class="v">'+E0(cap.inCorso)+'</div></div>'+
+   '<div class="card"><div class="k">Clienti attivi</div><div class="v">'+attivi+'</div></div>'+
+  '</div>';
+
+ if(serie.length>1){
+  h+='<div class="panel"><h2>Andamento del tuo netto</h2>'+area(serie,lab)+'</div>';
+ }
+
+ h+='<div class="panel"><h2>Reti e affiliati</h2>';
+ if(!reti.length){ h+='<div class="empty">Nessuna rete con cicli chiusi.</div>'; }
+ else{
+  for(const r of reti){
+   h+='<div class="cli">'+
+     '<div class="top"><span class="nm">'+esc(r.nome)+'</span><span class="st on">'+r.clienti+(r.clienti===1?' cliente':' clienti')+'</span></div>'+
+     '<div class="row"><span>Cicli chiusi</span><b>'+r.cicli+'</b></div>'+
+     '<div class="row"><span>Profitto generato</span><b>'+E0(r.profitto)+'</b></div>'+
+     '<div class="row"><span>Fee incassata</span><b>'+U(r.feeU)+'</b></div>'+
+     '<div class="row"><span>Quota a loro</span><b>'+U(r.quota)+'</b></div>'+
+     '<div class="row"><span>Resta a te</span><b class="q">'+U(r.mio)+'</b></div>'+
+    '</div>';
+  }
+ }
+ h+='</div>';
+
+ h+='<div class="panel"><h2>Clienti</h2>';
+ if(!clienti.length){ h+='<div class="empty">Nessun cliente.</div>'; }
+ else{
+  for(const c of clienti){
+   h+='<div class="cli">'+
+     '<div class="top"><span class="nm">'+esc(c.codice)+' · '+esc(c.nome)+'</span><span class="st '+statoCls(c.stato)+'">'+esc(c.stato)+'</span></div>'+
+     '<div class="row"><span>Rete</span><b>'+esc(c.rete)+'</b></div>'+
+     '<div class="row"><span>Capitale</span><b>'+E0(c.capitale)+'</b></div>'+
+     '<div class="row"><span>Cicli</span><b>'+c.cicli+'</b></div>'+
+     '<div class="row"><span>Profitto</span><b>'+E0(c.profitto)+'</b></div>'+
+     '<div class="row"><span>Resta a te</span><b class="q">'+U(c.mio)+'</b></div>'+
+     (c.ultimo?'<div class="row"><span>Ultimo ciclo</span><b>'+dBrev(c.ultimo)+'</b></div>':'')+
+    '</div>';
+  }
+ }
+ h+='</div>';
+
+ h+='<div class="panel"><h2>Ultimi cicli</h2>';
+ if(!cicli.length){ h+='<div class="empty">Nessun ciclo chiuso.</div>'; }
+ else{
+  h+='<table><thead><tr><th>Cliente</th><th>Data</th><th>Profitto</th><th>Tuo netto</th></tr></thead><tbody>';
+  for(const c of cicli.slice().reverse().slice(0,40)){
+   h+='<tr><td>'+esc(c.cliente||c.codice)+'<div class="mut" style="font-size:10.5px">'+esc(c.rete)+'</div></td>'+
+      '<td>'+dBrev(c.data)+'</td>'+
+      '<td>'+E0(c.profitto)+'</td>'+
+      '<td class="q">'+U0(c.mio)+'</td></tr>';
+  }
+  h+='</tbody></table>';
+ }
+ h+='</div>';
+
+ app.innerHTML=h;
+}
+carica();
+</script>
+</body></html>
