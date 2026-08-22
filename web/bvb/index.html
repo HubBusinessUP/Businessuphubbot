@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <title>Dashboard Investimenti</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -235,8 +236,18 @@
   .hero-badge .badge{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:6px 14px;border-radius:22px;
     background:rgba(74,222,149,.12);color:var(--green);border:1px solid rgba(74,222,149,.3);display:inline-block;}
   .hero-badge .badge.neg{background:rgba(242,100,90,.12);color:var(--red);border-color:rgba(242,100,90,.3);}
-  #btnShare{margin-top:16px;background:var(--gold);color:#04120F;border:0;border-radius:11px;
-    padding:12px 22px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+  #shareBar{text-align:center;margin:6px 0 26px;}
+  #btnShare{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;
+    padding:10px 18px;font-family:Inter,sans-serif;font-size:12.5px;cursor:pointer;}
+  #btnShare:active{color:var(--gold-bright);border-color:var(--gold);}
+  #shareCard{position:fixed;left:-9999px;top:0;width:540px;padding:44px 34px;background:#0F1417;
+    border:1px solid #0d9e88;border-radius:20px;text-align:center;font-family:Inter,system-ui,sans-serif;}
+  #shareCard .b{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;color:#0d9e88;text-transform:uppercase;}
+  #shareCard .l{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2.6px;color:#78818F;text-transform:uppercase;margin-top:28px;}
+  #shareCard .n{font-family:'Space Grotesk',sans-serif;font-size:66px;font-weight:700;color:#14c9ac;letter-spacing:-2px;line-height:1;margin:16px 0 14px;}
+  #shareCard .p{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:15px;padding:7px 16px;border-radius:22px;
+    background:rgba(20,201,172,.12);color:#14c9ac;border:1px solid rgba(20,201,172,.3);}
+  #shareCard .m{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#78818F;margin-top:24px;}
   .hero-meta{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.6px;}
   .stats{grid-template-columns:repeat(3,1fr);}
   @media(max-width:620px){
@@ -327,7 +338,6 @@
     <div class="hero-num"><span id="heroTotal">€ 0</span></div>
     <div class="hero-badge"><span class="badge" id="heroPct">0%</span></div>
     <div class="hero-meta"><span id="cycleCount">0 cicli</span> · <span id="lastDate">—</span></div>
-    <button id="btnShare" onclick="condividiTotale()">Condividi il risultato</button>
   </div>
 
   <div class="stats">
@@ -391,7 +401,16 @@
 
   <div id="bizPanels"></div>
 
+  <div id="shareBar"><button id="btnShare" onclick="condividiTotale()">Condividi il risultato</button></div>
 
+</div>
+
+<div id="shareCard">
+  <div class="b">Cashly · Broker vs Broker</div>
+  <div class="l">Profitto netto accumulato</div>
+  <div class="n" id="scNum">€ 0</div>
+  <div class="p" id="scPct">0%</div>
+  <div class="m" id="scMeta">—</div>
 </div>
 
 <script>
@@ -2331,17 +2350,39 @@ document.getElementById('registroAnnoGrid').addEventListener('change', e=>{ regi
   render();
 })();
 </script>
+
 <script>
-function condividiTotale(){
- const tot=document.getElementById('heroTotal').textContent.trim();
- const pct=document.getElementById('heroPct').textContent.trim();
- const nc=document.getElementById('cycleCount').textContent.trim();
- let t='Ho guadagnato '+tot+' con la strategia di hedging Broker vs Broker.';
- if(pct && pct!=='0%') t+='\n\nRendimento '+pct;
- if(nc) t+='\n'+nc;
- const url='https://t.me/share/url?url='+encodeURIComponent(t);
- if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openTelegramLink) Telegram.WebApp.openTelegramLink(url);
- else window.open(url,'_blank');
+async function condividiTotale(){
+ const btn=document.getElementById('btnShare');
+ const tot=(document.getElementById('heroTotal')||{}).textContent?.trim()||'';
+ const pct=(document.getElementById('heroPct')||{}).textContent?.trim()||'';
+ const nc=(document.getElementById('cycleCount')||{}).textContent?.trim()||'';
+ const dt=(document.getElementById('lastDate')||{}).textContent?.trim()||'';
+ let testo='Ho guadagnato '+tot+' con la strategia di hedging Broker vs Broker.';
+ if(pct && pct!=='0%') testo+='\n\nRendimento '+pct;
+ if(nc) testo+='\n'+nc;
+ const link='https://t.me/share/url?url='+encodeURIComponent(testo);
+ const apriTesto=()=>{ if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openTelegramLink) Telegram.WebApp.openTelegramLink(link); else window.open(link,'_blank'); };
+
+ document.getElementById('scNum').textContent=tot;
+ document.getElementById('scPct').textContent=pct;
+ document.getElementById('scMeta').textContent=nc+(dt?' · '+dt:'');
+
+ if(typeof html2canvas!=='function'){ apriTesto(); return; }
+ try{
+  btn.textContent='Preparo…';
+  const card=document.getElementById('shareCard');
+  card.style.left='0'; card.style.top='-3000px';
+  const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
+  card.style.left='-9999px'; card.style.top='0';
+  const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+  const file=new File([blob],'cashly-risultato.png',{type:'image/png'});
+  btn.textContent='Condividi il risultato';
+  if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:testo}); return; }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='cashly-risultato.png'; a.click();
+  setTimeout(apriTesto,700);
+ }catch(e){ btn.textContent='Condividi il risultato'; apriTesto(); }
 }
 </script>
 </body>
