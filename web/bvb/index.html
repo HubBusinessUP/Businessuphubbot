@@ -316,6 +316,12 @@ async function conImmagine(app){
   .add-row{display:none;}
   .registro-toolbar{display:flex;gap:8px;margin-bottom:14px;}
   .registro-toolbar select{flex:1;width:100%;max-width:none;}
+
+  .live{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:2px;color:#78818F;text-transform:uppercase;margin-bottom:14px}
+  .live i{width:8px;height:8px;border-radius:50%;background:#14c9ac;display:inline-block;
+    animation:pulse 1.9s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(20,201,172,.55)}70%{box-shadow:0 0 0 9px rgba(20,201,172,0)}100%{box-shadow:0 0 0 0 rgba(20,201,172,0)}}
 </style>
 </head>
 <body>
@@ -369,6 +375,7 @@ async function conImmagine(app){
 
   <div id="tabGrid">
 
+  <div class="live"><i></i>Dati aggiornati in tempo reale</div>
   <div class="hero">
     <div class="hero-lbl">Profitto netto accumulato</div>
     <div class="hero-num"><span id="heroTotal">€ 0</span></div>
