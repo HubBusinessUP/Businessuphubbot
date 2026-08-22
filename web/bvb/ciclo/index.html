@@ -1,63 +1,205 @@
 <!DOCTYPE html><html lang="it"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Cashly · Ciclo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Risultato ciclo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080B0D;--line:#1C222C;--txt:#ECEFF3;--mut:#78818F;--gold:#0d9e88;--gold2:#14c9ac;--grn:#14c9ac}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:16px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.wrap{width:100%;max-width:420px}
-.card{position:relative;background:#0F1417;border:1px solid var(--gold);border-radius:16px;padding:34px 24px 28px;overflow:hidden;text-align:center}
-.card:before{content:"";position:absolute;inset:0;pointer-events:none}
-.brand{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
-.rule{height:1px;margin:16px 0 30px;background:#0F1417;font-size:10px;letter-spacing:2.8px;color:var(--mut);text-transform:uppercase}
-.amt{font-family:'Space Grotesk',sans-serif;font-size:66px;font-weight:700;color:var(--gold2);letter-spacing:-2.5px;line-height:1;margin:14px 0 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--grn);border:1px solid rgba(74,222,149,.3);background:rgba(74,222,149,.08);padding:5px 12px;border-radius:20px}
-.who{margin-top:28px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut);letter-spacing:1px}
-.who b{color:var(--txt);font-weight:500}
-.btns{display:flex;margin-top:16px}
-button{flex:1;background:var(--gold);color:#080B0F;border:0;border-radius:11px;padding:14px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer}
-button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
-</style></head><body>
-<div class="wrap">
-<div class="card">
-  <div class="brand" id="brand">Broker vs Broker</div>
-  <div class="rule"></div>
-  <div class="k">Guadagno ciclo <span id="ncic"></span></div>
-  <div class="amt" id="big">—</div>
-  <div class="roi" id="roi">—</div>
-  <div class="who"><b id="who">—</b> · <span id="dt">—</span></div>
-</div>
-<div class="btns">
-  <button onclick="condividi()">Condividi</button>
+  /* stessi token della dashboard */
+  :root{
+    --bg:#080B0D;
+    --panel:#0F1417;
+    --panel-2:#131A1D;
+    --border:#1B242A;
+    --text:#EDEFF2;
+    --muted:#8B93A1;
+    --gold:#0d9e88;
+    --gold-bright:#14c9ac;
+    --green:#14c9ac;
+    --red:#F2645A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:28px;
+    min-height:100vh;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
 
+  /* header — identico alla dashboard */
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:2.5px;
+    color:var(--gold);
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .goldline{
+    height:2px;margin:10px 0 22px 0;border-radius:2px;
+    background:var(--panel);
+  }
+
+  /* panel — identico alla dashboard */
+  .panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:20px;
+  }
+  .panel h2{
+    font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;
+    color:var(--muted);margin:0 0 14px 0;letter-spacing:.5px;text-transform:uppercase;
+  }
+
+  /* hero-num — identico alla dashboard */
+  .hero-num{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(38px,11vw,56px);font-weight:700;line-height:1;
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  }
+  .hero-num .badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;font-weight:700;
+    background:rgba(20,201,172,.12);color:var(--green);
+    padding:6px 12px;border-radius:6px;
+  }
+  .hero-num .badge.neg{background:rgba(242,100,90,.12);color:var(--red);}
+
+  /* stati */
+  .msg{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.75;
+    color:var(--muted);white-space:pre-line;padding:6px 0 2px;
+  }
+  .hidden{display:none!important;}
+
+  /* bottoni — stessa regola di .save-all-bar button */
+  .btns{display:flex;gap:10px;margin-top:22px;}
+  .btns button{
+    flex:1;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;
+    padding:12px 28px;border-radius:8px;border:none;cursor:pointer;
+    background:var(--gold);color:#12151B;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .btns button:hover{background:var(--gold-bright);}
+  .btns button:active{transform:translateY(1px);}
+  .btns button.ghost{
+    background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    box-shadow:none;
+  }
+  .btns button.ghost:hover{background:var(--panel-2);color:var(--text);}
+  .btns button:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;}
+  .btns button[disabled]{opacity:.35;pointer-events:none;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+  @media(max-width:520px){
+    body{padding:16px;}
+    .panel{padding:16px;}
+  }
+</style></head><body>
+
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>BROKER VS BROKER</div>
+  <div class="goldline"></div>
+
+  <div class="panel">
+    <h2 id="titolo">Risultato ciclo</h2>
+
+    <div id="stato" class="msg">Carico i dati…</div>
+
+    <div id="corpo" class="hidden">
+      <div class="hero-num">
+        <span id="big">€ 0</span>
+        <span class="badge" id="roi">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button id="btnShare" disabled>Condividi</button>
+    <button class="ghost" id="btnSave" disabled>Salva</button>
+  </div>
 </div>
-</div>
+
 <script>
-const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
-const P=new URLSearchParams(location.search);
-const API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/cicli';
-const E=n=>'€ '+Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
-const E0=n=>'€ '+Math.round(n).toLocaleString('it-IT');
-const PC=n=>(n>=0?'+':'')+n.toFixed(2).replace('.',',')+'%';
-let TESTO='';
-async function carica(){
- const t=P.get('t')||''; if(!t) return;
- const r=await fetch(API+'?t='+encodeURIComponent(t)); const d=await r.json();
- const c=(d.cicli||[]); if(!c.length) return;
- const u=c[c.length-1], netto=u.lordo-u.fee, roi=u.capitale?netto/u.capitale*100:0;
- let cum=0; c.forEach(x=>cum+=x.lordo-x.fee);
- ncic.textContent='#'+u.n;
- big.textContent=E(netto);
- roi_el().textContent=PC(roi);
- who.textContent=d.cliente?.nome||'';
- document.getElementById('brand').textContent=(d.cliente?.brand||'Cashly')+' · Broker vs Broker';
- document.title=(d.cliente?.brand||'Cashly')+' · Ciclo';
- dt.textContent=new Date(u.data).toLocaleDateString('it-IT');
- TESTO='Ho guadagnato '+E(netto)+' con la strategia di hedging Broker vs Broker.\n\nRendimento '+PC(roi)+'\nTotale ad oggi '+E0(cum);
+const tg = window.Telegram?.WebApp;
+if(tg){
+  tg.ready(); tg.expand();
+  try{ tg.setHeaderColor('#080B0D'); tg.setBackgroundColor('#080B0D'); }catch(e){}
 }
-function roi_el(){return document.getElementById('roi');}
-function condividi(){const u='https://t.me/share/url?url='+encodeURIComponent(TESTO);
- if(tg) tg.openTelegramLink(u); else window.open(u,'_blank');}
+
+const $  = id => document.getElementById(id);
+const P  = new URLSearchParams(location.search);
+const API = 'https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/cicli';
+
+const E  = n => '€ ' + Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const PC = n => (n >= 0 ? '+' : '') + Number(n).toFixed(2).replace('.', ',') + '%';
+
+let TESTO = '';
+
+function errore(t){
+  $('stato').textContent = t;
+  $('stato').classList.remove('hidden');
+  $('corpo').classList.add('hidden');
+}
+
+async function carica(){
+  const t = P.get('t') || '';
+  if(!t) return errore('Apri questa pagina dal bot Telegram\nper vedere il tuo ciclo.');
+
+  let d;
+  try{
+    const r = await fetch(API + '?t=' + encodeURIComponent(t));
+    if(r.status === 401) return errore('Link non valido o scaduto.\nRiaprilo dal bot.');
+    if(!r.ok) throw new Error(r.status);
+    d = await r.json();
+  }catch(e){
+    return errore('Non riesco a caricare i dati.\nRiprova tra poco.');
+  }
+
+  const c = d.cicli || [];
+  if(!c.length) return errore('Nessun ciclo chiuso al momento.');
+
+  const u     = c[c.length - 1];
+  const netto = u.lordo - u.fee;
+  const roi   = u.capitale ? netto / u.capitale * 100 : 0;
+
+  $('titolo').textContent = 'Risultato ciclo ' + u.n;
+  $('big').textContent    = E(netto);
+
+  const badge = $('roi');
+  badge.textContent = u.capitale ? PC(roi) : '—';
+  badge.classList.toggle('neg', netto < 0);
+
+  $('stato').classList.add('hidden');
+  $('corpo').classList.remove('hidden');
+  $('btnShare').disabled = false;
+  $('btnSave').disabled  = false;
+
+  TESTO = 'Ho guadagnato ' + E(netto) + ' con la strategia di hedging Broker vs Broker.'
+        + (u.capitale ? '\n\nRendimento ' + PC(roi) : '');
+}
+
+// Telegram: url= e' il link condiviso, text= il messaggio.
+// Mettere il testo dentro url= lo fa interpretare come indirizzo.
+const LINK_BOT = 'https://t.me/cashly_bvb_bot';
+$('btnShare').addEventListener('click', () => {
+  const u = 'https://t.me/share/url?url=' + encodeURIComponent(LINK_BOT)
+          + '&text=' + encodeURIComponent(TESTO);
+  if(tg) tg.openTelegramLink(u); else window.open(u, '_blank');
+});
+
+$('btnSave').addEventListener('click', () => {
+  const m = 'Fai uno screenshot della scheda per salvarla.';
+  if(tg && tg.showAlert) tg.showAlert(m); else alert(m);
+});
+
 carica();
 </script></body></html>
