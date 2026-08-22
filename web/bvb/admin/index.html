@@ -67,6 +67,7 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
  .then(r=>r.json()).then(d=>{
   if(d.error){document.getElementById('app').innerHTML='<div class="empty">Accesso non valido.<br>Riapri il link dal bot.</div>';return;}
   const cic=d.cicli||[], reti=d.reti||[], cli=d.clienti||[], cap=d.capitale||{};
+  const pers=d.personale||{cicli:0,netto:0,lordo:0,capitale:0}, CB=d.cambio||1.17;
   const mio=cic.reduce((a,x)=>a+x.mio,0);
   const feeTot=cic.reduce((a,x)=>a+x.feeU,0);
   const profTot=cic.reduce((a,x)=>a+x.profitto,0);
@@ -112,6 +113,17 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
    });
    h+='</table></div>';
   }
+
+  // totale complessivo
+  const netRete=mio, netPers=pers.netto*CB, netTot=netRete+netPers;
+  h+='<div class="panel" style="border-color:#0d9e88"><h2>Totale complessivo</h2>'+
+     '<div class="box"><div class="row"><span>Dalla rete · '+cic.length+(cic.length===1?' ciclo':' cicli')+'</span><b class="q">'+U(netRete)+'</b></div>'+
+     '<div class="row"><span>Dai tuoi conti · '+pers.cicli+(pers.cicli===1?' ciclo':' cicli')+'</span><b class="q">'+U(netPers)+'</b></div>'+
+     '<div class="row" style="border-top:1px solid #1B242A;margin-top:8px;padding-top:12px"><span style="color:#ECEFF3;font-weight:600">Totale</span>'+
+     '<b style="color:#14c9ac;font-size:17px">'+U0(netTot)+'</b></div>'+
+     '<div class="row"><span>In euro</span><b>'+E0(netTot/CB)+'</b></div></div>'+
+     '<div style="font-family:monospace;font-size:10px;color:#78818F;margin-top:10px;line-height:1.6">'+
+     'Capitale tuo '+E0(pers.capitale)+' · lordo generato '+E0(pers.lordo)+'</div></div>';
 
   h+='<div class="panel"><h2>Clienti</h2>';
   cli.forEach(x=>{
