@@ -2,6 +2,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cashly · Ciclo</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#080B0D;--line:#1C222C;--txt:#ECEFF3;--mut:#78818F;--gold:#0d9e88;--gold2:#14c9ac;--grn:#14c9ac}
@@ -19,6 +20,13 @@ body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-seri
 .btns{display:flex;margin-top:16px}
 button{flex:1;background:var(--gold);color:#080B0F;border:0;border-radius:11px;padding:14px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer}
 button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+#sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99;align-items:flex-end;justify-content:center}
+#sheet .in{width:100%;max-width:480px;background:var(--pap,#0F1417);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+#sheet .t{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.4px;color:var(--mut);text-transform:uppercase;text-align:center;margin-bottom:16px}
+#sheet .g{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+#sheet .g button{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:13px;padding:14px 6px;color:var(--txt);font-family:Inter,sans-serif;font-size:11.5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px}
+#sheet .g button span{font-size:22px;line-height:1}
+#sheet .x{width:100%;margin-top:14px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px;color:var(--mut);font-size:13px;cursor:pointer}
 </style></head><body>
 <div class="wrap">
 <div class="card">
@@ -58,7 +66,65 @@ async function carica(){
  TESTO='Ho guadagnato '+E(netto)+' con la strategia di hedging Broker vs Broker.\n\nRendimento '+PC(roi)+'\nTotale ad oggi '+E0(cum);
 }
 function roi_el(){return document.getElementById('roi');}
-function condividi(){const u='https://t.me/share/url?url='+encodeURIComponent(TESTO);
- if(tg) tg.openTelegramLink(u); else window.open(u,'_blank');}
+let IMG=null;
+function chiudi(){ document.getElementById('sheet').style.display='none'; }
+function apri(){ document.getElementById('sheet').style.display='flex'; }
+
+async function condividi(){
+ const btn=document.querySelector('.btns button');
+ if(typeof html2canvas==='function'){
+  try{
+   if(btn) btn.textContent='Preparo…';
+   const card=document.querySelector('.card');
+   const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
+   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+   IMG=new File([blob],'cashly-ciclo.png',{type:'image/png'});
+   if(btn) btn.textContent='Condividi';
+   if(navigator.canShare && navigator.canShare({files:[IMG]})){
+    await navigator.share({files:[IMG],text:TESTO});
+    return;
+   }
+  }catch(e){ if(btn) btn.textContent='Condividi'; }
+ }
+ apri();
+}
+
+function su(app){
+ const t=encodeURIComponent(TESTO);
+ const url={
+  telegram:'https://t.me/share/url?url='+t,
+  whatsapp:'https://wa.me/?text='+t,
+  x:'https://twitter.com/intent/tweet?text='+t,
+  facebook:'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent('https://cashlypro.com')+'&quote='+t
+ }[app];
+ if(app==='telegram' && window.Telegram?.WebApp?.openTelegramLink) Telegram.WebApp.openTelegramLink(url);
+ else if(window.Telegram?.WebApp?.openLink) Telegram.WebApp.openLink(url);
+ else window.open(url,'_blank');
+ chiudi();
+}
+
+function salva(){
+ if(!IMG) return;
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(IMG); a.download='cashly-ciclo.png'; a.click();
+ chiudi();
+}
+
+async function copia(){ try{ await navigator.clipboard.writeText(TESTO); }catch(e){} chiudi(); }
+
 carica();
-</script></body></html>
+</script><div id="sheet" onclick="if(event.target===this)chiudi()">
+ <div class="in">
+  <div class="t">Condividi su</div>
+  <div class="g">
+   <button onclick="su('telegram')"><span>✈️</span>Telegram</button>
+   <button onclick="su('whatsapp')"><span>💬</span>WhatsApp</button>
+   <button onclick="su('x')"><span>𝕏</span>X</button>
+   <button onclick="su('facebook')"><span>f</span>Facebook</button>
+   <button onclick="salva()"><span>🖼</span>Salva immagine</button>
+   <button onclick="copia()"><span>📋</span>Copia testo</button>
+  </div>
+  <button class="x" onclick="chiudi()">Chiudi</button>
+ </div>
+</div>
+</body></html>
