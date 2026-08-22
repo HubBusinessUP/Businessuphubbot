@@ -235,6 +235,8 @@
   .hero-badge .badge{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:6px 14px;border-radius:22px;
     background:rgba(74,222,149,.12);color:var(--green);border:1px solid rgba(74,222,149,.3);display:inline-block;}
   .hero-badge .badge.neg{background:rgba(242,100,90,.12);color:var(--red);border-color:rgba(242,100,90,.3);}
+  #btnShare{margin-top:16px;background:var(--gold);color:#04120F;border:0;border-radius:11px;
+    padding:12px 22px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
   .hero-meta{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.6px;}
   .stats{grid-template-columns:repeat(3,1fr);}
   @media(max-width:620px){
@@ -325,6 +327,7 @@
     <div class="hero-num"><span id="heroTotal">€ 0</span></div>
     <div class="hero-badge"><span class="badge" id="heroPct">0%</span></div>
     <div class="hero-meta"><span id="cycleCount">0 cicli</span> · <span id="lastDate">—</span></div>
+    <button id="btnShare" onclick="condividiTotale()">Condividi il risultato</button>
   </div>
 
   <div class="stats">
@@ -2327,6 +2330,19 @@ document.getElementById('registroAnnoGrid').addEventListener('change', e=>{ regi
   setActiveTab(gridDeleted ? (tabOrder[0] || 'all') : 'grid');
   render();
 })();
+</script>
+<script>
+function condividiTotale(){
+ const tot=document.getElementById('heroTotal').textContent.trim();
+ const pct=document.getElementById('heroPct').textContent.trim();
+ const nc=document.getElementById('cycleCount').textContent.trim();
+ let t='Ho guadagnato '+tot+' con la strategia di hedging Broker vs Broker.';
+ if(pct && pct!=='0%') t+='\n\nRendimento '+pct;
+ if(nc) t+='\n'+nc;
+ const url='https://t.me/share/url?url='+encodeURIComponent(t);
+ if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openTelegramLink) Telegram.WebApp.openTelegramLink(url);
+ else window.open(url,'_blank');
+}
 </script>
 </body>
 </html>
