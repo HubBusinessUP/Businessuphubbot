@@ -71,6 +71,7 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
 .sticky span{font-size:13px;color:var(--gri);font-weight:500}
 .sticky a{background:var(--nero);color:#fff;padding:13px 26px;font-family:'Archivo Black',sans-serif;font-size:13px;text-transform:uppercase;text-decoration:none;white-space:nowrap}
 @media(max-width:760px){section{padding:52px 0}.g4,.g3{grid-template-columns:repeat(2,1fr)}.cell{border-bottom:2px solid var(--nero)}.cell:nth-child(2n){border-right:0}.g2{grid-template-columns:1fr}.step .n{flex:0 0 44px;height:44px;font-size:17px}}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(78,216,136,.55)}70%{box-shadow:0 0 0 9px rgba(78,216,136,0)}100%{box-shadow:0 0 0 0 rgba(78,216,136,0)}}
 </style></head>
 <body>
 
@@ -104,12 +105,13 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
 <section>
 <div class="w">
   <h2>Lo <span class="v">storico</span></h2>
-  <p class="sub">Operazioni chiuse dal 28 luglio 2026 su un numero limitato di conti. <b>Dati storici, non indicativi di risultati futuri.</b></p>
+  <p class="sub">Operazioni chiuse su un numero limitato di conti. <b>Dati storici, non indicativi di risultati futuri.</b></p>
+  <p style="text-align:center;margin-top:12px"><span id="liveTag" style="display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:1.6px;color:#4ED888;text-transform:uppercase"><i style="width:8px;height:8px;border-radius:50%;background:#4ED888;display:inline-block;animation:pl 1.9s ease-out infinite"></i><span id="liveTxt">Aggiornato in tempo reale</span></span></p>
   <div class="grid g4">
-    <div class="cell"><div class="num">37</div><div class="lbl">Cicli chiusi</div></div>
-    <div class="cell"><div class="num">13K</div><div class="lbl">Risultato lordo · €</div></div>
-    <div class="cell"><div class="num">4</div><div class="lbl">Conti seguiti</div></div>
-    <div class="cell"><div class="num">1–2</div><div class="lbl">Giorni per ciclo</div></div>
+    <div class="cell"><div class="num" id="nCicli">—</div><div class="lbl">Cicli chiusi</div></div>
+    <div class="cell"><div class="num" id="nLordo">—</div><div class="lbl">Risultato lordo · €</div></div>
+    <div class="cell"><div class="num" id="nClienti">—</div><div class="lbl">Conti seguiti</div></div>
+    <div class="cell"><div class="num" id="nDurata">—</div><div class="lbl">Giorni per ciclo</div></div>
   </div>
   <p class="mini" style="margin-top:20px">I risultati passati non sono indicativi di quelli futuri e non costituiscono garanzia di alcun rendimento. Ogni operazione comporta il rischio di perdita, anche totale, del capitale.</p>
 </div>
@@ -227,4 +229,36 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
   <a href="https://t.me/cashly_bvb_bot?start=r_landing">Parla col bot</a>
 </div>
 
+<script>
+(function(){
+ var API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/pubblico';
+ var MM=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+ function set(id,v){var e=document.getElementById(id); if(e) e.textContent=v;}
+ function anima(id,fin,suf){
+  var e=document.getElementById(id); if(!e) return;
+  var t0=null, dur=900;
+  function step(t){ if(!t0)t0=t; var p=Math.min((t-t0)/dur,1);
+   var v=Math.round(fin*(1-Math.pow(1-p,3)));
+   e.textContent=(suf==='K'? (v>=1000? Math.round(v/1000)+'K' : String(v)) : v.toLocaleString('it-IT'));
+   if(p<1) requestAnimationFrame(step); }
+  requestAnimationFrame(step);
+ }
+ function carica(){
+  fetch(API,{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
+   anima('nCicli', d.cicli||0);
+   anima('nLordo', d.lordo||0, 'K');
+   anima('nClienti', d.clienti||0);
+   set('nDurata', d.giorni ? (d.giorni===1?'1':'1–'+d.giorni) : '1–2');
+   if(d.ultimo){
+    var p=d.ultimo.split('-');
+    set('liveTxt','Ultimo ciclo chiuso il '+parseInt(p[2],10)+' '+MM[parseInt(p[1],10)-1]);
+   }
+  }).catch(function(){
+   set('nCicli','37'); set('nLordo','13K'); set('nClienti','4'); set('nDurata','1–2');
+  });
+ }
+ carica();
+ setInterval(carica, 120000);
+})();
+</script>
 </body></html>
