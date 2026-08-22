@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dashboard partner</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080B0D;--panel:#0F1417;--line:#1B242A;--txt:#ECEFF3;--mut:#78818F;--tl:#0d9e88;--tl2:#14c9ac;--red:#F2645A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:14px;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto}
+.hero{text-align:center;padding:24px 14px 20px;margin-bottom:16px;border-radius:16px;background:var(--panel);border:1px solid var(--tl)}
+.hero .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.6px;color:var(--mut);text-transform:uppercase}
+.hero .num{font-family:'Space Grotesk',sans-serif;font-size:clamp(38px,11vw,58px);font-weight:700;color:var(--tl2);letter-spacing:-2px;line-height:1;margin:12px 0 10px}
+.hero .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut)}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(20,201,172,.12);color:var(--tl2);border:1px solid rgba(20,201,172,.3)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px}
+.card .k{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
+.card .v{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-top:5px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px}
+.panel h2{font-size:12.5px;font-weight:600;margin-bottom:12px;letter-spacing:.2px}
+svg{display:block;width:100%;height:auto}
+table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px}
+th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.1px;color:var(--mut);text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-weight:500}
+td{padding:10px 6px;border-bottom:1px solid rgba(27,36,42,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){text-align:right}
+tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
+.q{color:var(--tl2);font-weight:600;font-family:'IBM Plex Mono',monospace}
+.mut{color:var(--mut)}
+.cli{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;background:rgba(255,255,255,.012)}
+.cli .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.cli .nm{font-weight:600;font-size:14px}
+.cli .st{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:12px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase}
+.cli .st.on{color:var(--tl2);border-color:rgba(20,201,172,.35);background:rgba(20,201,172,.1)}
+.cli .row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--mut)}
+.cli .row b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
+.empty{text-align:center;color:var(--mut);font-size:13px;padding:26px 10px}
+</style></head><body>
+<div class="wrap" id="app"><div class="empty">Carico i dati…</div></div>
+<script>
+const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
+const P=new URLSearchParams(location.search);
+const API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/partner';
+const U=n=>Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+const U0=n=>Math.round(n).toLocaleString('it-IT')+' USDT';
+const E0=n=>'€ '+Math.round(n).toLocaleString('it-IT');
+const MM=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const dBrev=s=>{const d=new Date(s);return d.getDate()+' '+MM[d.getMonth()];};
+
+function area(v,lab){
+ if(v.length<2) return '';
+ const W=680,H=190,pd={l:56,r:14,t:14,b:26};
+ const mx=Math.max(...v)*1.1||1, iw=W-pd.l-pd.r, ih=H-pd.t-pd.b;
+ const X=i=>pd.l+i*iw/(v.length-1), Y=x=>pd.t+ih-(x/mx)*ih;
+ let g='';
+ for(let i=0;i<=4;i++){const y=pd.t+ih*i/4;
+  g+='<line x1="'+pd.l+'" y1="'+y+'" x2="'+(W-pd.r)+'" y2="'+y+'" stroke="#1B242A"/>'+
+     '<text x="'+(pd.l-8)+'" y="'+(y+4)+'" fill="#78818F" font-size="10" text-anchor="end" font-family="monospace">'+Math.round(mx-mx*i/4)+'</text>';}
+ const d=v.map((x,i)=>(i?'L':'M')+X(i).toFixed(0)+' '+Y(x).toFixed(0)).join(' ');
+ const a='M'+pd.l+' '+(pd.t+ih)+' '+v.map((x,i)=>'L'+X(i).toFixed(0)+' '+Y(x).toFixed(0)).join(' ')+' L'+(W-pd.r)+' '+(pd.t+ih)+' Z';
+ let lb='';const st=Math.ceil(lab.length/6);
+ lab.forEach((l,i)=>{if(i%st===0||i===lab.length-1)lb+='<text x="'+X(i).toFixed(0)+'" y="'+(H-7)+'" fill="#78818F" font-size="10" text-anchor="middle" font-family="monospace">'+l+'</text>';});
+ return '<svg viewBox="0 0 '+W+' '+H+'">'+g+'<path d="'+a+'" fill="rgba(13,158,136,.12)"/><path d="'+d+'" fill="none" stroke="#0d9e88" stroke-width="2.2"/>'+
+  v.map((x,i)=>'<circle cx="'+X(i).toFixed(0)+'" cy="'+Y(x).toFixed(0)+'" r="3" fill="#0d9e88"/>').join('')+lb+'</svg>';
+}
+function barre(v,lab){
+ if(!v.length) return '';
+ const W=680,H=170,pd={l:56,r:14,t:14,b:26};
+ const mx=Math.max(...v)*1.15||1, iw=W-pd.l-pd.r, ih=H-pd.t-pd.b;
+ const bw=Math.min(44,iw/v.length*.6);
+ let g='';
+ for(let i=0;i<=4;i++){const y=pd.t+ih*i/4;
+  g+='<line x1="'+pd.l+'" y1="'+y+'" x2="'+(W-pd.r)+'" y2="'+y+'" stroke="#1B242A"/>'+
+     '<text x="'+(pd.l-8)+'" y="'+(y+4)+'" fill="#78818F" font-size="10" text-anchor="end" font-family="monospace">'+Math.round(mx-mx*i/4)+'</text>';}
+ let b='';
+ v.forEach((x,i)=>{const cx=pd.l+(i+.5)*iw/v.length, h=Math.max(2,x/mx*ih);
+  b+='<rect x="'+(cx-bw/2).toFixed(0)+'" y="'+(pd.t+ih-h).toFixed(0)+'" width="'+bw.toFixed(0)+'" height="'+h.toFixed(0)+'" rx="4" fill="#0d9e88" opacity=".85"/>'+
+     '<text x="'+cx.toFixed(0)+'" y="'+(H-7)+'" fill="#78818F" font-size="10" text-anchor="middle" font-family="monospace">'+lab[i]+'</text>';});
+ return '<svg viewBox="0 0 '+W+' '+H+'">'+g+b+'</svg>';
+}
+
+fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
+ .then(r=>r.json()).then(d=>{
+  if(d.error){document.getElementById('app').innerHTML='<div class="empty">Accesso non valido.<br>Riapri il link dal bot.</div>';return;}
+  const p=d.partner, cic=d.cicli||[], cli=d.clienti||[];
+  document.title=p.nome+' · Dashboard';
+  const forn=p.tipo==='fornitore';
+
+  // aggrego per giorno
+  const gg=new Map();
+  cic.forEach(x=>{const o=gg.get(x.data)||{n:0,incasso:0,quota:0};
+   o.n++; o.incasso+=forn?x.fee:x.profitto; o.quota+=x.quota; gg.set(x.data,o);});
+  const gs=[...gg.entries()].sort();
+  let cc=0; const giorni=gs.map(([k,v])=>{cc+=v.quota;return {k,...v,cum:cc};});
+
+  const tot=cic.reduce((a,x)=>a+x.quota,0);
+  const volume=cic.reduce((a,x)=>a+(forn?x.fee:x.profitto),0);
+  const attivi=cli.filter(x=>x.stato==='attivo'||x.stato==='pronto').length;
+  const mediaGiorno=giorni.length?tot/giorni.length:0;
+
+  let h='';
+
+  h+='<div class="hero"><div class="lbl">Profitto netto generato</div>'+
+     '<div class="num">'+U0(tot)+'</div>'+
+     '<div class="badge">'+p.percentuale+'% '+(forn?'sulle fee':'sul profitto')+'</div>'+
+     '<div class="meta" style="margin-top:12px">'+p.nome+' · ultimo '+(giorni.length?dBrev(giorni[giorni.length-1].k):'—')+'</div></div>';
+
+  h+='<div class="stats">'+
+     '<div class="card"><div class="k">Cicli di rete</div><div class="v">'+cic.length+'</div></div>'+
+     '<div class="card"><div class="k">Clienti attivi</div><div class="v">'+attivi+'</div></div>'+
+     '<div class="card"><div class="k">Media al giorno</div><div class="v">'+(mediaGiorno?U0(mediaGiorno):'—')+'</div></div></div>';
+
+  if(giorni.length>1){
+   h+='<div class="panel"><h2>Andamento incassi fee</h2>'+area(giorni.map(x=>x.cum),giorni.map(x=>dBrev(x.k)))+'</div>';
+   const per=new Map();
+   giorni.forEach(x=>{const k=x.k.slice(0,7);per.set(k,(per.get(k)||0)+x.quota);});
+   const ms=[...per.entries()].sort();
+   if(ms.length>1) h+='<div class="panel"><h2>Incasso fee per mese</h2>'+barre(ms.map(m=>m[1]),ms.map(m=>MM[+m[0].split('-')[1]-1]))+'</div>';
+  }
+
+  h+='<div class="panel"><h2>Registro incassi</h2>';
+  if(!giorni.length) h+='<div class="empty">Nessun incasso registrato.</div>';
+  else{
+   h+='<table><tr><th>Data</th><th>Incasso</th><th>%</th><th>Guadagno</th></tr>';
+   [...giorni].reverse().forEach(x=>{
+    h+='<tr><td>'+dBrev(x.k)+'</td>'+
+       '<td class="mut">'+E0(x.incasso)+'</td>'+
+       '<td class="mut" style="text-align:right">'+p.percentuale+'%</td>'+
+       '<td class="q">'+U(x.quota)+'</td></tr>';
+   });
+   h+='</table></div>';
+  }
+
+  h+='<div class="panel"><h2>I tuoi clienti</h2>';
+  if(!cli.length) h+='<div class="empty">Nessun cliente assegnato.</div>';
+  cli.forEach(x=>{
+   const on=x.stato==='attivo'||x.stato==='pronto';
+   h+='<div class="cli"><div class="top"><span class="nm">'+x.codice+' · '+x.nome+'</span>'+
+      '<span class="st'+(on?' on':'')+'">'+x.stato+'</span></div>'+
+      '<div class="row"><span>Cicli chiusi</span><b>'+x.cicli+'</b></div>'+
+      '<div class="row"><span>Profitto generato</span><b>'+E0(x.profitto)+'</b></div>'+
+      '<div class="row"><span>Il tuo guadagno</span><b class="q">'+U(x.quota)+'</b></div>'+
+      (x.ultimo?'<div class="row"><span>Ultimo ciclo</span><b>'+dBrev(x.ultimo)+'</b></div>':'')+
+      '</div>';
+  });
+  h+='</div>';
+
+  document.getElementById('app').innerHTML=h;
+ })
+ .catch(()=>{document.getElementById('app').innerHTML='<div class="empty">Errore di connessione.</div>';});
+</script></body></html>
