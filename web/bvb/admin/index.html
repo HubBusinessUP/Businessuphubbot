@@ -79,7 +79,7 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   let cc=0; const giorni=gs.map(([k,v])=>{cc+=v.mio;return {k,...v,cum:cc};});
 
   let h='';
-  h+='<div class="hero"><div class="lbl">Resta a te</div>'+
+  h+='<div class="hero"><div class="lbl">Il tuo netto</div>'+
      '<div class="num">'+U0(mio)+'</div>'+
      '<div class="badge">'+U0(feeTot)+' incassati</div>'+
      '<div class="meta">'+cic.length+' cicli · '+cli.length+' clienti · '+reti.length+' reti</div></div>';
@@ -100,12 +100,12 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
       '<div class="row"><span>Profitto generato</span><b>'+E0(r.profitto)+'</b></div>'+
       '<div class="row"><span>Fee incassate</span><b>'+U(r.feeU)+'</b></div>'+
       (r.quota>0?'<div class="row"><span>Spettante a loro</span><b>'+U(r.quota)+'</b></div>':'')+
-      '<div class="row"><span>Resta a te</span><b class="q">'+U(r.mio)+'</b></div></div>';
+      '<div class="row"><span>Il tuo netto</span><b class="q">'+U(r.mio)+'</b></div></div>';
   });
   h+='</div>';
 
   if(giorni.length){
-   h+='<div class="panel"><h2>Registro incassi</h2><table><tr><th>Data</th><th>Cicli</th><th>Fee</th><th>Tuo netto</th></tr>';
+   h+='<div class="panel"><h2>Registro incassi</h2><table><tr><th>Data</th><th>Cicli</th><th>Fee</th><th>Netto</th></tr>';
    [...giorni].reverse().forEach(x=>{
     h+='<tr><td>'+dBrev(x.k)+'</td><td class="mut">'+x.n+'</td>'+
        '<td class="mut">'+U0(x.fee)+'</td><td class="q">'+U(x.mio)+'</td></tr>';
@@ -122,7 +122,7 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
       '<div class="row"><span>Capitale</span><b>'+E0(x.capitale)+'</b></div>'+
       '<div class="row"><span>Cicli chiusi</span><b>'+x.cicli+'</b></div>'+
       '<div class="row"><span>Profitto generato</span><b>'+E0(x.profitto)+'</b></div>'+
-      '<div class="row"><span>Resta a te</span><b class="q">'+U(x.mio)+'</b></div>'+
+      '<div class="row"><span>Il tuo netto</span><b class="q">'+U(x.mio)+'</b></div>'+
       (x.ultimo?'<div class="row"><span>Ultimo ciclo</span><b>'+dBrev(x.ultimo)+'</b></div>':'')+
       '</div>';
   });
