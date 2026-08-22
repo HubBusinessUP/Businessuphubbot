@@ -73,7 +73,7 @@ function apri(){ document.getElementById('sheet').style.display='flex'; }
 
 async function fai(){
  if(IMG) return IMG;
- if(typeof html2canvas!=='function') return null;
+ if(typeof html2canvas!=='function') throw new Error('html2canvas non caricato');
  const card=document.querySelector('.card');
  const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
  IMG=canvas.toDataURL('image/png');
@@ -103,6 +103,7 @@ async function condividi(){
     body:JSON.stringify({t:new URLSearchParams(location.search).get('t')||'',img:img,testo:TESTO})});
    const j=await r.json();
    if(btn) btn.textContent=testo;
+   if(!j.ok) avvisa('Il bot non riesce a mandare la foto: '+(j.error||'sconosciuto'));
    if(j.ok){
     if(window.Telegram?.WebApp){
      Telegram.WebApp.showPopup?.({title:'Fatto',message:"Ti ho mandato l'immagine in chat. Da lì puoi inoltrarla dove vuoi.",buttons:[{type:'ok'}]},()=>Telegram.WebApp.close());
@@ -111,9 +112,18 @@ async function condividi(){
     return;
    }
   }
- }catch(e){}
+ }catch(e){
+  if(btn) btn.textContent=testo;
+  avvisa('Errore: '+(e && e.message ? e.message : e));
+  return;
+ }
  if(btn) btn.textContent=testo;
  apri();
+}
+
+function avvisa(m){
+ if(window.Telegram?.WebApp?.showAlert) Telegram.WebApp.showAlert(m);
+ else alert(m);
 }
 
 function su(app){
