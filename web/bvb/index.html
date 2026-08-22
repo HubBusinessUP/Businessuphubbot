@@ -2365,13 +2365,13 @@ document.getElementById('registroAnnoGrid').addEventListener('change', e=>{ regi
 </script>
 
 <script>
-let FILE_IMG=null, TESTO_SHARE='';
-
+let IMG=null, TESTO_SHARE='';
+const APIS='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/share';
 function apriFoglio(){ document.getElementById('shareSheet').style.display='flex'; }
 function chiudiFoglio(){ document.getElementById('shareSheet').style.display='none'; }
+function avvisa(m){ if(window.Telegram?.WebApp?.showAlert) Telegram.WebApp.showAlert(m); else alert(m); }
 
-async function condividiTotale(){
- const btn=document.getElementById('btnShare');
+function prepara(){
  const tot=(document.getElementById('heroTotal')||{}).textContent?.trim()||'';
  const pct=(document.getElementById('heroPct')||{}).textContent?.trim()||'';
  const nc=(document.getElementById('cycleCount')||{}).textContent?.trim()||'';
@@ -2379,29 +2379,56 @@ async function condividiTotale(){
  TESTO_SHARE='Ho guadagnato '+tot+' con la strategia di hedging Broker vs Broker.';
  if(pct && pct!=='0%') TESTO_SHARE+='\n\nRendimento '+pct;
  if(nc) TESTO_SHARE+='\n'+nc;
-
  document.getElementById('scNum').textContent=tot;
  document.getElementById('scPct').textContent=pct;
  document.getElementById('scMeta').textContent=nc+(dt?' · '+dt:'');
+}
 
- // provo subito la condivisione del sistema con l'immagine
- if(typeof html2canvas==='function'){
-  try{
-   btn.textContent='Preparo…';
-   const card=document.getElementById('shareCard');
-   card.style.left='0'; card.style.top='-3000px';
-   const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
-   card.style.left='-9999px'; card.style.top='0';
-   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
-   FILE_IMG=new File([blob],'cashly-risultato.png',{type:'image/png'});
-   btn.textContent='Condividi il risultato';
-   if(navigator.canShare && navigator.canShare({files:[FILE_IMG]})){
-    await navigator.share({files:[FILE_IMG],text:TESTO_SHARE});
-    return;
+async function fai(){
+ if(IMG) return IMG;
+ if(typeof html2canvas!=='function') throw new Error('html2canvas non caricato');
+ const card=document.getElementById('shareCard');
+ card.style.left='0'; card.style.top='-3000px';
+ const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
+ card.style.left='-9999px'; card.style.top='0';
+ IMG=canvas.toDataURL('image/png');
+ return IMG;
+}
+
+async function condividiTotale(){
+ const btn=document.getElementById('btnShare');
+ const orig=btn?btn.textContent:'';
+ prepara();
+ try{
+  if(btn) btn.textContent='Preparo…';
+  const img=await fai();
+
+  if(img && navigator.canShare){
+   const blob=await (await fetch(img)).blob();
+   const file=new File([blob],'cashly-risultato.png',{type:'image/png'});
+   if(navigator.canShare({files:[file]})){
+    if(btn) btn.textContent=orig;
+    try{ await navigator.share({files:[file],text:TESTO_SHARE}); return; }catch(e){}
    }
-  }catch(e){ btn.textContent='Condividi il risultato'; }
+  }
+
+  const r=await fetch(APIS,{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({t:new URLSearchParams(location.search).get('t')||'',img:img,testo:TESTO_SHARE})});
+  const j=await r.json();
+  if(btn) btn.textContent=orig;
+  if(j.ok){
+   if(window.Telegram?.WebApp){
+    Telegram.WebApp.showAlert?.("Ti ho mandato l'immagine in chat: da lì la inoltri dove vuoi.");
+    setTimeout(()=>Telegram.WebApp.close(),1500);
+   } else avvisa("Immagine inviata in chat.");
+   return;
+  }
+ }catch(e){
+  if(btn) btn.textContent=orig;
+  avvisa('Errore: '+(e&&e.message?e.message:e));
+  return;
  }
- // altrimenti apro il menu con le app
+ if(btn) btn.textContent=orig;
  apriFoglio();
 }
 
@@ -2420,16 +2447,10 @@ function condividiSu(app){
 }
 
 async function salvaImmagine(){
- if(!FILE_IMG) return;
- const a=document.createElement('a');
- a.href=URL.createObjectURL(FILE_IMG); a.download='cashly-risultato.png'; a.click();
+ try{ const img=await fai(); const a=document.createElement('a'); a.href=img; a.download='cashly-risultato.png'; a.click(); }catch(e){}
  chiudiFoglio();
 }
-
-async function copiaTesto(){
- try{ await navigator.clipboard.writeText(TESTO_SHARE); }catch(e){}
- chiudiFoglio();
-}
+async function copiaTesto(){ try{ await navigator.clipboard.writeText(TESTO_SHARE); }catch(e){} chiudiFoglio(); }
 </script>
 <div id="shareSheet" onclick="if(event.target===this)chiudiFoglio()">
  <div class="sheet">
