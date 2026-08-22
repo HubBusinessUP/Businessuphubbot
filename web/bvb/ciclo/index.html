@@ -58,7 +58,7 @@ button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line
   <div class="k">Guadagno ciclo <span id="ncic"></span></div>
   <div class="amt" id="big">—</div>
   <div class="roi" id="roi">—</div>
-  <div class="who"><b id="who">—</b> · <span id="dt">—</span></div>
+  <div class="who"><b id="who">—</b> · <span id="dt">—</span><span id="durw"></span></div>
 </div>
 <div class="btns">
   <button onclick="condividi()">Condividi</button>
@@ -73,6 +73,15 @@ const E=n=>'€ '+Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maxi
 const E0=n=>'€ '+Math.round(n).toLocaleString('it-IT');
 const PC=n=>(n>=0?'+':'')+n.toFixed(2).replace('.',',')+'%';
 let TESTO='';
+function durata(a,b){
+ const ms=new Date(b)-new Date(a);
+ if(!(ms>0)) return '';
+ const h=Math.floor(ms/36e5);
+ if(h<1) return Math.max(1,Math.round(ms/6e4))+' min';
+ if(h<24) return h+(h===1?' ora':' ore');
+ const g=Math.floor(h/24), r=h%24;
+ return g+(g===1?' giorno':' giorni')+(r>=2?' e '+r+'h':'');
+}
 async function carica(){
  const t=P.get('t')||''; if(!t) return;
  const r=await fetch(API+'?t='+encodeURIComponent(t)); const d=await r.json();
@@ -86,7 +95,9 @@ async function carica(){
  document.getElementById('brand').textContent=(d.cliente?.brand||'Cashly')+' · Broker vs Broker';
  document.title=(d.cliente?.brand||'Cashly')+' · Ciclo';
  dt.textContent=new Date(u.data).toLocaleDateString('it-IT');
- TESTO='Ho guadagnato '+E(netto)+' con la strategia di hedging Broker vs Broker.\n\nRendimento '+PC(roi)+'\nTotale ad oggi '+E0(cum);
+ const dur=u.avvio?durata(u.avvio,u.data):'';
+ TESTO='Ho guadagnato '+E(netto)+(dur?' in '+dur:'')+' con la strategia di hedging Broker vs Broker.\n\nRendimento '+PC(roi)+'\nTotale ad oggi '+E0(cum);
+ const el=document.getElementById('durw'); if(el&&dur) el.textContent=' · '+dur;
 }
 function roi_el(){return document.getElementById('roi');}
 let IMG=null;
