@@ -67,25 +67,52 @@ async function carica(){
 }
 function roi_el(){return document.getElementById('roi');}
 let IMG=null;
+const APIS='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/share';
 function chiudi(){ document.getElementById('sheet').style.display='none'; }
 function apri(){ document.getElementById('sheet').style.display='flex'; }
 
+async function fai(){
+ if(IMG) return IMG;
+ if(typeof html2canvas!=='function') return null;
+ const card=document.querySelector('.card');
+ const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
+ IMG=canvas.toDataURL('image/png');
+ return IMG;
+}
+
 async function condividi(){
  const btn=document.querySelector('.btns button');
- if(typeof html2canvas==='function'){
-  try{
-   if(btn) btn.textContent='Preparo…';
-   const card=document.querySelector('.card');
-   const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
-   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
-   IMG=new File([blob],'cashly-ciclo.png',{type:'image/png'});
-   if(btn) btn.textContent='Condividi';
-   if(navigator.canShare && navigator.canShare({files:[IMG]})){
-    await navigator.share({files:[IMG],text:TESTO});
+ const testo=btn?btn.textContent:'';
+ try{
+  if(btn) btn.textContent='Preparo…';
+  const img=await fai();
+
+  // prima provo la condivisione di sistema con la foto
+  if(img && navigator.canShare){
+   const blob=await (await fetch(img)).blob();
+   const file=new File([blob],'cashly-ciclo.png',{type:'image/png'});
+   if(navigator.canShare({files:[file]})){
+    if(btn) btn.textContent=testo;
+    try{ await navigator.share({files:[file],text:TESTO}); return; }catch(e){}
+   }
+  }
+
+  // altrimenti la mando in chat col bot
+  if(img){
+   const r=await fetch(APIS,{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:new URLSearchParams(location.search).get('t')||'',img:img,testo:TESTO})});
+   const j=await r.json();
+   if(btn) btn.textContent=testo;
+   if(j.ok){
+    if(window.Telegram?.WebApp){
+     Telegram.WebApp.showPopup?.({title:'Fatto',message:"Ti ho mandato l'immagine in chat. Da lì puoi inoltrarla dove vuoi.",buttons:[{type:'ok'}]},()=>Telegram.WebApp.close());
+     setTimeout(()=>Telegram.WebApp.close(),1800);
+    } else alert("Immagine inviata in chat.");
     return;
    }
-  }catch(e){ if(btn) btn.textContent='Condividi'; }
- }
+  }
+ }catch(e){}
+ if(btn) btn.textContent=testo;
  apri();
 }
 
@@ -103,10 +130,9 @@ function su(app){
  chiudi();
 }
 
-function salva(){
- if(!IMG) return;
- const a=document.createElement('a');
- a.href=URL.createObjectURL(IMG); a.download='cashly-ciclo.png'; a.click();
+async function salva(){
+ const img=await fai(); if(!img) return;
+ const a=document.createElement('a'); a.href=img; a.download='cashly-ciclo.png'; a.click();
  chiudi();
 }
 
