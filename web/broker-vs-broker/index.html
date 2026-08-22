@@ -2,96 +2,118 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Broker vs Broker · Cashly</title>
-<meta name="description" content="Hedging tra due broker. I conti restano tuoi, la commissione si paga solo a ciclo chiuso e in profitto. Capitale minimo 2.000 €.">
+<meta name="description" content="Hedging tra due broker. I conti restano tuoi, la commissione si paga solo a ciclo chiuso e in profitto.">
 <meta property="og:title" content="Broker vs Broker · Cashly">
-<meta property="og:description" content="I conti restano tuoi. Paghi solo se guadagni. Ogni commissione è tracciata sulla blockchain.">
-<meta property="og:type" content="website">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta property="og:description" content="I conti restano tuoi. Paghi solo se guadagni.">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080B0D;--panel:#0F1417;--panel2:#131A1D;--line:#1B242A;--txt:#ECEFF3;--mut:#78818F;--tl:#0d9e88;--tl2:#14c9ac;--red:#F2645A}
+:root{--nero:#0B0B0B;--verde:#6EE7A0;--verde2:#4ED888;--gri:#6B7280;--gri2:#9CA3AF;--linea:#E8EAED;--bg:#fff;--soft:#F7F8F9}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
-.w{max-width:940px;margin:0 auto;padding:0 20px}
-section{padding:64px 0;border-bottom:1px solid var(--line)}
-h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(32px,6.4vw,54px);font-weight:700;letter-spacing:-1.6px;line-height:1.08}
-h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(23px,4vw,32px);font-weight:600;letter-spacing:-.7px;margin-bottom:12px}
-h3{font-size:16px;font-weight:600;margin-bottom:7px}
-p{color:#C3C9D1}
-.lead{font-size:clamp(15px,2.4vw,18px);color:#AEB6BF;margin-top:18px;max-width:640px}
-.kick{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.6px;color:var(--tl);text-transform:uppercase;margin-bottom:20px}
-.kick i{width:8px;height:8px;border-radius:50%;background:var(--tl2);animation:p 1.9s ease-out infinite}
-@keyframes p{0%{box-shadow:0 0 0 0 rgba(20,201,172,.55)}70%{box-shadow:0 0 0 9px rgba(20,201,172,0)}100%{box-shadow:0 0 0 0 rgba(20,201,172,0)}}
-.cta{display:inline-block;background:var(--tl);color:#04120F;padding:15px 30px;border-radius:12px;font-weight:600;font-size:15.5px;text-decoration:none;margin-top:28px}
-.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);margin-left:10px}
-.sub{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--mut);margin-top:14px}
-.grid{display:grid;gap:14px;margin-top:26px}
-.g2{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
-.g3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
-.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
-.card p{font-size:14px;color:var(--mut)}
-.num{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:var(--tl2);letter-spacing:-1px;line-height:1}
-.lbl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1.6px;color:var(--mut);text-transform:uppercase;margin-top:8px}
-.step{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid rgba(27,36,42,.7)}
+body{background:var(--bg);color:var(--nero);font-family:Poppins,system-ui,sans-serif;line-height:1.75;-webkit-font-smoothing:antialiased}
+.w{max-width:1000px;margin:0 auto;padding:0 22px}
+.grid-bg{background-image:linear-gradient(var(--linea) 1px,transparent 1px),linear-gradient(90deg,var(--linea) 1px,transparent 1px);background-size:64px 64px}
+section{padding:76px 0}
+.eyebrow{font-family:Poppins;font-weight:700;font-size:12.5px;letter-spacing:4px;color:var(--verde2);text-transform:uppercase;text-align:center}
+h1{font-family:'Archivo Black',sans-serif;font-size:clamp(38px,9.4vw,74px);line-height:1.02;text-transform:uppercase;letter-spacing:-1px;text-align:center;margin-top:22px}
+h1 .v{color:var(--verde)}
+h2{font-family:'Archivo Black',sans-serif;font-size:clamp(26px,5.4vw,42px);line-height:1.1;text-transform:uppercase;letter-spacing:-.5px;text-align:center}
+h2 .v{color:var(--verde)}
+h3{font-family:'Archivo Black',sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:-.2px;margin-bottom:8px}
+.sub{text-align:center;color:var(--gri);font-size:clamp(15px,2.6vw,18px);max-width:660px;margin:26px auto 0}
+.sub b{color:var(--nero);font-weight:600}
+.cta-w{text-align:center;margin-top:38px}
+.cta{display:inline-block;background:var(--nero);color:#fff;padding:19px 40px;font-family:'Archivo Black',sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:.5px;text-decoration:none;border:2px solid var(--nero);transition:.15s}
+.cta:hover{background:var(--verde);color:var(--nero)}
+.cta.alt{background:transparent;color:var(--nero);margin-left:8px}
+.cta.alt:hover{background:var(--nero);color:#fff}
+.mini{text-align:center;color:var(--gri2);font-size:13px;margin-top:16px}
+.bar{background:var(--nero);color:#fff;padding:16px 0;text-align:center;font-family:'Archivo Black',sans-serif;font-size:clamp(13px,3vw,17px);text-transform:uppercase;letter-spacing:1px}
+.bar .v{color:var(--verde)}
+.grid{display:grid;gap:0;border:2px solid var(--nero);margin-top:44px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.cell{padding:26px 20px;border-right:2px solid var(--nero);text-align:center}
+.cell:last-child{border-right:0}
+.num{font-family:'Archivo Black',sans-serif;font-size:clamp(24px,5vw,38px);line-height:1}
+.lbl{font-size:11px;letter-spacing:1.6px;color:var(--gri);text-transform:uppercase;margin-top:9px;font-weight:600}
+.step{display:flex;gap:22px;padding:30px 0;border-bottom:2px solid var(--linea);align-items:flex-start}
 .step:last-child{border-bottom:0}
-.step .n{flex:0 0 34px;height:34px;border-radius:50%;border:1px solid var(--tl);color:var(--tl2);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px}
-.pill{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:5px 11px;border-radius:20px;background:rgba(20,201,172,.1);color:var(--tl2);border:1px solid rgba(20,201,172,.28);margin:0 6px 6px 0}
-.pill.warn{background:rgba(242,100,90,.09);color:var(--red);border-color:rgba(242,100,90,.28)}
-table{width:100%;border-collapse:collapse;margin-top:22px;font-size:14.5px}
-td{padding:13px 4px;border-bottom:1px solid var(--line)}
-td:last-child{text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--txt)}
-td:first-child{color:var(--mut)}
-.q{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
-.q summary{padding:16px 18px;cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:14px}
-.q summary::-webkit-details-marker{display:none}
-.q summary::after{content:"+";color:var(--tl2);font-size:20px;line-height:1}
-.q[open] summary::after{content:"–"}
-.q .a{padding:0 18px 17px;color:var(--mut);font-size:14.5px}
-ul{list-style:none}
-li{padding-left:22px;position:relative;font-size:14.5px;color:#C3C9D1;margin-bottom:9px}
-li:before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:50%;background:var(--tl)}
-li.no:before{background:var(--red)}
-footer{padding:44px 0;text-align:center;color:var(--mut);font-size:12.5px}
-footer a{color:var(--mut)}
-.warn{background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--red);border-radius:10px;padding:17px 19px;margin-top:26px}
-.warn p{font-size:13.5px;color:var(--mut)}
-.bar{position:sticky;bottom:0;background:rgba(8,11,13,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.bar span{font-size:13px;color:var(--mut)}
-.bar a{background:var(--tl);color:#04120F;padding:11px 22px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap}
-@media(max-width:640px){section{padding:44px 0}.grid{gap:11px}.card{padding:16px}}
+.step .n{flex:0 0 56px;height:56px;background:var(--verde);display:flex;align-items:center;justify-content:center;font-family:'Archivo Black',sans-serif;font-size:20px}
+.step p{color:var(--gri);font-size:15px;margin-top:2px}
+.box{border:2px solid var(--nero);padding:28px 24px}
+.box.soft{background:var(--soft);border-color:var(--linea)}
+.box p{color:var(--gri);font-size:14.5px}
+ul{list-style:none;margin-top:14px}
+li{padding-left:26px;position:relative;color:var(--gri);font-size:14.5px;margin-bottom:11px}
+li:before{content:"→";position:absolute;left:0;color:var(--verde2);font-weight:700}
+li.no:before{content:"×";color:#EF4444}
+table{width:100%;border-collapse:collapse;margin-top:38px;border:2px solid var(--nero)}
+td{padding:17px 20px;border-bottom:1px solid var(--linea);font-size:15px}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--gri)}
+td:last-child{text-align:right;font-weight:600}
+details{border:2px solid var(--nero);margin-top:-2px}
+summary{padding:20px 22px;cursor:pointer;font-weight:600;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:'Archivo Black',sans-serif;color:var(--verde2);font-size:22px}
+details[open] summary::after{content:"–"}
+details .a{padding:0 22px 22px;color:var(--gri);font-size:14.5px}
+.head{border-bottom:2px solid var(--linea);padding:16px 0}
+.head .w{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;background:var(--nero);color:var(--verde);font-family:'Archivo Black',sans-serif;font-size:24px;display:flex;align-items:center;justify-content:center}
+.nome{font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:.5px;line-height:1.2}
+.nome span{display:block;font-family:Poppins;font-weight:700;font-size:11px;letter-spacing:3px;color:var(--verde2)}
+footer{background:var(--nero);color:#fff;padding:56px 0 44px;text-align:center}
+footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:18px auto 0}
+.sticky{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--nero);padding:13px 22px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;z-index:9}
+.sticky span{font-size:13px;color:var(--gri);font-weight:500}
+.sticky a{background:var(--nero);color:#fff;padding:13px 26px;font-family:'Archivo Black',sans-serif;font-size:13px;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+@media(max-width:760px){section{padding:52px 0}.g4,.g3{grid-template-columns:repeat(2,1fr)}.cell{border-bottom:2px solid var(--nero)}.cell:nth-child(2n){border-right:0}.g2{grid-template-columns:1fr}.step .n{flex:0 0 44px;height:44px;font-size:17px}}
 </style></head>
 <body>
 
-<section style="border:0;padding-top:56px">
+<div class="head">
+  <div class="w">
+    <div class="logo">C</div>
+    <div class="nome">BROKER VS BROKER<span>BY CASHLY</span></div>
+  </div>
+</div>
+
+<section class="grid-bg" style="padding-top:64px">
 <div class="w">
-  <div class="kick"><i></i>Cashly · Broker vs Broker</div>
-  <h1>I conti restano tuoi.<br>Paghi solo se guadagni.</h1>
-  <p class="lead">Un sistema di hedging tra due broker: due posizioni opposte sullo stesso asset. Il mercato non conta, il capitale non si muove. Il profitto arriva dal bonus sul deposito e dallo swap.</p>
-  <a class="cta" href="https://t.me/cashly_bvb_bot?start=r_landing">Parla col bot su Telegram</a>
-  <a class="cta ghost" href="#come">Come funziona</a>
-  <div class="sub">Capitale minimo 2.000 € · nessun costo di ingresso</div>
+  <div class="eyebrow">Powered by Business UP</div>
+  <h1>I conti restano tuoi.<br><span class="v">Paghi solo se guadagni.</span></h1>
+  <p class="sub">Un sistema di <b>hedging tra due broker</b>: due posizioni opposte sullo stesso asset. Il mercato non conta, il capitale non si muove. Il profitto arriva dal <b>bonus sul deposito</b> e dallo swap.</p>
+  <div class="cta-w">
+    <a class="cta" href="https://t.me/cashly_bvb_bot?start=r_landing">Parla col bot</a>
+    <a class="cta alt" href="#come">Come funziona</a>
+  </div>
+  <p class="mini">Capitale minimo 2.000 € · nessun costo di ingresso</p>
 </div>
 </section>
+
+<div class="bar">Zero abbonamenti · <span class="v">commissione solo sul profitto</span></div>
 
 <section>
 <div class="w">
-  <h2>I numeri, aggiornati</h2>
-  <p style="font-size:14.5px;color:var(--mut)">Dati reali dei cicli chiusi dal 28 luglio 2026.</p>
+  <h2>I numeri, <span class="v">quelli veri</span></h2>
+  <p class="sub">Cicli chiusi e pagati dal 28 luglio 2026.</p>
   <div class="grid g4">
-    <div class="card"><div class="num">37</div><div class="lbl">Cicli chiusi</div></div>
-    <div class="card"><div class="num">€ 13.000</div><div class="lbl">Profitto generato</div></div>
-    <div class="card"><div class="num">+7,1%</div><div class="lbl">Rendimento medio a ciclo</div></div>
-    <div class="card"><div class="num">1–2</div><div class="lbl">Giorni per ciclo</div></div>
+    <div class="cell"><div class="num">37</div><div class="lbl">Cicli chiusi</div></div>
+    <div class="cell"><div class="num">13K</div><div class="lbl">Profitto generato</div></div>
+    <div class="cell"><div class="num">+7,1%</div><div class="lbl">Medio a ciclo</div></div>
+    <div class="cell"><div class="num">1–2</div><div class="lbl">Giorni per ciclo</div></div>
   </div>
-  <div class="warn"><p>I risultati passati non garantiscono quelli futuri. Il capitale è a rischio e i bonus dei broker possono cambiare o essere sospesi in qualsiasi momento.</p></div>
+  <p class="mini" style="margin-top:20px">I risultati passati non garantiscono quelli futuri. Il capitale è a rischio.</p>
 </div>
 </section>
 
-<section id="come">
+<section id="come" style="background:var(--soft)">
 <div class="w">
-  <h2>Come funziona</h2>
-  <div style="margin-top:24px">
+  <h2>Come <span class="v">funziona</span></h2>
+  <div style="margin-top:34px">
     <div class="step"><div class="n">1</div><div>
       <h3>Apri due conti a tuo nome</h3>
       <p>Due broker diversi, entrambi intestati a te. Li finanzi tu, le credenziali sono tue. Nessuno preleva, nessuno gestisce i tuoi soldi al posto tuo.</p></div></div>
@@ -110,7 +132,7 @@ footer a{color:var(--mut)}
 
 <section>
 <div class="w">
-  <h2>Cosa ti serve</h2>
+  <h2>Cosa ti <span class="v">serve</span></h2>
   <table>
     <tr><td>Capitale minimo</td><td>2.000 €</td></tr>
     <tr><td>Costo di ingresso</td><td>nessuno</td></tr>
@@ -122,34 +144,36 @@ footer a{color:var(--mut)}
 </div>
 </section>
 
+<div class="bar">Ogni commissione è <span class="v">verificabile sulla blockchain</span></div>
+
 <section>
 <div class="w">
-  <h2>Trasparenza</h2>
-  <p class="lead" style="margin-top:10px">Ogni commissione che paghi è una transazione pubblica sulla blockchain. Nella tua area vedi ciclo per ciclo quanto hai guadagnato, quanto hai versato e il link per verificarlo.</p>
+  <h2>Trasparenza <span class="v">totale</span></h2>
+  <p class="sub">Nella tua area vedi ciclo per ciclo quanto hai guadagnato, quanto hai versato e il link per verificarlo.</p>
   <div class="grid g3">
-    <div class="card"><h3>Dashboard personale</h3><p>Profitto accumulato, andamento e registro completo dei cicli.</p></div>
-    <div class="card"><h3>Certificato a ogni chiusura</h3><p>Un riepilogo del ciclo appena chiuso, condivisibile.</p></div>
-    <div class="card"><h3>Pagamenti verificabili</h3><p>Ogni fee ha il suo link on-chain, consultabile da chiunque.</p></div>
+    <div class="cell" style="text-align:left"><h3>Dashboard</h3><p style="color:var(--gri);font-size:14px">Profitto accumulato, andamento e registro completo dei cicli.</p></div>
+    <div class="cell" style="text-align:left"><h3>Certificato</h3><p style="color:var(--gri);font-size:14px">A ogni chiusura, un riepilogo del ciclo pronto da condividere.</p></div>
+    <div class="cell" style="text-align:left"><h3>Pagamenti</h3><p style="color:var(--gri);font-size:14px">Ogni fee ha il suo link on-chain, consultabile da chiunque.</p></div>
   </div>
 </div>
 </section>
 
-<section>
+<section style="background:var(--soft)">
 <div class="w">
-  <h2>Onestà</h2>
-  <div class="grid g2">
-    <div class="card">
-      <h3 style="color:var(--tl2)">Quello che funziona</h3>
-      <ul style="margin-top:12px">
+  <h2>Le carte <span class="v">in tavola</span></h2>
+  <div class="grid g2" style="border:0;gap:18px;margin-top:38px">
+    <div class="box">
+      <h3>Quello che funziona</h3>
+      <ul>
         <li>Il capitale resta sui tuoi conti, sempre</li>
         <li>Paghi solo a profitto realizzato</li>
         <li>Il mercato non incide sul risultato</li>
         <li>Ogni pagamento è verificabile pubblicamente</li>
       </ul>
     </div>
-    <div class="card">
-      <h3 style="color:var(--red)">Quello che devi sapere</h3>
-      <ul style="margin-top:12px">
+    <div class="box">
+      <h3>Quello che devi sapere</h3>
+      <ul>
         <li class="no">Serve capitale iniziale di almeno 2.000 €</li>
         <li class="no">Dipende dai bonus dei broker, che possono cambiare</li>
         <li class="no">Si opera su broker offshore, senza tutele UE</li>
@@ -162,35 +186,36 @@ footer a{color:var(--mut)}
 
 <section>
 <div class="w">
-  <h2>Domande</h2>
-  <details class="q"><summary>Chi tocca i miei soldi?</summary><div class="a">Nessuno. I due conti sono intestati a te, aperti da te, con le tue credenziali. Depositi e prelievi li fai solo tu.</div></details>
-  <details class="q"><summary>E se il broker non paga?</summary><div class="a">È il rischio principale e va detto chiaramente: si opera su broker offshore, fuori dalle tutele europee. Per questo si lavora con importi controllati e si chiudono i cicli in tempi brevi, senza lasciare capitale fermo più del necessario.</div></details>
-  <details class="q"><summary>Quanto posso guadagnare?</summary><div class="a">Dipende dal capitale e dai bonus disponibili in quel periodo. Il rendimento medio a ciclo sui dati reali è del 7,1%, ma non è una promessa: i bonus possono ridursi o sparire.</div></details>
-  <details class="q"><summary>Devo saper fare trading?</summary><div class="a">No. Le operazioni le esegue chi gestisce il servizio. A te serve capire cosa sta succedendo e seguire i passaggi dal bot.</div></details>
-  <details class="q"><summary>Come si paga la commissione?</summary><div class="a">In USDT su rete BEP20, a ciclo chiuso, solo sul profitto. Il bot ti dice quanto e su quale indirizzo, e verifica il pagamento sulla blockchain.</div></details>
-  <details class="q"><summary>Posso smettere quando voglio?</summary><div class="a">Sì. Non c'è vincolo né abbonamento: i conti sono tuoi e li chiudi quando vuoi.</div></details>
+  <h2>Domande <span class="v">dirette</span></h2>
+  <div style="margin-top:36px">
+    <details><summary>Chi tocca i miei soldi?</summary><div class="a">Nessuno. I due conti sono intestati a te, aperti da te, con le tue credenziali. Depositi e prelievi li fai solo tu.</div></details>
+    <details><summary>E se il broker non paga?</summary><div class="a">È il rischio principale e va detto chiaramente: si opera su broker offshore, fuori dalle tutele europee. Per questo si lavora con importi controllati e si chiudono i cicli in tempi brevi, senza lasciare capitale fermo più del necessario.</div></details>
+    <details><summary>Quanto posso guadagnare?</summary><div class="a">Dipende dal capitale e dai bonus disponibili in quel periodo. Il rendimento medio a ciclo sui dati reali è del 7,1%, ma non è una promessa: i bonus possono ridursi o sparire.</div></details>
+    <details><summary>Devo saper fare trading?</summary><div class="a">No. Le operazioni le esegue chi gestisce il servizio. A te serve capire cosa sta succedendo e seguire i passaggi dal bot.</div></details>
+    <details><summary>Come si paga la commissione?</summary><div class="a">In USDT su rete BEP20, a ciclo chiuso, solo sul profitto. Il bot ti dice quanto e su quale indirizzo, e verifica il pagamento sulla blockchain.</div></details>
+    <details><summary>Posso smettere quando voglio?</summary><div class="a">Sì. Non c'è vincolo né abbonamento: i conti sono tuoi e li chiudi quando vuoi.</div></details>
+  </div>
 </div>
 </section>
 
-<section style="border:0">
-<div class="w" style="text-align:center">
-  <h2>Il primo passo è una conversazione</h2>
-  <p class="lead" style="margin:14px auto 0">Apri il bot, guarda i risultati reali e rispondi a tre domande. Se il servizio non fa per te lo capiamo subito, senza far perdere tempo a nessuno.</p>
-  <a class="cta" href="https://t.me/cashly_bvb_bot?start=r_landing">Inizia da Telegram</a>
-  <div class="sub">Nessun costo di ingresso · nessun impegno</div>
+<section class="grid-bg" style="text-align:center">
+<div class="w">
+  <h2>Il primo passo è<br><span class="v">una conversazione</span></h2>
+  <p class="sub">Apri il bot, guarda i risultati reali e rispondi a tre domande. Se il servizio non fa per te lo capiamo subito, senza far perdere tempo a nessuno.</p>
+  <div class="cta-w"><a class="cta" href="https://t.me/cashly_bvb_bot?start=r_landing">Inizia da Telegram</a></div>
+  <p class="mini">Nessun costo di ingresso · nessun impegno</p>
 </div>
 </section>
 
 <footer>
 <div class="w">
-  Cashly · Broker vs Broker<br>
-  <span style="font-size:11.5px;line-height:1.8;display:block;margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto">
-  Il trading comporta il rischio di perdere il capitale investito. Cashly è un intermediario in affiliazione: non gestisce fondi di terzi, non offre consulenza finanziaria e non garantisce rendimenti. I risultati mostrati sono storici e non predittivi.
-  </span>
+  <div style="font-family:'Archivo Black',sans-serif;font-size:16px;letter-spacing:1px">CASHLY <span style="color:var(--verde)">·</span> BROKER VS BROKER</div>
+  <div style="font-size:11px;letter-spacing:3px;color:var(--verde);font-weight:700;margin-top:6px">BY BUSINESS UP</div>
+  <p class="dis">Il trading comporta il rischio di perdere il capitale investito. Cashly è un intermediario in affiliazione: non gestisce fondi di terzi, non offre consulenza finanziaria e non garantisce rendimenti. I risultati mostrati sono storici e non predittivi.</p>
 </div>
 </footer>
 
-<div class="bar">
+<div class="sticky">
   <span>Capitale minimo 2.000 € · commissione solo sul profitto</span>
   <a href="https://t.me/cashly_bvb_bot?start=r_landing">Parla col bot</a>
 </div>
