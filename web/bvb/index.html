@@ -872,14 +872,11 @@ function render(){
   tbody.innerHTML = '';
   c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid)).slice().reverse().forEach(r=>{
     const tr = document.createElement('tr');
-    const nCiclo = String(r.id||'').startsWith('db_') ? String(r.id).slice(3) : null;
-    const tok = new URLSearchParams(location.search).get('t')||'';
-    const link = nCiclo ? 'https://hub.cashlypro.com/bvb/ciclo/?v=18&t='+encodeURIComponent(tok)+'&n='+encodeURIComponent(nCiclo) : null;
     tr.innerHTML = `
       <td class="c-n">${r.idx}</td>
       <td class="c-d">${fmtDate(r.data)}</td>
       <td class="c-c">${fmtEur(r.capitale)}</td>
-      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}${link?`<a class="sh" href="${link}">›</a>`:''}</td>
+      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
     `;
     tbody.appendChild(tr);
   });
