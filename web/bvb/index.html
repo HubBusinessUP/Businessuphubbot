@@ -315,7 +315,9 @@ async function conImmagine(app){
   tbody tr:nth-child(even){background:rgba(255,255,255,.018);}
   .add-row{display:none;}
   tbody tr[style*="pointer"]:active{background:rgba(20,201,172,.08);}
-  .sh{color:var(--gold);opacity:.55;margin-left:7px;font-weight:400;}
+  .sh{color:var(--gold-bright);margin-left:10px;font-weight:600;text-decoration:none;
+    display:inline-block;padding:2px 9px;border:1px solid var(--border);border-radius:7px;font-size:13px;}
+  .sh:active{background:rgba(20,201,172,.12);border-color:var(--gold);}
   .registro-toolbar{display:flex;gap:8px;margin-bottom:14px;}
   .registro-toolbar select{flex:1;width:100%;max-width:none;}
 
@@ -870,17 +872,15 @@ function render(){
   tbody.innerHTML = '';
   c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid)).slice().reverse().forEach(r=>{
     const tr = document.createElement('tr');
+    const nCiclo = String(r.id||'').startsWith('db_') ? String(r.id).slice(3) : null;
+    const tok = new URLSearchParams(location.search).get('t')||'';
+    const link = nCiclo ? 'https://hub.cashlypro.com/bvb/ciclo/?v=18&t='+encodeURIComponent(tok)+'&n='+encodeURIComponent(nCiclo) : null;
     tr.innerHTML = `
       <td class="c-n">${r.idx}</td>
       <td class="c-d">${fmtDate(r.data)}</td>
       <td class="c-c">${fmtEur(r.capitale)}</td>
-      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}<span class="sh">›</span></td>
+      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}${link?`<a class="sh" href="${link}">›</a>`:''}</td>
     `;
-    if(window.DAL_BOT && String(r.id||'').startsWith('db_')){
-      tr.style.cursor='pointer';
-      tr.title='Apri il certificato di questo ciclo';
-      tr.addEventListener('click', ()=>apriCertificato(String(r.id).slice(3)));
-    }
     tbody.appendChild(tr);
   });
 
