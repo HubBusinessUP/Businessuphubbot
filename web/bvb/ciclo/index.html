@@ -93,7 +93,9 @@ async function carica(){
  const t=P.get('t')||''; if(!t) return;
  const r=await fetch(API+'?t='+encodeURIComponent(t)); const d=await r.json();
  const c=(d.cicli||[]); if(!c.length) return;
- const u=c[c.length-1], netto=u.lordo-u.fee, roi=u.capitale?netto/u.capitale*100:0;
+ const nRich=parseInt(P.get('n')||'0',10);
+ const u=(nRich? c.find(x=>x.n===nRich) : null) || c[c.length-1];
+ const netto=u.lordo-u.fee, roi=u.capitale?netto/u.capitale*100:0;
  let cum=0;
  for(const x of c){ cum+=x.lordo-x.fee; if(x.n===u.n) break; }
  ncic.textContent='#'+u.n;
