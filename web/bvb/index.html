@@ -2514,8 +2514,7 @@ async function copiaTesto(){ try{ await navigator.clipboard.writeText(TESTO_SHAR
 function apriCertificato(n){
  const t=new URLSearchParams(location.search).get('t')||'';
  const url='https://hub.cashlypro.com/bvb/ciclo/?v=17&t='+encodeURIComponent(t)+'&n='+encodeURIComponent(n);
- if(window.Telegram?.WebApp?.openLink) Telegram.WebApp.openLink(url);
- else window.open(url,'_blank');
+ location.href = url;   // resta dentro la Mini App
 }
 </script>
 </body>
