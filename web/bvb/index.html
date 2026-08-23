@@ -717,12 +717,15 @@ if(d.cliente && d.cliente.nome){
       window.CLIENTE = d.cliente;
       document.title = (d.cliente.brand||'Cashly') + ' · ' + d.cliente.nome;
     }
+    window.DAL_BOT = true;
     return d.cicli.map(c=>({ id:'db_'+c.n, capitale:c.capitale, data:c.data, avvio:c.avvio||null, gainLordo:c.lordo, spese:c.fee }));
   }catch(e){ return null; }
 }
 async function loadData(){
   const dal = await datiDalBot();
-  if(dal && dal.length){ rows = dal; return; }
+  // se la richiesta al bot è andata a buon fine, quelli sono gli unici dati validi:
+  // anche zero cicli è una risposta corretta, non un motivo per pescare altrove
+  if(window.DAL_BOT){ rows = dal || []; return; }
   try{
     const res = await storageGet(STORAGE_KEY);
     if(res && res.value){
@@ -821,6 +824,7 @@ async function saveForecast(){
 }
 
 async function saveData(showNote=true){
+  if(window.DAL_BOT) return;   // dati del bot: sola lettura, niente copie locali
   const note = document.getElementById('saveNote');
   try{
     await storageSet(STORAGE_KEY, JSON.stringify(rows));
