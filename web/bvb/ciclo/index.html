@@ -67,6 +67,9 @@ button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line
   <div class="roi" id="roi">—</div>
   <div class="who"><b id="who">—</b> · <span id="dt">—</span><span id="durw"></span></div>
 </div>
+<div id="back" style="display:none;text-align:center;margin-bottom:12px">
+  <a href="#" onclick="tornaDashboard();return false" style="color:var(--mut);font-size:12.5px;text-decoration:none">‹ Torna alla dashboard</a>
+</div>
 <div class="btns">
   <button onclick="condividi()">Condividi</button>
 
@@ -99,6 +102,7 @@ async function carica(){
  let cum=0;
  for(const x of c){ cum+=x.lordo-x.fee; if(x.n===u.n) break; }
  ncic.textContent='#'+u.n;
+ if(nRich){ const b=document.getElementById('back'); if(b) b.style.display='block'; }
  big.textContent=E(netto);
  roi_el().textContent=PC(roi);
  who.textContent=d.cliente?.nome||'';
@@ -111,6 +115,10 @@ async function carica(){
 }
 function roi_el(){return document.getElementById('roi');}
 let IMG=null;
+function tornaDashboard(){
+ const t=new URLSearchParams(location.search).get('t')||'';
+ location.href='https://hub.cashlypro.com/bvb/?v=17&t='+encodeURIComponent(t);
+}
 const APIS='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/share';
 function chiudi(){ document.getElementById('sheet').style.display='none'; }
 function apri(){ document.getElementById('sheet').style.display='flex'; }
