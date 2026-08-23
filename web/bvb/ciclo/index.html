@@ -94,7 +94,8 @@ async function carica(){
  const r=await fetch(API+'?t='+encodeURIComponent(t)); const d=await r.json();
  const c=(d.cicli||[]); if(!c.length) return;
  const u=c[c.length-1], netto=u.lordo-u.fee, roi=u.capitale?netto/u.capitale*100:0;
- let cum=0; c.forEach(x=>cum+=x.lordo-x.fee);
+ let cum=0;
+ for(const x of c){ cum+=x.lordo-x.fee; if(x.n===u.n) break; }
  ncic.textContent='#'+u.n;
  big.textContent=E(netto);
  roi_el().textContent=PC(roi);
