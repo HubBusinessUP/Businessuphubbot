@@ -314,6 +314,8 @@ async function conImmagine(app){
   td.c-c{color:var(--muted);}
   tbody tr:nth-child(even){background:rgba(255,255,255,.018);}
   .add-row{display:none;}
+  tbody tr[style*="pointer"]:active{background:rgba(20,201,172,.08);}
+  .sh{color:var(--gold);opacity:.55;margin-left:7px;font-weight:400;}
   .registro-toolbar{display:flex;gap:8px;margin-bottom:14px;}
   .registro-toolbar select{flex:1;width:100%;max-width:none;}
 
@@ -872,8 +874,13 @@ function render(){
       <td class="c-n">${r.idx}</td>
       <td class="c-d">${fmtDate(r.data)}</td>
       <td class="c-c">${fmtEur(r.capitale)}</td>
-      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
+      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}<span class="sh">›</span></td>
     `;
+    if(window.DAL_BOT && String(r.id||'').startsWith('db_')){
+      tr.style.cursor='pointer';
+      tr.title='Apri il certificato di questo ciclo';
+      tr.addEventListener('click', ()=>apriCertificato(String(r.id).slice(3)));
+    }
     tbody.appendChild(tr);
   });
 
@@ -2503,5 +2510,13 @@ async function copiaTesto(){ try{ await navigator.clipboard.writeText(TESTO_SHAR
   <button class="sh-x" onclick="chiudiFoglio()">Chiudi</button>
  </div>
 </div>
+<script>
+function apriCertificato(n){
+ const t=new URLSearchParams(location.search).get('t')||'';
+ const url='https://hub.cashlypro.com/bvb/ciclo/?v=17&t='+encodeURIComponent(t)+'&n='+encodeURIComponent(n);
+ if(window.Telegram?.WebApp?.openLink) Telegram.WebApp.openLink(url);
+ else window.open(url,'_blank');
+}
+</script>
 </body>
 </html>
