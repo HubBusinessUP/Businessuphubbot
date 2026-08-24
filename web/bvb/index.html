@@ -276,14 +276,18 @@ async function conImmagine(app){
   #btnShare{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;
     padding:10px 18px;font-family:Inter,sans-serif;font-size:12.5px;cursor:pointer;}
   #btnShare:active{color:var(--gold-bright);border-color:var(--gold);}
-  #shareCard{position:fixed;left:-9999px;top:0;width:540px;padding:44px 34px;background:#0F1417;
-    border:1px solid #0d9e88;border-radius:20px;text-align:center;font-family:Inter,system-ui,sans-serif;}
-  #shareCard .b{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;color:#0d9e88;text-transform:uppercase;}
-  #shareCard .l{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2.6px;color:#78818F;text-transform:uppercase;margin-top:28px;}
-  #shareCard .n{font-family:'Space Grotesk',sans-serif;font-size:66px;font-weight:700;color:#14c9ac;letter-spacing:-2px;line-height:1;margin:16px 0 14px;}
-  #shareCard .p{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:15px;padding:7px 16px;border-radius:22px;
-    background:rgba(20,201,172,.12);color:#14c9ac;border:1px solid rgba(20,201,172,.3);}
-  #shareCard .m{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#78818F;margin-top:24px;}
+  #shareCard{position:fixed;left:-9999px;top:0;width:520px;padding:34px 24px 30px;background:#0F1417;
+    border:1px solid #0d9e88;border-radius:16px;text-align:center;font-family:Inter,system-ui,sans-serif;}
+  #shareCard .sc-live{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;letter-spacing:2px;color:#78818F;text-transform:uppercase;}
+  #shareCard .sc-live i{width:8px;height:8px;border-radius:50%;background:#14c9ac;display:inline-block;}
+  #shareCard .sc-rule{height:1px;margin:16px 0 24px;background:#0d9e88;opacity:.5;}
+  #shareCard .b{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:3px;color:#0d9e88;text-transform:uppercase;margin-top:10px;}
+  #shareCard .l{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.6px;color:#78818F;text-transform:uppercase;}
+  #shareCard .n{font-family:'Space Grotesk',sans-serif;font-size:60px;font-weight:700;color:#14c9ac;letter-spacing:-2.5px;line-height:1;margin:14px 0 14px;}
+  #shareCard .p{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:14px;padding:6px 14px;border-radius:22px;
+    background:rgba(20,201,172,.1);color:#14c9ac;border:1px solid rgba(20,201,172,.3);}
+  #shareCard .m{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#78818F;margin-top:22px;}
   .hero-meta{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.6px;}
   .stats{grid-template-columns:repeat(3,1fr);}
   @media(max-width:620px){
@@ -453,7 +457,9 @@ async function conImmagine(app){
 </div>
 
 <div id="shareCard">
-  <div class="b">Cashly · Broker vs Broker</div>
+  <div class="sc-live"><i></i>Verificato on-chain</div>
+  <div class="b" id="scBrand">Cashly · Broker vs Broker</div>
+  <div class="sc-rule"></div>
   <div class="l">Profitto netto accumulato</div>
   <div class="n" id="scNum">€ 0</div>
   <div class="p" id="scPct">0%</div>
@@ -2422,6 +2428,8 @@ function prepara(){
  document.getElementById('scNum').textContent=tot;
  document.getElementById('scPct').textContent=pct;
  document.getElementById('scMeta').textContent=nc+(dt?' · '+dt:'');
+ const b=document.getElementById('scBrand');
+ if(b) b.textContent=((window.CLIENTE&&window.CLIENTE.brand)||'Cashly')+' · Broker vs Broker';
 }
 
 async function fai(){
