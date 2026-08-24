@@ -110,7 +110,7 @@ async function carica(){
  document.title=(d.cliente?.brand||'Cashly')+' · Ciclo';
  dt.textContent=new Date(u.data).toLocaleDateString('it-IT');
  const dur=u.avvio?durata(u.avvio,u.data):'';
- TESTO='Ho guadagnato '+E(netto)+(dur?' in '+dur:'')+' con la strategia di hedging Broker vs Broker.\n\nRendimento '+PC(roi)+'\nTotale ad oggi '+E0(cum);
+ TESTO='Ho guadagnato '+E(netto)+(dur?' in '+dur:'')+' con la strategia di hedging Broker vs Broker.'+(roi?'\n\nRendimento '+PC(roi):'');
  const el=document.getElementById('durw'); if(el&&dur) el.textContent=' · '+dur;
 }
 function roi_el(){return document.getElementById('roi');}
