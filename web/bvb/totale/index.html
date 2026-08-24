@@ -1,0 +1,214 @@
+<!DOCTYPE html><html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cashly · Totale</title>
+<script src="https://telegram.org/js/telegram-web-app.js">
+async function inviaInChat(){
+ try{
+  const img=await fai();
+  const r=await fetch(APIS,{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({t:new URLSearchParams(location.search).get('t')||'',img:img,testo:TESTO})});
+  const j=await r.json();
+  return !!j.ok;
+ }catch(e){ return false; }
+}
+
+async function conImmagine(app){
+ chiudi();
+ const ok=await inviaInChat();
+ if(!ok){ avvisa("Non riesco a preparare l'immagine."); return; }
+ if(app==='telegram'){
+  avvisa("Immagine pronta in chat: tienila premuta e inoltrala.");
+  setTimeout(()=>{ if(window.Telegram?.WebApp) Telegram.WebApp.close(); },1500);
+  return;
+ }
+ avvisa("Immagine pronta in chat.\nTienila premuta, scegli Condividi e poi l'app che vuoi.");
+ setTimeout(()=>{ if(window.Telegram?.WebApp) Telegram.WebApp.close(); },2200);
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080B0D;--line:#1C222C;--txt:#ECEFF3;--mut:#78818F;--gold:#0d9e88;--gold2:#14c9ac;--grn:#14c9ac}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:16px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.wrap{width:100%;max-width:420px}
+.card{position:relative;background:#0F1417;border:1px solid var(--gold);border-radius:16px;padding:34px 24px 28px;overflow:hidden;text-align:center}
+.card:before{content:"";position:absolute;inset:0;pointer-events:none}
+.brand{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.rule{height:1px;margin:16px 0 30px;background:#0F1417;font-size:10px;letter-spacing:2.8px;color:var(--mut);text-transform:uppercase}
+.amt{font-family:'Space Grotesk',sans-serif;font-size:60px;font-weight:700;color:var(--gold2);letter-spacing:-2.5px;line-height:1;margin:14px 0 14px}
+.roi{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--grn);border:1px solid rgba(20,201,172,.3);background:rgba(20,201,172,.1);padding:6px 14px;border-radius:22px}
+.who{margin-top:28px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut);letter-spacing:1px}
+.who b{color:var(--txt);font-weight:500}
+.btns{display:flex;margin-top:16px}
+button{flex:1;background:var(--gold);color:#080B0F;border:0;border-radius:11px;padding:14px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+#sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99;align-items:flex-end;justify-content:center}
+#sheet .in{width:100%;max-width:480px;background:var(--pap,#0F1417);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+#sheet .t{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.4px;color:var(--mut);text-transform:uppercase;text-align:center;margin-bottom:16px}
+#sheet .g{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+#sheet .g button{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:13px;padding:14px 6px;color:var(--txt);font-family:Inter,sans-serif;font-size:11.5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px}
+#sheet .g button span{font-size:22px;line-height:1}
+#sheet .x{width:100%;margin-top:14px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px;color:var(--mut);font-size:13px;cursor:pointer}
+
+  .live{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:2px;color:#78818F;text-transform:uppercase;margin-bottom:14px}
+  .live i{width:8px;height:8px;border-radius:50%;background:#14c9ac;display:inline-block;
+    animation:pulse 1.9s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(20,201,172,.55)}70%{box-shadow:0 0 0 9px rgba(20,201,172,0)}100%{box-shadow:0 0 0 0 rgba(20,201,172,0)}}
+</style></head><body>
+<div class="wrap">
+<div class="card">
+  <div class="live"><i></i>Verificato on-chain</div>
+  <div class="brand" id="brand">Broker vs Broker</div>
+  <div class="rule"></div>
+  <div class="k">Profitto netto accumulato</div>
+  <div class="amt" id="big">—</div>
+  <div class="roi" id="roi">—</div>
+  <div class="who"><b id="who">—</b> · <span id="dt">—</span><span id="durw"></span></div>
+</div>
+<div id="back" style="text-align:center;margin-bottom:12px">
+  <a href="#" onclick="tornaDashboard();return false" style="color:var(--mut);font-size:12.5px;text-decoration:none">‹ Torna alla dashboard</a>
+</div>
+<div class="btns">
+  <button onclick="condividi()">Condividi</button>
+
+</div>
+</div>
+<script>
+const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
+const P=new URLSearchParams(location.search);
+const API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/cicli';
+const E=n=>'€ '+Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const E0=n=>'€ '+Math.round(n).toLocaleString('it-IT');
+const PC=n=>(n>=0?'+':'')+n.toFixed(2).replace('.',',')+'%';
+let TESTO='';
+function durata(a,b){
+ const ms=new Date(b)-new Date(a);
+ if(!(ms>0)) return '';
+ const h=Math.floor(ms/36e5);
+ if(h<1) return Math.max(1,Math.round(ms/6e4))+' min';
+ if(h<24) return h+(h===1?' ora':' ore');
+ const g=Math.floor(h/24), r=h%24;
+ return g+(g===1?' giorno':' giorni')+(r>=2?' e '+r+'h':'');
+}
+async function carica(){
+ const t=P.get('t')||''; if(!t) return;
+ const r=await fetch(API+'?t='+encodeURIComponent(t)); const d=await r.json();
+ const c=(d.cicli||[]); if(!c.length) return;
+ const u=c[c.length-1];
+ const netto=c.reduce((a,x)=>a+x.lordo-x.fee,0);
+ const capMax=Math.max(0,...c.map(x=>Number(x.capitale)||0));
+ const roi=capMax?netto/capMax*100:0;
+ big.textContent=E(netto);
+ if(roi) roi_el().textContent=PC(roi); else roi_el().style.display='none';
+ who.textContent=d.cliente?.nome||'';
+ document.getElementById('brand').textContent=(d.cliente?.brand||'Cashly')+' · Broker vs Broker';
+ document.title=(d.cliente?.brand||'Cashly')+' · Totale';
+ dt.textContent=c.length+(c.length===1?' ciclo':' cicli')+' · ultimo '+new Date(u.data).toLocaleDateString('it-IT');
+ TESTO='Ho guadagnato '+E(netto)+' con la strategia di hedging Broker vs Broker.'+(roi?'\n\nRendimento '+PC(roi):'')+'\n'+c.length+' cicli';
+}
+function roi_el(){return document.getElementById('roi');}
+let IMG=null;
+function tornaDashboard(){
+ const t=new URLSearchParams(location.search).get('t')||'';
+ location.href='https://hub.cashlypro.com/bvb/?v=19&t='+encodeURIComponent(t);
+}
+const APIS='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/share';
+function chiudi(){ document.getElementById('sheet').style.display='none'; }
+function apri(){ document.getElementById('sheet').style.display='flex'; }
+
+async function fai(){
+ if(IMG) return IMG;
+ if(typeof html2canvas!=='function') throw new Error('html2canvas non caricato');
+ const card=document.querySelector('.card');
+ const canvas=await html2canvas(card,{backgroundColor:'#080B0D',scale:2,logging:false});
+ IMG=canvas.toDataURL('image/png');
+ return IMG;
+}
+
+async function condividi(){
+ const btn=document.querySelector('.btns button');
+ const testo=btn?btn.textContent:'';
+ try{
+  if(btn) btn.textContent='Preparo…';
+  const img=await fai();
+
+  // prima provo la condivisione di sistema con la foto
+  if(img && navigator.canShare){
+   const blob=await (await fetch(img)).blob();
+   const file=new File([blob],'cashly-totale.png',{type:'image/png'});
+   if(navigator.canShare({files:[file]})){
+    if(btn) btn.textContent=testo;
+    try{ await navigator.share({files:[file],text:TESTO}); return; }catch(e){}
+   }
+  }
+
+  // altrimenti la mando in chat col bot
+  if(img){
+   const r=await fetch(APIS,{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:new URLSearchParams(location.search).get('t')||'',img:img,testo:TESTO})});
+   const j=await r.json();
+   if(btn) btn.textContent=testo;
+   if(!j.ok) avvisa('Il bot non riesce a mandare la foto: '+(j.error||'sconosciuto'));
+   if(j.ok){
+    if(window.Telegram?.WebApp){
+     Telegram.WebApp.showPopup?.({title:'Fatto',message:"Ti ho mandato l'immagine in chat. Da lì puoi inoltrarla dove vuoi.",buttons:[{type:'ok'}]},()=>Telegram.WebApp.close());
+     setTimeout(()=>Telegram.WebApp.close(),1800);
+    } else alert("Immagine inviata in chat.");
+    return;
+   }
+  }
+ }catch(e){
+  if(btn) btn.textContent=testo;
+  avvisa('Errore: '+(e && e.message ? e.message : e));
+  return;
+ }
+ if(btn) btn.textContent=testo;
+ apri();
+}
+
+function avvisa(m){
+ if(window.Telegram?.WebApp?.showAlert) Telegram.WebApp.showAlert(m);
+ else alert(m);
+}
+
+function su(app){
+ const t=encodeURIComponent(TESTO);
+ const url={
+  telegram:'https://t.me/share/url?url='+t,
+  whatsapp:'https://wa.me/?text='+t,
+  x:'https://twitter.com/intent/tweet?text='+t,
+  facebook:'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent('https://cashlypro.com')+'&quote='+t
+ }[app];
+ if(app==='telegram' && window.Telegram?.WebApp?.openTelegramLink) Telegram.WebApp.openTelegramLink(url);
+ else if(window.Telegram?.WebApp?.openLink) Telegram.WebApp.openLink(url);
+ else window.open(url,'_blank');
+ chiudi();
+}
+
+async function salva(){
+ const img=await fai(); if(!img) return;
+ const a=document.createElement('a'); a.href=img; a.download='cashly-totale.png'; a.click();
+ chiudi();
+}
+
+async function copia(){ try{ await navigator.clipboard.writeText(TESTO); }catch(e){} chiudi(); }
+
+carica();
+</script><div id="sheet" onclick="if(event.target===this)chiudi()">
+ <div class="in">
+  <div class="t">Condividi su</div>
+  <div class="g">
+   <button onclick="conImmagine('telegram')"><span>🖼</span>Foto in chat</button>
+   <button onclick="su('telegram')"><span>✈️</span>Telegram</button>
+   <button onclick="su('whatsapp')"><span>💬</span>WhatsApp</button>
+   <button onclick="su('x')"><span>𝕏</span>X</button>
+   <button onclick="su('facebook')"><span>f</span>Facebook</button>
+   <button onclick="salva()"><span>🖼</span>Salva immagine</button>
+   <button onclick="copia()"><span>📋</span>Copia testo</button>
+  </div>
+  <button class="x" onclick="chiudi()">Chiudi</button>
+ </div>
+</div>
+</body></html>
