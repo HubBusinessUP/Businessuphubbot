@@ -1,0 +1,47 @@
+{
+  "telegram": {
+    "token": "TOKEN_DEL_BOT_CHE_MANDA_I_SEGNALI",
+    "chat_id": -1004333346667
+  },
+  "lettura_secondi": 3,
+  "controllo_secondi": 5,
+
+  "clienti": [
+    {
+      "nome": "Antonio Mazzone",
+      "attivo": true,
+      "capitale_slave": 3000,
+      "capitale_master": 3000,
+      "slave": {
+        "login": "5008233",
+        "password": "PASSWORD_INVESTITORE_TOTALFX",
+        "server": "OnamTrading-Live",
+        "terminale": "C:/MT5/C1_totalfx/terminal64.exe"
+      },
+      "master": {
+        "login": "27447042",
+        "password": "PASSWORD_INVESTITORE_ROBOFOREX",
+        "server": "RoboForex-Pro",
+        "terminale": "C:/MT5/C1_robo/terminal64.exe"
+      }
+    },
+    {
+      "nome": "Daniele Giagnorio",
+      "attivo": true,
+      "capitale_slave": 5000,
+      "capitale_master": 5000,
+      "slave": {
+        "login": "5008239",
+        "password": "PASSWORD_INVESTITORE",
+        "server": "OnamTrading-Live",
+        "terminale": "C:/MT5/C2_totalfx/terminal64.exe"
+      },
+      "master": {
+        "login": "27448952",
+        "password": "PASSWORD_INVESTITORE",
+        "server": "RoboForex-Pro",
+        "terminale": "C:/MT5/C2_robo/terminal64.exe"
+      }
+    }
+  ]
+}

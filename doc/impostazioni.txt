@@ -1,0 +1,56 @@
+# Impostazioni del bot
+#
+# Copia di lettura della tabella bvb_impostazioni. Il repository e' pubblico:
+# i valori segreti non si scrivono qui, si leggono dalla tabella.
+
+admin_token                <non riportato: sta in bvb_impostazioni, va rigenerato>
+bonus_percent              30
+bot_pausa                  0
+budget_max                 30000
+budget_min                 2000
+budget_step                1000
+canale_ufficiale           -1003801267885
+clienti_attivi             C1
+email_totalfx              cz@totalfx.com
+fee_percent                50
+link_rbx                   https://rinfinity.com/a/krozt
+link_roboforex             https://rinfinity.com/a/krozt
+link_tfx                   https://secure.totalfx.com/Registration/Main/Account?dest…
+link_totalfx               https://secure.totalfx.com/Registration/Main/Account?dest…
+profitto_alert_pct         30
+quota_fornitori            35
+quota_fornitori_pct        35
+ref_rbx                    krozt
+ref_roboforex              krozt
+sollecito_ogni_ore         3
+sollecito_prima_ore        1
+split_fornitori            70
+spread_max                 30
+tag_fornitori_default      
+ticket_alert_ore           24
+txt_dep                    📤 <b>Dati Roboforex inviati.</b>
+
+💰 <b>Su Roboforex puoi …
+txt_disc                   📋 <b>Prima di iniziare, leggi e accetta queste condizioni…
+txt_rbx                    📤 <b>Dati Total FX inviati ai fornitori.</b>
+
+Stanno pred…
+txt_spread                 ✅ <b>Conto Total FX predisposto per il bonus!</b>
+
+Ultimo…
+txt_strat                  🚀 <b>COME FUNZIONA LA STRATEGIA</b>
+
+Ogni ciclo parte con…
+txt_tfx                    📘 <b>STEP 1 — Apri il conto Total FX</b>
+
+Il conto su cui…
+txt_usdt                   Su <b>entrambi i broker</b> depositi e prelievi si fanno …
+vps_eur                    25
+vps_giorni_ciclo           30
+vps_giorno                 21
+vps_giorno_mese            21
+vps_trim_usdt              84
+vps_usdt                   28
+wallet_fornitori           0x57f8B35466A61536725F2810c89D4E9dC92C669a
+wallet_usdt                0x6d13656c3709F446aa5267969f35cCD1AEb0Cd1e
+wallet_vps                 0x8764e615480565a55D81006c35e02714d10700e3

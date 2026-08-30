@@ -1,0 +1,105 @@
+{
+  "slug": "broker-vs-broker",
+  "name": "Broker vs Broker",
+  "category_id": "trading",
+  "price_label": "Nessun costo di ingresso · commissione sul risultato positivo",
+  "cta_label": "Parla col bot",
+  "affiliate_url": "https://t.me/cashly_bvb_bot?start=r_hub",
+  "website": "https://hub.cashlypro.com/broker-vs-broker/",
+  "description": "Operatività di copertura tra due broker su conti intestati a te. Le somme restano sui tuoi conti, la commissione è dovuta solo su risultato positivo. Alto rischio: puoi perdere l'intero capitale.",
+  "tipo_guadagno": "Attivo",
+  "livello_richiesto": 3,
+  "livello_obiettivo": 4,
+  "livello_perche": "Richiede capitale proprio e la comprensione dei rischi legati a broker non vigilati in UE. Non è un reddito passivo: l'esito dipende da bonus di terzi revocabili in qualsiasi momento e il capitale può essere perso interamente.",
+  "pros": [
+    "Le somme restano su conti intestati a te, con le tue credenziali",
+    "Commissione dovuta solo su risultato positivo",
+    "La copertura riduce l'esposizione alle oscillazioni di prezzo",
+    "Ogni commissione è tracciata su blockchain e verificabile",
+    "Area personale con storico dei cicli e dei pagamenti"
+  ],
+  "cons": [
+    "Capitale minimo di 2.000 €, a rischio di perdita totale",
+    "Si opera con broker non soggetti a vigilanza europea: nessun fondo di garanzia",
+    "Dipende da bonus di deposito di terzi, revocabili senza preavviso",
+    "Costo fisso mensile di 25 € dovuto anche in assenza di operatività",
+    "L'operatività viene eseguita da terzi sui tuoi conti"
+  ],
+  "pricing": [
+    {
+      "label": "Ingresso",
+      "price": "gratis",
+      "desc": "Nessun costo di attivazione né abbonamento"
+    },
+    {
+      "label": "Commissione",
+      "price": "50%",
+      "desc": "Sul risultato positivo, a ciclo chiuso, in USDT"
+    },
+    {
+      "label": "Server",
+      "price": "25 €/mese",
+      "desc": "Costo fisso di gestione, dovuto anche a cicli fermi"
+    }
+  ],
+  "badges": [
+    {
+      "label": "Rischio molto alto",
+      "icon": "⚠️",
+      "bg": "#FEF3C7",
+      "color": "#92400E",
+      "border": "#FCD34D"
+    },
+    {
+      "label": "Broker non vigilati UE",
+      "icon": "🌍",
+      "bg": "#EDE9FE",
+      "color": "#5B21B6",
+      "border": "#C4B5FD"
+    },
+    {
+      "label": "Conti intestati a te",
+      "icon": "🔒",
+      "bg": "#DCFCE7",
+      "color": "#166534",
+      "border": "#86EFAC"
+    },
+    {
+      "label": "Commissioni verificabili",
+      "icon": "🔗",
+      "bg": "#DBEAFE",
+      "color": "#1E40AF",
+      "border": "#93C5FD"
+    }
+  ],
+  "best_for": [
+    "Chi ha già capitale disponibile",
+    "Chi accetta un rischio elevato",
+    "Chi vuole commissioni legate al risultato"
+  ],
+  "faq": [
+    {
+      "q": "Chi tocca le mie somme?",
+      "a": "Nessuno. I due conti sono intestati a te, aperti da te, con le tue credenziali. Depositi e prelievi li fai solo tu. Cashly non riceve né detiene somme di terzi."
+    },
+    {
+      "q": "Quanto posso guadagnare?",
+      "a": "Non è possibile indicare un guadagno atteso. L'esito dipende dal capitale, dai bonus disponibili in quel momento e dalle condizioni dei broker, che cambiano. Puoi anche chiudere in perdita."
+    },
+    {
+      "q": "Qual è il rischio principale?",
+      "a": "Si opera con broker non soggetti alla vigilanza europea: le somme depositate non sono coperte da alcun fondo di garanzia e possono essere perse interamente. È il rischio più concreto e va valutato prima di iniziare."
+    },
+    {
+      "q": "Come si paga la commissione?",
+      "a": "In USDT su rete BEP20, a ciclo chiuso, calcolata solo sul risultato positivo. Ogni pagamento è verificabile pubblicamente sulla blockchain."
+    },
+    {
+      "q": "Posso smettere quando voglio?",
+      "a": "Sì. Non c'è vincolo né abbonamento: i conti sono tuoi e li chiudi quando vuoi."
+    }
+  ],
+  "long_description": "<h2>Cos'è Broker vs Broker</h2><p>È un'operatività di copertura tra due broker: sullo stesso strumento vengono aperte due posizioni opposte, su due conti intestati al cliente. La copertura riduce l'esposizione alle oscillazioni di prezzo, mentre il risultato dipende dai bonus di deposito offerti dai broker e dallo swap.</p><h2>Come si struttura un ciclo</h2><p>Il cliente apre due conti a proprio nome e li finanzia. Vengono quindi aperte le posizioni; il ciclo si chiude in genere entro uno o due giorni. Se il ciclo produce un risultato positivo, il cliente versa una commissione pari al 50% del risultato; in caso contrario non è dovuta alcuna commissione.</p><h2>Cosa serve sapere prima</h2><p>I broker coinvolti non sono soggetti alla vigilanza delle autorità europee: le somme depositate non godono di alcun sistema di indennizzo. I bonus di deposito su cui si fonda il risultato sono condizioni commerciali di terzi, che possono essere ridotte, sospese o revocate senza preavviso. Il capitale può essere perso interamente.</p><h2>Cosa non è</h2><p>Cashly opera come segnalatore in affiliazione: non riceve, non detiene e non amministra somme di terzi, non presta servizi di investimento, consulenza finanziaria o gestione di portafogli, e non è iscritta ad albi di intermediari finanziari. Nessun contenuto costituisce raccomandazione personalizzata o promessa di rendimento.</p>",
+  "published": false,
+  "featured": false
+}
