@@ -343,6 +343,22 @@ async function conImmagine(app){
   .panel.pieghevole > .corpo{display:none}
   .panel.pieghevole.aperto > .corpo{display:block}
 
+  /* scelta del periodo: quattro voci in fila, quella attiva sottolineata */
+  .periodi{display:flex;gap:2px;margin:0 0 6px;border-bottom:1px solid var(--border)}
+  .periodi button{flex:1;background:none;border:0;cursor:pointer;padding:8px 2px 9px;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.4px;
+    text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+  .periodi button.on{color:var(--green);border-bottom-color:var(--green)}
+
+  /* intestazione di un periodo, con i totali di quel periodo */
+  .gruppo-per{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    padding:13px 0 7px;border-top:1px solid var(--border)}
+  .gruppo-per:first-child{border-top:0}
+  .gruppo-per .tit{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600}
+  .gruppo-per .n{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  .gruppo-per .tot{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600}
+  .gruppo-per .det{width:100%;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
   /* cicli nel dettaglio: una riga piena per ciclo, con fee e link insieme */
   .dett{border-top:1px solid var(--border);padding:13px 0}
   .dett:first-child{border-top:0;padding-top:0}
@@ -486,6 +502,12 @@ async function conImmagine(app){
   <div class="panel pieghevole" id="panelDettaglio" hidden>
     <h2 data-apre="panelDettaglio">Cicli nel dettaglio<span class="quanti" id="quantiDettaglio"></span><i class="freccia"></i></h2>
     <div class="corpo">
+      <div class="periodi" id="periodiDettaglio">
+        <button data-per="giorno">Giorno</button>
+        <button data-per="settimana">Settimana</button>
+        <button data-per="mese" class="on">Mese</button>
+        <button data-per="anno">Anno</button>
+      </div>
       <div id="dettaglioCicli"></div>
     </div>
   </div>
@@ -918,6 +940,47 @@ document.addEventListener('click', e=>{
   document.getElementById(h.dataset.apre).classList.toggle('aperto');
 });
 
+// Giorno, settimana, mese o anno: come sono raccolti i cicli nel dettaglio.
+// Il lunedi' e' l'inizio della settimana, come nei report del bot.
+let periodoDettaglio = 'mese';
+const MESI_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
+                 'luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
+function lunediDi(iso){
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1));
+  return d.toISOString().slice(0,10);
+}
+
+function chiavePeriodo(iso, per){
+  if(!iso) return 'senza-data';
+  if(per === 'giorno') return iso.slice(0,10);
+  if(per === 'settimana') return lunediDi(iso);
+  if(per === 'anno') return iso.slice(0,4);
+  return iso.slice(0,7);
+}
+
+function titoloPeriodo(iso, per){
+  if(!iso) return 'senza data';
+  const d = new Date(iso + 'T12:00:00');
+  if(per === 'giorno') return d.getDate() + ' ' + MESI_IT[d.getMonth()] + ' ' + d.getFullYear();
+  if(per === 'settimana'){
+    const l = new Date(lunediDi(iso) + 'T12:00:00');
+    return 'settimana dal ' + l.getDate() + ' ' + MESI_IT[l.getMonth()];
+  }
+  if(per === 'anno') return String(d.getFullYear());
+  return MESI_IT[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('#periodiDettaglio button');
+  if(!b) return;
+  periodoDettaglio = b.dataset.per;
+  document.querySelectorAll('#periodiDettaglio button')
+    .forEach(x=> x.classList.toggle('on', x === b));
+  renderDettaglio(computed());
+});
+
 // Ogni ciclo con dentro tutto: capitale, lordo, fee pagata e link alla
 // transazione. La fee si attacca al ciclo tramite cicloId; i pagamenti che
 // non appartengono a un ciclo (la VPS) restano fuori, hanno la loro riga.
@@ -934,7 +997,32 @@ function renderDettaglio(righe){
   const q = document.getElementById('quantiDettaglio');
   if(q) q.textContent = lista.length + (lista.length===1 ? ' ciclo' : ' cicli');
 
-  box.innerHTML = lista.map(r=>{
+  // i cicli raccolti nel periodo scelto, dal piu' recente
+  const gruppi = [];
+  const indice = {};
+  lista.forEach(r=>{
+    const k = chiavePeriodo(r.data, periodoDettaglio);
+    if(indice[k] === undefined){
+      indice[k] = gruppi.length;
+      gruppi.push({ k, titolo: titoloPeriodo(r.data, periodoDettaglio), righe: [] });
+    }
+    gruppi[indice[k]].righe.push(r);
+  });
+
+  box.innerHTML = gruppi.map(g=>{
+    const netto = g.righe.reduce((a,x)=>a + (Number(x.gainCiclo)||0), 0);
+    const lordoG = g.righe.reduce((a,x)=>a + (Number(x.gainLordo)||0), 0);
+    const feeG = g.righe.reduce((a,x)=>a + (Number(x.spese)||0), 0);
+    return '<div class="gruppo-per">'
+      + '<span class="tit">' + g.titolo + '</span>'
+      + '<span class="n">' + g.righe.length + (g.righe.length===1?' ciclo':' cicli') + '</span>'
+      + '<span class="tot ' + (netto>=0?'gainpos':'gainneg') + '">' + fmtEur(netto) + '</span>'
+      + '<span class="det">lordo ' + fmtEur(lordoG) + ' · fee ' + fmtEur(feeG) + '</span>'
+      + '</div>'
+      + g.righe.map(rigaDettaglio).join('');
+  }).join('');
+
+  function rigaDettaglio(r){
     const netto = Number(r.gainCiclo)||0;
     const lordo = Number(r.gainLordo)||0;
     const fee = Number(r.spese)||0;
@@ -973,7 +1061,7 @@ function renderDettaglio(righe){
       + '<div class="voci">' + voci.map(v=>'<div>' + v[0] + ' <b>' + v[1] + '</b></div>').join('') + '</div>'
       + tx
       + '</div>';
-  }).join('');
+  }
 }
 
 function render(){
