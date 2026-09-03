@@ -843,7 +843,7 @@ if(d.cliente && d.cliente.nome){
     window.PAGAMENTI = d.pagamenti || [];
     // conto e contoN: l'etichetta del conto, quando la persona ne ha piu' di uno
     // cicloId attacca a ogni ciclo la fee pagata e il link della transazione
-    return d.cicli.map(c=>({ id:'db_'+c.n, cicloId:c.id||null, tipo:c.tipo||null, capitale:c.capitale, data:c.data, avvio:c.avvio||null,
+    return d.cicli.map(c=>({ id:'db_'+c.n, cicloId:c.id||null, tipo:c.tipo||null, capitale:c.capitale, data:c.data, chiuso:c.chiuso||null, avvio:c.avvio||null,
                              gainLordo:c.lordo, spese:c.fee, feeUsdt:c.feeUsdt||0,
                              conto:c.conto||null, contoN:c.contoN||null }));
   }catch(e){ return null; }
@@ -1050,6 +1050,25 @@ document.addEventListener('click', e=>{
   renderDettaglio(computed());
 });
 
+// Quanto e' durato un ciclo, detto con la precisione che serve: sotto il
+// minuto i secondi, sotto l'ora i minuti, poi ore e giorni. Senza l'ora di
+// chiusura non si puo' dire piu' di "in giornata".
+function durataCiclo(r){
+  if(!r.avvio) return null;
+  const fine = r.chiuso ? new Date(r.chiuso) : null;
+  if(!fine || isNaN(fine)) return null;
+  const ms = fine - new Date(r.avvio);
+  if(!(ms > 0)) return null;
+  const s = Math.round(ms / 1000);
+  if(s < 60) return s + ' secondi';
+  const m = Math.floor(s / 60), sr = s % 60;
+  if(m < 60) return m + 'm ' + String(sr).padStart(2, '0') + 's';
+  const h = Math.floor(m / 60), mr = m % 60;
+  if(h < 24) return h + 'h ' + String(mr).padStart(2, '0') + 'm';
+  const g = Math.floor(h / 24), hr = h % 24;
+  return g + (g === 1 ? ' giorno' : ' giorni') + (hr ? ' ' + hr + 'h' : '');
+}
+
 // I record del cliente: non servono a decidere niente, servono a fargli
 // vedere che sta andando bene. Percio' si guardano solo i numeri veri e si
 // tace su quelli che non ci sono ancora, invece di mostrare zeri.
@@ -1084,16 +1103,12 @@ function renderRecord(righe){
   const mesi = Object.entries(perMese);
   const bestMese = mesi.reduce((a,x)=> x[1] > a[1] ? x : a, mesi[0]);
 
-  // la serie piu' lunga di cicli chiusi in positivo, di fila
-  let serie = 0, serieMax = 0;
-  righe.forEach(r=>{ if(netto(r) > 0){ serie++; serieMax = Math.max(serieMax, serie); } else serie = 0; });
-
-  // il ciclo piu' veloce, fra quelli di cui si sa quando sono partiti
-  const conDurata = righe.map(r=>({ r, ore: (r.avvio && r.data)
-      ? (new Date(r.data + 'T23:59:00') - new Date(r.avvio)) / 3600000 : null }))
-    .filter(x=> x.ore !== null && x.ore > 0);
+  // il ciclo piu' veloce, fra quelli di cui si conosce inizio e fine
+  const conDurata = righe.map(r=>({ r, ms: (r.avvio && r.chiuso)
+      ? new Date(r.chiuso) - new Date(r.avvio) : null }))
+    .filter(x=> x.ms !== null && x.ms > 0);
   const veloce = conDurata.length
-    ? conDurata.reduce((a,x)=> x.ore < a.ore ? x : a, conDurata[0]) : null;
+    ? conDurata.reduce((a,x)=> x.ms < a.ms ? x : a, conDurata[0]) : null;
 
   // quanti cicli a settimana, sul tempo passato davvero
   const date = righe.map(r=> new Date(r.data + 'T12:00:00')).sort((a,b)=>a-b);
@@ -1106,10 +1121,9 @@ function renderRecord(righe){
     bestGiorno[1].n + ' cicli', fmtDate(bestGiorno[0])]);
   righeSotto.push(
     ['Mese migliore', fmtEur(bestMese[1]), mesePerEsteso(bestMese[0])],
-    ['Cicli chiusi in positivo di fila', String(serieMax), serieMax === righe.length ? 'tutti quanti' : 'su ' + righe.length],
   );
   if(veloce) righeSotto.push(['Ciclo più veloce',
-    veloce.ore < 24 ? 'in giornata' : Math.round(veloce.ore / 24) + ' giorni', fmtDate(veloce.r.data)]);
+    durataCiclo(veloce.r) ?? '—', fmtDate(veloce.r.data)]);
   righeSotto.push(['Ritmo', (Math.round(aSettimana * 10) / 10).toString().replace('.', ',') + ' a settimana', giorniTot + ' giorni di attività']);
 
   box.innerHTML =
@@ -1175,6 +1189,7 @@ function renderDettaglio(righe){
     const lordo = Number(r.gainLordo)||0;
     const fee = Number(r.spese)||0;
     const p = r.cicloId ? pagDi[r.cicloId] : null;
+    const durata = durataCiclo(r);
     const giorni = (r.avvio && r.data)
       ? Math.round((new Date(r.data+'T12:00:00') - new Date(r.avvio))/86400000) : null;
 
@@ -1183,7 +1198,8 @@ function renderDettaglio(righe){
       ['lordo', fmtEur(lordo)],
       ['fee pagata', fmtEur(fee) + (r.feeUsdt ? ' · ' + Number(r.feeUsdt).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' USDT' : '')],
     ];
-    if(giorni !== null && giorni >= 0) voci.push(['durata', giorni < 1 ? 'in giornata' : giorni + (giorni===1?' giorno':' giorni')]);
+    if(durata) voci.push(['durata', durata]);
+    else if(giorni !== null && giorni >= 0) voci.push(['durata', giorni < 1 ? 'in giornata' : giorni + (giorni===1?' giorno':' giorni')]);
 
     // tre casi diversi, da non confondere: c'e' l'hash, il pagamento e' segnato
     // ma senza hash (i primi cicli), oppure la fee non risulta ancora pagata
