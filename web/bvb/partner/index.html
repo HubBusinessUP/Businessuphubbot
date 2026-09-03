@@ -41,6 +41,24 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
   .live i{width:8px;height:8px;border-radius:50%;background:#14c9ac;display:inline-block;
     animation:pulse 1.9s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(20,201,172,.55)}70%{box-shadow:0 0 0 9px rgba(20,201,172,0)}100%{box-shadow:0 0 0 0 rgba(20,201,172,0)}}
+table.inc{table-layout:auto}
+table.inc td:first-child,table.inc th:first-child{white-space:normal;width:auto}
+table.inc td:nth-child(2),table.inc th:nth-child(2){width:44px}
+.periodi{display:flex;gap:2px;margin:0 0 10px;border-bottom:1px solid #1B242A}
+.periodi button{flex:1;background:none;border:0;cursor:pointer;padding:8px 2px 9px;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.4px;
+  text-transform:uppercase;color:#78818F;border-bottom:2px solid transparent;margin-bottom:-1px}
+.periodi button.on{color:#14c9ac;border-bottom-color:#14c9ac}
+#cliInc{width:100%;background:#131A1D;border:1px solid #1B242A;color:#ECEFF3;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 10px;border-radius:7px;margin-bottom:10px}
+.somma{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  border-bottom:1px solid #1B242A;margin-bottom:8px;padding-bottom:12px}
+.somma .et{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.6px;
+  text-transform:uppercase;color:#78818F}
+.somma .q2{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#78818F}
+.somma .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;
+  font-weight:600;color:#14c9ac}
+.somma .det{width:100%;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#78818F}
 </style></head><body>
 <div class="wrap" id="app"><div class="empty">Carico i dati…</div></div>
 <script>
@@ -125,17 +143,19 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   }
 
   h+='<div class="panel"><h2>Registro incassi</h2>';
-  if(!giorni.length) h+='<div class="empty">Nessun incasso registrato.</div>';
+  if(!cic.length) h+='<div class="empty">Nessun incasso registrato.</div>';
   else{
-   h+='<table><tr><th>Data</th><th>Incasso</th><th>%</th><th>Guadagno</th></tr>';
-   [...giorni].reverse().forEach(x=>{
-    h+='<tr><td>'+dBrev(x.k)+'</td>'+
-       '<td class="mut">'+E0(x.incasso)+'</td>'+
-       '<td class="mut" style="text-align:right">'+p.percentuale+'%</td>'+
-       '<td class="q">'+U(x.quota)+'</td></tr>';
-   });
-   h+='</table></div>';
+   const nomiCli=[...new Set(cic.map(x=>x.codice+' · '+x.cliente))].sort();
+   h+='<div class="periodi" id="perInc">'+
+      ['giorno','settimana','mese','anno'].map(x=>
+        '<button data-per="'+x+'"'+(x==='giorno'?' class="on"':'')+'>'+x+'</button>').join('')+
+      '</div>'+
+      '<select id="cliInc"><option value="">Tutti i clienti</option>'+
+      nomiCli.map(c=>'<option value="'+c.split(' · ')[0]+'">'+c+'</option>').join('')+'</select>'+
+      '<div class="somma" id="sommaInc"></div>'+
+      '<div id="corpoInc"></div>';
   }
+  h+='</div>';
 
   h+='<div class="panel"><h2>I tuoi clienti</h2>';
   if(!cli.length) h+='<div class="empty">Nessun cliente assegnato.</div>';
@@ -152,6 +172,62 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   h+='</div>';
 
   document.getElementById('app').innerHTML=h;
+
+  // Registro incassi: per giorno, settimana, mese o anno, e si puo' isolare
+  // un cliente. La somma sta in cima, cosi' si legge senza scorrere.
+  let perInc='giorno', cliInc='';
+  const lunedi=iso=>{const d=new Date(iso+'T12:00:00');
+    d.setDate(d.getDate()-(d.getDay()===0?6:d.getDay()-1));return d.toISOString().slice(0,10);};
+  const chiaveP=(iso,per)=>per==='giorno'?iso.slice(0,10):per==='settimana'?lunedi(iso)
+    :per==='anno'?iso.slice(0,4):iso.slice(0,7);
+  const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio',
+              'agosto','settembre','ottobre','novembre','dicembre'];
+  const titoloP=(iso,per)=>{const d=new Date(iso+'T12:00:00');
+    if(per==='giorno') return d.getDate()+' '+MESI[d.getMonth()]+' '+d.getFullYear();
+    if(per==='settimana'){const l=new Date(lunedi(iso)+'T12:00:00');
+      return 'dal '+l.getDate()+' '+MESI[l.getMonth()];}
+    if(per==='anno') return String(d.getFullYear());
+    return MESI[d.getMonth()]+' '+d.getFullYear();};
+
+  function renderInc(){
+   const corpo=document.getElementById('corpoInc');
+   if(!corpo) return;
+   const sel=cic.filter(x=>!cliInc||x.codice===cliInc);
+   const g=new Map();
+   sel.forEach(x=>{const k=chiaveP(x.data,perInc);
+    const o=g.get(k)||{n:0,incasso:0,quota:0,titolo:titoloP(x.data,perInc)};
+    o.n++; o.incasso+=forn?x.fee:x.profitto; o.quota+=x.quota; g.set(k,o);});
+   const righe=[...g.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+
+   const quotaS=sel.reduce((a,x)=>a+x.quota,0);
+   const volS=sel.reduce((a,x)=>a+(forn?x.fee:x.profitto),0);
+   const tutto=sel.length===cic.length;
+   document.getElementById('sommaInc').innerHTML= sel.length
+    ? '<span class="et">'+(tutto?'Totale':'Totale filtrato')+'</span>'
+      +'<span class="q2">'+sel.length+(sel.length===1?' ciclo':' cicli')+'</span>'
+      +'<span class="v">'+U0(quotaS)+'</span>'
+      +'<span class="det">'+(forn?'fee di rete ':'profitto generato ')+E0(volS)+
+        ' · la tua quota '+p.percentuale+'%</span>'
+    : '<span class="et">Nessun ciclo con questo filtro</span>';
+
+   corpo.innerHTML= righe.length
+    ? '<table class="inc"><tr><th>'+perInc+'</th><th>Cicli</th><th>Incasso</th><th>Guadagno</th></tr>'
+      +righe.map(([k,v])=>'<tr><td>'+v.titolo+'</td><td class="mut">'+v.n+'</td>'
+        +'<td class="mut">'+E0(v.incasso)+'</td><td class="q">'+U0(v.quota)+'</td></tr>').join('')
+      +'</table>'
+    : '';
+  }
+
+  const barra=document.getElementById('perInc');
+  if(barra) barra.addEventListener('click',e=>{
+   const b=e.target.closest('button'); if(!b) return;
+   perInc=b.dataset.per;
+   barra.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+   renderInc();
+  });
+  const selCli=document.getElementById('cliInc');
+  if(selCli) selCli.addEventListener('change',e=>{cliInc=e.target.value;renderInc();});
+  renderInc();
  })
  .catch(()=>{document.getElementById('app').innerHTML='<div class="empty">Errore di connessione.</div>';});
 </script></body></html>
