@@ -308,10 +308,10 @@ async function conImmagine(app){
   }
   table{width:100%;table-layout:fixed;border-collapse:collapse;}
   th,td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:11px 10px;}
-  th:nth-child(1),td.c-n{width:10%;text-align:left;}
-  th:nth-child(2),td.c-d{width:26%;text-align:left;}
-  th:nth-child(3),td.c-c{width:30%;text-align:right;}
-  th:nth-child(4),td.c-g{width:34%;text-align:right;font-weight:600;font-size:14px;}
+  th:nth-child(1),td.c-d{width:40%;text-align:left;}
+  th:nth-child(2),td.c-n{width:14%;text-align:right;}
+  th:nth-child(3),td.c-c{width:22%;text-align:right;}
+  th:nth-child(4),td.c-g{width:24%;text-align:right;font-weight:600;font-size:14px;}
   th:nth-child(3),th:nth-child(4){text-align:right;}
   td.c-n{color:var(--muted);font-family:'IBM Plex Mono',monospace;}
   td.c-d{color:var(--muted);}
@@ -489,6 +489,12 @@ async function conImmagine(app){
   <div class="panel pieghevole" id="panelRegistro">
     <h2 data-apre="panelRegistro">Registro cicli<span class="quanti" id="quantiRegistro"></span><i class="freccia"></i></h2>
     <div class="corpo">
+      <div class="periodi" id="periodiRegistro">
+        <button data-per="giorno" class="on">Giorno</button>
+        <button data-per="settimana">Settimana</button>
+        <button data-per="mese">Mese</button>
+        <button data-per="anno">Anno</button>
+      </div>
       <div class="registro-toolbar">
         <select id="registroMeseGrid"></select>
         <select id="registroAnnoGrid"></select>
@@ -497,7 +503,7 @@ async function conImmagine(app){
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Data</th><th>Capitale</th><th>Netto</th>
+            <th id="thPeriodo">Giorno</th><th>Cicli</th><th>Capitale</th><th>Netto</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -953,6 +959,7 @@ document.addEventListener('click', e=>{
 // Giorno, settimana, mese o anno: come sono raccolti i cicli nel dettaglio.
 // Il lunedi' e' l'inizio della settimana, come nei report del bot.
 let periodoDettaglio = 'mese';
+let periodoRegistro = 'giorno';
 const MESI_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
                  'luglio','agosto','settembre','ottobre','novembre','dicembre'];
 
@@ -981,6 +988,15 @@ function titoloPeriodo(iso, per){
   if(per === 'anno') return String(d.getFullYear());
   return MESI_IT[d.getMonth()] + ' ' + d.getFullYear();
 }
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('#periodiRegistro button');
+  if(!b) return;
+  periodoRegistro = b.dataset.per;
+  document.querySelectorAll('#periodiRegistro button')
+    .forEach(x=> x.classList.toggle('on', x === b));
+  render();
+});
 
 document.addEventListener('click', e=>{
   const b = e.target.closest('#periodiDettaglio button');
@@ -1088,13 +1104,35 @@ function render(){
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
   const filtrate = c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid));
-  filtrate.slice().reverse().forEach(r=>{
+
+  // i cicli raccolti nel periodo scelto: una riga per giorno, settimana,
+  // mese o anno, col totale di quel periodo. Il ciclo per ciclo sta sotto,
+  // nella scheda del dettaglio.
+  const perR = {};
+  filtrate.forEach(r=>{
+    const k = chiavePeriodo(r.data, periodoRegistro);
+    if(!perR[k]) perR[k] = { titolo: titoloPeriodo(r.data, periodoRegistro).replace(/^settimana /, ''),
+                             n: 0, capitale: 0, netto: 0, conti: {} };
+    const g = perR[k];
+    g.n++;
+    g.capitale = Math.max(g.capitale, Number(r.capitale)||0);
+    g.netto += Number(r.gainCiclo)||0;
+    if(r.conto) g.conti[r.contoN||1] = r.conto;
+  });
+
+  const th = document.getElementById('thPeriodo');
+  if(th) th.textContent = periodoRegistro.charAt(0).toUpperCase() + periodoRegistro.slice(1);
+
+  Object.keys(perR).sort().reverse().forEach(k=>{
+    const g = perR[k];
+    const pastiglie = Object.keys(g.conti).map(n=>
+      '<span class="c-conto k' + n + '">' + g.conti[n] + '</span>').join('');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="c-n">${r.idx}${r.conto ? '<span class="c-conto k' + (r.contoN||1) + '">' + r.conto + '</span>' : ''}</td>
-      <td class="c-d">${fmtDate(r.data)}</td>
-      <td class="c-c">${fmtEur(r.capitale)}</td>
-      <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
+      <td class="c-d">${g.titolo}${pastiglie}</td>
+      <td class="c-n">${g.n}</td>
+      <td class="c-c">${fmtEur(g.capitale)}</td>
+      <td class="c-g ${g.netto>=0?'gainpos':'gainneg'}">${fmtEur(g.netto)}</td>
     `;
     tbody.appendChild(tr);
   });
