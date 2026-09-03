@@ -1332,6 +1332,14 @@ function computeForecastPlan(c){
 }
 
 function renderForecast(c){
+  // il pannello previsioni in questa pagina non c'e' mai stato: il codice
+  // arriva da un'altra dashboard. Senza questo controllo ogni render finiva
+  // con un errore, che nascondeva quelli veri nella console.
+  const boxF = document.getElementById('chartBoxForecast');
+  const boxC = document.getElementById('chartBoxCumulative');
+  const tabF = document.getElementById('tbodyForecast');
+  if(!boxF || !boxC || !tabF) return;
+
   const plan = computeForecastPlan(c);
   const capRifEl = document.getElementById('noteCapRif');
   if(capRifEl) capRifEl.textContent = fmtEur(getCapitaleRiferimento());
