@@ -160,11 +160,13 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
       '<div id="corpoIncassi"></div></div>';
   }
 
-  h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}.box.sub .nm{opacity:.8}
-  /* senza il monospaziato le cifre hanno larghezze diverse e le colonne
-     ballano: queste le rimettono tutte della stessa larghezza */
-  body{font-variant-numeric:tabular-nums}
-</style>';
+  // tabular-nums: senza, le cifre hanno larghezze diverse e le colonne ballano.
+  // Le righe restano staccate ma la stringa no: con l'apice singolo non si va
+  // a capo dentro una stringa, e il blocco intero smetteva di compilare.
+  h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}'
+    +'.box.sub .nm{opacity:.8}'
+    +'body{font-variant-numeric:tabular-nums}'
+    +'</style>';
   h+='<div class="panel"><h2>Clienti</h2>';
   ordinati.forEach(x=>{
    const on=x.stato==='attivo'||x.stato==='pronto';
