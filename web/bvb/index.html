@@ -343,6 +343,33 @@ async function conImmagine(app){
   .panel.pieghevole > .corpo{display:none}
   .panel.pieghevole.aperto > .corpo{display:block}
 
+  /* i record: il migliore prende tutto lo spazio, gli altri stanno stretti
+     sotto. Tre schede uguali in fila sarebbero solo tre numeri qualsiasi. */
+  .rec-top{border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:4px}
+  .rec-top .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--muted)}
+  .rec-top .v{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;
+    letter-spacing:-1px;color:var(--green);margin-top:4px;line-height:1}
+  .rec-top .q{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .rec-riga{display:flex;align-items:baseline;gap:10px;padding:10px 0;
+    border-bottom:1px solid rgba(27,36,42,.55)}
+  .rec-riga:last-child{border-bottom:0}
+  .rec-riga .k{font-size:13.5px}
+  .rec-riga .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;
+    font-size:15px;font-weight:600}
+  .rec-riga .q{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
+  /* i cicli di un periodo: si aprono toccando la riga del periodo */
+  tbody tr.riga-per{cursor:pointer}
+  tbody tr.riga-ciclo{display:none;background:rgba(255,255,255,.015)}
+  tbody tr.riga-ciclo.visibile{display:table-row}
+  tbody tr.riga-ciclo td{color:var(--muted);font-size:12px;padding-top:7px;padding-bottom:7px}
+  tbody tr.riga-ciclo td.c-d{padding-left:22px}
+  .frecciolina{display:inline-block;width:5px;height:5px;margin-right:7px;vertical-align:middle;
+    border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+    transform:rotate(-45deg);transition:transform .15s ease}
+  tr.riga-per.aperta .frecciolina{transform:rotate(45deg)}
+
   /* somma di quello che si sta guardando adesso, non di tutto lo storico */
   .somma{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
     border-bottom:1px solid var(--border);margin-bottom:6px;padding-bottom:12px}
@@ -462,6 +489,11 @@ async function conImmagine(app){
       <span onclick="toggleChartFilter('grid:cicli','bar')" data-legend-chart="grid:cicli" data-legend-series="bar"><i class="swatch bar"></i>Gain ciclo</span>
       <span onclick="toggleChartFilter('grid:cicli','line')" data-legend-chart="grid:cicli" data-legend-series="line"><i class="swatch line"></i>Gain Totale</span>
     </div>
+  </div>
+
+  <div class="panel" id="panelRecord" hidden>
+    <h2>I tuoi record</h2>
+    <div id="recordCicli"></div>
   </div>
 
   <div class="panel">
@@ -990,6 +1022,17 @@ function titoloPeriodo(iso, per){
 }
 
 document.addEventListener('click', e=>{
+  const riga = e.target.closest('tr.riga-per');
+  if(riga){
+    riga.classList.toggle('aperta');
+    const apri = riga.classList.contains('aperta');
+    document.querySelectorAll('tr.riga-ciclo[data-di="' + riga.dataset.per + '"]')
+      .forEach(x=> x.classList.toggle('visibile', apri));
+    return;
+  }
+});
+
+document.addEventListener('click', e=>{
   const b = e.target.closest('#periodiRegistro button');
   if(!b) return;
   periodoRegistro = b.dataset.per;
@@ -1006,6 +1049,85 @@ document.addEventListener('click', e=>{
     .forEach(x=> x.classList.toggle('on', x === b));
   renderDettaglio(computed());
 });
+
+// I record del cliente: non servono a decidere niente, servono a fargli
+// vedere che sta andando bene. Percio' si guardano solo i numeri veri e si
+// tace su quelli che non ci sono ancora, invece di mostrare zeri.
+function renderRecord(righe){
+  const box = document.getElementById('recordCicli');
+  const panel = document.getElementById('panelRecord');
+  if(!box || !panel) return;
+  if(righe.length < 2){ panel.hidden = true; return; }
+  panel.hidden = false;
+
+  const netto = r => Number(r.gainCiclo) || 0;
+
+  // il ciclo migliore
+  const best = righe.reduce((a,x)=> netto(x) > netto(a) ? x : a, righe[0]);
+
+  // il giorno con piu' cicli, e a parita' quello che ha reso di piu'
+  const perGiorno = {};
+  righe.forEach(r=>{
+    const k = String(r.data).slice(0,10);
+    perGiorno[k] = perGiorno[k] || { n:0, netto:0 };
+    perGiorno[k].n++; perGiorno[k].netto += netto(r);
+  });
+  const giorni = Object.entries(perGiorno);
+  const bestGiorno = giorni.reduce((a,x)=> x[1].n > a[1].n || (x[1].n === a[1].n && x[1].netto > a[1].netto) ? x : a, giorni[0]);
+
+  // il mese migliore
+  const perMese = {};
+  righe.forEach(r=>{
+    const k = String(r.data).slice(0,7);
+    perMese[k] = (perMese[k] || 0) + netto(r);
+  });
+  const mesi = Object.entries(perMese);
+  const bestMese = mesi.reduce((a,x)=> x[1] > a[1] ? x : a, mesi[0]);
+
+  // la serie piu' lunga di cicli chiusi in positivo, di fila
+  let serie = 0, serieMax = 0;
+  righe.forEach(r=>{ if(netto(r) > 0){ serie++; serieMax = Math.max(serieMax, serie); } else serie = 0; });
+
+  // il ciclo piu' veloce, fra quelli di cui si sa quando sono partiti
+  const conDurata = righe.map(r=>({ r, ore: (r.avvio && r.data)
+      ? (new Date(r.data + 'T23:59:00') - new Date(r.avvio)) / 3600000 : null }))
+    .filter(x=> x.ore !== null && x.ore > 0);
+  const veloce = conDurata.length
+    ? conDurata.reduce((a,x)=> x.ore < a.ore ? x : a, conDurata[0]) : null;
+
+  // quanti cicli a settimana, sul tempo passato davvero
+  const date = righe.map(r=> new Date(r.data + 'T12:00:00')).sort((a,b)=>a-b);
+  const giorniTot = Math.max(1, Math.round((date[date.length-1] - date[0]) / 86400000));
+  const aSettimana = righe.length / (giorniTot / 7);
+
+  const righeSotto = [];
+  // "giorno piu' intenso: 1 ciclo" non e' un record, e' una riga in meno
+  if(bestGiorno[1].n > 1) righeSotto.push(['Giorno più intenso',
+    bestGiorno[1].n + ' cicli', fmtDate(bestGiorno[0])]);
+  righeSotto.push(
+    ['Mese migliore', fmtEur(bestMese[1]), mesePerEsteso(bestMese[0])],
+    ['Cicli chiusi in positivo di fila', String(serieMax), serieMax === righe.length ? 'tutti quanti' : 'su ' + righe.length],
+  );
+  if(veloce) righeSotto.push(['Ciclo più veloce',
+    veloce.ore < 24 ? 'in giornata' : Math.round(veloce.ore / 24) + ' giorni', fmtDate(veloce.r.data)]);
+  righeSotto.push(['Ritmo', (Math.round(aSettimana * 10) / 10).toString().replace('.', ',') + ' a settimana', giorniTot + ' giorni di attività']);
+
+  box.innerHTML =
+    '<div class="rec-top">'
+    + '<div class="k">Il tuo ciclo migliore</div>'
+    + '<div class="v">' + fmtEur(netto(best)) + '</div>'
+    + '<div class="q">' + fmtDate(best.data) + ' · capitale ' + fmtEur(best.capitale)
+    +   (best.conto ? ' · ' + best.conto : '') + '</div>'
+    + '</div>'
+    + righeSotto.map(r=>'<div class="rec-riga"><span class="k">' + r[0] + '</span>'
+        + '<span class="v">' + r[1] + '</span>'
+        + '<span class="q">' + r[2] + '</span></div>').join('');
+}
+
+function mesePerEsteso(k){
+  const [a, m] = String(k).split('-');
+  return m ? MESI_IT[+m - 1] + ' ' + a : k;
+}
 
 // Ogni ciclo con dentro tutto: capitale, lordo, fee pagata e link alla
 // transazione. La fee si attacca al ciclo tramite cicloId; i pagamenti che
@@ -1128,13 +1250,29 @@ function render(){
     const pastiglie = Object.keys(g.conti).map(n=>
       '<span class="c-conto k' + n + '">' + g.conti[n] + '</span>').join('');
     const tr = document.createElement('tr');
+    tr.className = 'riga-per';
+    tr.dataset.per = k;
     tr.innerHTML = `
-      <td class="c-d">${g.titolo}${pastiglie}</td>
+      <td class="c-d"><span class="frecciolina"></span>${g.titolo}${pastiglie}</td>
       <td class="c-n">${g.n}</td>
       <td class="c-c">${fmtEur(g.capitale)}</td>
       <td class="c-g ${g.netto>=0?'gainpos':'gainneg'}">${fmtEur(g.netto)}</td>
     `;
     tbody.appendChild(tr);
+    // i cicli di quel periodo, uno per uno: nascosti finche' non si tocca la riga
+    filtrate.filter(r=>chiavePeriodo(r.data, periodoRegistro) === k)
+      .slice().reverse().forEach(r=>{
+      const sub = document.createElement('tr');
+      sub.className = 'riga-ciclo';
+      sub.dataset.di = k;
+      sub.innerHTML = `
+        <td class="c-d">#${r.idx} · ${fmtDate(r.data)}</td>
+        <td class="c-n"></td>
+        <td class="c-c">${fmtEur(r.capitale)}</td>
+        <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
+      `;
+      tbody.appendChild(sub);
+    });
   });
 
   // la somma di quello che si vede adesso: filtrando un mese deve dire quel
@@ -1162,6 +1300,7 @@ function render(){
   });
 
   renderDettaglio(c);
+  renderRecord(c);
   const qr = document.getElementById('quantiRegistro');
   if(qr) qr.textContent = c.length + (c.length===1 ? ' ciclo' : ' cicli');
 
