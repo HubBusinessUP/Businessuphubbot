@@ -361,6 +361,26 @@ async function conImmagine(app){
     font-size:14px;line-height:1.6}
   .fee-frase b{color:var(--green)}
 
+  /* VPS: il numero dei giorni e' la cosa che conta, quindi e' grande */
+  .vps-blocco{border-top:1px solid var(--border);padding-top:14px;margin-top:14px}
+  .vps-blocco:first-child{border-top:0;padding-top:0;margin-top:0}
+  .vps-conto{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .vps-conta{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;
+    letter-spacing:-1px;line-height:1}
+  .vps-conta.quasi{color:#FAC775}
+  .vps-stato{font-size:12.5px;color:var(--muted);margin-top:5px;margin-bottom:6px}
+  .vps-righe{margin-top:8px}
+
+  /* totale in fondo alle commissioni */
+  .pag-totale{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+    border-top:2px solid var(--border);margin-top:14px;padding-top:14px}
+  .pag-totale .k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--muted)}
+  .pag-totale .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;
+    font-weight:600;color:var(--green)}
+  .pag-totale .q{width:100%;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
   /* elenco dei pagamenti */
   .pag-mese{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:2.4px;
     text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border);
@@ -596,14 +616,15 @@ async function conImmagine(app){
 
   </div>
 
-  <h1 class="sezione">Le tue commissioni</h1>
+  <h1 class="sezione">Gestione pagamenti</h1>
 
-  <div class="panel" id="panelFee" hidden>
-    <div id="feeKpi"></div>
+  <div class="panel" id="panelVps" hidden>
+    <h2>VPS e gestione</h2>
+    <div id="vpsBox"></div>
   </div>
 
   <div class="panel pieghevole" id="panelPagamenti" hidden>
-    <h2 data-apre="panelPagamenti">Tutti i pagamenti<span class="quanti" id="quantiPagamenti"></span><i class="freccia"></i></h2>
+    <h2 data-apre="panelPagamenti">Commissioni pagate<span class="quanti" id="quantiPagamenti"></span><i class="freccia"></i></h2>
     <div class="corpo"><div id="listaPagamenti"></div></div>
   </div>
 
@@ -891,6 +912,8 @@ if(d.cliente && d.cliente.nome){
     }
     window.DAL_BOT = true;
     window.PAGAMENTI = d.pagamenti || [];
+    window.SITUAZIONE = d.situazione || [];
+    window.VPS = d.vps || {};
     // conto e contoN: l'etichetta del conto, quando la persona ne ha piu' di uno
     // cicloId attacca a ogni ciclo la fee pagata e il link della transazione
     return d.cicli.map(c=>({ id:'db_'+c.n, cicloId:c.id||null, tipo:c.tipo||null, capitale:c.capitale, data:c.data, chiuso:c.chiuso||null, avvio:c.avvio||null,
@@ -1122,46 +1145,45 @@ function durataDaMs(ms){
   return g + (g === 1 ? ' giorno' : ' giorni') + (hr ? ' ' + hr + 'h' : '');
 }
 
-// Le commissioni, dette come vanno dette: la fee non e' un costo secco,
-// e' meta' di un guadagno che senza il servizio non ci sarebbe. Quindi si
-// mettono accanto i due numeri veri e si lascia parlare il confronto.
-function renderFee(righe){
-  const riga = (k, v)=> '<div class="rec-riga"><span class="k">' + k + '</span>'
-    + '<span class="v">' + v + '</span></div>';
-  const box = document.getElementById('feeKpi');
-  const panel = document.getElementById('panelFee');
+// La VPS: quanto manca alla scadenza, detto in giorni, perche' e' l'unica
+// cosa che il cliente deve davvero tenere d'occhio. Chi scade resta fermo.
+function renderVps(){
+  const box = document.getElementById('vpsBox');
+  const panel = document.getElementById('panelVps');
   if(!box || !panel) return;
-  const lordo = righe.reduce((a,x)=> a + (Number(x.gainLordo)||0), 0);
-  const fee = righe.reduce((a,x)=> a + (Number(x.spese)||0), 0);
-  const netto = lordo - fee;
-  if(!(fee > 0)){ panel.hidden = true; return; }
+  const sit = (window.SITUAZIONE || []).filter(s=> s.vpsFino || s.vps);
+  if(!sit.length){ panel.hidden = true; return; }
   panel.hidden = false;
+  const prezzi = window.VPS || {};
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
 
-  const feeUsdt = righe.reduce((a,x)=> a + (Number(x.feeUsdt)||0), 0);
-  const perEuro = fee > 0 ? netto / fee : 0;
-  // il rendimento medio di un ciclo, non il totale diviso un capitale solo:
-  // quello sarebbe un numero piu' grande e piu' facile da fraintendere
-  const conCap = righe.filter(r=> Number(r.capitale) > 0);
-  const resaNetta = conCap.length
-    ? conCap.reduce((a,x)=> a + ((Number(x.gainLordo)||0) - (Number(x.spese)||0)) / Number(x.capitale) * 100, 0) / conCap.length
-    : 0;
+  box.innerHTML = sit.map(s=>{
+    const fino = s.vpsFino ? new Date(s.vpsFino + 'T12:00:00') : null;
+    const giorni = fino ? Math.round((fino - oggi) / 86400000) : null;
+    const scaduta = giorni !== null && giorni < 0;
+    const inScadenza = giorni !== null && giorni >= 0 && giorni <= 5;
+    const colore = scaduta ? 'gainneg' : inScadenza ? 'quasi' : 'gainpos';
+    const quanto = giorni === null ? '—'
+      : scaduta ? 'scaduta da ' + Math.abs(giorni) + (Math.abs(giorni) === 1 ? ' giorno' : ' giorni')
+      : giorni === 0 ? 'scade oggi'
+      : giorni + (giorni === 1 ? ' giorno' : ' giorni');
+    const righe = [];
+    if(fino) righe.push(['Coperta fino al', fmtDate(s.vpsFino)]);
+    if(prezzi.eur) righe.push(['Quota mensile', fmtEur(prezzi.eur)
+      + (prezzi.usdt ? ' ≈ ' + prezzi.usdt + ' USDT' : '')]);
+    if(prezzi.trimUsdt > 0) righe.push(['Oppure tre mesi', prezzi.trimUsdt + ' USDT']);
+    if(prezzi.giorno) righe.push(['Si rinnova il', 'giorno ' + prezzi.giorno + ' del mese']);
 
-  box.innerHTML =
-    '<div class="fee-conf">'
-    + '<div class="tuo"><div class="k">Rimasto a te</div><div class="v">' + fmtEur(netto) + '</div></div>'
-    + '<div class="loro"><div class="k">Commissioni pagate</div><div class="v">' + fmtEur(fee) + '</div></div>'
-    + '</div>'
-    + '<div class="fee-frase">Per ogni euro di commissione ne hai tenuti <b>'
-    +   (Math.round(perEuro * 100) / 100).toFixed(2).replace('.', ',') + '</b>.'
-    +   (resaNetta > 0 ? ' Ogni ciclo ti ha reso in media <b>' + pct(resaNetta)
-        + '</b> sul capitale, <b>già tolte le commissioni</b>.' : '')
-    + '</div>'
-    + '<div style="margin-top:6px">'
-    +   riga('Guadagno lordo', fmtEur(lordo))
-    +   riga('Commissioni in USDT', (Math.round(feeUsdt * 100) / 100)
-          .toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USDT')
-    +   riga('Cicli con commissione', righe.filter(x=>Number(x.spese) > 0).length + ' su ' + righe.length)
-    + '</div>';
+    return '<div class="vps-blocco">'
+      + (sit.length > 1 && s.contoN ? '<div class="vps-conto">Conto ' + s.contoN + '</div>' : '')
+      + '<div class="vps-conta ' + colore + '">' + quanto + '</div>'
+      + '<div class="vps-stato">' + (scaduta ? 'da rinnovare'
+          : inScadenza ? 'in scadenza' : 'attiva') + '</div>'
+      + '<div class="vps-righe">' + righe.map(r=>
+          '<div class="rec-riga"><span class="k">' + r[0] + '</span>'
+          + '<span class="v">' + r[1] + '</span></div>').join('') + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 // L'elenco dei pagamenti: commissioni e quote VPS, mese per mese, con il
@@ -1170,7 +1192,8 @@ function renderPagamenti(){
   const box = document.getElementById('listaPagamenti');
   const panel = document.getElementById('panelPagamenti');
   if(!box || !panel) return;
-  const p = (window.PAGAMENTI || []).slice()
+  // qui stanno solo le commissioni: la VPS ha il suo riquadro sopra
+  const p = (window.PAGAMENTI || []).filter(x=> x.tipo !== 'vps').slice()
     .sort((a,b)=> String(b.data || '').localeCompare(String(a.data || '')));
   if(!p.length){ panel.hidden = true; return; }
   panel.hidden = false;
@@ -1195,6 +1218,15 @@ function renderPagamenti(){
     if(x.hash) html += '<div class="pag-hash"><a target="_blank" rel="noopener" href="https://bscscan.com/tx/'
       + x.hash + '">' + x.hash.slice(0,12) + '…' + x.hash.slice(-8) + '</a></div>';
   });
+  const tot = p.reduce((a,x)=> a + (Number(x.usdt) || 0), 0);
+  const versati = p.filter(x=> x.stato === 'verificato').length;
+  html += '<div class="pag-totale">'
+    + '<span class="k">Totale commissioni</span>'
+    + '<span class="v">' + tot.toLocaleString('it-IT',
+        {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USDT</span>'
+    + '<span class="q">' + versati + ' su ' + p.length + ' verificati</span>'
+    + '</div>';
+
   box.innerHTML = html;
 }
 
@@ -1514,7 +1546,7 @@ function render(){
 
   renderDettaglio(c);
   renderRecord(c);
-  renderFee(c);
+  renderVps();
   renderPagamenti();
   renderInvito();
   const qr = document.getElementById('quantiRegistro');
