@@ -343,6 +343,50 @@ async function conImmagine(app){
   .panel.pieghevole > .corpo{display:none}
   .panel.pieghevole.aperto > .corpo{display:block}
 
+  /* i titoli che dividono la pagina in sezioni: si vedono da lontano */
+  h1.sezione{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;
+    letter-spacing:.4px;color:var(--text);margin:34px 2px 12px;padding-bottom:8px;
+    border-bottom:2px solid var(--gold)}
+
+  /* commissioni: il confronto fra quello che paghi e quello che tieni */
+  .fee-conf{display:flex;gap:14px;align-items:flex-end;margin-bottom:4px}
+  .fee-conf > div{flex:1}
+  .fee-conf .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.4px;
+    text-transform:uppercase;color:var(--muted)}
+  .fee-conf .v{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
+    letter-spacing:-.5px;margin-top:4px;line-height:1}
+  .fee-conf .tuo .v{color:var(--green);font-size:30px}
+  .fee-conf .loro .v{color:var(--muted)}
+  .fee-frase{border-top:1px solid var(--border);margin-top:14px;padding-top:14px;
+    font-size:14px;line-height:1.6}
+  .fee-frase b{color:var(--green)}
+
+  /* elenco dei pagamenti */
+  .pag-mese{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:2.4px;
+    text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);padding:6px 0;margin-top:18px}
+  .pag-riga{display:flex;align-items:center;gap:9px;padding:11px 0;
+    border-bottom:1px solid rgba(27,36,42,.55)}
+  .pag-riga .g{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
+    width:44px;flex:none}
+  .pag-riga .che{font-size:13.5px}
+  .pag-riga .u{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13.5px}
+  .pag-riga .punto{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none}
+  .pag-riga .punto.attesa{background:var(--muted)}
+  .pag-hash{padding:0 0 11px 53px;margin-top:-7px;font-family:'IBM Plex Mono',monospace;font-size:11px}
+  .pag-hash a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(13,158,136,.35)}
+
+  /* invito */
+  .inv-testo{font-size:14px;line-height:1.6;color:var(--muted)}
+  .inv-link{display:block;margin:14px 0;padding:12px 14px;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:8px;font-family:'IBM Plex Mono',monospace;
+    font-size:12px;color:var(--text);word-break:break-all;user-select:all}
+  .inv-bottoni{display:flex;gap:8px;flex-wrap:wrap}
+  .inv-bottoni a,.inv-bottoni button{flex:1;min-width:130px;text-align:center;cursor:pointer;
+    padding:12px 10px;border-radius:8px;border:1px solid var(--gold);background:none;
+    color:var(--gold);font-family:inherit;font-size:13.5px;text-decoration:none}
+  .inv-bottoni a.pieno{background:var(--gold);color:#04110E;border-color:var(--gold);font-weight:600}
+
   /* i record: il migliore prende tutto lo spazio, gli altri stanno stretti
      sotto. Tre schede uguali in fila sarebbero solo tre numeri qualsiasi. */
   .rec-top{border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:4px}
@@ -476,6 +520,8 @@ async function conImmagine(app){
     <div class="hero-meta"><span id="cycleCount">0 cicli</span> · <span id="lastDate">—</span></div>
   </div>
 
+  <div id="shareBar"><a id="btnShare" href="#" onclick="vaiTotale();return false">Condividi il risultato</a></div>
+
   <div class="panel">
     <h2>Andamento cicli</h2>
     <div class="chart-box" id="chartBox"></div>
@@ -503,6 +549,8 @@ async function conImmagine(app){
 
 
   
+
+  <h1 class="sezione">I tuoi cicli</h1>
 
   <div class="panel pieghevole" id="panelRegistro">
     <h2 data-apre="panelRegistro">Registro cicli<span class="quanti" id="quantiRegistro"></span><i class="freccia"></i></h2>
@@ -548,9 +596,25 @@ async function conImmagine(app){
 
   </div>
 
+  <h1 class="sezione">Le tue commissioni</h1>
+
+  <div class="panel" id="panelFee" hidden>
+    <div id="feeKpi"></div>
+  </div>
+
+  <div class="panel pieghevole" id="panelPagamenti" hidden>
+    <h2 data-apre="panelPagamenti">Tutti i pagamenti<span class="quanti" id="quantiPagamenti"></span><i class="freccia"></i></h2>
+    <div class="corpo"><div id="listaPagamenti"></div></div>
+  </div>
+
+  <h1 class="sezione">Invita un amico</h1>
+
+  <div class="panel" id="panelInvito" hidden>
+    <div id="invito"></div>
+  </div>
+
   <div id="bizPanels"></div>
 
-  <div id="shareBar"><a id="btnShare" href="#" onclick="vaiTotale();return false">Condividi il risultato</a></div>
 
 </div>
 
@@ -1058,6 +1122,115 @@ function durataDaMs(ms){
   return g + (g === 1 ? ' giorno' : ' giorni') + (hr ? ' ' + hr + 'h' : '');
 }
 
+// Le commissioni, dette come vanno dette: la fee non e' un costo secco,
+// e' meta' di un guadagno che senza il servizio non ci sarebbe. Quindi si
+// mettono accanto i due numeri veri e si lascia parlare il confronto.
+function renderFee(righe){
+  const riga = (k, v)=> '<div class="rec-riga"><span class="k">' + k + '</span>'
+    + '<span class="v">' + v + '</span></div>';
+  const box = document.getElementById('feeKpi');
+  const panel = document.getElementById('panelFee');
+  if(!box || !panel) return;
+  const lordo = righe.reduce((a,x)=> a + (Number(x.gainLordo)||0), 0);
+  const fee = righe.reduce((a,x)=> a + (Number(x.spese)||0), 0);
+  const netto = lordo - fee;
+  if(!(fee > 0)){ panel.hidden = true; return; }
+  panel.hidden = false;
+
+  const feeUsdt = righe.reduce((a,x)=> a + (Number(x.feeUsdt)||0), 0);
+  const perEuro = fee > 0 ? netto / fee : 0;
+  // il rendimento medio di un ciclo, non il totale diviso un capitale solo:
+  // quello sarebbe un numero piu' grande e piu' facile da fraintendere
+  const conCap = righe.filter(r=> Number(r.capitale) > 0);
+  const resaNetta = conCap.length
+    ? conCap.reduce((a,x)=> a + ((Number(x.gainLordo)||0) - (Number(x.spese)||0)) / Number(x.capitale) * 100, 0) / conCap.length
+    : 0;
+
+  box.innerHTML =
+    '<div class="fee-conf">'
+    + '<div class="tuo"><div class="k">Rimasto a te</div><div class="v">' + fmtEur(netto) + '</div></div>'
+    + '<div class="loro"><div class="k">Commissioni pagate</div><div class="v">' + fmtEur(fee) + '</div></div>'
+    + '</div>'
+    + '<div class="fee-frase">Per ogni euro di commissione ne hai tenuti <b>'
+    +   (Math.round(perEuro * 100) / 100).toFixed(2).replace('.', ',') + '</b>.'
+    +   (resaNetta > 0 ? ' Ogni ciclo ti ha reso in media <b>' + pct(resaNetta)
+        + '</b> sul capitale, <b>già tolte le commissioni</b>.' : '')
+    + '</div>'
+    + '<div style="margin-top:6px">'
+    +   riga('Guadagno lordo', fmtEur(lordo))
+    +   riga('Commissioni in USDT', (Math.round(feeUsdt * 100) / 100)
+          .toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USDT')
+    +   riga('Cicli con commissione', righe.filter(x=>Number(x.spese) > 0).length + ' su ' + righe.length)
+    + '</div>';
+}
+
+// L'elenco dei pagamenti: commissioni e quote VPS, mese per mese, con il
+// link alla transazione quando c'e'.
+function renderPagamenti(){
+  const box = document.getElementById('listaPagamenti');
+  const panel = document.getElementById('panelPagamenti');
+  if(!box || !panel) return;
+  const p = (window.PAGAMENTI || []).slice()
+    .sort((a,b)=> String(b.data || '').localeCompare(String(a.data || '')));
+  if(!p.length){ panel.hidden = true; return; }
+  panel.hidden = false;
+  const q = document.getElementById('quantiPagamenti');
+  if(q) q.textContent = p.length + (p.length === 1 ? ' pagamento' : ' pagamenti');
+
+  let html = '', meseOra = null;
+  p.forEach(x=>{
+    const m = x.data ? String(x.data).slice(0,7) : '';
+    if(m !== meseOra){
+      meseOra = m;
+      html += '<div class="pag-mese">' + (m ? mesePerEsteso(m) : 'senza data') + '</div>';
+    }
+    const che = x.tipo === 'vps' ? 'VPS e gestione' : 'Commissione';
+    html += '<div class="pag-riga">'
+      + '<span class="g">' + (x.data ? fmtDate(x.data) : '—') + '</span>'
+      + '<span class="punto' + (x.stato === 'verificato' ? '' : ' attesa') + '"></span>'
+      + '<span class="che">' + che + (x.contoN && (window.CLIENTE||{}).conti > 1 ? ' · conto ' + x.contoN : '') + '</span>'
+      + '<span class="u">' + Number(x.usdt || 0).toLocaleString('it-IT',
+          {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USDT</span>'
+      + '</div>';
+    if(x.hash) html += '<div class="pag-hash"><a target="_blank" rel="noopener" href="https://bscscan.com/tx/'
+      + x.hash + '">' + x.hash.slice(0,12) + '…' + x.hash.slice(-8) + '</a></div>';
+  });
+  box.innerHTML = html;
+}
+
+// Il link da mandare a un amico. Porta il codice del cliente, cosi' quando
+// qualcuno arriva si sa da chi. Per ora non promette niente: apre il bot.
+function renderInvito(){
+  const box = document.getElementById('invito');
+  const panel = document.getElementById('panelInvito');
+  if(!box || !panel) return;
+  const cod = (window.CLIENTE || {}).codice;
+  if(!cod){ panel.hidden = true; return; }
+  panel.hidden = false;
+  const link = 'https://t.me/cashly_bvb_bot?start=r_' + cod;
+  const testo = 'Guarda questa strategia di hedging fra due broker, io la sto usando: ' + link;
+  box.innerHTML =
+    '<div class="inv-testo">Manda questo link a chi te lo chiede: apre il bot e gli spiega'
+    + ' come funziona, passo per passo.</div>'
+    + '<code class="inv-link">' + link + '</code>'
+    + '<div class="inv-bottoni">'
+    +   '<a class="pieno" target="_blank" rel="noopener" href="https://t.me/share/url?url='
+        + encodeURIComponent(link) + '&text=' + encodeURIComponent('Guarda questa strategia, io la sto usando')
+        + '">Manda su Telegram</a>'
+    +   '<a target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(testo) + '">WhatsApp</a>'
+    +   '<button type="button" onclick="copiaInvito(this)">Copia il link</button>'
+    + '</div>';
+}
+
+function copiaInvito(b){
+  const link = document.querySelector('.inv-link');
+  if(!link) return;
+  const testo = link.textContent.trim();
+  const fatto = ()=>{ const p = b.textContent; b.textContent = 'Copiato'; setTimeout(()=>{ b.textContent = p; }, 1600); };
+  if(navigator.clipboard) navigator.clipboard.writeText(testo).then(fatto, fatto);
+  else fatto();
+}
+
 // I record del cliente: non servono a decidere niente, servono a fargli
 // vedere che sta andando bene. Percio' si guardano solo i numeri veri e si
 // tace su quelli che non ci sono ancora, invece di mostrare zeri.
@@ -1108,11 +1281,29 @@ function renderRecord(righe){
   // "giorno piu' intenso: 1 ciclo" non e' un record, e' una riga in meno
   if(bestGiorno[1].n > 1) righeSotto.push(['Giorno più intenso',
     bestGiorno[1].n + ' cicli', fmtDate(bestGiorno[0])]);
+  // il rendimento va rapportato al capitale che stava lavorando in quel ciclo,
+  // altrimenti 200 euro su 2.000 e 200 su 10.000 sembrano la stessa cosa
+  const conCap = righe.filter(r=> Number(r.capitale) > 0);
+  const rendMedio = conCap.length
+    ? conCap.reduce((a,x)=> a + netto(x) / Number(x.capitale) * 100, 0) / conCap.length : 0;
+  const capMedio = conCap.length
+    ? conCap.reduce((a,x)=> a + Number(x.capitale), 0) / conCap.length : 0;
+  const miglioreRend = conCap.length
+    ? conCap.reduce((a,x)=> (netto(x)/Number(x.capitale)) > (netto(a)/Number(a.capitale)) ? x : a, conCap[0])
+    : null;
+
   righeSotto.push(
     ['Mese migliore', fmtEur(bestMese[1]), mesePerEsteso(bestMese[0])],
     ['Guadagno medio a ciclo', fmtEur(righe.reduce((a,x)=>a + netto(x), 0) / righe.length),
      'su ' + righe.length + ' cicli'],
   );
+  if(conCap.length){
+    righeSotto.push(['Rendimento medio a ciclo', pct(rendMedio), 'sul capitale al lavoro']);
+    if(miglioreRend) righeSotto.push(['Miglior rendimento',
+      pct(netto(miglioreRend) / Number(miglioreRend.capitale) * 100),
+      fmtDate(miglioreRend.data) + ' · ' + fmtEur(miglioreRend.capitale)]);
+    righeSotto.push(['Capitale medio per ciclo', fmtEur(capMedio), '']);
+  }
 
   // durata media, sui soli cicli di cui si conosce inizio e fine
   const durateMs = righe.map(r=> (r.avvio && r.chiuso) ? new Date(r.chiuso) - new Date(r.avvio) : 0)
@@ -1132,11 +1323,16 @@ function renderRecord(righe){
     + '<div class="k">Il tuo ciclo migliore</div>'
     + '<div class="v">' + fmtEur(netto(best)) + '</div>'
     + '<div class="q">' + fmtDate(best.data) + ' · capitale ' + fmtEur(best.capitale)
+    +   (Number(best.capitale) > 0 ? ' · ' + pct(netto(best) / Number(best.capitale) * 100) : '')
     +   (best.conto ? ' · ' + best.conto : '') + '</div>'
     + '</div>'
     + righeSotto.map(r=>'<div class="rec-riga"><span class="k">' + r[0] + '</span>'
         + '<span class="v">' + r[1] + '</span>'
         + '<span class="q">' + r[2] + '</span></div>').join('');
+}
+
+function pct(n){
+  return (n >= 0 ? '+' : '') + (Math.round(n * 100) / 100).toFixed(2).replace('.', ',') + '%';
 }
 
 function mesePerEsteso(k){
@@ -1318,6 +1514,9 @@ function render(){
 
   renderDettaglio(c);
   renderRecord(c);
+  renderFee(c);
+  renderPagamenti();
+  renderInvito();
   const qr = document.getElementById('quantiRegistro');
   if(qr) qr.textContent = c.length + (c.length===1 ? ' ciclo' : ' cicli');
 
