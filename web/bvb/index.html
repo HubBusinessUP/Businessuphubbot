@@ -343,6 +343,15 @@ async function conImmagine(app){
   .panel.pieghevole > .corpo{display:none}
   .panel.pieghevole.aperto > .corpo{display:block}
 
+  /* somma di quello che si sta guardando adesso, non di tutto lo storico */
+  .somma{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    border-top:1px solid var(--border);margin-top:2px;padding-top:12px}
+  .somma .et{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--muted)}
+  .somma .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600}
+  .somma .det{width:100%;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted)}
+  .somma .q{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
   /* scelta del periodo: quattro voci in fila, quella attiva sottolineata */
   .periodi{display:flex;gap:2px;margin:0 0 6px;border-bottom:1px solid var(--border)}
   .periodi button{flex:1;background:none;border:0;cursor:pointer;padding:8px 2px 9px;
@@ -492,6 +501,7 @@ async function conImmagine(app){
         </thead>
         <tbody id="tbody"></tbody>
       </table>
+      <div class="somma" id="sommaRegistro"></div>
       <div class="add-row">
         <button class="primary" id="addBtn">+ Nuovo ciclo</button>
       </div>
@@ -1077,7 +1087,8 @@ function render(){
   // table (filtrata per mese/anno selezionati)
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid)).slice().reverse().forEach(r=>{
+  const filtrate = c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid));
+  filtrate.slice().reverse().forEach(r=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="c-n">${r.idx}${r.conto ? '<span class="c-conto k' + (r.contoN||1) + '">' + r.conto + '</span>' : ''}</td>
@@ -1087,6 +1098,23 @@ function render(){
     `;
     tbody.appendChild(tr);
   });
+
+  // la somma di quello che si vede adesso: filtrando un mese deve dire quel
+  // mese, non il totale di sempre che sta gia' in cima alla pagina
+  const somma = document.getElementById('sommaRegistro');
+  if(somma){
+    const netto = filtrate.reduce((a,x)=>a + (Number(x.gainCiclo)||0), 0);
+    const lordo = filtrate.reduce((a,x)=>a + (Number(x.gainLordo)||0), 0);
+    const fee = filtrate.reduce((a,x)=>a + (Number(x.spese)||0), 0);
+    const tutto = filtrate.length === c.length;
+    somma.innerHTML = filtrate.length
+      ? '<span class="et">' + (tutto ? 'Totale' : 'Totale filtrato') + '</span>'
+        + '<span class="q">'
+        + filtrate.length + (filtrate.length===1?' ciclo':' cicli') + '</span>'
+        + '<span class="v ' + (netto>=0?'gainpos':'gainneg') + '">' + fmtEur(netto) + '</span>'
+        + '<span class="det">lordo ' + fmtEur(lordo) + ' · fee ' + fmtEur(fee) + '</span>'
+      : '<span class="et">Nessun ciclo in questo periodo</span>';
+  }
 
   tbody.querySelectorAll('input.cell').forEach(inp=>{
     inp.addEventListener('change', onCellChange);
