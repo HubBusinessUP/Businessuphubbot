@@ -345,7 +345,7 @@ async function conImmagine(app){
 
   /* somma di quello che si sta guardando adesso, non di tutto lo storico */
   .somma{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
-    border-top:1px solid var(--border);margin-top:2px;padding-top:12px}
+    border-bottom:1px solid var(--border);margin-bottom:6px;padding-bottom:12px}
   .somma .et{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.6px;
     text-transform:uppercase;color:var(--muted)}
   .somma .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600}
@@ -493,6 +493,7 @@ async function conImmagine(app){
         <select id="registroMeseGrid"></select>
         <select id="registroAnnoGrid"></select>
       </div>
+      <div class="somma" id="sommaRegistro"></div>
       <table>
         <thead>
           <tr>
@@ -501,7 +502,6 @@ async function conImmagine(app){
         </thead>
         <tbody id="tbody"></tbody>
       </table>
-      <div class="somma" id="sommaRegistro"></div>
       <div class="add-row">
         <button class="primary" id="addBtn">+ Nuovo ciclo</button>
       </div>
