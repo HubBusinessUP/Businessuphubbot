@@ -894,7 +894,14 @@ function fmtDate(iso){
 const API_BASE = 'https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2';
 function tokenApp(){
   const p = new URLSearchParams(location.search);
-  return p.get('t') || '';
+  if(p.get('t')) return p.get('t');
+  // aperta come Mini App da un link diretto t.me/<bot>/<app>?startapp=<chiave>:
+  // li' la chiave non sta nell'indirizzo, la passa Telegram
+  try{
+    const sp = Telegram.WebApp.initDataUnsafe.start_param;
+    if(sp) return sp;
+  }catch(_){}
+  return '';
 }
 async function datiDalBot(){
   const t = tokenApp();
