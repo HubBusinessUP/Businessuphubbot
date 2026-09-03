@@ -77,7 +77,13 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   const mio=cic.reduce((a,x)=>a+x.mio,0);
   const feeTot=cic.reduce((a,x)=>a+x.feeU,0);
   const profTot=cic.reduce((a,x)=>a+x.profitto,0);
-  const attivi=cli.filter(x=>x.stato==='attivo'||x.stato==='pronto'||x.stato==='attesa').length;
+  const attivi=new Set(cli.filter(x=>x.stato==='attivo'||x.stato==='pronto'||x.stato==='attesa').map(x=>x.padre||x.codice)).size;
+  // un cliente con due conti resta una persona sola
+  const persone=new Set(cli.map(x=>x.padre||x.codice)).size;
+  // ogni conto aggiuntivo subito sotto il suo principale
+  const ordinati=[]; const figli={};
+  cli.forEach(x=>{ if(x.padre) (figli[x.padre]=figli[x.padre]||[]).push(x); });
+  cli.forEach(x=>{ if(x.padre) return; ordinati.push(x); (figli[x.codice]||[]).forEach(y=>ordinati.push(y)); });
 
   // per giorno
   const gg=new Map();
@@ -89,7 +95,7 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   h+='<div class="hero"><div class="lbl">Il tuo netto</div>'+
      '<div class="num">'+U0(mio)+'</div>'+
      '<div class="badge">'+U0(feeTot)+' incassati</div>'+
-     '<div class="meta">'+cic.length+' cicli · '+cli.length+' clienti · '+reti.length+' reti</div></div>';
+     '<div class="meta">'+cic.length+' cicli · '+persone+' clienti · '+reti.length+' reti</div></div>';
 
   h+='<div class="stats">'+
      '<div class="card"><div class="k">Capitale gestito</div><div class="v">'+E0(cap.totale||0)+'</div></div>'+
@@ -132,10 +138,12 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
    h+='</table></div>';
   }
 
+  h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}.box.sub .nm{opacity:.8}</style>';
   h+='<div class="panel"><h2>Clienti</h2>';
-  cli.forEach(x=>{
+  ordinati.forEach(x=>{
    const on=x.stato==='attivo'||x.stato==='pronto';
-   h+='<div class="box"><div class="top"><span class="nm">'+x.codice+' · '+x.nome+'</span>'+
+   const tit=x.padre?x.codice+' · conto '+(x.conto||2):x.codice+' · '+x.nome;
+   h+='<div class="box'+(x.padre?' sub':'')+'"><div class="top"><span class="nm">'+tit+'</span>'+
       '<span class="st'+(on?' on':'')+'">'+x.stato+'</span></div>'+
       '<div class="row"><span>Rete</span><b>'+x.rete+'</b></div>'+
       '<div class="row"><span>Capitale</span><b>'+E0(x.capitale)+'</b></div>'+
