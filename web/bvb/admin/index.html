@@ -166,7 +166,45 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
   h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}'
     +'.box.sub .nm{opacity:.8}'
     +'body{font-variant-numeric:tabular-nums}'
+    +'.apri{margin-top:9px;width:100%;background:none;border:1px solid #1B242A;'
+      +'color:#78818F;font-family:inherit;font-size:11px;letter-spacing:.6px;'
+      +'padding:6px;cursor:pointer}'
+    +'.apri:hover{color:#ECEFF3;border-color:#28343C}'
+    +'.cicli{display:none;margin-top:9px;overflow-x:auto}'
+    +'.cicli.on{display:block}'
+    +'.cicli table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:420px}'
+    +'.cicli th{text-align:left;color:#59636D;font-weight:500;font-size:9px;'
+      +'letter-spacing:1.1px;text-transform:uppercase;padding:5px 6px;'
+      +'border-bottom:1px solid #1B242A;white-space:nowrap}'
+    +'.cicli td{padding:5px 6px;border-bottom:1px solid rgba(27,36,42,.5);white-space:nowrap}'
+    +'.cicli td.d{text-align:right}'
+    +'.cicli a{color:#3FA98A;text-decoration:none;border-bottom:1px dotted rgba(63,169,138,.45)}'
+    +'.cicli a:hover{color:#5FCBAA}'
+    +'.cicli .no{color:#D98634}'
     +'</style>';
+  // I cicli di un cliente, con la transazione della fee. Dove l'hash non e'
+  // mai stato registrato si scrive che manca: non si mette niente al suo posto.
+  function suoiCicli(cod){
+   const suoi=cic.filter(c=>c.codice===cod).sort((a,b)=>(a.numero||0)-(b.numero||0));
+   if(!suoi.length) return '';
+   const senza=suoi.filter(c=>!c.tx).length;
+   const righe=suoi.map(c=>{
+    const link=c.tx
+      ? '<a href="https://bscscan.com/tx/'+c.tx+'" target="_blank" rel="noopener">'
+        +c.tx.slice(0,8)+'…'+c.tx.slice(-4)+'</a>'
+      : '<span class="no">'+(c.pagato?'non registrato':'fee sospesa')+'</span>';
+    return '<tr><td>#'+(c.numero||'')+'</td><td>'+dBrev(c.data)+'</td>'
+      +'<td class="d">'+E0(c.profitto)+'</td><td class="d">'+E0(c.fee)+'</td>'
+      +'<td>'+link+'</td></tr>';
+   }).join('');
+   return '<button class="apri" type="button" data-cod="'+cod+'">'
+     +'Cicli e pagamenti ('+suoi.length+(senza?' · '+senza+' senza link':'')+')</button>'
+     +'<div class="cicli" data-per="'+cod+'"><table>'
+     +'<tr><th>#</th><th>chiuso</th><th style="text-align:right">profitto</th>'
+     +'<th style="text-align:right">fee</th><th>pagamento</th></tr>'
+     +righe+'</table></div>';
+  }
+
   h+='<div class="panel"><h2>Clienti</h2>';
   ordinati.forEach(x=>{
    const on=x.stato==='attivo'||x.stato==='pronto';
@@ -179,10 +217,18 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
       '<div class="row"><span>Profitto generato</span><b>'+E0(x.profitto)+'</b></div>'+
       '<div class="row"><span>Il tuo netto</span><b class="q">'+U(x.mio)+'</b></div>'+
       (x.ultimo?'<div class="row"><span>Ultimo ciclo</span><b>'+dBrev(x.ultimo)+'</b></div>':'')+
+      suoiCicli(x.codice)+
       '</div>';
   });
   h+='</div>';
   document.getElementById('app').innerHTML=h;
+
+  // apre e chiude l'elenco dei cicli sotto ogni cliente
+  document.getElementById('app').addEventListener('click',e=>{
+   const b=e.target.closest('.apri'); if(!b) return;
+   const el=document.querySelector('.cicli[data-per="'+b.dataset.cod+'"]');
+   if(el) el.classList.toggle('on');
+  });
 
   // Registro incassi: si guarda per giorno, settimana, mese o anno, e si puo'
   // isolare una rete. La somma sta in cima, cosi' si legge senza scorrere.
