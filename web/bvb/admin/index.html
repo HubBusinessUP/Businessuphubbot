@@ -2,41 +2,41 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cashly · Admin</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Archivo+Narrow:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#080B0D;--panel:#0F1417;--line:#1B242A;--txt:#ECEFF3;--mut:#78818F;--tl:#C99A2E;--tl2:#E8B94A}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:14px;min-height:100vh}
 .wrap{max-width:720px;margin:0 auto}
 .hero{text-align:center;padding:24px 14px 20px;margin-bottom:16px;border-radius:16px;background:var(--panel);border:1px solid var(--tl)}
-.hero .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.6px;color:var(--mut);text-transform:uppercase}
+.hero .lbl{font-family:'Archivo Narrow',sans-serif;font-size:10px;letter-spacing:2.6px;color:var(--mut);text-transform:uppercase}
 .hero .num{font-family:'Space Grotesk',sans-serif;font-size:clamp(38px,11vw,56px);font-weight:700;color:var(--tl2);letter-spacing:-2px;line-height:1;margin:12px 0 10px}
-.hero .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mut);margin-top:10px}
-.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(232,185,74,.12);color:var(--tl2);border:1px solid rgba(232,185,74,.3)}
+.hero .meta{font-family:'Archivo Narrow',sans-serif;font-size:11px;color:var(--mut);margin-top:10px}
+.badge{display:inline-block;font-family:'Archivo Narrow',sans-serif;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(232,185,74,.12);color:var(--tl2);border:1px solid rgba(232,185,74,.3)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px}
-.card .k{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
+.card .k{font-family:'Archivo Narrow',sans-serif;font-size:8.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
 .card .v{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-top:5px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px}
 .panel h2{font-size:12.5px;font-weight:600;margin-bottom:12px}
 svg{display:block;width:100%;height:auto}
 table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px}
-th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.1px;color:var(--mut);text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-weight:500}
+th{font-family:'Archivo Narrow',sans-serif;font-size:9px;letter-spacing:1.1px;color:var(--mut);text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-weight:500}
 td{padding:10px 6px;border-bottom:1px solid rgba(27,36,42,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 th:nth-child(n+2),td:nth-child(n+2){text-align:right}
 tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
-.q{color:var(--tl2);font-weight:600;font-family:'IBM Plex Mono',monospace}
+.q{color:var(--tl2);font-weight:600;font-family:'Archivo Narrow',sans-serif}
 .mut{color:var(--mut)}
 .box{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;background:rgba(255,255,255,.012)}
 .box .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
 .box .nm{font-weight:600;font-size:14px}
-.box .st{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:12px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase}
+.box .st{font-family:'Archivo Narrow',sans-serif;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:12px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase}
 .box .st.on{color:var(--tl2);border-color:rgba(232,185,74,.35);background:rgba(232,185,74,.1)}
 .box .row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--mut)}
-.box .row b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
+.box .row b{color:var(--txt);font-family:'Archivo Narrow',sans-serif}
 .empty{text-align:center;color:var(--mut);font-size:13px;padding:26px 10px}
 
-  .live{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  .live{display:inline-flex;align-items:center;gap:7px;font-family:'Archivo Narrow',sans-serif;font-size:9.5px;
     letter-spacing:2px;color:#78818F;text-transform:uppercase;margin-bottom:14px}
   .live i{width:8px;height:8px;border-radius:50%;background:#E8B94A;display:inline-block;
     animation:pulse 1.9s ease-out infinite}
@@ -46,19 +46,19 @@ table.inc td:first-child,table.inc th:first-child{white-space:normal;width:auto}
 table.inc td:nth-child(2),table.inc th:nth-child(2){width:44px}
 .periodi{display:flex;gap:2px;margin:0 0 10px;border-bottom:1px solid #1B242A}
 .periodi button{flex:1;background:none;border:0;cursor:pointer;padding:8px 2px 9px;
-  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.4px;
+  font-family:'Archivo Narrow',sans-serif;font-size:10.5px;letter-spacing:1.4px;
   text-transform:uppercase;color:#78818F;border-bottom:2px solid transparent;margin-bottom:-1px}
 .periodi button.on{color:#E8B94A;border-bottom-color:#E8B94A}
 #reteIncassi{width:100%;background:#131A1D;border:1px solid #1B242A;color:#ECEFF3;
-  font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 10px;border-radius:7px;margin-bottom:10px}
+  font-family:'Archivo Narrow',sans-serif;font-size:12px;padding:8px 10px;border-radius:7px;margin-bottom:10px}
 .somma{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
   border-bottom:1px solid #1B242A;margin-bottom:8px;padding-bottom:12px}
-.somma .et{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.6px;
+.somma .et{font-family:'Archivo Narrow',sans-serif;font-size:10.5px;letter-spacing:1.6px;
   text-transform:uppercase;color:#78818F}
-.somma .q2{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#78818F}
+.somma .q2{font-family:'Archivo Narrow',sans-serif;font-size:11px;color:#78818F}
 .somma .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;
   font-weight:600;color:#E8B94A}
-.somma .det{width:100%;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#78818F}
+.somma .det{width:100%;font-family:'Archivo Narrow',sans-serif;font-size:11px;color:#78818F}
 </style></head><body>
 <div class="wrap" id="app"><div class="empty">Carico i dati…</div></div>
 <script>
@@ -160,7 +160,11 @@ fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
       '<div id="corpoIncassi"></div></div>';
   }
 
-  h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}.box.sub .nm{opacity:.8}</style>';
+  h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}.box.sub .nm{opacity:.8}
+  /* senza il monospaziato le cifre hanno larghezze diverse e le colonne
+     ballano: queste le rimettono tutte della stessa larghezza */
+  body{font-variant-numeric:tabular-nums}
+</style>';
   h+='<div class="panel"><h2>Clienti</h2>';
   ordinati.forEach(x=>{
    const on=x.stato==='attivo'||x.stato==='pronto';
