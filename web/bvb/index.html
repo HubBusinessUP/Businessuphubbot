@@ -330,6 +330,37 @@ async function conImmagine(app){
   .live i{width:8px;height:8px;border-radius:50%;background:#14c9ac;display:inline-block;
     animation:pulse 1.9s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(20,201,172,.55)}70%{box-shadow:0 0 0 9px rgba(20,201,172,0)}100%{box-shadow:0 0 0 0 rgba(20,201,172,0)}}
+  /* schede che si aprono al clic: chiuse la pagina resta corta */
+  .panel.pieghevole > h2{cursor:pointer;display:flex;align-items:center;gap:9px;margin-bottom:0;
+    user-select:none;-webkit-user-select:none}
+  .panel.pieghevole.aperto > h2{margin-bottom:16px}
+  .panel.pieghevole > h2 .quanti{font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:0;text-transform:none;color:#5C6570}
+  .panel.pieghevole > h2 .freccia{margin-left:auto;width:8px;height:8px;border-right:1.5px solid var(--muted);
+    border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .18s ease;
+    position:relative;top:-2px}
+  .panel.pieghevole.aperto > h2 .freccia{transform:rotate(-135deg);top:2px}
+  .panel.pieghevole > .corpo{display:none}
+  .panel.pieghevole.aperto > .corpo{display:block}
+
+  /* cicli nel dettaglio: una riga piena per ciclo, con fee e link insieme */
+  .dett{border-top:1px solid var(--border);padding:13px 0}
+  .dett:first-child{border-top:0;padding-top:0}
+  .dett .cima{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .dett .num{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+  .dett .quando{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+  .dett .netto{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600}
+  .dett .voci{display:flex;flex-wrap:wrap;gap:4px 20px;margin-top:8px}
+  .dett .voci div{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+  .dett .voci b{color:var(--text);font-weight:500}
+  .dett .tx{margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+  .dett .tx a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(13,158,136,.35)}
+  .dett .tx .attesa{color:var(--muted)}
+.c-conto{display:inline-block;margin-top:3px;font-size:.68em;line-height:1;font-weight:500;
+    padding:3px 6px;border-radius:4px;background:rgba(20,201,172,.15);color:#14c9ac}
+  .c-conto.k2{background:rgba(127,169,255,.15);color:#7FA9FF}
+  .c-conto.k3{background:rgba(250,199,117,.15);color:#FAC775}
+  .c-conto.k4{background:rgba(240,153,123,.15);color:#F0997B}
 </style>
 </head>
 <body>
@@ -428,24 +459,33 @@ async function conImmagine(app){
 
   
 
-  <div class="panel">
-    <h2>Registro cicli</h2>
-    <div class="registro-toolbar">
-      <select id="registroMeseGrid"></select>
-      <select id="registroAnnoGrid"></select>
+  <div class="panel pieghevole" id="panelRegistro">
+    <h2 data-apre="panelRegistro">Registro cicli<span class="quanti" id="quantiRegistro"></span><i class="freccia"></i></h2>
+    <div class="corpo">
+      <div class="registro-toolbar">
+        <select id="registroMeseGrid"></select>
+        <select id="registroAnnoGrid"></select>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Data</th><th>Capitale</th><th>Netto</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="add-row">
+        <button class="primary" id="addBtn">+ Nuovo ciclo</button>
+      </div>
+      <div class="save-note" id="saveNote">&nbsp;</div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>Data</th><th>Capitale</th><th>Netto</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <div class="add-row">
-      <button class="primary" id="addBtn">+ Nuovo ciclo</button>
+  </div>
+
+  <div class="panel pieghevole" id="panelDettaglio" hidden>
+    <h2 data-apre="panelDettaglio">Cicli nel dettaglio<span class="quanti" id="quantiDettaglio"></span><i class="freccia"></i></h2>
+    <div class="corpo">
+      <div id="dettaglioCicli"></div>
     </div>
-    <div class="save-note" id="saveNote">&nbsp;</div>
   </div>
 
   </div>
@@ -728,7 +768,12 @@ if(d.cliente && d.cliente.nome){
       document.title = (d.cliente.brand||'Cashly') + ' · ' + d.cliente.nome;
     }
     window.DAL_BOT = true;
-    return d.cicli.map(c=>({ id:'db_'+c.n, capitale:c.capitale, data:c.data, avvio:c.avvio||null, gainLordo:c.lordo, spese:c.fee }));
+    window.PAGAMENTI = d.pagamenti || [];
+    // conto e contoN: l'etichetta del conto, quando la persona ne ha piu' di uno
+    // cicloId attacca a ogni ciclo la fee pagata e il link della transazione
+    return d.cicli.map(c=>({ id:'db_'+c.n, cicloId:c.id||null, capitale:c.capitale, data:c.data, avvio:c.avvio||null,
+                             gainLordo:c.lordo, spese:c.fee, feeUsdt:c.feeUsdt||0,
+                             conto:c.conto||null, contoN:c.contoN||null }));
   }catch(e){ return null; }
 }
 async function loadData(){
@@ -863,6 +908,71 @@ function computeCyclesGeneric(rawRows){
   });
 }
 
+// Le due schede dei cicli si aprono al clic: aperte tutte e due la pagina
+// diventa lunghissima, e quasi sempre servono solo di tanto in tanto.
+document.addEventListener('click', e=>{
+  const h = e.target.closest('h2[data-apre]');
+  if(!h) return;
+  document.getElementById(h.dataset.apre).classList.toggle('aperto');
+});
+
+// Ogni ciclo con dentro tutto: capitale, lordo, fee pagata e link alla
+// transazione. La fee si attacca al ciclo tramite cicloId; i pagamenti che
+// non appartengono a un ciclo (la VPS) restano fuori, hanno la loro riga.
+function renderDettaglio(righe){
+  const box = document.getElementById('dettaglioCicli');
+  const panel = document.getElementById('panelDettaglio');
+  if(!box || !panel) return;
+  const pagDi = {};
+  (window.PAGAMENTI||[]).forEach(p=>{ if(p.cicloId && p.tipo!=='vps') pagDi[p.cicloId] = p; });
+
+  const lista = righe.slice().reverse();
+  if(!lista.length){ panel.hidden = true; return; }
+  panel.hidden = false;
+  const q = document.getElementById('quantiDettaglio');
+  if(q) q.textContent = lista.length + (lista.length===1 ? ' ciclo' : ' cicli');
+
+  box.innerHTML = lista.map(r=>{
+    const netto = Number(r.gainCiclo)||0;
+    const lordo = Number(r.gainLordo)||0;
+    const fee = Number(r.spese)||0;
+    const p = r.cicloId ? pagDi[r.cicloId] : null;
+    const giorni = (r.avvio && r.data)
+      ? Math.round((new Date(r.data+'T12:00:00') - new Date(r.avvio))/86400000) : null;
+
+    const voci = [
+      ['capitale', fmtEur(r.capitale)],
+      ['lordo', fmtEur(lordo)],
+      ['fee pagata', fmtEur(fee) + (r.feeUsdt ? ' · ' + Number(r.feeUsdt).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' USDT' : '')],
+    ];
+    if(giorni !== null && giorni >= 0) voci.push(['durata', giorni < 1 ? 'in giornata' : giorni + (giorni===1?' giorno':' giorni')]);
+
+    // tre casi diversi, da non confondere: c'e' l'hash, il pagamento e' segnato
+    // ma senza hash (i primi cicli), oppure la fee non risulta ancora pagata
+    let tx = '';
+    if(p && p.hash){
+      tx = '<div class="tx"><a target="_blank" rel="noopener" href="https://bscscan.com/tx/' + p.hash + '">'
+         + p.hash.slice(0,12) + '…' + p.hash.slice(-8) + '</a></div>';
+    } else if(p){
+      tx = '<div class="tx"><span class="attesa">fee ' + (p.stato==='verificato' ? 'incassata' : (p.stato||'segnata'))
+         + ', senza link della transazione</span></div>';
+    } else if(fee > 0){
+      tx = '<div class="tx"><span class="attesa">fee non ancora pagata</span></div>';
+    }
+
+    return '<div class="dett">'
+      + '<div class="cima">'
+      +   '<span class="num">#' + r.idx + '</span>'
+      +   '<span class="quando">' + fmtDate(r.data) + '</span>'
+      +   (r.conto ? '<span class="c-conto k' + (r.contoN||1) + '">' + r.conto + '</span>' : '')
+      +   '<span class="netto ' + (netto>=0?'gainpos':'gainneg') + '">' + fmtEur(netto) + '</span>'
+      + '</div>'
+      + '<div class="voci">' + voci.map(v=>'<div>' + v[0] + ' <b>' + v[1] + '</b></div>').join('') + '</div>'
+      + tx
+      + '</div>';
+  }).join('');
+}
+
 function render(){
   const c = computed();
 
@@ -879,7 +989,7 @@ function render(){
   c.filter(r=>rowMatchesMonthYear(r, registroFilterGrid)).slice().reverse().forEach(r=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="c-n">${r.idx}</td>
+      <td class="c-n">${r.idx}${r.conto ? '<span class="c-conto k' + (r.contoN||1) + '">' + r.conto + '</span>' : ''}</td>
       <td class="c-d">${fmtDate(r.data)}</td>
       <td class="c-c">${fmtEur(r.capitale)}</td>
       <td class="c-g ${r.gainCiclo>=0?'gainpos':'gainneg'}">${fmtEur(r.gainCiclo)}</td>
@@ -893,6 +1003,10 @@ function render(){
   tbody.querySelectorAll('.del-btn').forEach(btn=>{
     btn.addEventListener('click', onDelete);
   });
+
+  renderDettaglio(c);
+  const qr = document.getElementById('quantiRegistro');
+  if(qr) qr.textContent = c.length + (c.length===1 ? ' ciclo' : ' cicli');
 
   // hero + stats
   const last = c[c.length-1];
