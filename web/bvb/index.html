@@ -358,6 +358,8 @@ async function conImmagine(app){
   .dett .tx .attesa{color:var(--muted)}
 .c-conto{display:inline-block;margin-top:3px;font-size:.68em;line-height:1;font-weight:500;
     padding:3px 6px;border-radius:4px;background:rgba(20,201,172,.15);color:#14c9ac}
+  .c-tipo{display:inline-block;margin-top:3px;font-size:.68em;line-height:1;font-weight:500;
+    padding:3px 6px;border-radius:4px;background:rgba(201,154,46,.18);color:#D9AE55}
   .c-conto.k2{background:rgba(127,169,255,.15);color:#7FA9FF}
   .c-conto.k3{background:rgba(250,199,117,.15);color:#FAC775}
   .c-conto.k4{background:rgba(240,153,123,.15);color:#F0997B}
@@ -771,7 +773,7 @@ if(d.cliente && d.cliente.nome){
     window.PAGAMENTI = d.pagamenti || [];
     // conto e contoN: l'etichetta del conto, quando la persona ne ha piu' di uno
     // cicloId attacca a ogni ciclo la fee pagata e il link della transazione
-    return d.cicli.map(c=>({ id:'db_'+c.n, cicloId:c.id||null, capitale:c.capitale, data:c.data, avvio:c.avvio||null,
+    return d.cicli.map(c=>({ id:'db_'+c.n, cicloId:c.id||null, tipo:c.tipo||null, capitale:c.capitale, data:c.data, avvio:c.avvio||null,
                              gainLordo:c.lordo, spese:c.fee, feeUsdt:c.feeUsdt||0,
                              conto:c.conto||null, contoN:c.contoN||null }));
   }catch(e){ return null; }
@@ -965,6 +967,7 @@ function renderDettaglio(righe){
       +   '<span class="num">#' + r.idx + '</span>'
       +   '<span class="quando">' + fmtDate(r.data) + '</span>'
       +   (r.conto ? '<span class="c-conto k' + (r.contoN||1) + '">' + r.conto + '</span>' : '')
+      +   (r.tipo === 'silver' ? '<span class="c-tipo">Silver</span>' : '')
       +   '<span class="netto ' + (netto>=0?'gainpos':'gainneg') + '">' + fmtEur(netto) + '</span>'
       + '</div>'
       + '<div class="voci">' + voci.map(v=>'<div>' + v[0] + ' <b>' + v[1] + '</b></div>').join('') + '</div>'
