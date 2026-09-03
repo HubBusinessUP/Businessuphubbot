@@ -507,14 +507,6 @@ async function conImmagine(app){
 
   
 
-  <div class="panel">
-    <h2>ROI mensile</h2>
-    <div class="chart-box short" id="chartBoxRoi"></div>
-    <div class="chart-legend">
-      <span onclick="toggleChartFilter('grid:roi','real')" data-legend-chart="grid:roi" data-legend-series="real"><i class="swatch line"></i>ROI cumulato reale</span>
-      <span onclick="toggleChartFilter('grid:roi','forecast')" data-legend-chart="grid:roi" data-legend-series="forecast"><i class="swatch line-forecast-sw"></i>ROI cumulato previsionale (12 mesi)</span>
-    </div>
-  </div>
 
   
 
@@ -1357,7 +1349,6 @@ function render(){
 
   renderChart(c);
   renderChartMonthly(c);
-  renderRoi(c);
   renderForecast(c);
 }
 
@@ -1422,6 +1413,9 @@ function computeRoiPlan(c){
 }
 
 function renderRoi(c){
+  // il pannello ROI non c'e' piu': se qualcosa la chiama lo stesso, esce
+  // subito invece di far saltare tutto il render, come faceva renderForecast
+  if(!document.getElementById('chartBoxRoi')) return;
   const plan = computeRoiPlan(c);
   const labels = plan.map(p=>p.label);
   const realCumValues = plan.map(p=>p.roiCumulatoReale);
