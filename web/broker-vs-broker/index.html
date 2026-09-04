@@ -101,11 +101,9 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
   <h2>Lo <span class="v">storico</span></h2>
   <p class="sub">Operazioni chiuse su un numero limitato di conti. <b>Dati storici, non indicativi di risultati futuri.</b></p>
   <p style="text-align:center;margin-top:12px"><span id="liveTag" style="display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:1.6px;color:#4ED888;text-transform:uppercase"><i style="width:8px;height:8px;border-radius:50%;background:#4ED888;display:inline-block;animation:pl 1.9s ease-out infinite"></i><span id="liveTxt">Aggiornato in tempo reale</span></span></p>
-  <div class="grid g4">
+  <div class="grid g2">
     <div class="cell"><div class="num" id="nCicli">—</div><div class="lbl">Cicli chiusi</div></div>
     <div class="cell"><div class="num" id="nLordo">—</div><div class="lbl">Risultato lordo · €</div></div>
-    <div class="cell"><div class="num" id="nClienti">—</div><div class="lbl">Conti seguiti</div></div>
-    <div class="cell"><div class="num" id="nDurata">—</div><div class="lbl">Giorni per ciclo</div></div>
   </div>
   <p class="mini" style="margin-top:20px">I risultati passati non sono indicativi di quelli futuri e non costituiscono garanzia di alcun rendimento. Ogni operazione comporta il rischio di perdita, anche totale, del capitale.</p>
 </div>
@@ -116,14 +114,14 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
   <h2>Come <span class="v">funziona</span></h2>
   <div style="margin-top:34px">
     <div class="step"><div class="n">1</div><div>
-      <h3>Apri due conti a tuo nome</h3>
-      <p>Due broker diversi, entrambi intestati a te. Li finanzi tu, le credenziali sono tue. Nessuno preleva, nessuno gestisce i tuoi soldi al posto tuo.</p></div></div>
+      <h3>Total FX e Roboforex</h3>
+      <p>Il <b>primo conto</b> si apre su <b>Total FX</b>, il <b>secondo</b> su <b>Roboforex</b>. Li finanzi tu, le credenziali sono tue. Nessuno preleva, nessuno gestisce i tuoi soldi al posto tuo.</p></div></div>
     <div class="step"><div class="n">2</div><div>
       <h3>Si apre il ciclo</h3>
       <p>Sui due conti vengono aperte posizioni opposte sullo stesso strumento. La copertura riduce l'esposizione alle oscillazioni di prezzo, ma non elimina gli altri rischi: spread, slittamenti, cambio delle condizioni del broker.</p></div></div>
     <div class="step"><div class="n">3</div><div>
       <h3>Da dove nasce il risultato</h3>
-      <p>Dai bonus offerti dai broker e dallo swap. Sono condizioni commerciali di terzi, che possono essere ridotte, sospese o revocate in qualsiasi momento senza preavviso.</p></div></div>
+      <p>Dai bonus offerti dai broker e dallo swap. Sono condizioni commerciali di terzi, che possono essere ridotte, sospese o revocate in qualsiasi momento.</p></div></div>
     <div class="step"><div class="n">4</div><div>
       <h3>Paghi a ciclo chiuso</h3>
       <p>La commissione si calcola sul risultato positivo eventualmente realizzato e si versa in USDT. In assenza di risultato positivo non è dovuta alcuna commissione.</p></div></div>
@@ -154,34 +152,6 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
     </div>
   </div>
   <p class="mini" style="margin-top:22px">In tutti e due i casi la commissione si paga solo a ciclo chiuso in profitto.</p>
-</div>
-</section>
-
-<section style="background:var(--soft)">
-<div class="w">
-  <h2>Cosa può <span class="v">andare storto</span></h2>
-  <p class="sub">La copertura toglie una parte del rischio di prezzo. Non toglie il resto.</p>
-  <div class="grid g2" style="border:0;gap:18px;margin-top:38px">
-    <div class="box">
-      <h3>I rischi</h3>
-      <ul>
-        <li><b>Errore umano</b> — la procedura la fanno persone, su due conti</li>
-        <li><b>Errore del software</b> — il sistema che allinea i conti può fermarsi</li>
-        <li><b>Il mercato</b> — movimenti violenti e gap lasciano scoperto un margine</li>
-        <li><b>Il broker</b> — spread, slippage, condizioni e bonus che cambiano</li>
-        <li><b>Imprevisti</b> — conti bloccati, verifiche lunghe, prelievi sospesi</li>
-      </ul>
-    </div>
-    <div class="box">
-      <h3>Come si decide l'importo</h3>
-      <ul>
-        <li>Quanto puoi <b>perdere</b> senza che cambi niente</li>
-        <li>Quanto rischio <b>reggi</b> davvero</li>
-        <li>Che fetta del tuo <b>budget</b> stai impegnando</li>
-      </ul>
-      <p style="margin-top:16px;font-size:14.5px"><b>Se una delle tre non torna, la cifra è sbagliata.</b> Anche col minimo di 2.000 €.</p>
-    </div>
-  </div>
 </div>
 </section>
 
@@ -230,7 +200,7 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
       <h3>Quello che devi sapere</h3>
       <ul>
         <li class="no">Serve capitale iniziale di almeno 2.000 €</li>
-        <li class="no">Dipende da bonus di terzi, revocabili senza preavviso</li>
+        <li class="no">Dipende da bonus di terzi, revocabili</li>
         <li class="no">Si opera con broker non soggetti alla vigilanza europea: nessun fondo di garanzia</li>
         <li class="no">Costo fisso mensile dovuto anche in assenza di operatività</li>
       </ul>
@@ -266,6 +236,7 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
 <div class="w">
   <div style="font-family:'Archivo Black',sans-serif;font-size:16px;letter-spacing:1px">CASHLY <span style="color:var(--verde)">·</span> BROKER VS BROKER</div>
   <div style="font-size:11px;letter-spacing:3px;color:var(--verde);font-weight:700;margin-top:6px">BY BUSINESS UP</div>
+  <p class="dis"><b style="color:#fff">I rischi.</b> Errore umano nell'esecuzione; errore o fermo del software che allinea i conti; movimenti di mercato e gap che lasciano scoperto un margine; spread, slippage e cambio delle condizioni da parte dei broker; imprevisti come conti bloccati, verifiche lunghe o prelievi sospesi. L'importo va deciso su quanto puoi perdere, quanto rischio reggi e che parte del tuo budget stai impegnando.</p>
   <p class="dis"><b style="color:#fff">Avvertenza sui rischi.</b> Le operazioni su strumenti finanziari a leva comportano un elevato rischio di perdita, anche totale, del capitale. Il servizio si avvale di intermediari non autorizzati dalla Consob e non soggetti alla vigilanza delle autorità europee: le somme depositate non sono coperte da alcun sistema di indennizzo o fondo di garanzia.<br><br>
   Cashly opera come segnalatore in affiliazione. Non riceve, non detiene e non amministra somme di denaro di terzi, non presta servizi di investimento, consulenza finanziaria, gestione di portafogli o raccolta del risparmio, e non è iscritta ad albi o registri di intermediari finanziari.<br><br>
   Nessun contenuto di questa pagina costituisce sollecitazione al pubblico risparmio, raccomandazione personalizzata o promessa di rendimento. I dati storici riportati riguardano un numero limitato di conti in un periodo circoscritto e non sono indicativi di risultati futuri. Ogni decisione è assunta dall'utente in piena autonomia e sotto la propria esclusiva responsabilità.</p>
@@ -295,14 +266,12 @@ footer .dis{color:#8A8F96;font-size:12px;line-height:1.8;max-width:660px;margin:
   fetch(API,{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
    anima('nCicli', d.cicli||0);
    anima('nLordo', d.lordo||0, 'K');
-   anima('nClienti', d.clienti||0);
-   set('nDurata', d.giorni ? (d.giorni===1?'1':'1–'+d.giorni) : '1–2');
    if(d.ultimo){
     var p=d.ultimo.split('-');
     set('liveTxt','Ultimo ciclo chiuso il '+parseInt(p[2],10)+' '+MM[parseInt(p[1],10)-1]);
    }
   }).catch(function(){
-   set('nCicli','37'); set('nLordo','13K'); set('nClienti','4'); set('nDurata','1–2');
+   set('nCicli','37'); set('nLordo','13K');
   });
  }
  carica();
