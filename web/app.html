@@ -1349,8 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<style>.demoInvite{display:none!important}</style>
-<script src="identikit.js?v=173"></script>
+<script src="identikit.js?v=174"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2000,7 +1999,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (s.longevita) righe += srow('Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
       var r = RISCHIO[s.rischio_livello];
       if (r) righe += srow('Rischio', r[0], '', r[1]);
-      if (s.requisiti) righe += srow('Cosa serve', s.requisiti, '', '');
+      // "Cosa serve" sta gia' in Panoramica: ripeterlo qui lo faceva leggere
+      // due volte nella stessa scheda, a due linguette di distanza.
       if (righe) out += '<div style="padding:8px 20px 0"><table class="pctab"><tbody>' + righe + '</tbody></table></div>';
     }
     // Vuoto = niente linguetta. Prima si mostrava "da compilare", ma su un broker o
@@ -2038,50 +2038,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +     '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>'
       + '</div>';
   }
+  // Il fondo della scheda porta SOLO l'azione. Panoramica, caratteristiche e
+  // "cosa serve" stanno gia' nelle linguette qui sopra: ristamparli faceva
+  // leggere tutto due volte di fila, e con la scheda di sola lettura la
+  // ripetizione era l'unica cosa che si notava.
   function _schedaBody(d){
     var s = d.servizio || {};
     var out = '';
-
-    var panor = s.panoramica || s.descrizione || '';
-    if (panor) out += '<div class="pc"><div class="seyeb">Panoramica</div>'
-      + '<div class="spanor">' + esc(panor) + '</div></div>';
-
-    // I 4 dati decisi con Antonio. Le righe senza valore non si disegnano.
-    var righe = '';
-    // Budget: quanto ti serve per partire.
-    var budget = s.budget_minimo ? ('da ' + s.budget_minimo + ' EUR') : '';
-    if (budget) righe += srow('Budget minimo', budget, 'per iniziare', '');
-
-    // COSTI: quanto costa il servizio in se'. Distinti da "budget", che e' il capitale
-    // che ti serve per operare: confonderli e' il modo piu' facile per far arrabbiare
-    // qualcuno che scopre una spesa mensile che non si aspettava.
-    var attiv = (s.costo_attivazione !== null && s.costo_attivazione !== undefined && Number(s.costo_attivazione) > 0) ? Number(s.costo_attivazione) : 0;
-    var mens  = (s.costi_fissi_mensili !== null && s.costi_fissi_mensili !== undefined && Number(s.costi_fissi_mensili) > 0) ? Number(s.costi_fissi_mensili) : 0;
-    if (attiv || mens) {
-      var valCosti = mens ? (euro(mens) + '/mese') : euro(attiv);
-      var sottoCosti = (attiv && mens) ? ('piu ' + euro(attiv) + ' una tantum')
-                     : (attiv ? 'una tantum' : 'ricorrente');
-      righe += srow('Costi', valCosti, sottoCosti, '');
-    } else if (s.costi) {
-      righe += srow('Costi', s.costi, '', '');
-    }
-
-    // Quanto ci vuole davvero ad attivarlo.
-    if (s.tempo_stimato) righe += srow('Tempo per attivarlo', s.tempo_stimato, '', '');
-
-    if (s.longevita) righe += srow('Longevita', s.longevita, s.longevita.toLowerCase() === 'ciclica' ? 'si ripete a ogni ciclo' : '', '');
-    var r = RISCHIO[s.rischio_livello];
-    if (r) righe += srow('Rischio', r[0], '', r[1]);
-    if (righe) out += '<div class="pc"><div class="seyeb">Caratteristiche</div>'
-      + '<table class="pctab"><tbody>' + righe + '</tbody></table></div>';
-
-    // COSA SERVE PER INIZIARE: e' prosa, non un valore, quindi non e' una riga-dato.
-    // Sta prima del disclaimer di proposito: sono le condizioni pratiche, il disclaimer
-    // e' quello legale. Chi scopre solo dopo di non avere i requisiti si sente preso in giro.
-    if (s.requisiti) {
-      out += '<div class="pc"><div class="seyeb">Cosa serve per iniziare</div>'
-        + '<div class="sreq">' + esc(s.requisiti) + '</div></div>';
-    }
 
     // ---- DIRECTORY: la scheda informa, il passo si fa dal fornitore ----
     // Cashly elenca, spiega e confronta; l'attivazione avviene sul sito di chi

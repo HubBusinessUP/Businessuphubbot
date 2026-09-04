@@ -340,12 +340,9 @@ async function verificaSbloccoPartner(sponsorId: number) {
   const { count } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("referred_by", sponsorId).eq("bot_started", true).not("attivo", "is", false)
   if ((count ?? 0) < PARTNER_SOGLIA) return
   await supabase.from("leads").update({ is_partner: true }).eq("telegram_id", sponsorId)
-  await notifyUser(
-    sponsorId,
-    `🚀 <b>Complimenti, ora sei Partner!</b>\n\nHai portato ${count} iscritti. Da adesso puoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`,
-    "🔗 Inserisci i miei link",
-    "/app.html?s=wallet",
-  )
+  // Nessun avviso: da quando l'app e' una directory, essere Partner
+  // non apre nessuna schermata da mostrare a chi viene promosso.
+
 }
 
 // Un diretto ha bloccato/lasciato il bot: marcalo inattivo, avvisa il padrino (con tasto Scrivigli) e rivaluta il suo stato Partner.
@@ -355,11 +352,8 @@ async function onIscrittoUscito(uid: number) {
   await supabase.from("eventi").insert({ telegram_id: uid, tipo: "bot_bloccato", dettaglio: null }).catch(() => {})
   const sponsor = lead?.referred_by
   if (sponsor && sponsor !== ADMIN_ID) {
-    const nome = String(lead?.nome || lead?.username || "Un iscritto").replace(/[<>&]/g, "").trim() || "Un iscritto"
-    const uname = String(lead?.username || "").replace(/^@/, "")
-    // Il bot NON può scrivere a chi lo ha bloccato: notifichiamo il PADRINO, che scrive dal suo account.
-    const markup = uname ? { inline_keyboard: [[{ text: "✍️ Scrivigli", url: `https://t.me/${uname}` }]] } : undefined
-    await sendMessage(sponsor, `👋 <b>${nome}</b> ha lasciato la tua rete (ha chiuso il bot).\n\nNon conta più per lo stato Partner. Se vuoi, scrivigli tu.`, markup, "HTML").catch((e) => console.error("notifica uscita:", e))
+    // Nessun avviso di uscita: parlava di rete e di stato Partner,
+    // due cose che l'utente non vede piu'.
     await verificaRetentionPartner(sponsor).catch((e) => console.error("retention partner:", e))
   }
 }
@@ -375,7 +369,8 @@ async function verificaRetentionPartner(sponsorId: number) {
   const { count: refOk } = await supabase.from("affiliate_link").select("id", { count: "exact", head: true }).eq("telegram_id", sponsorId).eq("approvato", true)
   if ((suggOk ?? 0) > 0 || (refOk ?? 0) > 0) return // ha contribuito o ha ref link attivi -> mantiene Partner
   await supabase.from("leads").update({ is_partner: false }).eq("telegram_id", sponsorId)
-  await notifyUser(sponsorId, `⚠️ Sei sceso sotto i ${PARTNER_SOGLIA} iscritti attivi e non hai ancora un suggerimento approvato né un link referral attivo: lo stato Partner è in pausa.\n\nInvita ancora qualcuno per riattivarlo.`, "👀 La mia rete", "/app.html?s=wallet").catch(() => {})
+  // Nessun avviso: lo stato Partner non e' piu' visibile all'utente.
+
 }
 
 // Imposta il menu button (in basso nella chat) sull'app nuova (app.html), così l'ingresso non usa il vecchio dashboard.html cachato da Telegram.
@@ -451,14 +446,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
 
   const sponsorFinale = existing?.referred_by ?? refBy
   if (!existing && sponsorFinale) {
-    // Avvisa lo sponsor del nuovo iscritto nella sua rete (deep-link alla sezione Affiliazione).
-    const nuovoNome = String(from.first_name || "Qualcuno").replace(/[<>&]/g, "").trim() || "Qualcuno"
-    notifyUser(
-      sponsorFinale,
-      `🎉 <b>Nuovo iscritto nella tua rete!</b>\n\n<b>${nuovoNome}</b> è appena entrato in Cashly col tuo invito. Ora è collegato a te per sempre.`,
-      "👀 Vedi la tua rete",
-      "/app.html?s=wallet",
-    ).catch((e) => console.error("notifica nuovo iscritto:", e))
+    // Nessun avviso allo sponsor: la rete non ha piu' una schermata
+    // dove guardarla. Il legame resta tracciato sul lead, per l'admin.
     if (sponsorFinale !== ADMIN_ID) verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
   }
 
@@ -2205,9 +2194,7 @@ async function apiAdminAffiliateLinkApprove(body: any) {
     await supabase.from("servizi").update({ link_principale: link.ref_link }).eq("id", link.servizio_id)
   }
 
-  if (link.telegram_id) {
-    await notifyUser(link.telegram_id, `🔗 <b>Il tuo link affiliato è stato approvato!</b>\n\nSu <b>${htmlEsc(sv?.nome || "un business")}</b> ora la tua rete vedrà il tuo referral.`, "📊 I miei link", "/app.html?s=wallet")
-  }
+  // Nessun avviso: l'app non ha piu' una sezione link affiliati.
 
   return json({ ok: true })
 }
@@ -2218,10 +2205,7 @@ async function apiAdminAffiliateLinkDelete(body: any) {
   const { data: link } = await supabase.from("affiliate_link").select("servizio_id, approvato, telegram_id").eq("id", id).maybeSingle()
   const { error } = await supabase.from("affiliate_link").delete().eq("id", id)
   if (error) return json({ error: error.message }, 500)
-  if (link && !link.approvato && link.telegram_id) {
-    const { data: sv } = await supabase.from("servizi").select("nome").eq("id", link.servizio_id).maybeSingle()
-    await notifyUser(link.telegram_id, `❌ <b>Il tuo link affiliato non è stato approvato.</b>\n\nSu <b>${htmlEsc(sv?.nome || "il business")}</b>. Puoi proporne uno nuovo dalla sezione Affiliazione.`, "🔗 Riprova", "/app.html?s=wallet")
-  }
+  // Nessun avviso: l'app non ha piu' una sezione link affiliati.
   return json({ ok: true })
 }
 
@@ -2252,7 +2236,8 @@ async function apiSegnala(telegramId: number, body: any) {
       if (refInfo.fonte === "sponsor" && refInfo.sponsor_id && refInfo.sponsor_id !== ADMIN_ID) {
         await supabase.from("affiliate_link").update({ approvato: false }).eq("telegram_id", refInfo.sponsor_id).eq("servizio_id", servizioId)
         linkSospeso = true
-        sendMessage(refInfo.sponsor_id, `⚠️ Link Sospeso\n\nIl tuo link referral su "${nomeServizio}" è stato segnalato (${TIPI_SEGNALAZIONE[tipo]}) ed è stato sospeso in attesa di verifica.\n\nControlla che funzioni e, se serve, aggiornalo da La mia pagina → I miei link. L'admin lo riesaminerà a breve.`).catch(() => {})
+        // Nessun avviso allo sponsor: non ha piu' una schermata dei suoi link.
+
       }
     }
   }
@@ -2320,11 +2305,7 @@ async function apiAdminPartnerDecidi(body: any) {
   const { error } = await supabase.from("leads").update({ is_partner: approva, partner_richiesto: false }).eq("telegram_id", telegramId)
   if (error) return json({ error: error.message }, 500)
 
-  if (approva) {
-    await notifyUser(telegramId, `🚀 <b>La tua richiesta è stata approvata: ora sei Partner!</b>\n\nPuoi inserire i tuoi link referral sui business: la tua rete vedrà i TUOI link.`, "🔗 Inserisci i miei link", "/app.html?s=wallet")
-  } else {
-    await notifyUser(telegramId, `La tua richiesta Partner non è stata approvata per ora.\n\nPorta ${PARTNER_SOGLIA} iscritti con il tuo link invito e lo status si sblocca in automatico.`, "🔗 Il tuo link invito", "/app.html?s=wallet")
-  }
+  // Nessun avviso all'utente: essere Partner non apre piu' schermate.
   return json({ ok: true })
 }
 
