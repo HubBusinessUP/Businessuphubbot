@@ -137,7 +137,8 @@ async function carica(){
  if(nRich){ const b=document.getElementById('back'); if(b) b.style.display='block'; }
  big.textContent=E(netto);
  roi_el().textContent=PC(roi);
- who.textContent=d.cliente?.nome||'';
+ // solo il nome: il certificato gira fuori, il cognome no
+ who.textContent=String(d.cliente?.nome||'').trim().split(/\s+/)[0]||'';
  document.getElementById('brand').textContent=(d.cliente?.brand||'Cashly')+' · Broker vs Broker';
  document.title=(d.cliente?.brand||'Cashly')+' · Ciclo';
  dt.textContent=new Date(u.data).toLocaleDateString('it-IT');
