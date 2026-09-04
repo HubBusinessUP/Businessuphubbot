@@ -3270,16 +3270,50 @@ async function apiAdminBroadcast(body: any) {
 
 // ---------- FOLLOW-UP AUTOMATICI ----------
 // Messaggi Day 1/3/7 per chi non ha ancora attivato nessun business; ogni invio è loggato e mai ripetuto.
-function testoFollowup(giorno: number, nome: string): string {
-  if (giorno === 1) return `Ciao ${nome}! Ho visto che ti sei iscritto a Cashly. Hai già dato un'occhiata alla Business List? Dentro trovi i business testati, ordinati dai voti della community.`
-  if (giorno === 3) return `Ehi ${nome}, c'è qualcosa che non ti è chiaro nei tutorial? Ogni business ha una checklist passo-passo: apri la scheda e segui gli step. Se ti blocchi, scrivimi pure.`
-  return `${nome}, ultima chiamata da parte mia: nella Business List ci sono opportunità che la community sta già usando. Bastano 5 minuti per attivare la prima. Poi non ti disturbo più, promesso.`
+// I tre messaggi non nominano nessun business in particolare: valgono per
+// qualunque cosa entri in lista, oggi e domani. L'unica parte che cambia e'
+// il nome della scheda che la persona ha aperto davvero, se ne ha aperta una.
+// Tono da elenco, non da venditore: la lista informa, non insegue.
+function testoFollowup(giorno: number, nome: string, business?: string | null): string {
+  if (giorno === 1) {
+    return `Ciao ${nome}. Dentro Cashly trovi la lista dei business e dei tool che ho selezionato: cosa sono, cosa serve per partire e quanto costano davvero.\n\nGuarda con calma, non c'e' niente da fare in fretta.`
+  }
+  if (giorno === 3) {
+    if (business) {
+      return `${nome}, avevi aperto la scheda di ${business}.\n\nSe ti e' rimasto un dubbio scrivimi pure: le schede le tengo aggiornate io, e quello che non c'e' scritto te lo dico.`
+    }
+    return `${nome}, se non sai da dove cominciare dimmi che genere di cosa stai cercando e ti indico la scheda giusta.\n\nMeglio due minuti di domande che aprire il business sbagliato.`
+  }
+  if (business) {
+    return `${nome}, ultimo messaggio da parte mia.\n\nSe ${business} ti interessava ancora, il link sta nella sua scheda. La lista resta li' e si aggiorna: la riapri dal menu del bot quando ti serve.`
+  }
+  return `${nome}, ultimo messaggio da parte mia.\n\nLa lista resta li' e si aggiorna quando aggiungo qualcosa: la riapri dal menu del bot quando ti serve. Non ti scrivo piu'.`
 }
 
 async function cronFollowup() {
-  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, created_at, primo_start_at, bot_started").eq("bot_started", true)
-  const { data: attivazioni } = await supabase.from("lead_servizi").select("telegram_id")
-  const haAttivato = new Set((attivazioni ?? []).map((a: any) => a.telegram_id))
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, created_at, primo_start_at").eq("bot_started", true).not("attivo", "is", false)
+
+  // Chi ha gia' aperto il link di un fornitore ha fatto il passo che conta:
+  // da qui in poi la cosa sta fra lui e chi offre il servizio, non ci si mette
+  // in mezzo. Prima il segnale era l'attivazione in app, che non esiste piu'.
+  const { data: usciti } = await supabase.from("eventi").select("telegram_id").eq("tipo", "link_aperto")
+  const giaUscito = new Set((usciti ?? []).map((e: any) => e.telegram_id))
+
+  // L'ultima scheda aperta da ciascuno: e' quella che il messaggio nominera'.
+  const { data: aperture } = await supabase.from("eventi")
+    .select("telegram_id, riferimento_id, created_at").eq("tipo", "scheda_aperta")
+    .order("created_at", { ascending: false })
+  const ultimaScheda: Record<number, number> = {}
+  for (const a of (aperture ?? []) as any[]) {
+    if (a.telegram_id && a.riferimento_id && !ultimaScheda[a.telegram_id]) ultimaScheda[a.telegram_id] = a.riferimento_id
+  }
+
+  // Solo i business ancora in lista: nominarne uno tolto o sospeso manderebbe
+  // la persona su una scheda che non c'e' piu'.
+  const { data: servizi } = await supabase.from("servizi").select("id, nome").eq("stato", "attivo")
+  const nomeDi: Record<number, string> = {}
+  for (const sv of (servizi ?? []) as any[]) nomeDi[sv.id] = sv.nome
+
   const { data: logs } = await supabase.from("followup_log").select("telegram_id, giorno")
   const giaInviati = new Set((logs ?? []).map((l: any) => `${l.telegram_id}:${l.giorno}`))
 
@@ -3291,12 +3325,15 @@ async function cronFollowup() {
     const applicabili = [1, 3, 7].filter((s) => giorni >= s && !giaInviati.has(`${l.telegram_id}:${s}`))
     if (!applicabili.length) continue
 
-    // Chi ha già attivato un business non riceve nudge: si loggano le soglie come chiuse.
-    if (!haAttivato.has(l.telegram_id)) {
+    if (!giaUscito.has(l.telegram_id)) {
       const soglia = Math.max(...applicabili)
       const nome = l.nome || l.username || "ciao"
-      await sendMessage(l.telegram_id, testoFollowup(soglia, nome), {
-        inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]],
+      const schedaId = ultimaScheda[l.telegram_id]
+      const business = schedaId ? (nomeDi[schedaId] || null) : null
+      // Se sappiamo cosa ha guardato, il bottone lo riporta esattamente li'.
+      const url = WEBAPP_URL + "/app.html?" + (business && schedaId ? "scheda=" + schedaId + "&" : "") + "_=" + Date.now()
+      await sendMessage(l.telegram_id, testoFollowup(soglia, nome, business), {
+        inline_keyboard: [[{ text: business ? "Riapri la scheda" : "Apri la lista", web_app: { url } }]],
       })
       inviati++
       await new Promise((r) => setTimeout(r, 50))
