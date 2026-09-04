@@ -26,40 +26,68 @@ async function conImmagine(app){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Archivo+Narrow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080B0D;--line:#1C222C;--txt:#ECEFF3;--mut:#78818F;--gold:#C99A2E;--gold2:#E8B94A;--grn:#E8B94A}
+:root{
+  --bg:#06050C; --card1:#221A4A; --card2:#0E0A1E; --card3:#08060F;
+  --line:#1E1938; --txt:#FFFFFF; --mut:#8E8CA8; --mut2:#5F5D78;
+  --verde:#22E07C; --verde2:#19C46B;
+  --gold:#22E07C; --gold2:#22E07C; --grn:#22E07C;
+  --f:Manrope,system-ui,-apple-system,sans-serif;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:16px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+body{background:var(--bg);color:var(--txt);font-family:var(--f);padding:16px;
+     min-height:100vh;display:flex;flex-direction:column;align-items:center;
+     justify-content:center;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 .wrap{width:100%;max-width:420px}
-.card{position:relative;background:#0F1417;border:1px solid var(--gold);border-radius:16px;padding:34px 24px 28px;overflow:hidden;text-align:center}
+
+/* la card: il bagliore sta nel fondo, non in uno pseudo-elemento,
+   cosi' html2canvas lo porta dentro l'immagine da condividere */
+.card{position:relative;border-radius:26px;padding:32px 24px 30px;overflow:hidden;
+      text-align:center;border:1px solid rgba(255,255,255,.07);
+      background:radial-gradient(120% 78% at 50% 0%,var(--card1) 0%,var(--card2) 62%,var(--card3) 100%)}
 .card:before{content:"";position:absolute;inset:0;pointer-events:none}
-.brand{font-family:'Archivo Narrow',sans-serif;font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
-.rule{height:1px;margin:16px 0 30px;background:#0F1417;font-size:10px;letter-spacing:2.8px;color:var(--mut);text-transform:uppercase}
-.amt{font-family:'Space Grotesk',sans-serif;font-size:60px;font-weight:700;color:var(--gold2);letter-spacing:-2.5px;line-height:1;margin:14px 0 14px}
-.roi{display:inline-block;font-family:'Archivo Narrow',sans-serif;font-size:14px;color:var(--grn);border:1px solid rgba(232,185,74,.3);background:rgba(232,185,74,.1);padding:6px 14px;border-radius:22px}
-.who{margin-top:28px;font-family:'Archivo Narrow',sans-serif;font-size:11px;color:var(--mut);letter-spacing:1px}
-.who b{color:var(--txt);font-weight:500}
-.btns{display:flex;margin-top:16px}
-button{flex:1;background:var(--gold);color:#080B0F;border:0;border-radius:11px;padding:14px;font-family:Inter,sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+
+.live{display:inline-flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:2px;
+      color:var(--mut2);text-transform:uppercase;font-weight:700;margin-bottom:16px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--verde);display:inline-block;
+        animation:pulse 1.9s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,224,124,.55)}
+  70%{box-shadow:0 0 0 9px rgba(34,224,124,0)}100%{box-shadow:0 0 0 0 rgba(34,224,124,0)}}
+
+.brand{font-size:19px;font-weight:800;letter-spacing:-.6px;color:var(--txt);text-transform:none}
+.rule{height:1px;margin:18px 0 34px;background:rgba(255,255,255,.08)}
+.k{font-size:10.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--mut2);font-weight:700}
+.amt{font-size:clamp(50px,14vw,68px);font-weight:800;color:var(--verde);letter-spacing:-2.6px;
+     line-height:1;margin:16px 0 18px;
+     text-shadow:0 0 44px rgba(34,224,124,.42),0 0 88px rgba(34,224,124,.15)}
+.roi{display:inline-block;font-size:13.5px;font-weight:700;color:var(--verde);
+     border:1px solid rgba(34,224,124,.28);background:rgba(34,224,124,.1);
+     padding:7px 15px;border-radius:22px;letter-spacing:.2px}
+.who{margin-top:30px;font-size:11.5px;color:var(--mut2);letter-spacing:.8px;font-weight:600}
+.who b{color:var(--txt);font-weight:800;letter-spacing:-.1px}
+
+.btns{display:flex;gap:10px;margin-top:16px}
+button{flex:1;background:var(--verde);color:#04240F;border:0;border-radius:14px;padding:15px;
+       font-family:var(--f);font-size:14.5px;font-weight:800;cursor:pointer;letter-spacing:-.1px}
+button:hover{background:var(--verde2)}
 button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
-#sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99;align-items:flex-end;justify-content:center}
-#sheet .in{width:100%;max-width:480px;background:var(--pap,#0F1417);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
-#sheet .t{font-family:'Archivo Narrow',sans-serif;font-size:10px;letter-spacing:2.4px;color:var(--mut);text-transform:uppercase;text-align:center;margin-bottom:16px}
+button:focus-visible{outline:3px solid rgba(34,224,124,.5);outline-offset:2px}
+
+#sheet{display:none;position:fixed;inset:0;background:rgba(4,3,10,.8);z-index:99;
+       align-items:flex-end;justify-content:center}
+#sheet .in{width:100%;max-width:480px;background:#100C22;border:1px solid var(--line);
+       border-radius:22px 22px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+#sheet .t{font-size:10px;letter-spacing:2.4px;color:var(--mut2);text-transform:uppercase;
+       text-align:center;margin-bottom:16px;font-weight:700}
 #sheet .g{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-#sheet .g button{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:13px;padding:14px 6px;color:var(--txt);font-family:Inter,sans-serif;font-size:11.5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px}
+#sheet .g button{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:15px;
+       padding:14px 6px;color:var(--txt);font-size:11.5px;font-weight:700;cursor:pointer;
+       display:flex;flex-direction:column;align-items:center;gap:7px}
+#sheet .g button:hover{background:rgba(255,255,255,.08)}
 #sheet .g button span{font-size:22px;line-height:1}
-#sheet .x{width:100%;margin-top:14px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px;color:var(--mut);font-size:13px;cursor:pointer}
-
-  .live{display:inline-flex;align-items:center;gap:7px;font-family:'Archivo Narrow',sans-serif;font-size:9.5px;
-    letter-spacing:2px;color:#78818F;text-transform:uppercase;margin-bottom:14px}
-  .live i{width:8px;height:8px;border-radius:50%;background:#E8B94A;display:inline-block;
-    animation:pulse 1.9s ease-out infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,185,74,.55)}70%{box-shadow:0 0 0 9px rgba(232,185,74,0)}100%{box-shadow:0 0 0 0 rgba(232,185,74,0)}}
-
-  /* senza il monospaziato le cifre hanno larghezze diverse e le colonne
-     ballano: queste le rimettono tutte della stessa larghezza */
-  body{font-variant-numeric:tabular-nums}
+#sheet .x{width:100%;margin-top:14px;background:transparent;border:1px solid var(--line);
+       border-radius:14px;padding:13px;color:var(--mut);font-size:13px;font-weight:700;cursor:pointer}
 </style></head><body>
 <div class="wrap">
 <div class="card">
