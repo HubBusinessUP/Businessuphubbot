@@ -2,288 +2,453 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cashly · Admin</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Archivo+Narrow:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#06050C;--panel:#100C22;--line:#1E1938;--txt:#FFFFFF;--mut:#8E8CA8;--tl:#22E07C;--tl2:#35EE8C}
+:root{
+  --bg:#06050C; --panel:#100C22; --panel2:#16112E; --line:#1E1938; --line2:#2A2350;
+  --txt:#FFFFFF; --mut:#8E8CA8; --mut2:#5F5D78;
+  --v:#22E07C; --v2:#35EE8C; --amb:#E0A44B; --red:#F2645A; --blu:#7FA9FF;
+  --f:Manrope,system-ui,-apple-system,sans-serif;
+  --barra:64px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:14px;min-height:100vh}
-.wrap{max-width:720px;margin:0 auto}
-.hero{text-align:center;padding:24px 14px 20px;margin-bottom:16px;border-radius:16px;background:var(--panel);border:1px solid var(--tl)}
-.hero .lbl{font-family:'Archivo Narrow',sans-serif;font-size:10px;letter-spacing:2.6px;color:var(--mut);text-transform:uppercase}
-.hero .num{font-family:'Space Grotesk',sans-serif;font-size:clamp(38px,11vw,56px);font-weight:700;color:var(--tl2);letter-spacing:-2px;line-height:1;margin:12px 0 10px}
-.hero .meta{font-family:'Archivo Narrow',sans-serif;font-size:11px;color:var(--mut);margin-top:10px}
-.badge{display:inline-block;font-family:'Archivo Narrow',sans-serif;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(53,238,140,.12);color:var(--tl2);border:1px solid rgba(53,238,140,.3)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px}
-.card .k{font-family:'Archivo Narrow',sans-serif;font-size:8.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
-.card .v{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-top:5px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px}
-.panel h2{font-size:12.5px;font-weight:600;margin-bottom:12px}
-svg{display:block;width:100%;height:auto}
-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px}
-th{font-family:'Archivo Narrow',sans-serif;font-size:9px;letter-spacing:1.1px;color:var(--mut);text-transform:uppercase;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-weight:500}
-td{padding:10px 6px;border-bottom:1px solid rgba(30,25,56,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-th:nth-child(n+2),td:nth-child(n+2){text-align:right}
-tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
-.q{color:var(--tl2);font-weight:600;font-family:'Archivo Narrow',sans-serif}
-.mut{color:var(--mut)}
-.box{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;background:rgba(255,255,255,.012)}
-.box .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-.box .nm{font-weight:600;font-size:14px}
-.box .st{font-family:'Archivo Narrow',sans-serif;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:12px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase}
-.box .st.on{color:var(--tl2);border-color:rgba(53,238,140,.35);background:rgba(53,238,140,.1)}
-.box .row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--mut)}
-.box .row b{color:var(--txt);font-family:'Archivo Narrow',sans-serif}
-.empty{text-align:center;color:var(--mut);font-size:13px;padding:26px 10px}
+body{background:var(--bg);color:var(--txt);font-family:var(--f);
+     -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+     padding:12px 12px calc(var(--barra) + 22px + env(safe-area-inset-bottom))}
+.wrap{max-width:760px;margin:0 auto}
 
-  .live{display:inline-flex;align-items:center;gap:7px;font-family:'Archivo Narrow',sans-serif;font-size:9.5px;
-    letter-spacing:2px;color:#8E8CA8;text-transform:uppercase;margin-bottom:14px}
-  .live i{width:8px;height:8px;border-radius:50%;background:#35EE8C;display:inline-block;
-    animation:pulse 1.9s ease-out infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(53,238,140,.55)}70%{box-shadow:0 0 0 9px rgba(53,238,140,0)}100%{box-shadow:0 0 0 0 rgba(53,238,140,0)}}
-table.inc{table-layout:auto}
-table.inc td:first-child,table.inc th:first-child{white-space:normal;width:auto}
-table.inc td:nth-child(2),table.inc th:nth-child(2){width:44px}
-.periodi{display:flex;gap:2px;margin:0 0 10px;border-bottom:1px solid #1E1938}
-.periodi button{flex:1;background:none;border:0;cursor:pointer;padding:8px 2px 9px;
-  font-family:'Archivo Narrow',sans-serif;font-size:10.5px;letter-spacing:1.4px;
-  text-transform:uppercase;color:#8E8CA8;border-bottom:2px solid transparent;margin-bottom:-1px}
-.periodi button.on{color:#35EE8C;border-bottom-color:#35EE8C}
-#reteIncassi{width:100%;background:#16112E;border:1px solid #1E1938;color:#FFFFFF;
-  font-family:'Archivo Narrow',sans-serif;font-size:12px;padding:8px 10px;border-radius:7px;margin-bottom:10px}
-.somma{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
-  border-bottom:1px solid #1E1938;margin-bottom:8px;padding-bottom:12px}
-.somma .et{font-family:'Archivo Narrow',sans-serif;font-size:10.5px;letter-spacing:1.6px;
-  text-transform:uppercase;color:#8E8CA8}
-.somma .q2{font-family:'Archivo Narrow',sans-serif;font-size:11px;color:#8E8CA8}
-.somma .v{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:17px;
-  font-weight:600;color:#35EE8C}
-.somma .det{width:100%;font-family:'Archivo Narrow',sans-serif;font-size:11px;color:#8E8CA8}
+/* ── barra in fondo ── */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;
+    background:rgba(11,8,24,.96);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;cursor:pointer;color:var(--mut2);
+    font-family:var(--f);font-size:10px;font-weight:700;letter-spacing:.4px;
+    padding:9px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:5px;
+    min-height:var(--barra);text-transform:uppercase}
+nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--v)}
+nav button:focus-visible{outline:2px solid var(--v);outline-offset:-3px}
+
+.vista{display:none}
+.vista.on{display:block}
+
+h1{font-size:19px;font-weight:800;letter-spacing:-.5px;margin:4px 0 14px}
+h2{font-size:13px;font-weight:800;letter-spacing:-.2px;margin-bottom:11px}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:2px;
+      color:var(--mut2);text-transform:uppercase;font-weight:700;margin-bottom:12px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--v);display:inline-block;
+        animation:pl 1.9s ease-out infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(34,224,124,.5)}70%{box-shadow:0 0 0 8px rgba(34,224,124,0)}
+  100%{box-shadow:0 0 0 0 rgba(34,224,124,0)}}
+
+/* ── tessere ── */
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.k{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px 14px 15px}
+.k .et{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut2);font-weight:700}
+.k .n{font-size:22px;font-weight:800;letter-spacing:-1px;margin-top:8px;line-height:1.05}
+.k .n.g{color:var(--v)}
+.k .n.a{color:var(--amb)}
+.k .d{font-size:11px;color:var(--mut);font-weight:600;margin-top:5px}
+.k.largo{grid-column:1/-1}
+
+.pan{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+     padding:15px 14px;margin-bottom:14px}
+
+/* ── righe e card ── */
+.riga{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
+.riga:last-child{border-bottom:0}
+.riga .id{width:38px;height:38px;border-radius:11px;background:var(--panel2);flex:0 0 38px;
+     display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#B9B5DC}
+.riga .mid{flex:1;min-width:0}
+.riga .nm{font-size:14px;font-weight:800;letter-spacing:-.2px;overflow:hidden;
+     text-overflow:ellipsis;white-space:nowrap}
+.riga .sub{font-size:11.5px;color:var(--mut);font-weight:600;margin-top:2px}
+.riga .dx{text-align:right;white-space:nowrap}
+.riga .dx b{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.3px}
+.riga .dx b.g{color:var(--v)}
+.riga .dx span{font-size:10.5px;color:var(--mut2);font-weight:600}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;
+      margin-bottom:9px;width:100%;text-align:left;font-family:var(--f);color:var(--txt);
+      cursor:pointer;display:block}
+.card:hover{border-color:var(--line2)}
+.card:focus-visible{outline:2px solid var(--v);outline-offset:2px}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.card .nm{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.card .cod{font-size:10.5px;color:var(--mut2);font-weight:700;letter-spacing:1px;margin-top:2px}
+.card .grande{font-size:19px;font-weight:800;color:var(--v);letter-spacing:-.6px;text-align:right}
+.card .grande span{display:block;font-size:10px;color:var(--mut2);letter-spacing:1px;
+     text-transform:uppercase;font-weight:700;margin-top:3px}
+.coppie{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin-top:4px}
+.coppie div{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);font-weight:600}
+.coppie b{color:var(--txt);font-weight:700}
+
+.barra-roi{height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+.barra-roi i{display:block;height:100%;background:var(--v);border-radius:3px}
+
+.pill{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 9px;
+      border-radius:20px;border:1px solid var(--line2);color:var(--mut);font-weight:700;white-space:nowrap}
+.pill.on{color:var(--v);border-color:rgba(34,224,124,.35);background:rgba(34,224,124,.1)}
+.pill.att{color:var(--amb);border-color:rgba(224,164,75,.35);background:rgba(224,164,75,.1)}
+.pill.off{color:var(--mut2)}
+
+/* ── comandi ── */
+.strumenti{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+input,select{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);
+     border-radius:12px;color:var(--txt);font-family:var(--f);font-size:13px;font-weight:600;
+     padding:12px 12px;min-height:44px}
+input::placeholder{color:var(--mut2)}
+input:focus,select:focus{outline:2px solid rgba(34,224,124,.45);outline-offset:-1px;border-color:var(--line2)}
+.tab{display:flex;gap:2px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.tab button{flex:1;background:none;border:0;cursor:pointer;padding:11px 2px 12px;min-height:44px;
+     font-family:var(--f);font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+     color:var(--mut2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab button.on{color:var(--v);border-bottom-color:var(--v)}
+
+a.tx{font-size:11px;color:var(--v);text-decoration:none;font-weight:700;
+     border-bottom:1px dotted rgba(34,224,124,.4)}
+a.tx:hover{color:var(--v2)}
+.manca{font-size:10.5px;color:var(--amb);font-weight:700}
+
+.spunte{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.sp{font-size:10px;font-weight:700;letter-spacing:.4px;padding:5px 9px;border-radius:9px;
+    border:1px solid var(--line);color:var(--mut2);display:flex;align-items:center;gap:5px}
+.sp.si{color:var(--v);border-color:rgba(34,224,124,.3);background:rgba(34,224,124,.07)}
+
+.vuoto{text-align:center;color:var(--mut2);font-size:13px;font-weight:600;padding:34px 12px}
+.altro{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:13px;
+     color:var(--txt);font-family:var(--f);font-size:13px;font-weight:700;padding:13px;
+     min-height:44px;cursor:pointer;margin-top:6px}
+svg.graf{display:block;width:100%;height:auto}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
-<div class="wrap" id="app"><div class="empty">Carico i dati…</div></div>
+
+<div class="wrap" id="app"><div class="vuoto">Carico i dati…</div></div>
+
+<nav id="nav" hidden>
+  <button data-v="quadro" class="on"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 7h8V3h-8z"/></svg>Quadro</button>
+  <button data-v="clienti"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/></svg>Clienti</button>
+  <button data-v="cicli"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Cicli</button>
+  <button data-v="fornitore"><svg viewBox="0 0 24 24"><path d="M3 9h18M3 9l2-5h14l2 5M5 9v11h14V9"/><path d="M9 13h6"/></svg>Fornitore</button>
+  <button data-v="avvio"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Avvio</button>
+</nav>
+
 <script>
 const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand();}
 const P=new URLSearchParams(location.search);
 const API='https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/admin';
-const U=n=>Number(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
-const U0=n=>Math.round(n).toLocaleString('it-IT')+' USDT';
-const E0=n=>'€ '+Math.round(n).toLocaleString('it-IT');
+
+const U=n=>Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+const U0=n=>Math.round(n||0).toLocaleString('it-IT')+' USDT';
+const E=n=>'€ '+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const E0=n=>'€ '+Math.round(n||0).toLocaleString('it-IT');
+const PC=n=>(n||0).toFixed(1).replace('.',',')+'%';
 const MM=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
-const dBrev=s=>{const d=new Date(s);return d.getDate()+' '+MM[d.getMonth()];};
+const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto',
+            'settembre','ottobre','novembre','dicembre'];
+const dBrev=s=>{const d=new Date(s+(s.length===10?'T12:00:00':''));return d.getDate()+' '+MM[d.getMonth()];};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function tocca(){ try{ tg?.HapticFeedback?.impactOccurred('light'); }catch(e){} }
 
-function area(v,lab){
- if(v.length<2) return '';
- const W=680,H=190,pd={l:60,r:14,t:14,b:26};
- const mx=Math.max(...v)*1.1||1, iw=W-pd.l-pd.r, ih=H-pd.t-pd.b;
- const X=i=>pd.l+i*iw/(v.length-1), Y=x=>pd.t+ih-(x/mx)*ih;
- let g='';
- for(let i=0;i<=4;i++){const y=pd.t+ih*i/4;
-  g+='<line x1="'+pd.l+'" y1="'+y+'" x2="'+(W-pd.r)+'" y2="'+y+'" stroke="#1E1938"/>'+
-     '<text x="'+(pd.l-8)+'" y="'+(y+4)+'" fill="#8E8CA8" font-size="10" text-anchor="end" font-family="monospace">'+Math.round(mx-mx*i/4)+'</text>';}
- const d=v.map((x,i)=>(i?'L':'M')+X(i).toFixed(0)+' '+Y(x).toFixed(0)).join(' ');
- const a='M'+pd.l+' '+(pd.t+ih)+' '+v.map((x,i)=>'L'+X(i).toFixed(0)+' '+Y(x).toFixed(0)).join(' ')+' L'+(W-pd.r)+' '+(pd.t+ih)+' Z';
- let lb='';const st=Math.ceil(lab.length/6);
- lab.forEach((l,i)=>{if(i%st===0||i===lab.length-1)lb+='<text x="'+X(i).toFixed(0)+'" y="'+(H-7)+'" fill="#8E8CA8" font-size="10" text-anchor="middle" font-family="monospace">'+l+'</text>';});
- return '<svg viewBox="0 0 '+W+' '+H+'">'+g+'<path d="'+a+'" fill="rgba(34,224,124,.12)"/><path d="'+d+'" fill="none" stroke="#22E07C" stroke-width="2.2"/>'+lb+'</svg>';
-}
+let D=null, VISTA='quadro', DETT=null;
+let ordCli='guadagno', cercaCli='', filtroRete='';
+let filtroCli='', filtroMese='', filtroStato='', quantiCicli=50;
 
+/* ─────────── caricamento ─────────── */
 fetch(API+'?t='+encodeURIComponent(P.get('t')||''))
  .then(r=>r.json()).then(d=>{
-  if(d.error){document.getElementById('app').innerHTML='<div class="empty">Accesso non valido.<br>Riapri il link dal bot.</div>';return;}
-  const cic=d.cicli||[], reti=d.reti||[], cli=d.clienti||[], cap=d.capitale||{};
-  const pers=d.personale||{cicli:0,netto:0,lordo:0,capitale:0}, CB=d.cambio||1.17;
-  const mio=cic.reduce((a,x)=>a+x.mio,0);
-  const feeTot=cic.reduce((a,x)=>a+x.feeU,0);
-  const profTot=cic.reduce((a,x)=>a+x.profitto,0);
-  const attivi=new Set(cli.filter(x=>x.stato==='attivo'||x.stato==='pronto'||x.stato==='attesa').map(x=>x.padre||x.codice)).size;
-  // un cliente con due conti resta una persona sola
-  const persone=new Set(cli.map(x=>x.padre||x.codice)).size;
-  // ogni conto aggiuntivo subito sotto il suo principale
-  const ordinati=[]; const figli={};
-  cli.forEach(x=>{ if(x.padre) (figli[x.padre]=figli[x.padre]||[]).push(x); });
-  cli.forEach(x=>{ if(x.padre) return; ordinati.push(x); (figli[x.codice]||[]).forEach(y=>ordinati.push(y)); });
-
-  // per giorno
-  const gg=new Map();
-  cic.forEach(x=>{const o=gg.get(x.data)||{n:0,fee:0,mio:0};o.n++;o.fee+=x.feeU;o.mio+=x.mio;gg.set(x.data,o);});
-  const gs=[...gg.entries()].sort();
-  let cc=0; const giorni=gs.map(([k,v])=>{cc+=v.mio;return {k,...v,cum:cc};});
-
-  let h='<div class="live"><i></i>Dati aggiornati in tempo reale</div>';
-  h+='<div class="hero"><div class="lbl">Il tuo netto</div>'+
-     '<div class="num">'+U0(mio)+'</div>'+
-     '<div class="badge">'+U0(feeTot)+' incassati</div>'+
-     '<div class="meta">'+cic.length+' cicli · '+persone+' clienti · '+reti.length+' reti</div></div>';
-
-  h+='<div class="stats">'+
-     '<div class="card"><div class="k">Capitale gestito</div><div class="v">'+E0(cap.totale||0)+'</div></div>'+
-     '<div class="card"><div class="k">In ciclo ora</div><div class="v">'+E0(cap.inCorso||0)+'</div></div>'+
-     '<div class="card"><div class="k">Clienti attivi</div><div class="v">'+attivi+'</div></div></div>';
-
-  // totale complessivo
-  const netRete=mio, netPers=pers.netto*CB, netTot=netRete+netPers;
-  h+='<div class="panel" style="border-color:#22E07C"><h2>Totale complessivo</h2>'+
-     '<div class="box"><div class="row"><span>Dalla rete · '+cic.length+(cic.length===1?' ciclo':' cicli')+'</span><b class="q">'+U(netRete)+'</b></div>'+
-     '<div class="row"><span>Dai tuoi conti · '+pers.cicli+(pers.cicli===1?' ciclo':' cicli')+'</span><b class="q">'+U(netPers)+'</b></div>'+
-     '<div class="row" style="border-top:1px solid #1E1938;margin-top:8px;padding-top:12px"><span style="color:#FFFFFF;font-weight:600">Totale</span>'+
-     '<b style="color:#35EE8C;font-size:17px">'+U0(netTot)+'</b></div>'+
-     '<div class="row"><span>In euro</span><b>'+E0(netTot/CB)+'</b></div></div>'+
-     '<div style="font-family:monospace;font-size:10px;color:#8E8CA8;margin-top:10px;line-height:1.6">'+
-     'Capitale tuo '+E0(pers.capitale)+' · lordo generato '+E0(pers.lordo)+'</div></div>';
-
-
-  if(giorni.length>1)
-   h+='<div class="panel"><h2>Il tuo netto nel tempo</h2>'+area(giorni.map(x=>x.cum),giorni.map(x=>dBrev(x.k)))+'</div>';
-
-  h+='<div class="panel"><h2>Le tue reti</h2>';
-  reti.forEach(r=>{
-   h+='<div class="box"><div class="top"><span class="nm">'+r.nome+'</span>'+
-      '<span class="st on">'+r.clienti+(r.clienti===1?' cliente':' clienti')+'</span></div>'+
-      '<div class="row"><span>Cicli chiusi</span><b>'+r.cicli+'</b></div>'+
-      '<div class="row"><span>Profitto generato</span><b>'+E0(r.profitto)+'</b></div>'+
-      '<div class="row"><span>Fee incassate</span><b>'+U(r.feeU)+'</b></div>'+
-      (r.quota>0?'<div class="row"><span>Spettante a loro</span><b>'+U(r.quota)+'</b></div>':'')+
-      '<div class="row"><span>Il tuo netto</span><b class="q">'+U(r.mio)+'</b></div></div>';
-  });
-  h+='</div>';
-
-  if(cic.length){
-   const nomiReti=[...new Set(cic.map(x=>x.rete))].sort();
-   h+='<div class="panel"><h2>Registro incassi</h2>'+
-      '<div class="periodi" id="perIncassi">'+
-      ['giorno','settimana','mese','anno'].map(x=>
-        '<button data-per="'+x+'"'+(x==='giorno'?' class="on"':'')+'>'+x+'</button>').join('')+
-      '</div>'+
-      '<select id="reteIncassi"><option value="">Tutte le reti</option>'+
-      nomiReti.map(r=>'<option value="'+r+'">'+r+'</option>').join('')+'</select>'+
-      '<div class="somma" id="sommaIncassi"></div>'+
-      '<div id="corpoIncassi"></div></div>';
-  }
-
-  // tabular-nums: senza, le cifre hanno larghezze diverse e le colonne ballano.
-  // Le righe restano staccate ma la stringa no: con l'apice singolo non si va
-  // a capo dentro una stringa, e il blocco intero smetteva di compilare.
-  h+='<style>.box.sub{margin-left:14px;border-left:2px solid var(--q,#c9a227);}'
-    +'.box.sub .nm{opacity:.8}'
-    +'body{font-variant-numeric:tabular-nums}'
-    +'.apri{margin-top:9px;width:100%;background:none;border:1px solid #1E1938;'
-      +'color:#8E8CA8;font-family:inherit;font-size:11px;letter-spacing:.6px;'
-      +'padding:6px;cursor:pointer}'
-    +'.apri:hover{color:#FFFFFF;border-color:#28343C}'
-    +'.cicli{display:none;margin-top:9px;overflow-x:auto}'
-    +'.cicli.on{display:block}'
-    +'.cicli table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:420px}'
-    +'.cicli th{text-align:left;color:#59636D;font-weight:500;font-size:9px;'
-      +'letter-spacing:1.1px;text-transform:uppercase;padding:5px 6px;'
-      +'border-bottom:1px solid #1E1938;white-space:nowrap}'
-    +'.cicli td{padding:5px 6px;border-bottom:1px solid rgba(30,25,56,.5);white-space:nowrap}'
-    +'.cicli td.d{text-align:right}'
-    +'.cicli a{color:#3FA98A;text-decoration:none;border-bottom:1px dotted rgba(34,224,124,.45)}'
-    +'.cicli a:hover{color:#5FCBAA}'
-    +'.cicli .no{color:#D98634}'
-    +'</style>';
-  // I cicli di un cliente, con la transazione della fee. Dove l'hash non e'
-  // mai stato registrato si scrive che manca: non si mette niente al suo posto.
-  function suoiCicli(cod){
-   const suoi=cic.filter(c=>c.codice===cod).sort((a,b)=>(a.numero||0)-(b.numero||0));
-   if(!suoi.length) return '';
-   const senza=suoi.filter(c=>!c.tx).length;
-   const righe=suoi.map(c=>{
-    const link=c.tx
-      ? '<a href="https://bscscan.com/tx/'+c.tx+'" target="_blank" rel="noopener">'
-        +c.tx.slice(0,8)+'…'+c.tx.slice(-4)+'</a>'
-      : '<span class="no">'+(c.pagato?'non registrato':'fee sospesa')+'</span>';
-    return '<tr><td>#'+(c.numero||'')+'</td><td>'+dBrev(c.data)+'</td>'
-      +'<td class="d">'+E0(c.profitto)+'</td><td class="d">'+E0(c.fee)+'</td>'
-      +'<td>'+link+'</td></tr>';
-   }).join('');
-   return '<button class="apri" type="button" data-cod="'+cod+'">'
-     +'Cicli e pagamenti ('+suoi.length+(senza?' · '+senza+' senza link':'')+')</button>'
-     +'<div class="cicli" data-per="'+cod+'"><table>'
-     +'<tr><th>#</th><th>chiuso</th><th style="text-align:right">profitto</th>'
-     +'<th style="text-align:right">fee</th><th>pagamento</th></tr>'
-     +righe+'</table></div>';
-  }
-
-  h+='<div class="panel"><h2>Clienti</h2>';
-  ordinati.forEach(x=>{
-   const on=x.stato==='attivo'||x.stato==='pronto';
-   const tit=x.padre?x.codice+' · conto '+(x.conto||2):x.codice+' · '+x.nome;
-   h+='<div class="box'+(x.padre?' sub':'')+'"><div class="top"><span class="nm">'+tit+'</span>'+
-      '<span class="st'+(on?' on':'')+'">'+x.stato+'</span></div>'+
-      '<div class="row"><span>Rete</span><b>'+x.rete+'</b></div>'+
-      '<div class="row"><span>Capitale</span><b>'+E0(x.capitale)+'</b></div>'+
-      '<div class="row"><span>Cicli chiusi</span><b>'+x.cicli+'</b></div>'+
-      '<div class="row"><span>Profitto generato</span><b>'+E0(x.profitto)+'</b></div>'+
-      '<div class="row"><span>Il tuo netto</span><b class="q">'+U(x.mio)+'</b></div>'+
-      (x.ultimo?'<div class="row"><span>Ultimo ciclo</span><b>'+dBrev(x.ultimo)+'</b></div>':'')+
-      suoiCicli(x.codice)+
-      '</div>';
-  });
-  h+='</div>';
-  document.getElementById('app').innerHTML=h;
-
-  // apre e chiude l'elenco dei cicli sotto ogni cliente
-  document.getElementById('app').addEventListener('click',e=>{
-   const b=e.target.closest('.apri'); if(!b) return;
-   const el=document.querySelector('.cicli[data-per="'+b.dataset.cod+'"]');
-   if(el) el.classList.toggle('on');
-  });
-
-  // Registro incassi: si guarda per giorno, settimana, mese o anno, e si puo'
-  // isolare una rete. La somma sta in cima, cosi' si legge senza scorrere.
-  let perInc='giorno', reteInc='';
-  const lunedi=iso=>{const d=new Date(iso+'T12:00:00');
-    d.setDate(d.getDate()-(d.getDay()===0?6:d.getDay()-1));return d.toISOString().slice(0,10);};
-  const chiaveP=(iso,per)=>per==='giorno'?iso.slice(0,10):per==='settimana'?lunedi(iso)
-    :per==='anno'?iso.slice(0,4):iso.slice(0,7);
-  const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio',
-              'agosto','settembre','ottobre','novembre','dicembre'];
-  const titoloP=(iso,per)=>{const d=new Date(iso+'T12:00:00');
-    if(per==='giorno') return d.getDate()+' '+MESI[d.getMonth()]+' '+d.getFullYear();
-    if(per==='settimana'){const l=new Date(lunedi(iso)+'T12:00:00');
-      return 'dal '+l.getDate()+' '+MESI[l.getMonth()];}
-    if(per==='anno') return String(d.getFullYear());
-    return MESI[d.getMonth()]+' '+d.getFullYear();};
-
-  function renderIncassi(){
-   const corpo=document.getElementById('corpoIncassi');
-   if(!corpo) return;
-   const sel=cic.filter(x=>!reteInc||x.rete===reteInc);
-   const g=new Map();
-   sel.forEach(x=>{const k=chiaveP(x.data,perInc);
-    const o=g.get(k)||{n:0,fee:0,mio:0,prof:0,titolo:titoloP(x.data,perInc)};
-    o.n++;o.fee+=x.feeU;o.mio+=x.mio;o.prof+=x.profitto;g.set(k,o);});
-   const righe=[...g.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
-
-   const mioS=sel.reduce((a,x)=>a+x.mio,0), feeS=sel.reduce((a,x)=>a+x.feeU,0);
-   const profS=sel.reduce((a,x)=>a+x.profitto,0);
-   const tutto=sel.length===cic.length;
-   document.getElementById('sommaIncassi').innerHTML= sel.length
-    ? '<span class="et">'+(tutto?'Totale':'Totale filtrato')+'</span>'
-      +'<span class="q2">'+sel.length+(sel.length===1?' ciclo':' cicli')+'</span>'
-      +'<span class="v">'+U0(mioS)+'</span>'
-      +'<span class="det">fee incassate '+U0(feeS)+' · profitto generato '+E0(profS)+'</span>'
-    : '<span class="et">Nessun ciclo con questo filtro</span>';
-
-   corpo.innerHTML= righe.length
-    ? '<table class="inc"><tr><th>'+perInc+'</th><th>Cicli</th><th>Fee</th><th>Netto</th></tr>'
-      +righe.map(([k,v])=>'<tr><td>'+v.titolo+'</td><td class="mut">'+v.n+'</td>'
-        +'<td class="mut">'+U0(v.fee)+'</td><td class="q">'+U0(v.mio)+'</td></tr>').join('')
-      +'</table>'
-    : '';
-  }
-
-  const barra=document.getElementById('perIncassi');
-  if(barra) barra.addEventListener('click',e=>{
-   const b=e.target.closest('button'); if(!b) return;
-   perInc=b.dataset.per;
-   barra.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-   renderIncassi();
-  });
-  const selRete=document.getElementById('reteIncassi');
-  if(selRete) selRete.addEventListener('change',e=>{reteInc=e.target.value;renderIncassi();});
-  renderIncassi();
+  if(d.error){ app.innerHTML='<div class="vuoto">Accesso non valido.<br>Riapri il link dal bot.</div>'; return; }
+  D=d; document.getElementById('nav').hidden=false; disegna();
  })
- .catch(()=>{document.getElementById('app').innerHTML='<div class="empty">Errore di connessione.</div>';});
-</script></body></html>
+ .catch(()=>{ app.innerHTML='<div class="vuoto">Non riesco a caricare i dati.<br>Riprova fra poco.</div>'; });
+
+/* ─────────── navigazione ─────────── */
+document.getElementById('nav').addEventListener('click',e=>{
+ const b=e.target.closest('button[data-v]'); if(!b) return;
+ tocca(); DETT=null; VISTA=b.dataset.v;
+ [...document.querySelectorAll('#nav button')].forEach(x=>x.classList.toggle('on',x===b));
+ window.scrollTo(0,0); disegna();
+});
+function apriDettaglio(cod){
+ tocca(); DETT=cod; window.scrollTo(0,0); disegna();
+ if(tg?.BackButton){ tg.BackButton.show(); tg.BackButton.onClick(chiudiDettaglio); }
+}
+function chiudiDettaglio(){
+ DETT=null; disegna();
+ if(tg?.BackButton){ tg.BackButton.hide(); tg.BackButton.offClick(chiudiDettaglio); }
+}
+
+/* ─────────── conti ─────────── */
+function conti(){
+ const cic=D.cicli||[], cli=D.clienti||[], forn=D.fornitore||[];
+ const netto=cic.reduce((a,x)=>a+(x.profitto||0),0);
+ const feeU=cic.reduce((a,x)=>a+(x.feeU||0),0);
+ const mio=cic.reduce((a,x)=>a+(x.mio||0),0);
+ const quota=cic.reduce((a,x)=>a+(x.qAff||0),0);
+ const sosp=cic.filter(x=>!x.pagato);
+ const attivi=new Set(cli.filter(x=>x.stato==='attivo'||x.stato==='pronto'||x.stato==='attesa')
+   .map(x=>x.padre||x.codice)).size;
+ const atteso=forn.reduce((a,x)=>a+(x.atteso||0),0);
+ const ricevuto=forn.reduce((a,x)=>a+(x.ricevuto||0),0);
+ return {netto,feeU,mio,quota,sosp,attivi,atteso,ricevuto,residuo:atteso-ricevuto,
+         persone:new Set(cli.map(x=>x.padre||x.codice)).size};
+}
+
+/* ─────────── grafico a barre per mese ─────────── */
+function perMese(){
+ const m=new Map();
+ (D.cicli||[]).forEach(x=>{
+  const k=(x.data||'').slice(0,7); if(!k) return;
+  const o=m.get(k)||{n:0,netto:0,fee:0,mio:0};
+  o.n++; o.netto+=x.profitto||0; o.fee+=x.feeU||0; o.mio+=x.mio||0; m.set(k,o);
+ });
+ return [...m.entries()].sort();
+}
+function barre(dati){
+ if(dati.length<1) return '';
+ const W=680,H=150,pd={l:8,r:8,t:10,b:26};
+ const mx=Math.max(...dati.map(d=>d[1].netto))*1.15||1;
+ const iw=W-pd.l-pd.r, ih=H-pd.t-pd.b, bw=Math.min(52,iw/dati.length*.62);
+ let s='';
+ dati.forEach((d,i)=>{
+  const cx=pd.l+(i+.5)*iw/dati.length, h=Math.max(3,d[1].netto/mx*ih);
+  s+='<rect x="'+(cx-bw/2).toFixed(0)+'" y="'+(pd.t+ih-h).toFixed(0)+'" width="'+bw.toFixed(0)+
+     '" height="'+h.toFixed(0)+'" rx="5" fill="#22E07C" opacity=".85"/>'+
+     '<text x="'+cx.toFixed(0)+'" y="'+(H-8)+'" fill="#8E8CA8" font-size="11" text-anchor="middle" '+
+     'font-family="Manrope,sans-serif" font-weight="700">'+MM[+d[0].slice(5,7)-1]+'</text>';
+ });
+ return '<svg class="graf" viewBox="0 0 '+W+' '+H+'">'+s+'</svg>';
+}
+
+/* ─────────── viste ─────────── */
+function vQuadro(){
+ const c=conti(), mesi=perMese();
+ let h='<div class="live"><i></i>Dati aggiornati in tempo reale</div><h1>Quadro</h1>';
+ h+='<div class="kpi">'+
+   tess('Netto generato',E0(c.netto),'g',(D.cicli||[]).length+' cicli')+
+   tess('Fee incassate',U0(c.feeU),'', 'dai clienti')+
+   tess('Il tuo netto',U0(c.mio),'g','tolti fornitori e reti')+
+   tess('Quota affiliati',U0(c.quota),'','maturata')+
+   tess('Fee in sospeso',U0(c.sosp.reduce((a,x)=>a+(x.feeU||0),0)),c.sosp.length?'a':'',
+        c.sosp.length+(c.sosp.length===1?' ciclo':' cicli'))+
+   tess('Clienti attivi',c.attivi,'', 'su '+c.persone+' persone')+
+   tess('Dal fornitore',U0(c.ricevuto),'', 'incassato')+
+   tess('Residuo fornitore',U0(c.residuo),c.residuo>0?'a':'g','da ricevere')+
+ '</div>';
+ if(mesi.length){
+  h+='<div class="pan"><h2>Netto per mese</h2>'+barre(mesi);
+  h+='<div style="margin-top:10px">';
+  mesi.slice().reverse().forEach(([k,v])=>{
+   h+='<div class="riga"><div class="mid"><div class="nm">'+MESI[+k.slice(5,7)-1]+'</div>'+
+      '<div class="sub">'+v.n+(v.n===1?' ciclo':' cicli')+'</div></div>'+
+      '<div class="dx"><b class="g">'+E0(v.netto)+'</b><span>'+U0(v.mio)+' a te</span></div></div>';
+  });
+  h+='</div></div>';
+ }
+ if(c.sosp.length){
+  h+='<div class="pan"><h2>Fee ancora da incassare</h2>';
+  c.sosp.forEach(x=>{
+   h+='<div class="riga"><div class="id">'+esc(x.codice)+'</div><div class="mid">'+
+      '<div class="nm">'+esc(x.cliente)+'</div><div class="sub">ciclo #'+(x.numero||'')+' · '+dBrev(x.data)+'</div></div>'+
+      '<div class="dx"><b class="g">'+U0(x.feeU)+'</b><span>'+E0(x.profitto)+' lordo</span></div></div>';
+  });
+  h+='</div>';
+ }
+ return h;
+}
+function tess(et,n,cl,d){
+ return '<div class="k"><div class="et">'+et+'</div><div class="n '+(cl||'')+'">'+n+'</div>'+
+        (d?'<div class="d">'+d+'</div>':'')+'</div>';
+}
+
+function vClienti(){
+ if(DETT) return vCliente(DETT);
+ const cic=D.cicli||[];
+ let cli=(D.clienti||[]).filter(x=>!x.padre);
+ const reti=[...new Set((D.clienti||[]).map(x=>x.rete))].filter(Boolean).sort();
+ if(cercaCli) cli=cli.filter(x=>(x.nome+' '+x.codice).toLowerCase().includes(cercaCli.toLowerCase()));
+ if(filtroRete) cli=cli.filter(x=>x.rete===filtroRete);
+ const ord={guadagno:(a,b)=>b.mio-a.mio, netto:(a,b)=>b.profitto-a.profitto,
+            cicli:(a,b)=>b.cicli-a.cicli,
+            roi:(a,b)=>(b.capitale?b.profitto/b.capitale:0)-(a.capitale?a.profitto/a.capitale:0)};
+ cli=cli.slice().sort(ord[ordCli]||ord.guadagno);
+ let h='<h1>Clienti</h1><div class="strumenti">'+
+  '<input id="cerca" placeholder="Cerca nome o codice" value="'+esc(cercaCli)+'">'+
+  '<select id="rete"><option value="">Tutte le reti</option>'+
+   reti.map(r=>'<option'+(r===filtroRete?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select>'+
+  '<select id="ord">'+
+   [['guadagno','Il tuo netto'],['netto','Profitto'],['roi','Rendimento'],['cicli','Cicli']]
+    .map(([v,t])=>'<option value="'+v+'"'+(v===ordCli?' selected':'')+'>'+t+'</option>').join('')+
+  '</select></div>';
+ if(!cli.length) return h+'<div class="vuoto">Nessun cliente con questi filtri.</div>';
+ let tN=0,tM=0,tC=0;
+ cli.forEach(x=>{
+  const roi=x.capitale?x.profitto/x.capitale*100:0;
+  tN+=x.profitto; tM+=x.mio; tC+=x.cicli;
+  const on=x.stato==='attivo'||x.stato==='pronto';
+  h+='<button class="card" data-cli="'+esc(x.codice)+'">'+
+   '<div class="top"><div><div class="nm">'+esc(x.nome)+'</div>'+
+    '<div class="cod">'+esc(x.codice)+' · '+esc(x.rete)+'</div></div>'+
+    '<div class="grande">'+U0(x.mio)+'<span>il tuo netto</span></div></div>'+
+   '<div class="barra-roi"><i style="width:'+Math.max(2,Math.min(100,roi)).toFixed(0)+'%"></i></div>'+
+   '<div class="coppie">'+
+    '<div><span>Rendimento</span><b>'+PC(roi)+'</b></div>'+
+    '<div><span>Profitto</span><b>'+E0(x.profitto)+'</b></div>'+
+    '<div><span>Cicli</span><b>'+x.cicli+'</b></div>'+
+    '<div><span>Capitale</span><b>'+E0(x.capitale)+'</b></div>'+
+   '</div>'+
+   '<div class="spunte"><span class="pill '+(on?'on':'off')+'">'+esc(x.stato)+'</span>'+
+    (x.ultimo?'<span class="pill">ultimo '+dBrev(x.ultimo)+'</span>':'')+'</div>'+
+  '</button>';
+ });
+ h+='<div class="pan" style="margin-top:12px"><div class="riga" style="padding-top:0">'+
+   '<div class="mid"><div class="nm">'+cli.length+(cli.length===1?' cliente':' clienti')+'</div>'+
+   '<div class="sub">'+tC+' cicli</div></div>'+
+   '<div class="dx"><b class="g">'+U0(tM)+'</b><span>'+E0(tN)+' di profitto</span></div></div></div>';
+ return h;
+}
+
+function vCliente(cod){
+ const u=(D.clienti||[]).find(x=>x.codice===cod); if(!u) return '<div class="vuoto">Cliente non trovato.</div>';
+ const suoi=(D.cicli||[]).filter(x=>x.codice===cod).sort((a,b)=>(b.numero||0)-(a.numero||0));
+ const roi=u.capitale?u.profitto/u.capitale*100:0;
+ const senza=suoi.filter(x=>!x.tx).length;
+ let h='<button class="altro" onclick="chiudiDettaglio()" style="margin:0 0 14px">‹ Tutti i clienti</button>';
+ h+='<h1>'+esc(u.nome)+'</h1>';
+ h+='<div class="kpi">'+
+   tess('Il tuo netto',U0(u.mio),'g',esc(u.codice)+' · '+esc(u.rete))+
+   tess('Profitto',E0(u.profitto),'',u.cicli+' cicli')+
+   tess('Rendimento',PC(roi),'','su '+E0(u.capitale))+
+   tess('Ultimo ciclo',u.ultimo?dBrev(u.ultimo):'—','',esc(u.stato))+
+ '</div>';
+ if(!suoi.length) return h+'<div class="vuoto">Nessun ciclo chiuso.</div>';
+ h+='<div class="pan"><h2>Cicli e pagamenti'+(senza?' · <span class="manca">'+senza+' senza link</span>':'')+'</h2>';
+ suoi.forEach(x=>{
+  h+='<div class="riga"><div class="id">#'+(x.numero||'')+'</div><div class="mid">'+
+   '<div class="nm">'+E0(x.profitto)+' <span style="color:var(--mut);font-weight:600;font-size:12px">lordo</span></div>'+
+   '<div class="sub">'+dBrev(x.data)+' · fee '+E0(x.fee)+'</div></div>'+
+   '<div class="dx">'+(x.tx
+     ? '<a class="tx" href="https://bscscan.com/tx/'+esc(x.tx)+'" target="_blank" rel="noopener">'+esc(x.tx.slice(0,8))+'…</a>'
+     : '<span class="manca">'+(x.pagato?'non registrato':'fee sospesa')+'</span>')+
+   '<span>'+U0(x.feeU)+'</span></div></div>';
+ });
+ return h+'</div>';
+}
+
+function vCicli(){
+ let cic=(D.cicli||[]).slice().sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+ const clienti=[...new Set(cic.map(x=>x.codice))].sort();
+ const mesi=[...new Set(cic.map(x=>(x.data||'').slice(0,7)))].filter(Boolean).sort().reverse();
+ if(filtroCli) cic=cic.filter(x=>x.codice===filtroCli);
+ if(filtroMese) cic=cic.filter(x=>(x.data||'').slice(0,7)===filtroMese);
+ if(filtroStato==='sospesi') cic=cic.filter(x=>!x.pagato);
+ if(filtroStato==='senzalink') cic=cic.filter(x=>!x.tx);
+ let h='<h1>Cicli</h1><div class="strumenti">'+
+  '<select id="fcli"><option value="">Tutti i clienti</option>'+
+   clienti.map(c=>'<option'+(c===filtroCli?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select>'+
+  '<select id="fmese"><option value="">Tutti i mesi</option>'+
+   mesi.map(m=>'<option value="'+m+'"'+(m===filtroMese?' selected':'')+'>'+MESI[+m.slice(5,7)-1]+'</option>').join('')+
+  '</select></div>'+
+  '<div class="tab" id="fstato">'+
+   [['','Tutti'],['sospesi','Da incassare'],['senzalink','Senza link']]
+    .map(([v,t])=>'<button data-s="'+v+'" class="'+(v===filtroStato?'on':'')+'">'+t+'</button>').join('')+
+  '</div>';
+ const tot=cic.reduce((a,x)=>a+(x.feeU||0),0);
+ h+='<div class="pan"><div class="riga" style="padding-top:0">'+
+   '<div class="mid"><div class="nm">'+cic.length+(cic.length===1?' ciclo':' cicli')+'</div>'+
+   '<div class="sub">con i filtri attivi</div></div>'+
+   '<div class="dx"><b class="g">'+U0(tot)+'</b><span>di fee</span></div></div></div>';
+ if(!cic.length) return h+'<div class="vuoto">Nessun ciclo con questi filtri.</div>';
+ const mostra=cic.slice(0,quantiCicli);
+ h+='<div class="pan">';
+ mostra.forEach(x=>{
+  h+='<div class="riga"><div class="id">'+esc(x.codice)+'</div><div class="mid">'+
+   '<div class="nm">'+esc(x.cliente)+' <span style="color:var(--mut2);font-weight:600;font-size:11.5px">#'+(x.numero||'')+'</span></div>'+
+   '<div class="sub">'+dBrev(x.data)+' · '+E0(x.profitto)+' lordo'+
+     (x.pagato?'':' · <span class="manca">da incassare</span>')+'</div></div>'+
+   '<div class="dx"><b class="g">'+U0(x.feeU)+'</b>'+
+    (x.tx?'<a class="tx" href="https://bscscan.com/tx/'+esc(x.tx)+'" target="_blank" rel="noopener">verifica</a>'
+        :'<span class="manca">no link</span>')+'</div></div>';
+ });
+ h+='</div>';
+ if(cic.length>mostra.length)
+  h+='<button class="altro" id="ancora">Mostra altri '+Math.min(50,cic.length-mostra.length)+' · ne restano '+(cic.length-mostra.length)+'</button>';
+ return h;
+}
+
+function vFornitore(){
+ const f=(D.fornitore||[]).slice().sort((a,b)=>(b.dal||'').localeCompare(a.dal||''));
+ const atteso=f.reduce((a,x)=>a+(x.atteso||0),0), ric=f.reduce((a,x)=>a+(x.ricevuto||0),0);
+ let h='<h1>Fornitore</h1><div class="kpi">'+
+   tess('Maturato',U0(atteso),'',f.length+' settimane')+
+   tess('Incassato',U0(ric),'g','')+
+   tess('Residuo',U0(atteso-ric),atteso-ric>0?'a':'g','da ricevere')+
+   tess('Coperto',atteso?PC(ric/atteso*100):'—','','del maturato')+
+ '</div>';
+ if(!f.length) return h+'<div class="vuoto">Nessuna settimana registrata.</div>';
+ h+='<div class="pan">';
+ let cum=0;
+ f.slice().reverse().forEach(x=>{ cum+=(x.ricevuto||0)-(x.atteso||0); });
+ f.forEach(x=>{
+  const res=(x.atteso||0)-(x.ricevuto||0);
+  const saldata=res<=0.005;
+  h+='<div class="riga"><div class="mid">'+
+   '<div class="nm">'+dBrev(x.dal)+' – '+dBrev(x.al)+'</div>'+
+   '<div class="sub">maturato '+U0(x.atteso)+(x.incasso?' · incassato il '+dBrev(x.incasso):'')+'</div></div>'+
+   '<div class="dx"><b class="'+(saldata?'g':'')+'">'+U0(x.ricevuto)+'</b>'+
+   '<span>'+(saldata?'saldata':'mancano '+U0(res))+'</span></div></div>';
+ });
+ return h+'</div>';
+}
+
+function vAvvio(){
+ const cli=(D.clienti||[]).filter(x=>!x.avvioFatto || !x.gruppo || !x.fornitori || !x.vps);
+ let h='<h1>Avvio</h1>';
+ if(!cli.length) return h+'<div class="vuoto">Tutti i clienti hanno finito l\'avvio.</div>';
+ h+='<div class="pan" style="margin-bottom:12px"><div class="riga" style="padding:0">'+
+  '<div class="mid"><div class="nm">'+cli.length+(cli.length===1?' cliente da seguire':' clienti da seguire')+'</div>'+
+  '<div class="sub">manca almeno un passo</div></div></div></div>';
+ cli.forEach(x=>{
+  h+='<div class="card" style="cursor:default">'+
+   '<div class="top"><div><div class="nm">'+esc(x.nome)+'</div>'+
+   '<div class="cod">'+esc(x.codice)+' · '+esc(x.rete)+'</div></div>'+
+   '<span class="pill '+(x.avvioFatto?'on':'att')+'">'+esc(x.passo||x.stato)+'</span></div>'+
+   '<div class="spunte">'+
+    sp('Gruppo',x.gruppo)+sp('Fornitori',x.fornitori)+sp('Total FX',x.tfx)+
+    sp('Roboforex',x.rbx)+sp('Monaxa',x.mnx)+sp('Depositi',x.depositi)+sp('VPS',x.vps)+
+   '</div></div>';
+ });
+ return h;
+}
+function sp(t,ok){ return '<span class="sp'+(ok?' si':'')+'">'+(ok?'✓':'○')+' '+t+'</span>'; }
+
+/* ─────────── disegno e ascolti ─────────── */
+function disegna(){
+ const f={quadro:vQuadro,clienti:vClienti,cicli:vCicli,fornitore:vFornitore,avvio:vAvvio}[VISTA];
+ app.innerHTML='<div class="vista on">'+f()+'</div>';
+ collega();
+}
+function collega(){
+ const c=document.getElementById('cerca');
+ if(c) c.addEventListener('input',e=>{ cercaCli=e.target.value;
+   const p=e.target.selectionStart; disegna();
+   const n=document.getElementById('cerca'); if(n){ n.focus(); n.setSelectionRange(p,p); } });
+ const r=document.getElementById('rete');
+ if(r) r.addEventListener('change',e=>{ filtroRete=e.target.value; disegna(); });
+ const o=document.getElementById('ord');
+ if(o) o.addEventListener('change',e=>{ ordCli=e.target.value; disegna(); });
+ const fc=document.getElementById('fcli');
+ if(fc) fc.addEventListener('change',e=>{ filtroCli=e.target.value; quantiCicli=50; disegna(); });
+ const fm=document.getElementById('fmese');
+ if(fm) fm.addEventListener('change',e=>{ filtroMese=e.target.value; quantiCicli=50; disegna(); });
+ const fs=document.getElementById('fstato');
+ if(fs) fs.addEventListener('click',e=>{ const b=e.target.closest('button[data-s]'); if(!b) return;
+   tocca(); filtroStato=b.dataset.s; quantiCicli=50; disegna(); });
+ const an=document.getElementById('ancora');
+ if(an) an.addEventListener('click',()=>{ tocca(); quantiCicli+=50; disegna(); });
+ app.querySelectorAll('button[data-cli]').forEach(b=>
+   b.addEventListener('click',()=>apriDettaglio(b.dataset.cli)));
+}
+</script>
+</body></html>
