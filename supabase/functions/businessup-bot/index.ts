@@ -387,6 +387,48 @@ async function setMenuButton(chatId: number) {
 // Quante persone si nominano in un saluto solo, quando entrano in gruppo.
 const BENVENUTO_MAX_NOMI = 5
 
+// Otto benvenuti diversi, non otto modi di dire la stessa frase: ognuno entra
+// da una porta sua -- cosa c'e' dentro, cosa NON entra in lista, i costi in
+// chiaro, l'assenza di fretta, l'orientamento, l'aggiornamento, il confronto
+// col cercare a caso, la mancanza di promesse. Chi vede il gruppo per settimane
+// non deve leggere sempre la stessa riga: e' li' che un saluto automatico si
+// riconosce come tale e smette di funzionare.
+// {chi} e' la menzione di chi entra, {n} il numero di schede in lista.
+const BENVENUTI: { testo: string; bottone: string }[] = [
+  {
+    testo: `{saluto} {chi}.\n\n<b>Cashly</b> e' una lista: business e servizi online, con scritto cosa sono, cosa serve per partire e quanto costano davvero.\n\nNon devi fare niente, puoi solo guardare.`,
+    bottone: "Apri la lista",
+  },
+  {
+    testo: `{chi}, {saluto_min}.\n\nIn <b>Cashly</b> finisce solo quello che ho guardato da vicino: se una cosa non e' chiara o non regge, in lista non entra. Per questo sono poche.`,
+    bottone: "Vedi cosa c'e'",
+  },
+  {
+    testo: `{saluto} {chi}.\n\nOgni scheda dice tre cose che di solito nessuno scrive: quanto ti serve per iniziare, quanto costa tenerlo aperto, e cosa devi fare tu.\n\nSono tutte dentro <b>Cashly</b>.`,
+    bottone: "Apri Cashly",
+  },
+  {
+    testo: `{chi}, {saluto_min}.\n\nQui non ti vendo niente. <b>Cashly</b> e' la directory dei business e dei servizi online che ho selezionato: la apri, leggi, e se una cosa ti convince ci vai per conto tuo.`,
+    bottone: "Guarda la lista",
+  },
+  {
+    testo: `{saluto} {chi}.\n\nSe cerchi qualcosa di preciso -- un broker, uno strumento, un modo per iniziare -- parti da <b>Cashly</b> invece che da una ricerca a caso: e' molto piu' corta, e ogni voce e' gia' passata da un filtro.`,
+    bottone: "Apri la directory",
+  },
+  {
+    testo: `{chi}, {saluto_min}.\n\nIn lista ci sono <b>{n}</b> tra business e servizi, divisi per categoria. Si aggiorna quando trovo qualcosa che vale, e quello che smette di valere lo tolgo.`,
+    bottone: "Vedi la lista",
+  },
+  {
+    testo: `{saluto} {chi}.\n\n<b>Cashly</b> e' il posto dove guardare <i>prima</i> di iniziare qualcosa: costi, requisiti e rischi scritti in chiaro, sulla stessa pagina.\n\nMeglio due minuti di lettura che accorgersene dopo.`,
+    bottone: "Apri la lista",
+  },
+  {
+    testo: `{chi}, {saluto_min}.\n\n<b>Cashly</b> raccoglie business e servizi online senza promesse in mezzo: cosa serve, quanto costa, cosa ci si guadagna. Poi decidi tu.`,
+    bottone: "Entra in Cashly",
+  },
+]
+
 // Saluta chi entra nel gruppo. Il messaggio va NEL GRUPPO, non in privato:
 // Telegram vieta al bot di scrivere per primo a chi non lo ha mai avviato, e
 // un tentativo del genere fallirebbe in silenzio per quasi tutti. Il bottone
@@ -405,15 +447,24 @@ async function benvenutoGruppo(chatId: number, entrati: any[]) {
   })
   const restanti = persone.length - mostrati.length
   const chi = nomi.join(", ") + (restanti > 0 ? ` e altri ${restanti}` : "")
-  const saluto = persone.length > 1 ? "Benvenuti" : "Benvenuto"
 
-  const testo =
-    `${saluto} ${chi}.\n\n` +
-    `Qui si parla dei business e dei tool che trovi in <b>Cashly</b>: quelli selezionati, con scritto cosa serve per partire e quanto costano davvero.\n\n` +
-    `La lista si apre dal bot, e' gratis e non chiede niente.`
+  // Rotazione, non sorteggio: col caso lo stesso testo puo' uscire due volte
+  // di fila, ed e' proprio quello che fa dire "e' un bot". Si conta quanti
+  // ingressi ci sono gia' stati e si scorre la lista in ordine.
+  const { count } = await supabase.from("eventi").select("id", { count: "exact", head: true }).eq("tipo", "entrato_gruppo")
+  const variante = BENVENUTI[(count ?? 0) % BENVENUTI.length]
+
+  // Il numero di schede lo si dice solo se e' vero: si legge adesso.
+  const { count: quanti } = await supabase.from("servizi").select("id", { count: "exact", head: true }).eq("stato", "attivo")
+
+  const testo = variante.testo
+    .replace("{saluto}", persone.length > 1 ? "Benvenuti" : "Benvenuto")
+    .replace("{saluto_min}", persone.length > 1 ? "benvenuti" : "benvenuto")
+    .replace("{chi}", chi)
+    .replace("{n}", String(quanti ?? 0))
 
   // start=gruppo: nell'evento resta scritto da dove e' arrivato.
-  const markup = { inline_keyboard: [[{ text: "Apri la lista", url: `https://t.me/${BOT_USERNAME}?start=gruppo` }]] }
+  const markup = { inline_keyboard: [[{ text: variante.bottone, url: `https://t.me/${BOT_USERNAME}?start=gruppo` }]] }
   await sendMessage(chatId, testo, markup, "HTML")
 
   for (const m of persone) {
