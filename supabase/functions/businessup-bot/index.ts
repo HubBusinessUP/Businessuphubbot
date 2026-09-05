@@ -384,6 +384,43 @@ async function setMenuButton(chatId: number) {
   } catch (e) { console.error("setMenuButton:", e) }
 }
 
+// Quante persone si nominano in un saluto solo, quando entrano in gruppo.
+const BENVENUTO_MAX_NOMI = 5
+
+// Saluta chi entra nel gruppo. Il messaggio va NEL GRUPPO, non in privato:
+// Telegram vieta al bot di scrivere per primo a chi non lo ha mai avviato, e
+// un tentativo del genere fallirebbe in silenzio per quasi tutti. Il bottone
+// e' un link normale e non una web_app, perche' nei gruppi le web_app non si
+// possono aprire da un bottone in linea.
+async function benvenutoGruppo(chatId: number, entrati: any[]) {
+  const persone = (entrati || []).filter((m: any) => m && !m.is_bot)
+  if (!persone.length) return
+
+  // Se entrano in dieci nello stesso momento si manda UN messaggio, non dieci:
+  // una raffica di saluti identici il gruppo la legge come spam.
+  const mostrati = persone.slice(0, BENVENUTO_MAX_NOMI)
+  const nomi = mostrati.map((m: any) => {
+    const n = String(m.first_name || "").replace(/[<>&]/g, "").trim() || "ciao"
+    return `<a href="tg://user?id=${m.id}">${htmlEsc(n)}</a>`
+  })
+  const restanti = persone.length - mostrati.length
+  const chi = nomi.join(", ") + (restanti > 0 ? ` e altri ${restanti}` : "")
+  const saluto = persone.length > 1 ? "Benvenuti" : "Benvenuto"
+
+  const testo =
+    `${saluto} ${chi}.\n\n` +
+    `Qui si parla dei business e dei tool che trovi in <b>Cashly</b>: quelli selezionati, con scritto cosa serve per partire e quanto costano davvero.\n\n` +
+    `La lista si apre dal bot, e' gratis e non chiede niente.`
+
+  // start=gruppo: nell'evento resta scritto da dove e' arrivato.
+  const markup = { inline_keyboard: [[{ text: "Apri la lista", url: `https://t.me/${BOT_USERNAME}?start=gruppo` }]] }
+  await sendMessage(chatId, testo, markup, "HTML")
+
+  for (const m of persone) {
+    await supabase.from("eventi").insert({ telegram_id: m.id, tipo: "entrato_gruppo", dettaglio: `chat:${chatId}` }).then(() => {}, () => {})
+  }
+}
+
 async function handleStart(chatId: number, from: any, payload?: string) {
   setMenuButton(chatId).catch(() => {})
   let refBy: number | undefined
@@ -442,7 +479,9 @@ async function handleStart(chatId: number, from: any, payload?: string) {
     referred_by: existing?.referred_by ?? refBy ?? null,
   }, { onConflict: "telegram_id" })
 
-  await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: refBy ? `ref:${refBy}` : null })
+  // "gruppo" arriva dal bottone del benvenuto: si tiene la provenienza.
+  const provenienza = payload === "gruppo" ? "da:gruppo" : (refBy ? `ref:${refBy}` : null)
+  await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: provenienza })
 
   const sponsorFinale = existing?.referred_by ?? refBy
   if (!existing && sponsorFinale) {
@@ -672,6 +711,16 @@ async function handleUpdate(u: any) {
   if (!u.message) return
   const from = u.message.from
   const chatId = u.message.chat.id
+
+  // Qualcuno e' entrato nel gruppo: si saluta li' e si finisce qui. E' un
+  // messaggio di servizio, non ha testo, e non deve attraversare il resto
+  // degli handler.
+  const entrati = u.message.new_chat_members
+  if (Array.isArray(entrati) && entrati.length) {
+    const tipo = u.message.chat?.type
+    if (tipo === "group" || tipo === "supergroup") await benvenutoGruppo(chatId, entrati)
+    return
+  }
   const text = (u.message.text || "").trim()
   const caption = (u.message.caption || "").trim()
   const isAdmin = from?.id === ADMIN_ID
