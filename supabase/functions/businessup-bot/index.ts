@@ -390,6 +390,23 @@ const BENVENUTO_MAX_NOMI = 5
 // Sei benvenuti brevi: si saluta e si invita ad aprire l'app. Nient'altro.
 // Cambiano solo per non ripetere la stessa riga a ogni ingresso.
 // {chi} è la menzione di chi entra.
+// Chi entra dal link del sito del Trading Matematico ha gia' letto di cosa si
+// tratta: il saluto lo porta dritto al punto invece di ripresentargli la lista.
+const BENVENUTI_MATEMATICO: { testo: string; bottone: string }[] = [
+  {
+    testo: `{saluto} {chi}.\n\nPer accedere al Trading Matematico e al servizio Broker vs Broker entra nell'app.`,
+    bottone: "Apri l'app",
+  },
+  {
+    testo: `{chi}, {saluto_min}.\n\nTrovi il Trading Matematico e Broker vs Broker dentro l'app, con requisiti e costi.`,
+    bottone: "Vedi il servizio",
+  },
+  {
+    testo: `{saluto} {chi}.\n\nIl Trading Matematico si attiva dall'app: apri la scheda e leggi cosa serve.`,
+    bottone: "Apri la scheda",
+  },
+]
+
 const BENVENUTI: { testo: string; bottone: string }[] = [
   {
     testo: `{saluto} {chi}.\n\nEntra nell'app Cashly: dentro c'è la lista dei business e dei servizi.`,
@@ -421,8 +438,32 @@ const BENVENUTI: { testo: string; bottone: string }[] = [
 // un tentativo del genere fallirebbe in silenzio per quasi tutti. Il bottone
 // e' un link normale e non una web_app, perche' nei gruppi le web_app non si
 // possono aprire da un bottone in linea.
-async function benvenutoGruppo(chatId: number, entrati: any[]) {
-  const persone = (entrati || []).filter((m: any) => m && !m.is_bot)
+// Riconosce il link d'invito usato per entrare. Il nome del link si imposta in
+// config, chiave invito_matematico: cosi' si cambia senza toccare il codice.
+// Senza quella chiave si riconoscono comunque i nomi che contengono
+// "matematico" o "tmpro".
+async function daSitoMatematico(invito: any): Promise<boolean> {
+  if (!invito) return false
+  const nome = String(invito.name || "").toLowerCase()
+  const url = String(invito.invite_link || "").toLowerCase()
+  const { data: cfg } = await supabase.from("config").select("valore").eq("chiave", "invito_matematico").maybeSingle()
+  const atteso = String(cfg?.valore || "").trim().toLowerCase()
+  if (atteso) return nome.includes(atteso) || url.includes(atteso)
+  return nome.includes("matematico") || nome.includes("tmpro")
+}
+
+async function benvenutoGruppo(chatId: number, entrati: any[], invito?: any) {
+  let persone = (entrati || []).filter((m: any) => m && !m.is_bot)
+  if (!persone.length) return
+
+  // Lo stesso ingresso puo' arrivare due volte: come messaggio di servizio e
+  // come chat_member. Chi e' gia' stato salutato negli ultimi minuti si salta,
+  // se no il gruppo vede il benvenuto doppio.
+  const daPoco = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+  const { data: gia } = await supabase.from("eventi").select("telegram_id")
+    .eq("tipo", "entrato_gruppo").gte("created_at", daPoco)
+  const salutati = new Set((gia ?? []).map((e: any) => e.telegram_id))
+  persone = persone.filter((m: any) => !salutati.has(m.id))
   if (!persone.length) return
 
   // Se entrano in dieci nello stesso momento si manda UN messaggio, non dieci:
@@ -439,7 +480,9 @@ async function benvenutoGruppo(chatId: number, entrati: any[]) {
   // di fila, ed e' proprio quello che fa dire "e' un bot". Si conta quanti
   // ingressi ci sono gia' stati e si scorre la lista in ordine.
   const { count } = await supabase.from("eventi").select("id", { count: "exact", head: true }).eq("tipo", "entrato_gruppo")
-  const variante = BENVENUTI[(count ?? 0) % BENVENUTI.length]
+  const dalSito = await daSitoMatematico(invito)
+  const elenco = dalSito ? BENVENUTI_MATEMATICO : BENVENUTI
+  const variante = elenco[(count ?? 0) % elenco.length]
 
   const testo = variante.testo
     .replace("{saluto}", persone.length > 1 ? "Benvenuti" : "Benvenuto")
@@ -451,7 +494,7 @@ async function benvenutoGruppo(chatId: number, entrati: any[]) {
   await sendMessage(chatId, testo, markup, "HTML")
 
   for (const m of persone) {
-    await supabase.from("eventi").insert({ telegram_id: m.id, tipo: "entrato_gruppo", dettaglio: `chat:${chatId}` }).then(() => {}, () => {})
+    await supabase.from("eventi").insert({ telegram_id: m.id, tipo: "entrato_gruppo", dettaglio: dalSito ? "da:matematico" : `chat:${chatId}` }).then(() => {}, () => {})
   }
 }
 
@@ -732,6 +775,22 @@ async function handleUpdate(u: any) {
   }
 
   // Un iscritto blocca/sblocca il bot -> aggiorna lo stato attivo; se esce, avvisa il padrino.
+  // Un ingresso nel gruppo. A differenza del messaggio di servizio, questo
+  // update porta anche il link d'invito usato: e' l'unico modo per sapere se
+  // la persona arriva dal sito. Richiede il bot amministratore e chat_member
+  // fra gli allowed_updates del webhook.
+  if (u.chat_member) {
+    const cm = u.chat_member
+    const prima = cm.old_chat_member?.status
+    const dopo = cm.new_chat_member?.status
+    const entrato = (prima === "left" || prima === "kicked") && (dopo === "member" || dopo === "administrator" || dopo === "creator")
+    const tipo = cm.chat?.type
+    if (entrato && (tipo === "group" || tipo === "supergroup") && cm.new_chat_member?.user) {
+      await benvenutoGruppo(cm.chat.id, [cm.new_chat_member.user], cm.invite_link)
+    }
+    return
+  }
+
   if (u.my_chat_member) {
     const st = u.my_chat_member.new_chat_member?.status
     const uid = u.my_chat_member.from?.id
@@ -3452,7 +3511,7 @@ serve(async (req) => {
       const res = await fetch(`${TG_API}/setWebhook`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: webhookUrl, secret_token: WEBHOOK_SECRET, allowed_updates: ["message", "callback_query", "my_chat_member"] }),
+        body: JSON.stringify({ url: webhookUrl, secret_token: WEBHOOK_SECRET, allowed_updates: ["message", "callback_query", "my_chat_member", "chat_member"] }),
       })
       return json({ ok: true, telegram: await res.json(), webhook_url: webhookUrl })
     }
