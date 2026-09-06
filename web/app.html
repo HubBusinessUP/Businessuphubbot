@@ -590,7 +590,7 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .scpane{padding:16px 20px 0}
 /* Misure e voci portano il proprio margine laterale: qui va tolto, se no rientrano
    due volte e la colonna non si allinea piu' con il resto della schermata. */
-.scpane[data-pane="car"],.scpane[data-pane="cf"]{padding:16px 0 0}
+.scpane[data-pane="car"]{padding:16px 0 0}
 /* Le card di "Come funziona" non hanno stati: niente numero acceso, niente
    opacita' ridotta. Sono tutte allo stesso livello perche' si leggono tutte. */
 .stcard.cf .stnum{background:var(--s2);color:var(--dim)}
@@ -770,9 +770,6 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 #gruppoCta i{font-style:normal;font-size:13px;color:var(--dim);line-height:1.35}
 #gruppoCta .freccia{width:17px;height:17px;flex:0 0 auto;fill:none;stroke:var(--mut);
   stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* "Come funziona": una colonna di video, nient'altro. */
-.cfvideo{display:flex;flex-direction:column;gap:14px;padding:16px 16px 4px}
-.cfvideo .stmed{margin:0}
 #listaReale{background:var(--s0);border-radius:22px;margin:14px 20px 20px;padding:2px 0;overflow:hidden}
 
 /* ===== TESTATA E CATEGORIE, SUL MODELLO DEL RIFERIMENTO =====
@@ -1352,7 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=176"></script>
+<script src="identikit.js?v=177"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1974,14 +1971,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // "Come funziona": si spiega, non si esegue. Stessa forma delle card del
   // tutorial (si riconoscono), ma niente spunta "fatto": una spiegazione che
   // chiede di essere spuntata sembra un passo obbligatorio e blocca chi legge.
-  function scComeFunziona(d){
-    var s = d.servizio || {};
-    var b = Array.isArray(s.come_funziona) ? s.come_funziona : [];
-    var out = b.map(function(x){ return x && x.media_url ? mediaHtml(x.media_url) : ''; })
-      .filter(function(h){ return h; })
-      .join('');
-    return out ? '<div class="cfvideo">' + out + '</div>' : '';
-  }
   function scCaratteristiche(d){
     var s = d.servizio || {};
     var out = scMisure(d) + scVoci(d);
@@ -2123,21 +2112,17 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // gli altri: prima si vedeva solo la panoramica e caratteristiche e
     // funzionamento restavano nel database senza arrivare a schermo. Cambia solo
     // il fondo: un bottone che porta in chat invece del link al fornitore.
-    var cf = scComeFunziona(d);
     var car = scCaratteristiche(d);
     // Le linguette compaiono solo se c'e' qualcosa dentro: una linguetta vuota che
     // si apre sul nulla e' peggio che non averla. Se la tab attiva sparisce, si
     // torna in Panoramica per non restare su un pannello che non c'e' piu'.
-    if (!cf && SC_TAB === 'cf') SC_TAB = 'pan';
     if (!car && SC_TAB === 'car') SC_TAB = 'pan';
     return scTesta(d)
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
-      +   (cf ? '<button class="sctab' + (SC_TAB === 'cf' ? ' on' : '') + '" data-sctab="cf">Come funziona</button>' : '')
       +   (car ? '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>' : '')
       + '</div>'
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
-      + (cf ? '<div class="scpane"' + (SC_TAB === 'cf' ? '' : ' hidden') + ' data-pane="cf">' + cf + '</div>' : '')
       + (car ? '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + car + '</div>' : '')
       + '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>';
   }
