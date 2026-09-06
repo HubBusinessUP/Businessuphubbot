@@ -770,6 +770,9 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 #gruppoCta i{font-style:normal;font-size:13px;color:var(--dim);line-height:1.35}
 #gruppoCta .freccia{width:17px;height:17px;flex:0 0 auto;fill:none;stroke:var(--mut);
   stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* "Come funziona": una colonna di video, nient'altro. */
+.cfvideo{display:flex;flex-direction:column;gap:14px;padding:16px 16px 4px}
+.cfvideo .stmed{margin:0}
 #listaReale{background:var(--s0);border-radius:22px;margin:14px 20px 20px;padding:2px 0;overflow:hidden}
 
 /* ===== TESTATA E CATEGORIE, SUL MODELLO DEL RIFERIMENTO =====
@@ -1349,7 +1352,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=175"></script>
+<script src="identikit.js?v=176"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1971,39 +1974,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // "Come funziona": si spiega, non si esegue. Stessa forma delle card del
   // tutorial (si riconoscono), ma niente spunta "fatto": una spiegazione che
   // chiede di essere spuntata sembra un passo obbligatorio e blocca chi legge.
-  // Serve a "Come funziona": disegna i link di un blocco. Era finita via con la
-  // schermata del tutorial, che la usava anch'essa, e senza di lei ogni scheda
-  // con dei blocchi compilati smetteva di aprirsi.
-  function linkStepHtml(st){
-    var l = Array.isArray(st.links) ? st.links.slice() : [];
-    if (!l.length && st.link_url) l = [{ url: st.link_url, label: st.link_label }];
-    l = l.filter(function(x){ return x && x.url; });
-    if (!l.length) return '';
-    return '<div class="stbtns">' + l.map(function(x){
-      return '<a class="stbtn" href="' + esc(x.url) + '" target="_blank" rel="noopener" data-ext="1">'
-        + esc(x.label || 'Apri il link')
-        + '<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
-    }).join('') + '</div>';
-  }
-
   function scComeFunziona(d){
     var s = d.servizio || {};
-    var b = Array.isArray(s.come_funziona) ? s.come_funziona.filter(function(x){
-      return x && (x.titolo || x.testo);
-    }) : [];
-    if (!b.length) return '';
-    return b.map(function(x, i){
-      return '<div class="stcard cf">'
-        + '<div class="stnum">' + (i + 1) + '</div>'
-        + '<div class="stbody">'
-        +   (x.titolo ? '<div class="sttit">' + esc(x.titolo) + '</div>' : '')
-        +   (x.testo ? '<div class="sttxt">' + esc(x.testo) + '</div>' : '')
-        +   mediaHtml(x.media_url)
-        +   linkStepHtml(x)
-        + '</div></div>';
-    }).join('');
+    var b = Array.isArray(s.come_funziona) ? s.come_funziona : [];
+    var out = b.map(function(x){ return x && x.media_url ? mediaHtml(x.media_url) : ''; })
+      .filter(function(h){ return h; })
+      .join('');
+    return out ? '<div class="cfvideo">' + out + '</div>' : '';
   }
-
   function scCaratteristiche(d){
     var s = d.servizio || {};
     var out = scMisure(d) + scVoci(d);
