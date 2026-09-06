@@ -1349,7 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=174"></script>
+<script src="identikit.js?v=175"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1971,6 +1971,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // "Come funziona": si spiega, non si esegue. Stessa forma delle card del
   // tutorial (si riconoscono), ma niente spunta "fatto": una spiegazione che
   // chiede di essere spuntata sembra un passo obbligatorio e blocca chi legge.
+  // Serve a "Come funziona": disegna i link di un blocco. Era finita via con la
+  // schermata del tutorial, che la usava anch'essa, e senza di lei ogni scheda
+  // con dei blocchi compilati smetteva di aprirsi.
+  function linkStepHtml(st){
+    var l = Array.isArray(st.links) ? st.links.slice() : [];
+    if (!l.length && st.link_url) l = [{ url: st.link_url, label: st.link_label }];
+    l = l.filter(function(x){ return x && x.url; });
+    if (!l.length) return '';
+    return '<div class="stbtns">' + l.map(function(x){
+      return '<a class="stbtn" href="' + esc(x.url) + '" target="_blank" rel="noopener" data-ext="1">'
+        + esc(x.label || 'Apri il link')
+        + '<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></a>';
+    }).join('') + '</div>';
+  }
+
   function scComeFunziona(d){
     var s = d.servizio || {};
     var b = Array.isArray(s.come_funziona) ? s.come_funziona.filter(function(x){
@@ -2126,15 +2141,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
   function schedaScreenHtml(d){
     var s0 = d.servizio || {};
-    // Scheda snella: solo Panoramica e il bottone Richiedi. La riga finale e' la
-    // chiamata all'azione dentro il testo (l'ha chiesta Antonio: "a fine testo").
-    if (s0.solo_contatto) {
-      return scTesta(d)
-        + '<div class="sctabs"><button class="sctab on" data-sctab="pan">Panoramica</button></div>'
-        + '<div class="scpane" data-pane="pan">' + scPanoramica(d)
-        +   '<p class="scfin">Richiedi Informazioni e tutorial attivazione</p></div>'
-        + '<div class="scfondo">' + schedaContattoHtml(s0.nome) + '</div>';
-    }
+    // I prodotti che si chiudono in chat mostrano tutto quello che hanno, come
+    // gli altri: prima si vedeva solo la panoramica e caratteristiche e
+    // funzionamento restavano nel database senza arrivare a schermo. Cambia solo
+    // il fondo: un bottone che porta in chat invece del link al fornitore.
     var cf = scComeFunziona(d);
     var car = scCaratteristiche(d);
     // Le linguette compaiono solo se c'e' qualcosa dentro: una linguetta vuota che
@@ -2151,7 +2161,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
       + (cf ? '<div class="scpane"' + (SC_TAB === 'cf' ? '' : ' hidden') + ' data-pane="cf">' + cf + '</div>' : '')
       + (car ? '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + car + '</div>' : '')
-      + '<div class="scfondo">' + schedaHtml(d) + '</div>';
+      + '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>';
   }
 
   function traccia(azione, riferimento, dettaglio){
