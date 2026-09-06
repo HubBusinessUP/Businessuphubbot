@@ -1566,7 +1566,16 @@ function render(){
   // hero + stats
   const last = c[c.length-1];
   const totalGain = last ? last.gainTotale : 0;
-  const currentCapitale = last ? Number(last.capitale) : 0;
+  // il rendimento si misura sul capitale in gestione, cioè la somma
+  // dell'ultimo capitale di ogni conto: con due conti attivi l'ultima
+  // riga da sola darebbe una percentuale falsata
+  let currentCapitale = 0;
+  if (last) {
+    const ultimoPerConto = new Map();
+    c.forEach(r => { const k = (r.contoN != null ? r.contoN : 1); ultimoPerConto.set(k, Number(r.capitale)||0); });
+    ultimoPerConto.forEach(v => currentCapitale += v);
+    if (!currentCapitale) currentCapitale = Number(last.capitale)||0;
+  }
   const pct = currentCapitale ? (totalGain/currentCapitale*100) : 0;
 
   document.getElementById('heroTotal').textContent = fmtEur(totalGain);
