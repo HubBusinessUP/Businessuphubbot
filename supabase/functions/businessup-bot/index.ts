@@ -490,7 +490,12 @@ async function benvenutoGruppo(chatId: number, entrati: any[], invito?: any) {
     .replace("{chi}", chi)
 
   // start=gruppo: nell'evento resta scritto da dove e' arrivato.
-  const markup = { inline_keyboard: [[{ text: variante.bottone, url: `https://t.me/${BOT_USERNAME}?start=gruppo` }]] }
+  // Il bottone porta avanti la provenienza: chi e' entrato dal link del sito
+  // arriva al bot come tale, e il bot gli apre la scheda del Trading Matematico
+  // invece della lista intera. Senza questo, il passaggio dal gruppo azzerava
+  // tutto e chi veniva dal sito diventava un iscritto qualunque.
+  const avvio = dalSito ? "tmpro" : "gruppo"
+  const markup = { inline_keyboard: [[{ text: variante.bottone, url: `https://t.me/${BOT_USERNAME}?start=${avvio}` }]] }
   await sendMessage(chatId, testo, markup, "HTML")
 
   for (const m of persone) {
