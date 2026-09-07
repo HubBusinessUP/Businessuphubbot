@@ -498,6 +498,40 @@ async function benvenutoGruppo(chatId: number, entrati: any[], invito?: any) {
   }
 }
 
+// Avvisa l'admin che si e' iscritto qualcuno. Si manda solo alla PRIMA
+// iscrizione, non a ogni /start: chi riapre il bot dieci volte non deve
+// produrre dieci notifiche.
+async function avvisaAdminNuovoIscritto(from: any, payload?: string) {
+  const nome = String(from?.first_name || "").replace(/[<>&]/g, "").trim()
+  const cognome = String(from?.last_name || "").replace(/[<>&]/g, "").trim()
+  const chi = [nome, cognome].filter(Boolean).join(" ") || "Senza nome"
+  const uname = String(from?.username || "").replace(/^@/, "")
+
+  // Da dove arriva: il gruppo, un invito di qualcuno, o direttamente il bot.
+  let da = "dal bot"
+  if (payload === "gruppo") da = "dal gruppo"
+  else if (payload && payload.startsWith("svc_")) da = "da una scheda condivisa"
+  else if (payload && payload.startsWith("ref_")) da = "da un invito"
+  else if (payload) da = "da un link condiviso"
+
+  // Quanti sono in tutto: un numero che cresce sotto gli occhi vale piu' di
+  // una notifica isolata.
+  const { count: totale } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
+
+  const righe = [
+    `<b>Nuovo iscritto</b>`,
+    ``,
+    `${htmlEsc(chi)}${uname ? ` (@${htmlEsc(uname)})` : ""}`,
+    `Arrivato ${da}.`,
+    ``,
+    `Iscritti in tutto: <b>${totale ?? 0}</b>`,
+  ]
+  // Il tasto per scrivergli c'e' solo se ha un username: senza, Telegram non
+  // offre nessun modo di aprire la chat da un bottone.
+  const markup = uname ? { inline_keyboard: [[{ text: "Scrivigli", url: `https://t.me/${uname}` }]] } : undefined
+  await sendMessage(ADMIN_ID, righe.join("\n"), markup, "HTML")
+}
+
 async function handleStart(chatId: number, from: any, payload?: string) {
   setMenuButton(chatId).catch(() => {})
   let refBy: number | undefined
@@ -561,10 +595,16 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: provenienza })
 
   const sponsorFinale = existing?.referred_by ?? refBy
-  if (!existing && sponsorFinale) {
-    // Nessun avviso allo sponsor: la rete non ha piu' una schermata
-    // dove guardarla. Il legame resta tracciato sul lead, per l'admin.
-    if (sponsorFinale !== ADMIN_ID) verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
+
+  // L'avviso all'admin dipende solo dal fatto che sia gente nuova, non da chi
+  // l'ha portata: se un domani qualcuno arriva senza sponsor, va segnalato uguale.
+  // Niente avviso allo sponsor invece: la rete non ha piu' una schermata dove
+  // guardarla, e l'admin e' l'unico che deve accorgersi di chi entra.
+  if (!existing) {
+    inBackground(avvisaAdminNuovoIscritto(from, payload).catch((e) => console.error("avviso iscrizione:", e)))
+    if (sponsorFinale && sponsorFinale !== ADMIN_ID) {
+      verificaSbloccoPartner(sponsorFinale).catch((e) => console.error("sblocco partner:", e))
+    }
   }
 
   const nomeBenvenuto = String(from.first_name || "").replace(/[<>&]/g, "").trim()
