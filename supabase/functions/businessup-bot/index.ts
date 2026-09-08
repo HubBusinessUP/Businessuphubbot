@@ -3591,7 +3591,11 @@ serve(async (req) => {
     // Riconfigura il webhook includendo i click dei bottoni (callback_query), oltre ai messaggi.
     if (sub === "admin/setup-webhook" && req.method === "POST") {
       if (req.headers.get("x-admin-key") !== ADMIN_API_KEY) return json({ error: "unauthorized" }, 401)
-      const webhookUrl = `${url.origin}${url.pathname.replace(/\/admin\/setup-webhook$/, "/telegram")}`
+      // L'indirizzo non si ricava dalla richiesta: dentro l'ambiente Supabase
+      // origin arriva in http e il prefisso /functions/v1 e' gia' stato tolto,
+      // e Telegram rifiuta un webhook che non sia https. SUPABASE_URL e' l'unica
+      // fonte attendibile del proprio indirizzo pubblico.
+      const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/businessup-bot/telegram`
       const res = await fetch(`${TG_API}/setWebhook`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
