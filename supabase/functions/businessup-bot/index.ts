@@ -755,9 +755,16 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
   if (!pending || pending.tipo === "awaiting") return { inviati: 0, falliti: 0 }
   const destinatari = await destinatariNews(segmento)
 
+  // Un annuncio senza un modo per aprire l'app resta una riga di testo: si
+  // aggiunge un bottone. Punta alla scheda in evidenza, se ce n'e' una attiva,
+  // se no alla lista. Cosi' non va aggiornato a ogni lancio.
+  const { data: vetrina } = await supabase.from("servizi").select("id, nome").eq("stato", "attivo").eq("in_evidenza", true).limit(1).maybeSingle()
+  const urlNews = WEBAPP_URL + "/app.html?" + (vetrina ? "scheda=" + (vetrina as any).id + "&" : "") + "_=" + Date.now()
+  const markupNews = { inline_keyboard: [[{ text: vetrina ? "Apri la scheda" : "Apri la lista", web_app: { url: urlNews } }]] }
+
   let inviati = 0, falliti = 0
   for (const tid of destinatari) {
-    const res = await inviaContenuto(tid, pending.tipo, pending.testo, pending.photo_file_id)
+    const res = await inviaContenuto(tid, pending.tipo, pending.testo, pending.photo_file_id, markupNews)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
     else falliti++
