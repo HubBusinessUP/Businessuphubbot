@@ -1349,7 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=177"></script>
+<script src="identikit.js?v=178"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2912,7 +2912,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (!CONTESTO) return TXT;
       // Una riga sola (Antonio). La descrizione la legge nella scheda: qui serve
       // il motivo per cliccare, non un riassunto che ripete quello che trovera'.
-      return 'Dai un\'occhiata a ' + (CONTESTO.nome || '') + ' su Cashly 👀';
+      return 'Dai un\'occhiata a ' + (CONTESTO.nome || '') + ' su Cashly 👀'
+        // Chi riceve il link e non ha mai usato il bot si trova davanti un tasto
+        // Avvia e nient'altro: senza una riga di istruzioni resta li'.
+        + '\n\nApri il link, premi Avvia e la scheda si apre da sola.';
     }
     function titoloCondivisione(){ return CONTESTO ? (CONTESTO.nome + ' su Cashly') : 'Cashly'; }
     function extOpen(u){ try{ if(tg&&tg.openLink) tg.openLink(u); else window.open(u,'_blank'); }catch(e){ window.open(u,'_blank'); } }

@@ -558,6 +558,21 @@ const BENVENUTI_BOT_SITO: { testo: string; bottone: string }[] = [
   { testo: `Ciao {nome}.\n\nHai letto del Trading Matematico: la scheda con tutti i numeri è qui.`, bottone: "Apri la scheda" },
 ]
 
+// Chi arriva da una scheda condivisa da qualcun altro. Il nome del business
+// entra nel testo: dire "ecco la lista" a chi si aspettava una cosa precisa
+// e' il modo piu' rapido per farlo uscire.
+const BENVENUTI_BOT_SCHEDA: { testo: string; bottone: string }[] = [
+  { testo: `Ciao {nome}.
+
+Ti hanno condiviso <b>{business}</b>. La scheda è qui sotto: cosa serve, quanto costa, come funziona.`, bottone: "Apri la scheda" },
+  { testo: `{nome}, benvenuto.
+
+Apri <b>{business}</b> qui sotto: c'è tutto quello che serve per capire se fa per te.`, bottone: "Vedi la scheda" },
+  { testo: `Ciao {nome}.
+
+Ecco <b>{business}</b>, la scheda che ti hanno mandato.`, bottone: "Apri la scheda" },
+]
+
 // Da dove arriva chi preme Avvia. Il sito passa start=tmpro; il gruppo start=gruppo.
 function daSito(payload?: string): boolean {
   const p = String(payload || "").toLowerCase()
@@ -668,10 +683,21 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
   // Quale dei due elenchi, e quale variante: si scorre sul numero di iscritti
   // gia' presenti, cosi' due persone di fila non leggono la stessa riga.
-  const elencoBv = dalSito ? BENVENUTI_BOT_SITO : BENVENUTI_BOT
+  // Se il link portava a una scheda precisa, si guarda com'e' messa adesso: se
+  // nel frattempo e' finita in bozza, meglio il benvenuto normale che nominare
+  // un business che poi non si apre.
+  let nomeScheda: string | null = null
+  if (schedaId) {
+    const { data: svCond } = await supabase.from("servizi").select("nome").eq("id", schedaId).eq("stato", "attivo").maybeSingle()
+    if (svCond) nomeScheda = (svCond as any).nome
+    else schedaId = null
+  }
+  const elencoBv = nomeScheda ? BENVENUTI_BOT_SCHEDA : (dalSito ? BENVENUTI_BOT_SITO : BENVENUTI_BOT)
   const { count: quantiGia } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
   const bv = elencoBv[(quantiGia ?? 0) % elencoBv.length]
-  const testoBenvenuto = bv.testo.replace("{nome}", nomeBenvenuto || "ciao")
+  const testoBenvenuto = bv.testo
+    .replace("{nome}", nomeBenvenuto || "ciao")
+    .replace("{business}", htmlEsc(nomeScheda || ""))
 
   const appUrl = WEBAPP_URL + "/app.html?" + (schedaId ? "scheda=" + schedaId + "&" : "") + "_=" + Date.now()
   const btn = { inline_keyboard: [[{ text: bv.bottone, web_app: { url: appUrl } }]] }
