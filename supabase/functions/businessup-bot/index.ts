@@ -69,8 +69,11 @@ function escHtml(x: unknown) {
   return String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
-async function sendMessage(chatId: number, text: string, markup?: any, parseMode?: string) {
-  const body: any = { chat_id: chatId, text }
+// threadId: nei gruppi a forum un messaggio senza di lui finisce nel topic
+// generale, non in quello voluto.
+async function sendMessage(chatId: number, text: string, markup?: any, parseMode?: string, threadId?: number) {
+  const body: any = { chat_id: chatId,
+      ...(threadId ? { message_thread_id: threadId } : {}), text }
   if (markup) body.reply_markup = markup
   if (parseMode) body.parse_mode = parseMode
   return fetch(`${TG_API}/sendMessage`, {
@@ -925,6 +928,45 @@ async function handleUpdate(u: any) {
   // ----- Flusso annunci (solo admin) -----
   if (isAdmin) {
     // /news [testo]: senza testo apre la modalità (mandami il contenuto), con testo prepara subito.
+    // /qui, scritto DENTRO un topic del gruppo: il bot si segna dove si trova.
+    // Serve perche' ne' l'id del gruppo ne' quello del topic si leggono da
+    // nessuna parte nell'interfaccia di Telegram.
+    if (text === "/qui") {
+      const tid = u.message.message_thread_id
+      const dove = `${chatId}${tid ? ":" + tid : ""}`
+      await supabase.from("config").upsert({ chiave: "topic_post", valore: dove }, { onConflict: "chiave" })
+      await sendMessage(chatId, tid ? `Memorizzato: pubblichero' qui.` : `Memorizzato: questa chat, topic generale.`, undefined, undefined, tid)
+      return
+    }
+
+    // /post <testo>: pubblica nel topic memorizzato. Un link YouTube dentro al
+    // testo lo espande Telegram da solo, con copertina e titolo.
+    if (text.startsWith("/post")) {
+      const contenuto = text.slice(5).trim()
+      if (!contenuto) {
+        await sendMessage(chatId, "Scrivi cosa pubblicare: /post seguito dal testo o dal link.")
+        return
+      }
+      const { data: cfgTopic } = await supabase.from("config").select("valore").eq("chiave", "topic_post").maybeSingle()
+      const dove = String(cfgTopic?.valore || "")
+      if (!dove) {
+        await sendMessage(chatId, "Non so ancora dove pubblicare. Scrivi /qui dentro il topic del gruppo.")
+        return
+      }
+      const [gruppoStr, threadStr] = dove.split(":")
+      const gruppo = parseInt(gruppoStr)
+      const thread = threadStr ? parseInt(threadStr) : undefined
+      const res = await sendMessage(gruppo, contenuto, undefined, undefined, thread)
+      const esito = await res.json().catch(() => ({}))
+      if (esito.ok) {
+        await sendMessage(chatId, "Pubblicato nel gruppo.")
+        await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "post_gruppo", dettaglio: dove }).then(() => {}, () => {})
+      } else {
+        await sendMessage(chatId, `Non ha funzionato: ${htmlEsc(String(esito.description || "errore sconosciuto"))}`)
+      }
+      return
+    }
+
     if (text === "/news") { await attendiNews(chatId); return }
     if (text.startsWith("/news ")) {
       const testo = text.slice(6).trim()
@@ -3557,6 +3599,37 @@ function testoFollowup(giorno: number, nome: string, business?: string | null): 
   return `${nome}, ultimo messaggio da parte mia.\n\nLa lista resta li' e si aggiorna quando aggiungo qualcosa: la riapri dal menu del bot quando ti serve. Non ti scrivo piu'.`
 }
 
+// Pubblica i post programmati la cui ora e' arrivata. Li tiene in config, una
+// riga per post: chiave post_<quando>, valore JSON con dove e cosa. Cosi' non
+// serve una tabella nuova e il testo resta modificabile fino all'ultimo.
+async function cronPostProgrammati() {
+  const { data: righe } = await supabase.from("config").select("chiave, valore").like("chiave", "postprog_%")
+  let pubblicati = 0
+  for (const r of (righe ?? []) as any[]) {
+    let dati: any = null
+    try { dati = JSON.parse(r.valore) } catch { continue }
+    if (!dati || !dati.quando || !dati.dove || !dati.testo) continue
+    if (new Date(dati.quando).getTime() > Date.now()) continue   // non e' ancora ora
+
+    const [gruppoStr, threadStr] = String(dati.dove).split(":")
+    const gruppo = parseInt(gruppoStr)
+    const thread = threadStr ? parseInt(threadStr) : undefined
+    const res = await sendMessage(gruppo, String(dati.testo), undefined, undefined, thread)
+    const esito = await res.json().catch(() => ({}))
+
+    if (esito.ok) {
+      pubblicati++
+      await supabase.from("config").delete().eq("chiave", r.chiave)
+      await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "post_programmato", dettaglio: String(dati.dove) }).then(() => {}, () => {})
+      await sendMessage(ADMIN_ID, "Post programmato pubblicato nel gruppo.").catch(() => {})
+    } else {
+      // Si lascia la riga dov'e': al giro dopo ci riprova, e intanto l'admin sa.
+      await sendMessage(ADMIN_ID, `Il post programmato non e' partito: ${String(esito.description || "errore")}`).catch(() => {})
+    }
+  }
+  return json({ ok: true, pubblicati })
+}
+
 async function cronFollowup() {
   const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, created_at, primo_start_at").eq("bot_started", true).not("attivo", "is", false)
 
@@ -3813,6 +3886,12 @@ serve(async (req) => {
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       if (!tid) return json({ error: "unauthorized" }, 401)
       return await apiReteBroadcast(tid, await req.json())
+    }
+
+    if (sub === "cron/post" && req.method === "POST") {
+      const { data: cfg } = await supabase.from("config").select("valore").eq("chiave", "cron_secret").maybeSingle()
+      if (!cfg?.valore || req.headers.get("x-cron-key") !== cfg.valore) return json({ error: "unauthorized" }, 401)
+      return await cronPostProgrammati()
     }
 
     if (sub === "cron/followup" && req.method === "POST") {
