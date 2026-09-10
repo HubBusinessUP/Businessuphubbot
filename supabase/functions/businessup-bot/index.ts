@@ -349,7 +349,7 @@ async function verificaSbloccoPartner(sponsorId: number) {
 async function onIscrittoUscito(uid: number) {
   const { data: lead } = await supabase.from("leads").select("referred_by, nome, username").eq("telegram_id", uid).maybeSingle()
   await supabase.from("leads").update({ attivo: false, bloccato_at: new Date().toISOString() }).eq("telegram_id", uid)
-  await supabase.from("eventi").insert({ telegram_id: uid, tipo: "bot_bloccato", dettaglio: null }).catch(() => {})
+  await supabase.from("eventi").insert({ telegram_id: uid, tipo: "bot_bloccato", dettaglio: null }).then(() => {}, () => {})
   const sponsor = lead?.referred_by
   if (sponsor && sponsor !== ADMIN_ID) {
     // Nessun avviso di uscita: parlava di rete e di stato Partner,
@@ -558,7 +558,19 @@ const BENVENUTI_BOT_SITO: { testo: string; bottone: string }[] = [
 // Da dove arriva chi preme Avvia. Il sito passa start=tmpro; il gruppo start=gruppo.
 function daSito(payload?: string): boolean {
   const p = String(payload || "").toLowerCase()
-  return p === "tmpro" || p === "matematico" || p === "sito"
+  return p === "tmpro" || p === "matematico" || p === "sito" || p === "yt" || p.startsWith("yt_")
+}
+
+// Da dove arriva chi apre il bot, in forma leggibile nel campo dettaglio.
+// YouTube passa yt oppure yt_<codice-video>: e' l'unico modo di sapere da quale
+// video arriva la persona, perche' Telegram non porta il referrer del sito.
+function fonteAvvio(payload?: string): string | null {
+  const p = String(payload || "").toLowerCase()
+  if (p === "yt") return "da:youtube"
+  if (p.startsWith("yt_")) return "da:youtube:" + p.slice(3)
+  if (p === "gruppo") return "da:gruppo"
+  if (daSito(p)) return "da:sito-matematico"
+  return null
 }
 
 async function handleStart(chatId: number, from: any, payload?: string) {
@@ -594,6 +606,9 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }
   // Deep-link diretto a una scheda: t.me/cashlyhub_bot?start=svc_<id> apre quel business.
   if (payload?.startsWith("svc_")) { const sid = parseInt(payload.slice(4)); if (sid) schedaId = sid }
+  // Si calcola qui, subito dopo l'ultima riscrittura del payload: piu' sotto
+  // veniva letto prima di essere dichiarato e ogni /start moriva in errore.
+  const dalSito = daSito(payload)
   // Chi entra senza link viene assegnato al Sistema (Founder): il legame sponsor è a vita e non cambia mai.
   if (!refBy && from.id !== ADMIN_ID) refBy = ADMIN_ID
 
@@ -620,9 +635,7 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   }, { onConflict: "telegram_id" })
 
   // "gruppo" arriva dal bottone del benvenuto: si tiene la provenienza.
-  const provenienza = payload === "gruppo" ? "da:gruppo"
-    : dalSito ? "da:sito-matematico"
-    : (refBy ? `ref:${refBy}` : null)
+  const provenienza = fonteAvvio(payload) ?? (refBy ? `ref:${refBy}` : null)
   await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: provenienza })
 
   const sponsorFinale = existing?.referred_by ?? refBy
@@ -650,15 +663,15 @@ async function handleStart(chatId: number, from: any, payload?: string) {
       if (sv) schedaId = sv.id
     }
   }
-  const appUrl = WEBAPP_URL + "/app.html?" + (schedaId ? "scheda=" + schedaId + "&" : "") + "_=" + Date.now()
-  const btn = { inline_keyboard: [[{ text: bv.bottone, web_app: { url: appUrl } }]] }
   // Quale dei due elenchi, e quale variante: si scorre sul numero di iscritti
   // gia' presenti, cosi' due persone di fila non leggono la stessa riga.
-  const dalSito = daSito(payload)
   const elencoBv = dalSito ? BENVENUTI_BOT_SITO : BENVENUTI_BOT
   const { count: quantiGia } = await supabase.from("leads").select("telegram_id", { count: "exact", head: true }).eq("bot_started", true)
   const bv = elencoBv[(quantiGia ?? 0) % elencoBv.length]
   const testoBenvenuto = bv.testo.replace("{nome}", nomeBenvenuto || "ciao")
+
+  const appUrl = WEBAPP_URL + "/app.html?" + (schedaId ? "scheda=" + schedaId + "&" : "") + "_=" + Date.now()
+  const btn = { inline_keyboard: [[{ text: bv.bottone, web_app: { url: appUrl } }]] }
 
   // Video di presentazione (se impostato dall'admin con /presentazione): appare sopra al benvenuto.
   const { data: vid } = await supabase.from("config").select("valore").eq("chiave", "welcome_video").maybeSingle()
