@@ -1182,14 +1182,25 @@
 
       const acq = k.acquisizione || { invito: 0, diretto: 0 };
       const acqTot = (acq.invito || 0) + (acq.diretto || 0) || 1;
+      // La provenienza vera viene dagli eventi start, non da referred_by: distingue
+      // YouTube video per video. Se non c'e' ancora nessun evento si tiene la
+      // vecchia coppia invito/diretti, cosi' la scheda non resta vuota.
+      const prov = k.provenienza || [];
+      const provTot = prov.reduce((s, r) => s + (r.persone || 0), 0);
+      const provCol = (c) => c.indexOf("YouTube") === 0 ? "#F87171"
+        : c === "Sito" ? "#A78BFA" : c === "Gruppo" ? "#4A90E2" : c === "Invito" ? "#34D399" : "#64748B";
+      const provRow = (lab, val, col) => {
+        const pct = Math.round(((val || 0) / (provTot || 1)) * 100);
+        return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:#94A3B8">${esc(lab)}</span><span style="font-weight:700;color:#F8FAFC">${val || 0} · ${pct}%</span></div><div class="bt-fun-bar" style="height:8px"><i style="width:${pct}%;background:${col}"></i></div></div>`;
+      };
+      const provRows = prov.map((r) => provRow(r.canale, r.persone, provCol(r.canale))).join("");
       const acqRow = (lab, val, col) => {
         const pct = Math.round(((val || 0) / acqTot) * 100);
         return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="color:#94A3B8">${lab}</span><span style="font-weight:700;color:#F8FAFC">${val || 0} · ${pct}%</span></div><div class="bt-fun-bar" style="height:8px"><i style="width:${pct}%;background:${col}"></i></div></div>`;
       };
       const onb = k.onboarding || {};
-      const acqCard = `<div class="bt-card"><div class="bt-h"><b>Da dove arrivano</b><span class="bt-hint">${acqTot} ingressi</span></div><div class="bt-body">`
-        + acqRow("Da un invito", acq.invito, "#34D399")
-        + acqRow("Diretti", acq.diretto, "#64748B")
+      const acqCard = `<div class="bt-card"><div class="bt-h"><b>Da dove arrivano</b><span class="bt-hint">${provTot || acqTot} ingressi</span></div><div class="bt-body">`
+        + (provRows || (acqRow("Da un invito", acq.invito, "#34D399") + acqRow("Diretti", acq.diretto, "#64748B")))
         + (onb.tot ? `<div style="border-top:1px solid rgba(255,255,255,.07);margin-top:2px;padding-top:12px">` + acqRow("Crea profilo subito", onb.profilo, "#A78BFA") + `</div>` : "")
         + `</div></div>`;
 

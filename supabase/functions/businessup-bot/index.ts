@@ -2901,6 +2901,26 @@ async function apiAdminKpi() {
 
   const tassoAttivazione = (totale ?? 0) ? Math.round((setAttiv.size * 1000) / (totale ?? 1)) / 10 : 0
 
+  // Da quale canale arriva chi apre il bot. Il payload del deep link finisce in
+  // eventi.dettaglio ed e' l'unico posto dove YouTube lascia una traccia: Telegram
+  // non porta il referrer. Si contano persone distinte, non avvii: chi riapre il
+  // bot dieci volte non vale dieci.
+  const { data: evStart } = await supabase.from("eventi").select("telegram_id, dettaglio").eq("tipo", "start")
+  const perCanale = new Map<string, Set<number>>()
+  for (const e of evStart ?? []) {
+    const d = String((e as any).dettaglio || "")
+    let canale = "Diretti"
+    if (d.startsWith("da:youtube")) canale = d.length > 10 ? "YouTube · " + d.slice(11) : "YouTube"
+    else if (d === "da:sito-matematico") canale = "Sito"
+    else if (d === "da:gruppo") canale = "Gruppo"
+    else if (d.startsWith("ref:")) canale = "Invito"
+    if (!perCanale.has(canale)) perCanale.set(canale, new Set())
+    perCanale.get(canale)!.add((e as any).telegram_id)
+  }
+  const provenienza = [...perCanale.entries()]
+    .map(([canale, persone]) => ({ canale, persone: persone.size }))
+    .sort((a, b) => b.persone - a.persone)
+
   return json({
     totale: totale ?? 0,
     nuovi_oggi: nuoviOggi ?? 0,
@@ -2915,6 +2935,7 @@ async function apiAdminKpi() {
     serie,
     funnel,
     acquisizione: { invito: acqInvito, diretto: acqDiretto },
+    provenienza,
     churn_7gg: churn7,
     churn_tot: churnTot,
     tasso_attivazione: tassoAttivazione,
