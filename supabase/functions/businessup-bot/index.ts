@@ -3078,10 +3078,34 @@ async function apiAdminServizioStats(servizioId: number) {
   for (const a of (att ?? []) as any[]) { attTot++; const g = (a.created_at || "").slice(0, 10); if (g) attGiorno[g] = (attGiorno[g] ?? 0) + 1; if (a.created_at >= setteFa) att7++ }
 
   const { data: evS } = await supabase.from("eventi").select("telegram_id, created_at").eq("tipo", "scheda_aperta").eq("riferimento_id", servizioId)
-  const { data: evL } = await supabase.from("eventi").select("telegram_id").eq("tipo", "link_aperto").eq("riferimento_id", servizioId)
+  const { data: evL } = await supabase.from("eventi").select("telegram_id, created_at").eq("tipo", "link_aperto").eq("riferimento_id", servizioId).order("created_at", { ascending: false })
   const apSet = new Set<number>(); const apGiorno: Record<string, number> = {}
   for (const e of (evS ?? []) as any[]) { apSet.add(e.telegram_id); const g = (e.created_at || "").slice(0, 10); if (g) apGiorno[g] = (apGiorno[g] ?? 0) + 1 }
   const uscSet = new Set<number>(); for (const e of (evL ?? []) as any[]) uscSet.add(e.telegram_id)
+
+  // Chi e' uscito verso il fornitore, con l'ultima volta che l'ha fatto. Serve a
+  // ricontattarlo: un totale dice quanti, non chi. Un click vale uno per persona
+  // al giorno (lo decide /click-link), quindi "clic" qui sono giorni diversi.
+  const perPersona: Record<number, { ultimo: string; volte: number }> = {}
+  for (const e of (evL ?? []) as any[]) {
+    if (!e.telegram_id) continue
+    const r = perPersona[e.telegram_id] ||= { ultimo: e.created_at, volte: 0 }
+    r.volte++
+    if (e.created_at > r.ultimo) r.ultimo = e.created_at
+  }
+  const idCliccati = Object.keys(perPersona).map(Number)
+  const { data: chiLead } = idCliccati.length
+    ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", idCliccati)
+    : { data: [] }
+  const anag: Record<number, any> = {}
+  for (const l of (chiLead ?? []) as any[]) anag[l.telegram_id] = l
+  const cliccato = idCliccati.map((id) => ({
+    telegram_id: id,
+    nome: [anag[id]?.nome, anag[id]?.cognome].filter(Boolean).join(" ") || `ID ${id}`,
+    username: anag[id]?.username || "",
+    ultimo: perPersona[id].ultimo,
+    volte: perPersona[id].volte,
+  })).sort((a, b) => (a.ultimo < b.ultimo ? 1 : -1))
 
   const giorni: string[] = []
   for (let i = 29; i >= 0; i--) giorni.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10))
@@ -3107,7 +3131,7 @@ async function apiAdminServizioStats(servizioId: number) {
     servizio: { id: svc.id, nome: svc.nome, stato: svc.stato, logo_url: (svc as any).logo_url, logo_pieno: (svc as any).logo_pieno },
     voti: voti ?? 0, voti_base: (svc as any).voti_base ?? 0, salvataggi: salvataggi ?? 0,
     waitlist: waitlist ?? 0, segnalazioni: segnalazioni ?? 0, affiliati: affiliati ?? 0,
-    aperture_persone: apSet.size, uscite_persone: uscSet.size,
+    aperture_persone: apSet.size, uscite_persone: uscSet.size, cliccato,
     attivazioni: attTot, attivazioni_7gg: att7,
     conversione: apSet.size ? Math.round((attTot * 1000) / apSet.size) / 10 : 0,
     serie,
@@ -3859,6 +3883,23 @@ serve(async (req) => {
         await supabase.from("eventi").insert({ tipo: "link_aperto", telegram_id: tid, riferimento_id: sid })
       }
       return json({ ok: true })
+    }
+
+    // Video privato di una scheda: il file sta in un bucket NON pubblico e si
+    // guarda solo con un indirizzo firmato che scade dopo un'ora. Serve l'initData
+    // di Telegram: fuori dall'app non si ottiene nessun indirizzo, e un link
+    // copiato e passato ad altri smette di funzionare da solo.
+    if (sub === "video-url" && req.method === "GET") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      const sid = parseInt(url.searchParams.get("servizio_id") || "0")
+      if (!sid) return json({ error: "servizio_richiesto" }, 400)
+      const { data: sv } = await supabase.from("servizi").select("cta").eq("id", sid).maybeSingle()
+      const percorso = String((sv as any)?.cta?.video_privato || "").trim()
+      if (!percorso) return json({ error: "nessun_video" }, 404)
+      const { data: firmato, error: errFirma } = await supabase.storage.from("video-privati").createSignedUrl(percorso, 3600)
+      if (errFirma || !firmato?.signedUrl) return json({ error: "video_non_disponibile" }, 404)
+      return json({ url: firmato.signedUrl, scade_tra: 3600 })
     }
 
     if (sub === "step-progress" && req.method === "POST") {

@@ -1349,7 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=178"></script>
+<script src="identikit.js?v=179"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1804,6 +1804,40 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // solo al Rischio), non decorazione: gli altri valori restano neutri.
   // Il media di uno step: una foto caricata, una clip, oppure un link YouTube/Vimeo.
   // Si riconosce dall'URL, cosi' l'admin ha un campo solo e non deve dichiarare il tipo.
+  // ---- VIDEO PRIVATI ----
+  // Il lettore non espone download, riproduzione remota, velocita' ne' picture-in-picture,
+  // e il tasto destro non apre il menu. L'indirizzo scade dopo un'ora: si tiene in
+  // memoria per 50 minuti, cosi' riaprire la scheda non lo richiede ogni volta.
+  // Se qualcosa non va, il segnaposto sparisce e la scheda resta intera.
+  var VPRIV = {};
+  function caricaVideoPrivati(radice){
+    var posti = (radice || document).querySelectorAll('[data-vpriv]:not([data-vpronto])');
+    Array.prototype.forEach.call(posti, function(el){
+      el.setAttribute('data-vpronto', '1');
+      var sid = parseInt(el.getAttribute('data-vpriv')) || 0;
+      if (!sid) { el.remove(); return; }
+      var mostra = function(u){
+        el.innerHTML = '<video src="' + esc(u) + '" controls playsinline preload="metadata"'
+          + ' controlsList="nodownload noremoteplayback noplaybackrate" disablePictureInPicture'
+          + ' oncontextmenu="return false"></video>';
+      };
+      var c = VPRIV[sid];
+      if (c && c.fino > Date.now()) { mostra(c.url); return; }
+      fetch(API_URL + '/video-url?servizio_id=' + sid, { headers: HDRS, cache: 'no-store' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || !d.url) throw new Error('nessun video');
+          VPRIV[sid] = { url: d.url, fino: Date.now() + 50 * 60 * 1000 };
+          mostra(d.url);
+        })
+        .catch(function(){ var box = el.parentNode; el.remove(); if (box && !box.children.length) box.remove(); });
+    });
+  }
+  try {
+    new MutationObserver(function(){ caricaVideoPrivati(); })
+      .observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+
   function mediaHtml(url){
     var u = String(url || '').trim();
     if (!u) return '';
@@ -1908,7 +1942,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var t = s.panoramica || s.descrizione || '';
     // Video demo in cima alla Panoramica (se il servizio ne ha uno): un video mostra
     // in 20 secondi quello che il testo spiega in 200 parole.
-    var video = s.media_url ? ('<div style="margin-bottom:16px">' + mediaHtml(s.media_url) + '</div>') : '';
+    // Un video privato non ha un indirizzo pubblico: qui resta solo un segnaposto,
+    // e l'indirizzo firmato lo chiede caricaVideoPrivati appena la scheda e' a schermo.
+    var vp = (s.cta && typeof s.cta.video_privato === 'string' && s.cta.video_privato.trim()) ? s.id : 0;
+    var video = vp
+      ? '<div style="margin-bottom:16px"><div class="stmed" data-vpriv="' + vp + '"></div></div>'
+      : (s.media_url ? ('<div style="margin-bottom:16px">' + mediaHtml(s.media_url) + '</div>') : '');
     if (!t && !video) return '<div class="vuoto" style="padding:18px 0">Panoramica ancora da scrivere.</div>';
     return video
       + (t ? '<div class="spanor">' + esc(t) + '</div>' : '')
@@ -2038,16 +2077,23 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
     var urlFornitore = s.link_principale || d.ref_link || '';
     if (urlFornitore) {
-      out += '<a class="cta-attiva" href="' + esc(urlFornitore) + '" target="_blank" rel="noopener" data-ext="1"'
+      // data-broker, non data-ext: e' l'handler che chiama segnaClick PRIMA di aprire
+      // il link. Con data-ext il click finiva nel gestore dei link generici, che apre
+      // e basta: dalla build 173 nessuna uscita verso i fornitori veniva piu' contata.
+      out += '<a class="cta-attiva" href="' + esc(urlFornitore) + '" target="_blank" rel="noopener" data-broker="1"'
            + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center">'
            + etichetta(s, 'attiva') + '</a>';
     } else {
       out += '<button class="cta-attiva" disabled>Link non disponibile</button>';
     }
     // Se la lista guadagna, si dice sulla scheda e non in fondo alle condizioni:
-    // e' la differenza fra una directory e una vetrina.
-    out += '<div class="cons">Servizio di un fornitore terzo: di ogni conseguenza risponde lui.'
-         + ' Cashly puo ricevere una commissione se attivi da questo link.</div>';
+    // e' la differenza fra una directory e una vetrina. Un servizio puo' avere un
+    // testo suo (cta.trasparenza: chi e' cliente, chi ha un'affiliazione, i
+    // rischi); se non ce l'ha resta la riga comune a tutti.
+    var trasp = (s.cta && typeof s.cta.trasparenza === 'string') ? s.cta.trasparenza.trim() : '';
+    out += '<div class="cons">' + (trasp ? esc(trasp)
+         : 'Servizio di un fornitore terzo: di ogni conseguenza risponde lui.'
+         + ' Cashly puo ricevere una commissione se attivi da questo link.') + '</div>';
     return out;
   }
 

@@ -2585,7 +2585,17 @@
       const viralHtml = `<div class="bt-card"><div class="bt-h"><b>Viralità</b><span class="bt-hint">quanto gira fuori dall'app</span></div><div class="bt-body">`
         + `<div style="display:flex;gap:26px;margin-bottom:12px"><div><div style="font-size:22px;font-weight:700;color:#F8FAFC;line-height:1">${v.condivisioni || 0}</div><div class="bt-sub">condivisioni</div></div><div><div style="font-size:22px;font-weight:700;color:#34D399;line-height:1">${v.aperture_link || 0}</div><div class="bt-sub">aperture da link</div></div></div>`
         + `<div class="bt-sub" style="margin-bottom:4px">Chi lo condivide di più</div>${sharerHtml}</div></div>`;
-      document.getElementById("svcStatsBody").innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${grid}${statChart(d.serie)}${tutHtml}${viralHtml}</div>`;
+      // Chi e' uscito verso il fornitore: nome, ultima volta, quante volte. Un totale
+      // dice quanti, questo dice chi, e serve a ricontattarli. "Volte" sono giorni
+      // diversi: /click-link ne conta al massimo uno per persona al giorno.
+      const cl = d.cliccato || [];
+      const quando = (iso) => { try { return new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+      const clickHtml = `<div class="bt-card"><div class="bt-h"><b>Chi è uscito verso il fornitore</b><span class="bt-hint">${cl.length} ${cl.length === 1 ? 'persona' : 'persone'}</span></div><div class="bt-body">`
+        + (cl.length
+          ? cl.map((u) => `<div class="bt-rank"><span class="nm">${esc(u.nome)}${u.username ? ` <span style="color:#64748B">@${esc(u.username)}</span>` : ''}</span><span class="vv" style="color:#F59E0B">${quando(u.ultimo)}${u.volte > 1 ? ` · ${u.volte} giorni` : ''}</span></div>`).join('')
+          : '<div class="bt-sub" style="padding:8px 6px">Ancora nessuno.</div>')
+        + `</div></div>`;
+      document.getElementById("svcStatsBody").innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${grid}${statChart(d.serie)}${tutHtml}${clickHtml}${viralHtml}</div>`;
     }
     async function openServizioStats(id) {
       document.getElementById("svcStatsTitle").textContent = "Caricamento…";
