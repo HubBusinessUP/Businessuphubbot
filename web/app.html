@@ -1349,7 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=180"></script>
+<script src="identikit.js?v=181"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2424,6 +2424,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // chi ha aperto la scheda PERCHE' gli e' arrivato l'annuncio.
   var FONTE_URL = '';
   try { FONTE_URL = new URLSearchParams(location.search).get('fonte') || ''; } catch(e){}
+  // ?ann=<numero>: quale messaggio. Se il pulsante apre la lista e non una scheda,
+  // l'apertura si registra lo stesso; il rinvio aspetta che lo script sia finito,
+  // cosi' la richiesta parte con l'autenticazione di Telegram gia' pronta.
+  var ANN_URL = '';
+  try { ANN_URL = (new URLSearchParams(location.search).get('ann') || '').replace(/[^0-9]/g, ''); } catch(e){}
+  if (FONTE_URL === 'annuncio' && !SCHEDA_URL) setTimeout(function(){ traccia('apre_da_annuncio', null, ANN_URL ? 'ann:' + ANN_URL : null); }, 50);
 
   // Scheletro di caricamento della home: senza, se la fetch e' lenta o cade (webview
   // Telegram su dati mobili, cold-start della function) lo schermo resta bianco ed e'
@@ -2469,7 +2475,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       renderCollezioni();
       // Se il link portava a un business preciso, aprilo direttamente sulla sua scheda
       // invece di lasciare la persona sul catalogo a cercarselo. Una volta sola.
-      if (SCHEDA_URL) { var sid = SCHEDA_URL; SCHEDA_URL = 0; setTimeout(function(){ apriScheda(sid); }, 60); if (FONTE_URL === 'annuncio') traccia('apre_da_annuncio', sid); }
+      if (SCHEDA_URL) { var sid = SCHEDA_URL; SCHEDA_URL = 0; setTimeout(function(){ apriScheda(sid); }, 60); if (FONTE_URL === 'annuncio') traccia('apre_da_annuncio', sid, ANN_URL ? 'ann:' + ANN_URL : null); }
     })
     .catch(function(){
       // Errore VISIBILE con "Riprova": prima il catch era muto e una fetch caduta

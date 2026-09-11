@@ -491,6 +491,11 @@
       </div>
     </div>
 
+    <div class="section" id="secMsgStats">
+      <div class="section-head"><h2>Statistiche messaggi</h2><button class="btn btn-secondary btn-small" onclick="caricaStatsMessaggi()">Aggiorna</button></div>
+      <div id="msgStatsList"><p class="empty">Apri questa scheda per caricare i numeri.</p></div>
+    </div>
+
     <div class="section">
       <div class="section-head"><h2>Broadcast</h2></div>
       <div class="item">
@@ -3173,7 +3178,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni", "Whitelist domini link referral"] },
       { key: "msg", label: "Messaggi", title: "Messaggi", sub: "Broadcast, rubrica e invii programmati",
         icon: '<path d="M4 5h16v12H7l-3 3z"/>',
-        titles: ["Broadcast", "Miei contatti"] },
+        titles: ["Statistiche messaggi", "Broadcast", "Miei contatti"] },
     ];
     (function () {
       const sel = document.getElementById("dashPeriodo");
@@ -3248,6 +3253,43 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         })
         .catch(() => mostraGate("Nessuna connessione. Controlla la rete e riprova."));
     }
+  
+    // ---- STATISTICHE MESSAGGI ----
+    // Un riquadro per messaggio: quanti l'hanno ricevuto, quanti l'hanno aperto, quanti
+    // hanno guardato il video, e chi. Si carica quando si apre la scheda Messaggi.
+    async function caricaStatsMessaggi() {
+      const box = document.getElementById('msgStatsList'); if (!box) return;
+      box.innerHTML = '<p class="empty">Carico…</p>';
+      let d;
+      try { const r = await api('admin/messaggi-stats'); d = await r.json(); if (!r.ok || d.error) throw 0; }
+      catch (e) { box.innerHTML = '<p class="empty">Non riesco a caricare le statistiche dei messaggi.</p>'; return; }
+      const lista = d.messaggi || [];
+      if (!lista.length) { box.innerHTML = '<p class="empty">Nessun messaggio ancora.</p>'; return; }
+      const q = (iso) => { try { return new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+      const pct = (a, b) => b ? Math.round(a * 100 / b) + '%' : '—';
+      const kv = (n, lab, col, sub) => `<div><div style="font-size:20px;font-weight:700;color:${col};line-height:1">${n}</div><div class="bt-sub">${lab}${sub ? ' · ' + sub : ''}</div></div>`;
+      const stato = (u) => u.fine ? 'visto tutto' : (u.meta ? 'a metà' : (u.avvio ? 'video avviato' : 'solo aperto'));
+      box.innerHTML = lista.map((m) => {
+        const testo = String(m.testo || '').replace('[ricostruito] ', '');
+        const gente = (m.persone || []).map((u) => `<div class="bt-rank"><span class="nm">${esc(u.nome)}${u.username ? ` <span style="color:#64748B">@${esc(u.username)}</span>` : ''}</span><span class="vv" style="color:#A78BFA">${q(u.quando)} · ${stato(u)}</span></div>`).join('');
+        return `<div class="item" style="display:block">`
+          + `<div class="item-meta" style="margin-bottom:6px">${q(m.quando)} · ${esc(m.tipo || '')}</div>`
+          + `<div style="white-space:pre-line;font-size:13.5px;color:#CBD5E1;margin-bottom:12px">${esc(testo.slice(0, 220))}${testo.length > 220 ? '…' : ''}</div>`
+          + `<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px">`
+          + kv(m.inviati ?? 0, 'consegnati', '#F8FAFC', m.falliti ? m.falliti + ' non consegnati' : '')
+          + kv(m.aperture || 0, 'hanno aperto', '#A78BFA', pct(m.aperture || 0, m.inviati || 0))
+          + kv(m.video_avvio || 0, 'video avviato', '#34D399') + kv(m.video_meta || 0, 'a metà', '#34D399') + kv(m.video_fine || 0, 'visto tutto', '#F59E0B')
+          + `</div>`
+          + ((m.persone || []).length ? `<details><summary style="cursor:pointer;color:#94A3B8;font-size:13px">Chi ha aperto (${m.persone.length})</summary><div style="margin-top:8px">${gente}</div></details>` : '')
+          + `</div>`;
+      }).join('');
+    }
+    window.caricaStatsMessaggi = caricaStatsMessaggi;
+    (function () {
+      const orig = window.switchAdminTab;
+      if (typeof orig !== 'function') return;
+      window.switchAdminTab = function (k) { orig.apply(this, arguments); if (k === 'msg') caricaStatsMessaggi(); };
+    })();
   </script>
 </body>
 </html>

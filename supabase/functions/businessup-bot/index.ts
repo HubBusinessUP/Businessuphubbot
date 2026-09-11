@@ -809,7 +809,14 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
   // aggiunge un bottone. Punta alla scheda in evidenza, se ce n'e' una attiva,
   // se no alla lista. Cosi' non va aggiornato a ogni lancio.
   const { data: vetrina } = await supabase.from("servizi").select("id, nome").eq("stato", "attivo").eq("in_evidenza", true).limit(1).maybeSingle()
-  const urlNews = WEBAPP_URL + "/app.html?" + (vetrina ? "scheda=" + (vetrina as any).id + "&" : "") + "fonte=annuncio&_=" + Date.now()
+  // Ogni messaggio ha il suo numero in broadcast_log: finisce nel pulsante, cosi'
+  // ogni apertura sa da quale annuncio arriva anche quando se ne mandano tanti.
+  const { data: logN } = await supabase.from("broadcast_log")
+    .insert({ tipo: `${pending.tipo}/${segmento}`, testo: pending.testo, destinatari_count: destinatari.length })
+    .select("id").maybeSingle()
+  const annId = (logN as any)?.id || 0
+  const urlNews = WEBAPP_URL + "/app.html?" + (vetrina ? "scheda=" + (vetrina as any).id + "&" : "")
+    + "fonte=annuncio&" + (annId ? "ann=" + annId + "&" : "") + "_=" + Date.now()
   const markupNews = { inline_keyboard: [[{ text: vetrina ? "Apri la scheda" : "Apri la lista", web_app: { url: urlNews } }]] }
 
   let inviati = 0, falliti = 0
@@ -821,6 +828,7 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
     await new Promise((r) => setTimeout(r, 50))
   }
   await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
+  if (annId) await supabase.from("broadcast_log").update({ inviati, falliti }).eq("id", annId)
   await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast_chat", dettaglio: `${pending.tipo}/${segmento} inviati:${inviati} falliti:${falliti}` })
   return { inviati, falliti }
 }
@@ -3081,6 +3089,74 @@ async function apiAdminPresenza() {
 }
 
 // Scheda-tool: tutte le statistiche di un singolo servizio (per il pannello admin).
+// Statistiche dei messaggi mandati dal bot, uno per riga di broadcast_log. Un'apertura
+// appartiene al messaggio indicato dal suo numero (ann:<id>); se non ce l'ha -- i
+// messaggi partiti prima che il numero esistesse -- va al messaggio piu' recente
+// mandato prima di lei. Il video conta per un messaggio se la stessa persona lo
+// guarda dopo averlo aperto da li', sulla stessa scheda. Persone diverse, non eventi.
+async function apiAdminMessaggiStats() {
+  const { data: msgs } = await supabase.from("broadcast_log")
+    .select("id, tipo, testo, destinatari_count, inviati, falliti, created_at")
+    .order("created_at", { ascending: false }).limit(50)
+  const lista = (msgs ?? []) as any[]
+  if (!lista.length) return json({ messaggi: [] })
+  const primo = lista[lista.length - 1].created_at
+  const { data: aperture } = await supabase.from("click")
+    .select("telegram_id, riferimento, dettaglio, created_at").eq("azione", "apre_da_annuncio").gte("created_at", primo)
+  const crescenti = [...lista].sort((a, b) => (a.created_at < b.created_at ? -1 : 1))
+  const messaggioDi = (ap: any): number | null => {
+    const m = /^ann:(\d+)$/.exec(String(ap.dettaglio || ""))
+    if (m) return parseInt(m[1])
+    let scelto: number | null = null
+    for (const b of crescenti) { if (b.created_at <= ap.created_at) scelto = b.id; else break }
+    return scelto
+  }
+  const perMsg: Record<number, Record<number, { quando: string; scheda: number | null }>> = {}
+  for (const ap of (aperture ?? []) as any[]) {
+    if (!ap.telegram_id) continue
+    const id = messaggioDi(ap)
+    if (!id) continue
+    const m = perMsg[id] ||= {}
+    const prima = m[ap.telegram_id]
+    if (!prima || ap.created_at < prima.quando) m[ap.telegram_id] = { quando: ap.created_at, scheda: ap.riferimento ?? null }
+  }
+  const persone = [...new Set(Object.values(perMsg).flatMap((m) => Object.keys(m).map(Number)))]
+  const { data: video } = persone.length
+    ? await supabase.from("click").select("telegram_id, azione, riferimento, created_at")
+        .in("azione", ["video_avvio", "video_meta", "video_fine"]).in("telegram_id", persone).gte("created_at", primo)
+    : { data: [] }
+  const { data: anag } = persone.length
+    ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", persone)
+    : { data: [] }
+  const chi: Record<number, any> = {}
+  for (const l of (anag ?? []) as any[]) chi[l.telegram_id] = l
+  const messaggi = lista.map((b) => {
+    const m = perMsg[b.id] || {}
+    const gente = Object.entries(m).map(([tidStr, a]) => {
+      const tid = Number(tidStr)
+      const v = ((video ?? []) as any[]).filter((e) => e.telegram_id === tid && e.created_at >= a.quando && (a.scheda == null || e.riferimento === a.scheda))
+      const ha = (az: string) => v.some((e) => e.azione === az)
+      return {
+        telegram_id: tid,
+        nome: [chi[tid]?.nome, chi[tid]?.cognome].filter(Boolean).join(" ") || `ID ${tid}`,
+        username: chi[tid]?.username || "",
+        quando: a.quando,
+        avvio: ha("video_avvio"), meta: ha("video_meta"), fine: ha("video_fine"),
+      }
+    }).sort((x, y) => (x.quando < y.quando ? 1 : -1))
+    return {
+      id: b.id, tipo: b.tipo, testo: b.testo, quando: b.created_at,
+      destinatari: b.destinatari_count, inviati: b.inviati, falliti: b.falliti,
+      aperture: gente.length,
+      video_avvio: gente.filter((g) => g.avvio).length,
+      video_meta: gente.filter((g) => g.meta).length,
+      video_fine: gente.filter((g) => g.fine).length,
+      persone: gente,
+    }
+  })
+  return json({ messaggi })
+}
+
 async function apiAdminServizioStats(servizioId: number) {
   if (!servizioId) return json({ error: "id_mancante" }, 400)
   const { data: svc } = await supabase.from("servizi").select("id, nome, stato, logo_url, logo_pieno, voti_base").eq("id", servizioId).maybeSingle()
@@ -3660,11 +3736,18 @@ async function apiAdminBroadcast(body: any) {
     return json({ destinatari_count: destinatari.length, esempi: destinatari.slice(0, 5).map((d) => d.nome) })
   }
 
+  // Registrato come i messaggi di /news, per le statistiche. Il numero va nel
+  // pulsante predefinito; un pulsante verso un link esterno non si puo' seguire.
+  const { data: logA } = await supabase.from("broadcast_log")
+    .insert({ tipo: `testo/${body?.filtro?.tipo || "tutti"}`, testo, destinatari_count: destinatari.length })
+    .select("id").maybeSingle()
+  const annIdA = (logA as any)?.id || 0
+
   // Bottone sotto la news: se l'admin indica testo + URL usa quello (link esterno),
   // altrimenti resta il bottone di default che apre la Mini App.
   const btnText = String(body?.btn_text || "").trim()
   const btnUrl = String(body?.btn_url || "").trim()
-  let markup: any = { inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?_=" + Date.now() } }]] }
+  let markup: any = { inline_keyboard: [[{ text: "Apri Cashly", web_app: { url: WEBAPP_URL + "/app.html?fonte=annuncio&" + (annIdA ? "ann=" + annIdA + "&" : "") + "_=" + Date.now() } }]] }
   if (btnText && btnUrl && /^https?:\/\//.test(btnUrl)) {
     markup = { inline_keyboard: [[{ text: btnText.slice(0, 40), url: btnUrl }]] }
   } else if (btnText === "" && btnUrl === "" && body?.senza_bottone) {
@@ -3682,6 +3765,7 @@ async function apiAdminBroadcast(body: any) {
     await new Promise((r) => setTimeout(r, 50))
   }
 
+  if (annIdA) await supabase.from("broadcast_log").update({ inviati, falliti }).eq("id", annIdA)
   await supabase.from("eventi").insert({ telegram_id: ADMIN_ID, tipo: "broadcast", dettaglio: `filtro:${body?.filtro?.tipo || "tutti"} inviati:${inviati} falliti:${falliti}` })
   return json({ ok: true, inviati, falliti })
 }
@@ -4121,6 +4205,7 @@ serve(async (req) => {
       if (sub === "admin/kpi" && req.method === "GET") return await apiAdminKpi()
       if (sub === "admin/presenza" && req.method === "GET") return await apiAdminPresenza()
       if (sub === "admin/servizio-stats" && req.method === "GET") return await apiAdminServizioStats(parseInt(url.searchParams.get("id") || "0"))
+      if (sub === "admin/messaggi-stats" && req.method === "GET") return await apiAdminMessaggiStats()
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()
