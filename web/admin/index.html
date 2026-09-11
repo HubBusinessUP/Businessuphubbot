@@ -2595,7 +2595,20 @@
           ? cl.map((u) => `<div class="bt-rank"><span class="nm">${esc(u.nome)}${u.username ? ` <span style="color:#64748B">@${esc(u.username)}</span>` : ''}</span><span class="vv" style="color:#F59E0B">${quando(u.ultimo)}${u.volte > 1 ? ` · ${u.volte} giorni` : ''}</span></div>`).join('')
           : '<div class="bt-sub" style="padding:8px 6px">Ancora nessuno.</div>')
         + `</div></div>`;
-      document.getElementById("svcStatsBody").innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${grid}${statChart(d.serie)}${tutHtml}${clickHtml}${viralHtml}</div>`;
+      // Annuncio e video: quanti hanno aperto la scheda dal pulsante di un messaggio,
+      // quanti hanno avviato il video, quanti sono arrivati a meta' e alla fine. Poi chi.
+      const vd = d.video || { persone: [] };
+      const kv = (n, lab, col) => `<div><div style="font-size:22px;font-weight:700;color:${col};line-height:1">${n || 0}</div><div class="bt-sub">${lab}</div></div>`;
+      const segni = (u) => [u.annuncio ? 'da annuncio' : '', u.fine ? 'visto tutto' : (u.meta ? 'a metà' : (u.avvio ? 'avviato' : ''))].filter(Boolean).join(' · ');
+      const videoHtml = `<div class="bt-card"><div class="bt-h"><b>Annuncio e video</b><span class="bt-hint">persone diverse</span></div><div class="bt-body">`
+        + `<div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:12px">`
+        + kv(vd.da_annuncio, 'aperta da annuncio', '#A78BFA') + kv(vd.avviato, 'video avviato', '#34D399')
+        + kv(vd.meta, 'arrivati a metà', '#34D399') + kv(vd.fine, 'visto tutto', '#F59E0B') + `</div>`
+        + ((vd.persone || []).length
+          ? vd.persone.map((u) => `<div class="bt-rank"><span class="nm">${esc(u.nome)}${u.username ? ` <span style="color:#64748B">@${esc(u.username)}</span>` : ''}</span><span class="vv" style="color:#A78BFA">${segni(u)}</span></div>`).join('')
+          : '<div class="bt-sub" style="padding:8px 6px">Ancora nessuno.</div>')
+        + `</div></div>`;
+      document.getElementById("svcStatsBody").innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${grid}${statChart(d.serie)}${tutHtml}${videoHtml}${clickHtml}${viralHtml}</div>`;
     }
     async function openServizioStats(id) {
       document.getElementById("svcStatsTitle").textContent = "Caricamento…";

@@ -1349,7 +1349,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=179"></script>
+<script src="identikit.js?v=180"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1804,6 +1804,42 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // solo al Rischio), non decorazione: gli altri valori restano neutri.
   // Il media di uno step: una foto caricata, una clip, oppure un link YouTube/Vimeo.
   // Si riconosce dall'URL, cosi' l'admin ha un campo solo e non deve dichiarare il tipo.
+  // ---- QUANTO SI GUARDA IL VIDEO ----
+  // Tre momenti per scheda: avviato, arrivato a meta', finito. Ognuno si segna
+  // una volta sola per sessione: riavvolgere non gonfia i numeri.
+  var VISTO = {}, DURATA_YT = 0;
+  function segnaVideo(azione){
+    var sid = SC_ID || 0; if (!sid) return;
+    var k = sid + ':' + azione; if (VISTO[k]) return;
+    VISTO[k] = 1; traccia(azione, sid);
+  }
+  // I file (mp4, video privati): gli eventi dei media non risalgono, si prendono in cattura.
+  document.addEventListener('play', function(e){ if (e.target && e.target.tagName === 'VIDEO') segnaVideo('video_avvio'); }, true);
+  document.addEventListener('timeupdate', function(e){
+    var v = e.target; if (!v || v.tagName !== 'VIDEO' || !v.duration) return;
+    if (v.currentTime / v.duration >= 0.5) segnaVideo('video_meta');
+  }, true);
+  document.addEventListener('ended', function(e){ if (e.target && e.target.tagName === 'VIDEO') segnaVideo('video_fine'); }, true);
+  // YouTube: il lettore manda notizie solo dopo che gli si dice che si sta ascoltando.
+  function ascoltaYouTube(){
+    Array.prototype.forEach.call(document.querySelectorAll('iframe[data-yt]:not([data-ytok])'), function(f){
+      f.setAttribute('data-ytok', '1');
+      f.addEventListener('load', function(){
+        try { f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch(e){}
+      });
+    });
+  }
+  window.addEventListener('message', function(ev){
+    var host = String(ev.origin || '').replace(/^https?:\/\//, '').split(':')[0];
+    if (!/(^|\.)youtube(-nocookie)?\.com$/.test(host)) return;
+    var d; try { d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data; } catch(e){ return; }
+    var info = d && d.info; if (!info) return;
+    if (info.duration) DURATA_YT = info.duration;
+    if (info.playerState === 1) segnaVideo('video_avvio');
+    if (info.playerState === 0) segnaVideo('video_fine');
+    if (info.currentTime && DURATA_YT && info.currentTime / DURATA_YT >= 0.5) segnaVideo('video_meta');
+  });
+
   // ---- VIDEO PRIVATI ----
   // Il lettore non espone download, riproduzione remota, velocita' ne' picture-in-picture,
   // e il tasto destro non apre il menu. L'indirizzo scade dopo un'ora: si tiene in
@@ -1834,7 +1870,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     });
   }
   try {
-    new MutationObserver(function(){ caricaVideoPrivati(); })
+    new MutationObserver(function(){ caricaVideoPrivati(); ascoltaYouTube(); })
       .observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
 
@@ -1846,7 +1882,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
     if (yt) {
       return '<div class="stmed"><iframe src="https://www.youtube-nocookie.com/embed/' + esc(yt[1])
-        + '" title="Video" loading="lazy" allow="accelerometer;clipboard-write;encrypted-media;picture-in-picture"'
+        + '?enablejsapi=1" data-yt="1" title="Video" loading="lazy" allow="accelerometer;clipboard-write;encrypted-media;picture-in-picture"'
         + ' referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>';
     }
     var vim = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
@@ -2384,6 +2420,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // La scheda da aprire subito, se il link portava a un business preciso (?scheda=<id>).
   var SCHEDA_URL = 0;
   try { SCHEDA_URL = parseInt(new URLSearchParams(location.search).get('scheda')) || 0; } catch(e){}
+  // ?fonte=annuncio: il pulsante dei messaggi del bot lo aggiunge, cosi' si sa
+  // chi ha aperto la scheda PERCHE' gli e' arrivato l'annuncio.
+  var FONTE_URL = '';
+  try { FONTE_URL = new URLSearchParams(location.search).get('fonte') || ''; } catch(e){}
 
   // Scheletro di caricamento della home: senza, se la fetch e' lenta o cade (webview
   // Telegram su dati mobili, cold-start della function) lo schermo resta bianco ed e'
@@ -2429,7 +2469,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       renderCollezioni();
       // Se il link portava a un business preciso, aprilo direttamente sulla sua scheda
       // invece di lasciare la persona sul catalogo a cercarselo. Una volta sola.
-      if (SCHEDA_URL) { var sid = SCHEDA_URL; SCHEDA_URL = 0; setTimeout(function(){ apriScheda(sid); }, 60); }
+      if (SCHEDA_URL) { var sid = SCHEDA_URL; SCHEDA_URL = 0; setTimeout(function(){ apriScheda(sid); }, 60); if (FONTE_URL === 'annuncio') traccia('apre_da_annuncio', sid); }
     })
     .catch(function(){
       // Errore VISIBILE con "Riprova": prima il catch era muto e una fetch caduta

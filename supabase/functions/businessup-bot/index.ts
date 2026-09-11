@@ -763,8 +763,15 @@ async function preparaNews(chatId: number, tipo: string, testo: string, mediaFil
     [{ text: `⭐ Top 10 sponsor (${nTop})`, callback_data: "news_send:top" }],
     [{ text: "❌ Annulla", callback_data: "news_cancel" }],
   ] }
+  // Nell'anteprima {nome} diventa il nome dell'admin: si vede il messaggio come
+  // lo leggera' davvero chi lo riceve, non con il segnaposto in mezzo.
+  let testoAnteprima = testo
+  if (testo && testo.includes("{nome}")) {
+    const { data: io } = await supabase.from("leads").select("nome").eq("telegram_id", ADMIN_ID).maybeSingle()
+    testoAnteprima = testo.split("{nome}").join(String((io as any)?.nome || "Marco").trim())
+  }
   const caption = testo
-    ? `ANTEPRIMA — ecco come arriverà.\n\n${testo}\n\nA chi lo invio?`
+    ? `ANTEPRIMA — ecco come arriverà.\n\n${testoAnteprima}\n\nA chi lo invio?`
     : "ANTEPRIMA — ecco come arriverà (solo il media).\n\nA chi lo invio?"
   await inviaContenuto(chatId, tipo, caption, mediaFileId || null, markup)
 }
@@ -784,16 +791,30 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
   if (!pending || pending.tipo === "awaiting") return { inviati: 0, falliti: 0 }
   const destinatari = await destinatariNews(segmento)
 
+  // {nome} nel testo diventa il nome di chi riceve: un annuncio che saluta per
+  // nome si legge come un messaggio, non come una circolare. Il testo parte senza
+  // formattazione, quindi un nome con caratteri strani non rompe niente. Se un
+  // nome manca, il segnaposto sparisce invece di restare scritto.
+  const nomi: Record<number, string> = {}
+  if (pending.testo && pending.testo.includes("{nome}") && destinatari.length) {
+    const { data: ll } = await supabase.from("leads").select("telegram_id, nome").in("telegram_id", destinatari)
+    for (const l of (ll ?? []) as any[]) nomi[l.telegram_id] = String(l.nome || "").trim()
+  }
+  const personalizza = (t: string | null, tid: number): string | null => {
+    if (!t || !t.includes("{nome}")) return t
+    return nomi[tid] ? t.split("{nome}").join(nomi[tid]) : t.replace(/\s*\{nome\}/g, "")
+  }
+
   // Un annuncio senza un modo per aprire l'app resta una riga di testo: si
   // aggiunge un bottone. Punta alla scheda in evidenza, se ce n'e' una attiva,
   // se no alla lista. Cosi' non va aggiornato a ogni lancio.
   const { data: vetrina } = await supabase.from("servizi").select("id, nome").eq("stato", "attivo").eq("in_evidenza", true).limit(1).maybeSingle()
-  const urlNews = WEBAPP_URL + "/app.html?" + (vetrina ? "scheda=" + (vetrina as any).id + "&" : "") + "_=" + Date.now()
+  const urlNews = WEBAPP_URL + "/app.html?" + (vetrina ? "scheda=" + (vetrina as any).id + "&" : "") + "fonte=annuncio&_=" + Date.now()
   const markupNews = { inline_keyboard: [[{ text: vetrina ? "Apri la scheda" : "Apri la lista", web_app: { url: urlNews } }]] }
 
   let inviati = 0, falliti = 0
   for (const tid of destinatari) {
-    const res = await inviaContenuto(tid, pending.tipo, pending.testo, pending.photo_file_id, markupNews)
+    const res = await inviaContenuto(tid, pending.tipo, personalizza(pending.testo, tid), pending.photo_file_id, markupNews)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
     else falliti++
@@ -3107,6 +3128,44 @@ async function apiAdminServizioStats(servizioId: number) {
     volte: perPersona[id].volte,
   })).sort((a, b) => (a.ultimo < b.ultimo ? 1 : -1))
 
+  // Annuncio e video, dalla tabella click che l'app scrive con traccia(): chi ha
+  // aperto la scheda dal pulsante di un annuncio, chi ha avviato il video, chi e'
+  // arrivato a meta', chi l'ha finito. Persone diverse, non eventi.
+  const AZ_VIDEO = ["apre_da_annuncio", "video_avvio", "video_meta", "video_fine"]
+  const { data: evV } = await supabase.from("click").select("telegram_id, azione, created_at")
+    .eq("riferimento", servizioId).in("azione", AZ_VIDEO)
+  const perAz: Record<string, Set<number>> = {}
+  for (const a of AZ_VIDEO) perAz[a] = new Set<number>()
+  const perChi: Record<number, { annuncio: boolean; avvio: boolean; meta: boolean; fine: boolean; ultimo: string }> = {}
+  for (const e of (evV ?? []) as any[]) {
+    if (!e.telegram_id || !perAz[e.azione]) continue
+    perAz[e.azione].add(e.telegram_id)
+    const r = perChi[e.telegram_id] ||= { annuncio: false, avvio: false, meta: false, fine: false, ultimo: e.created_at }
+    if (e.azione === "apre_da_annuncio") r.annuncio = true
+    if (e.azione === "video_avvio") r.avvio = true
+    if (e.azione === "video_meta") r.meta = true
+    if (e.azione === "video_fine") r.fine = true
+    if (e.created_at > r.ultimo) r.ultimo = e.created_at
+  }
+  const idV = Object.keys(perChi).map(Number)
+  const { data: chiV } = idV.length
+    ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", idV)
+    : { data: [] }
+  const anagV: Record<number, any> = {}
+  for (const l of (chiV ?? []) as any[]) anagV[l.telegram_id] = l
+  const video = {
+    da_annuncio: perAz["apre_da_annuncio"].size,
+    avviato: perAz["video_avvio"].size,
+    meta: perAz["video_meta"].size,
+    fine: perAz["video_fine"].size,
+    persone: idV.map((id) => ({
+      telegram_id: id,
+      nome: [anagV[id]?.nome, anagV[id]?.cognome].filter(Boolean).join(" ") || `ID ${id}`,
+      username: anagV[id]?.username || "",
+      ...perChi[id],
+    })).sort((a, b) => (a.ultimo < b.ultimo ? 1 : -1)),
+  }
+
   const giorni: string[] = []
   for (let i = 29; i >= 0; i--) giorni.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10))
   const serie = giorni.map((g) => ({ d: g, aperture: apGiorno[g] ?? 0, attiv: attGiorno[g] ?? 0 }))
@@ -3131,7 +3190,7 @@ async function apiAdminServizioStats(servizioId: number) {
     servizio: { id: svc.id, nome: svc.nome, stato: svc.stato, logo_url: (svc as any).logo_url, logo_pieno: (svc as any).logo_pieno },
     voti: voti ?? 0, voti_base: (svc as any).voti_base ?? 0, salvataggi: salvataggi ?? 0,
     waitlist: waitlist ?? 0, segnalazioni: segnalazioni ?? 0, affiliati: affiliati ?? 0,
-    aperture_persone: apSet.size, uscite_persone: uscSet.size, cliccato,
+    aperture_persone: apSet.size, uscite_persone: uscSet.size, cliccato, video,
     attivazioni: attTot, attivazioni_7gg: att7,
     conversione: apSet.size ? Math.round((attTot * 1000) / apSet.size) / 10 : 0,
     serie,
