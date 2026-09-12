@@ -1441,6 +1441,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
 .sez-vt{font-size:15.5px;font-weight:700;color:var(--tx);line-height:1.35}
 .sez-vx{font-size:14.5px;color:var(--dim);line-height:1.55;margin-top:3px}
+/* L'immagine sotto la voce prende tutta la larghezza del testo: una schermata
+   stretta non si legge. */
+.sez-vimg{display:block;width:100%;height:auto;margin-top:10px;border-radius:10px;
+  border:1px solid var(--line);background:var(--s2)}
 .sez-fila{display:flex;gap:10px;overflow-x:auto;margin:12px 0 0;padding:0 0 4px;
   scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sez-fila::-webkit-scrollbar{display:none}
@@ -1481,7 +1485,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=194"></script>
+<script src="identikit.js?v=195"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2226,6 +2230,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             + '<div style="min-width:0">'
             +   (v.titolo ? '<div class="sez-vt">' + esc(v.titolo) + '</div>' : '')
             +   (v.testo ? '<div class="sez-vx">' + esc(v.testo) + '</div>' : '')
+            // Solo http(s): un indirizzo diverso qui finirebbe dritto nel DOM.
+            +   (v.img && /^https?:\/\//i.test(String(v.img)) ? '<img class="sez-vimg" src="' + esc(v.img) + '" alt="" loading="lazy">' : '')
             + '</div></div>';
         }).join('');
       } else if (b.tipo === 'immagini') {
