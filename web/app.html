@@ -1462,7 +1462,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=192"></script>
+<script src="identikit.js?v=193"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1643,6 +1643,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // dal filtro sembra un risultato sbagliato.
   // ---- EVENTI IN HOME ----
   var EVENTI = [];
+  // Il banner si conta una volta per sessione, non a ogni ridisegno della lista.
+  var VISTI_EV = {};
+  // 'home' se la scheda e' stata aperta dalla card in home: il modulo lo manda
+  // al server, e l'admin sa quanti arrivano da li' e quanti dalla scheda.
+  var FONTE_EV = '';
 
   function dueCifre(n){ return (n < 10 ? '0' : '') + n; }
 
@@ -1695,7 +1700,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!vivi.length) { box.innerHTML = ''; return; }
     box.innerHTML = vivi.map(function(e){
       var t = new Date(e.quando).getTime();
-      return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
+      if (!VISTI_EV[e.evento_id]) { VISTI_EV[e.evento_id] = 1; try { traccia('evento_visto', e.servizio_id, 'ev:' + e.evento_id); } catch (x) {} }
+      return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '" data-ev="' + e.evento_id + '">'
         // Sopra: cos'e'. Logo come nella lista, cosi' si riconosce la scheda.
         + '<div class="ev-a">'
         +   logoHtml({ logo_url: e.logo_url, logo_pieno: e.logo_pieno })
@@ -2399,8 +2405,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!w || !w.url || !w.quando) return '';
     var t = new Date(w.quando).getTime();
     if (!t || t < Date.now()) return '';
+    // Ogni evento ha il suo 'fatto': un webinar nuovo sulla stessa scheda riparte
+    // dal modulo, non da "manca un passo" del webinar precedente.
+    var chiaveEv = w.id ? ('cashly_ev_' + w.id) : ('cashly_webinar_' + s.id);
     var segnato = false;
-    try { segnato = localStorage.getItem('cashly_webinar_' + s.id) === '1'; } catch (e) {}
+    try { segnato = localStorage.getItem(chiaveEv) === '1'; } catch (e) {}
     var punti = (Array.isArray(w.punti) ? w.punti : []).map(function(x){
       return '<li>' + esc(x) + '</li>';
     }).join('');
@@ -2416,14 +2425,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + (punti ? '<ul>' + punti + '</ul>' : '')
       + (segnato
           ? '<div class="gia"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg><div><b>Manca un passo: completa l\'iscrizione su Zoom.</b> È lì che ti arriva il link per entrare martedì sera. Senza quella, non sei dentro.</div></div>'
-            + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-riapri="1" data-url="' + esc(w.url) + '">Completa l\'iscrizione su Zoom</button>'
+            + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-ev="' + (w.id || '') + '" data-riapri="1" data-url="' + esc(w.url) + '">Completa l\'iscrizione su Zoom</button>'
           : '<div class="wfrm">'
             + '<label class="wl">Nome e cognome<input class="wi" type="text" id="wbNome" value="' + esc(nomeIniziale()) + '" placeholder="Come ti chiami" autocomplete="name"></label>'
             + '<label class="wl">Email<input class="wi" type="email" id="wbMail" value="' + esc(mailIniziale()) + '" placeholder="latua@email.it" autocomplete="email" inputmode="email"></label>'
             + '<div class="werr" id="wbErr" hidden></div>'
             + (w.consenso ? '<div class="wcons">' + esc(w.consenso) + '</div>' : '')
             + '<div class="wpassi"><b>1</b> lasci qui nome ed email &nbsp;·&nbsp; <b>2</b> ti iscrivi su Zoom</div>'
-            + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-url="' + esc(w.url) + '">' + esc(w.bottone || 'Prendi il tuo posto') + '</button>'
+            + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-ev="' + (w.id || '') + '" data-url="' + esc(w.url) + '">' + esc(w.bottone || 'Prendi il tuo posto') + '</button>'
             + '</div>')
       + '<div class="fine">' + esc(w.nota || '') + '</div>'
       + '</div>';
@@ -2572,7 +2581,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
       + (car ? '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + car + '</div>' : '')
       + (ev ? '<div class="scpane"' + (SC_TAB === 'ev' ? '' : ' hidden') + ' data-pane="ev">' + ev + '</div>' : '')
-      + '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>';
+      // Con un evento in corso il fondo del prodotto sparisce: un "non ancora
+      // disponibile" sotto un webinar a cui ci si puo' iscrivere confonde. L'azione
+      // di questa scheda e' il modulo dell'evento.
+      + (ev ? '' : '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>');
   }
 
   function traccia(azione, riferimento, dettaglio){
@@ -2615,7 +2627,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
   function apriScheda(id){
     if (!id) return;
-    SC_ID = id; SC_TAB = 'pan';
+    SC_ID = id; SC_TAB = 'pan'; FONTE_EV = '';
     var box = document.getElementById('scBody');
     var tu = document.getElementById('tuBody');
     if (tu) tu.innerHTML = '';
@@ -2727,7 +2739,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         try { if (tg && tg.openLink) tg.openLink(uw); else window.open(uw, '_blank'); } catch(x){ window.open(uw, '_blank'); }
       };
       // Il bottone "riapri" non richiede niente: e' gia' in lista.
-      if (!wid || wb.getAttribute('data-riapri')) { apri(); return; }
+      var evW = wb.getAttribute('data-ev') || '';
+      if (!wid || wb.getAttribute('data-riapri')) {
+        try { traccia('webinar_zoom', wid, evW ? 'ev:' + evW : null); } catch(x){}
+        apri(); return;
+      }
       var cn = document.getElementById('wbNome'), cm = document.getElementById('wbMail');
       var nomeW = cn ? String(cn.value || '').trim() : '';
       var mailW = cm ? String(cm.value || '').trim() : '';
@@ -2738,14 +2754,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       };
       if (nomeW.length < 3) { ferma('Scrivi nome e cognome: servono a chi organizza per metterti in lista.', cn); return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mailW)) { ferma("Controlla l'email: cosi' com'e' non arriva l'invito.", cm); return; }
-      try { traccia('webinar_posto', wid, (SCHEDE[wid] && SCHEDE[wid].servizio ? SCHEDE[wid].servizio.nome : '')); } catch(x){}
+      try { traccia('webinar_posto', wid, evW ? 'ev:' + evW : ''); } catch(x){}
       try {
         fetch(API_URL + '/webinar', { method: 'POST',
           headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
-          body: JSON.stringify({ servizio_id: wid, nome: nomeW, email: mailW }), keepalive: true }).catch(function(){});
+          body: JSON.stringify({ servizio_id: wid, evento_id: parseInt(evW) || 0, nome: nomeW, email: mailW, fonte: FONTE_EV || 'scheda' }), keepalive: true }).catch(function(){});
       } catch(x){}
       try {
-        localStorage.setItem('cashly_webinar_' + wid, '1');
+        localStorage.setItem(evW ? ('cashly_ev_' + evW) : ('cashly_webinar_' + wid), '1');
         localStorage.setItem('cashly_webinar_nome', nomeW);
         localStorage.setItem('cashly_webinar_mail', mailW);
       } catch(x){}
@@ -2762,8 +2778,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       e.preventDefault();
       var eid = parseInt(evc.getAttribute('data-evento')) || 0;
       if (eid) {
-        try { traccia('apri_evento', eid); } catch(x){}
+        var evid = evc.getAttribute('data-ev') || '';
+        try { traccia('apri_evento', eid, evid ? 'ev:' + evid : null); } catch(x){}
         apriScheda(eid);
+        FONTE_EV = 'home';
         SC_TAB = 'ev';
         ridisegnaScheda(eid);
       }

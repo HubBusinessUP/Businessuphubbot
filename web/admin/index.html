@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=192"></script>
+<script src="/identikit.js?v=193"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -345,6 +345,33 @@
     .bt-two { grid-template-columns: 1fr; }
     .bt-fun-row { grid-template-columns: 96px 1fr 62px; }
   }
+/* EVENTI. Ogni evento e' un blocco: in testa cos'e' e quando, poi il percorso
+   come quattro numeri in fila, perche' si legge da sinistra a destra come lo
+   fa chi si iscrive. Le percentuali stanno sotto il numero a cui arrivano. */
+.ev-griglia{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:560px){.ev-griglia{grid-template-columns:1fr}}
+.evx{display:block;margin-bottom:12px}
+.evx-testa{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.evx-nome{font-size:16px;font-weight:700;color:#F8FAFC;line-height:1.3}
+.evx-sub{font-size:13px;color:#94A3B8;margin-top:3px}
+.evx-pill{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.evx-pill.attivo{background:rgba(52,211,153,.14);color:#34D399}
+.evx-pill.bozza{background:rgba(148,163,184,.14);color:#CBD5E1}
+.evx-pill.chiuso,.evx-pill.passato{background:rgba(248,113,113,.12);color:#F87171}
+.evx-per{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin:14px 0 10px;
+  background:rgba(148,163,184,.14);border-radius:10px;overflow:hidden}
+@media (max-width:560px){.evx-per{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.evx-per div{background:#0F141B;padding:11px 12px}
+.evx-per b{display:block;font-size:22px;font-weight:800;color:#F8FAFC;font-variant-numeric:tabular-nums;line-height:1.1}
+.evx-per span{display:block;font-size:12px;color:#94A3B8;margin-top:3px}
+.evx-per em{display:block;font-style:normal;font-size:12px;color:#FF8A5C;margin-top:2px;font-variant-numeric:tabular-nums}
+.evx-righe{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:#94A3B8}
+.evx-righe b{color:#E2E8F0;font-variant-numeric:tabular-nums}
+.evx-azioni{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.evx-tab{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.evx-tab th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748B;padding:6px 8px;border-bottom:1px solid rgba(148,163,184,.18)}
+.evx-tab td{padding:7px 8px;border-bottom:1px solid rgba(148,163,184,.08);color:#CBD5E1;vertical-align:top}
+.evx-scorri{overflow-x:auto}
 </style>
 </head>
 <body>
@@ -489,6 +516,16 @@
         </div>
         <div id="whitelistRows"></div>
       </div>
+    </div>
+
+    <div class="section" id="secEventi">
+      <div class="section-head"><h2>Eventi</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-small" onclick="caricaEventi()">Aggiorna</button>
+          <button class="btn btn-primary btn-small" onclick="nuovoEvento()">+ Nuovo evento</button>
+        </div>
+      </div>
+      <div id="evList"><p class="empty">Apri questa scheda per caricare gli eventi.</p></div>
     </div>
 
     <div class="section" id="secAbbandoni">
@@ -688,6 +725,42 @@
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('catOverlay')">Annulla</button>
         <button class="btn btn-primary" onclick="saveCategoria()">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Evento -->
+  <div class="overlay" id="evOverlay">
+    <div class="modal" style="max-width:640px">
+      <h3 id="evModalTitle">Nuovo evento</h3>
+      <input type="hidden" id="evId" />
+      <div class="ev-griglia">
+        <div class="field"><label>Scheda</label><select id="evScheda"></select></div>
+        <div class="field"><label>Stato</label><select id="evStato">
+          <option value="bozza">Bozza: lo vedi solo tu</option>
+          <option value="attivo">Attivo: lo vedono tutti</option>
+          <option value="chiuso">Chiuso: sparisce dall'app</option>
+        </select></div>
+      </div>
+      <div class="field"><label>Nome dell'evento (card in home)</label><input id="evNome" placeholder="Webinar EdgeFunds: le prop e la greylist" /></div>
+      <div class="ev-griglia">
+        <div class="field"><label>Data e ora (ora italiana)</label><input id="evQuando" type="datetime-local" /></div>
+        <div class="field"><label>Dove</label><input id="evDove" placeholder="Online su Zoom" /></div>
+      </div>
+      <div class="field"><label>Link di iscrizione</label><input id="evUrl" placeholder="https://..." /></div>
+      <div class="ev-griglia">
+        <div class="field"><label>Scarsità</label><input id="evScarsita" placeholder="Posti limitati" /></div>
+        <div class="field"><label>Testo del pulsante</label><input id="evBottone" placeholder="Prendi il tuo posto" /></div>
+      </div>
+      <div class="field"><label>Titolo nella scheda</label><input id="evTitolo" placeholder="Le prop non ti scoprono per caso. Ti cercano." /></div>
+      <div class="field"><label>Descrizione breve</label><input id="evDescrizione" /></div>
+      <div class="field"><label>Testo (un paragrafo per riga)</label><textarea id="evTesto" rows="5"></textarea></div>
+      <div class="field"><label>Cosa si vede (un punto per riga)</label><textarea id="evPunti" rows="3"></textarea></div>
+      <div class="field"><label>Nota in fondo</label><input id="evNota" /></div>
+      <div class="field"><label>Riga sotto i campi del modulo (facoltativa)</label><input id="evConsenso" /></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('evOverlay')">Annulla</button>
+        <button class="btn btn-primary" id="evSalva" onclick="salvaEvento()">Salva</button>
       </div>
     </div>
   </div>
@@ -3181,6 +3254,9 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
       { key: "coda", label: "Da validare", title: "Da validare", sub: "Tutto ciò che aspetta una tua decisione",
         icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
         titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni", "Whitelist domini link referral"] },
+      { key: "eventi", label: "Eventi", title: "Eventi", sub: "Webinar e dirette: crea, segui i numeri, esporta chi si iscrive",
+        icon: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+        titles: ["Eventi"] },
       { key: "msg", label: "Messaggi", title: "Messaggi", sub: "Broadcast, rubrica e invii programmati",
         icon: '<path d="M4 5h16v12H7l-3 3z"/>',
         titles: ["Statistiche messaggi", "Broadcast", "Miei contatti"] },
@@ -3314,11 +3390,180 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
           + `<div>${t.persone.map(riga).join('')}</div></div>`).join('');
     }
     window.caricaAbbandoni = caricaAbbandoni;
+    // ---- EVENTI ----
+    let EV_DATI = { eventi: [], schede: [] };
+    const evQ = (iso) => { try { return new Date(iso).toLocaleString('it-IT', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+    const evPct = (p) => (p === null || p === undefined) ? '' : p + '%';
+    function evManca(iso) {
+      const m = new Date(iso).getTime() - Date.now();
+      if (m <= 0) return 'concluso';
+      const h = Math.floor(m / 3600000);
+      return h < 24 ? 'fra ' + h + ' ore' : 'fra ' + Math.round(h / 24) + ' giorni';
+    }
+
+    async function caricaEventi() {
+      const box = document.getElementById('evList'); if (!box) return;
+      box.innerHTML = '<p class="empty">Carico…</p>';
+      try { const r = await api('admin/eventi'); EV_DATI = await r.json(); if (!r.ok || EV_DATI.error) throw 0; }
+      catch (e) { box.innerHTML = '<p class="empty">Non riesco a caricare gli eventi.</p>'; return; }
+      const lista = EV_DATI.eventi || [];
+      if (!lista.length) { box.innerHTML = '<p class="empty">Nessun evento. Creane uno con + Nuovo evento.</p>'; return; }
+      box.innerHTML = lista.map((e) => {
+        const k = e.kpi || {};
+        const stato = e.passato && e.stato !== 'chiuso' ? 'passato' : e.stato;
+        const giorni = (k.per_giorno || []).map((g) => `${esc(g.giorno)} <b>${g.n}</b>`).join(' · ');
+        return `<div class="item evx">`
+          + `<div class="evx-testa"><div>`
+          +   `<div class="evx-nome">${esc(e.nome)}</div>`
+          +   `<div class="evx-sub">${esc(e.scheda)}${e.scheda_stato !== 'attivo' ? ' (scheda ' + esc(e.scheda_stato) + ')' : ''} · ${esc(evQ(e.quando))} · ${esc(evManca(e.quando))}</div>`
+          + `</div><span class="evx-pill ${esc(stato)}">${esc(stato)}</span></div>`
+          // Il percorso, da sinistra a destra.
+          + `<div class="evx-per">`
+          +   `<div><b>${k.visti || 0}</b><span>hanno visto il banner</span></div>`
+          +   `<div><b>${k.aperture || 0}</b><span>hanno aperto l'evento</span><em>${evPct(k.apertura_su_visti)}${k.apertura_su_visti !== null ? ' di chi l\'ha visto' : ''}</em></div>`
+          +   `<div><b>${k.dati || 0}</b><span>hanno lasciato i dati</span><em>${evPct(k.dati_su_aperture)}${k.dati_su_aperture !== null ? ' di chi l\'ha aperto' : ''}</em></div>`
+          +   `<div><b>${k.zoom || 0}</b><span>sono andati su Zoom</span></div>`
+          + `</div>`
+          + `<div class="evx-righe">`
+          +   `<span>dalla home <b>${k.da_home || 0}</b></span><span>dalla scheda <b>${k.da_scheda || 0}</b></span>`
+          +   `<span>da consegnare <b>${k.da_consegnare || 0}</b></span><span>già clienti <b>${k.gia_clienti || 0}</b></span>`
+          +   (k.dati_su_visti !== null ? `<span>dal banner ai dati <b>${evPct(k.dati_su_visti)}</b></span>` : '')
+          + `</div>`
+          + (giorni ? `<div class="evx-righe" style="margin-top:6px"><span>iscritti per giorno: ${giorni}</span></div>` : '')
+          + `<div class="evx-azioni">`
+          +   `<button class="btn btn-secondary btn-small" onclick="modificaEvento(${e.id})">Modifica</button>`
+          +   `<button class="btn btn-secondary btn-small" onclick="iscrittiEvento(${e.id})">Iscritti (${k.dati || 0})</button>`
+          +   `<button class="btn btn-secondary btn-small" onclick="esportaEvento(${e.id})">Esporta CSV</button>`
+          +   `<button class="btn btn-secondary btn-small" onclick="copiaEmailEvento(${e.id})">Copia email</button>`
+          +   (k.da_consegnare ? `<button class="btn btn-secondary btn-small" onclick="consegnatiEvento(${e.id})">Segna ${k.da_consegnare} come consegnati</button>` : '')
+          + `</div>`
+          + `<div id="evIscr${e.id}"></div>`
+          + `</div>`;
+      }).join('');
+    }
+
+    function evRiempiSchede(scelta) {
+      const sel = document.getElementById('evScheda');
+      sel.innerHTML = (EV_DATI.schede || []).map((x) => `<option value="${x.id}"${x.id === scelta ? ' selected' : ''}>${esc(x.nome)}${x.stato !== 'attivo' ? ' (' + esc(x.stato) + ')' : ''}</option>`).join('');
+    }
+    // datetime-local vuole l'ora locale senza fuso: si toglie lo scarto del browser.
+    function evPerCampo(iso) {
+      const d = new Date(iso); if (isNaN(d)) return '';
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+    const EV_CAMPI = { evNome: 'nome', evDove: 'dove', evUrl: 'url', evScarsita: 'scarsita', evBottone: 'bottone', evTitolo: 'titolo', evDescrizione: 'descrizione', evTesto: 'testo', evNota: 'nota', evConsenso: 'consenso' };
+
+    async function nuovoEvento() {
+      if (!(EV_DATI.schede || []).length) await caricaEventi();
+      document.getElementById('evModalTitle').textContent = 'Nuovo evento';
+      document.getElementById('evId').value = '';
+      Object.keys(EV_CAMPI).forEach((id) => { document.getElementById(id).value = ''; });
+      document.getElementById('evPunti').value = '';
+      document.getElementById('evQuando').value = '';
+      document.getElementById('evStato').value = 'bozza';
+      document.getElementById('evDove').value = 'Online su Zoom';
+      document.getElementById('evScarsita').value = 'Posti limitati';
+      document.getElementById('evBottone').value = 'Prendi il tuo posto';
+      evRiempiSchede(0);
+      openModal('evOverlay');
+    }
+
+    function modificaEvento(id) {
+      const e = (EV_DATI.eventi || []).find((x) => x.id === id); if (!e) return;
+      document.getElementById('evModalTitle').textContent = 'Modifica evento';
+      document.getElementById('evId').value = e.id;
+      Object.entries(EV_CAMPI).forEach(([id2, k]) => { document.getElementById(id2).value = e[k] || ''; });
+      document.getElementById('evPunti').value = (e.punti || []).join('\n');
+      document.getElementById('evQuando').value = evPerCampo(e.quando);
+      document.getElementById('evStato').value = e.stato;
+      evRiempiSchede(e.servizio_id);
+      openModal('evOverlay');
+    }
+
+    async function salvaEvento() {
+      const corpo = { id: document.getElementById('evId').value || undefined };
+      Object.entries(EV_CAMPI).forEach(([id, k]) => { corpo[k] = document.getElementById(id).value; });
+      corpo.punti = document.getElementById('evPunti').value;
+      corpo.servizio_id = parseInt(document.getElementById('evScheda').value) || 0;
+      corpo.stato = document.getElementById('evStato').value;
+      const q = document.getElementById('evQuando').value;
+      corpo.quando = q ? new Date(q).toISOString() : '';
+      const b = document.getElementById('evSalva'); b.disabled = true;
+      try {
+        const r = await api('admin/eventi/save', { method: 'POST', body: JSON.stringify(corpo) });
+        const d = await r.json();
+        if (!r.ok || d.error) { alert(d.detail || 'Non salvato: ' + (d.error || r.status)); return; }
+        closeModal('evOverlay');
+        caricaEventi();
+      } catch (e) { alert('Non salvato: controlla la connessione.'); }
+      finally { b.disabled = false; }
+    }
+
+    async function evIscritti(id) {
+      const r = await api('admin/eventi/iscritti?id=' + id);
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'errore');
+      return d.iscritti || [];
+    }
+
+    async function iscrittiEvento(id) {
+      const box = document.getElementById('evIscr' + id); if (!box) return;
+      if (box.innerHTML) { box.innerHTML = ''; return; }
+      box.innerHTML = '<p class="empty">Carico…</p>';
+      let righe;
+      try { righe = await evIscritti(id); } catch (e) { box.innerHTML = '<p class="empty">Non riesco a caricare gli iscritti.</p>'; return; }
+      if (!righe.length) { box.innerHTML = '<p class="empty">Ancora nessuno.</p>'; return; }
+      box.innerHTML = '<div class="evx-scorri"><table class="evx-tab"><thead><tr><th>Nome</th><th>Email</th><th>Telegram</th><th>Da</th><th>Quando</th><th>Consegnato</th></tr></thead><tbody>'
+        + righe.map((u) => `<tr><td>${esc(u.nome)}${u.cliente ? ' <span style="color:#34D399">· cliente</span>' : ''}</td><td>${esc(u.email)}</td>`
+          + `<td>${u.username ? `<a href="https://t.me/${esc(u.username)}" target="_blank" rel="noopener" style="color:#94A3B8">@${esc(u.username)}</a>` : '—'}</td>`
+          + `<td>${esc(u.fonte === 'home' ? 'home' : 'scheda')}</td><td>${esc(evQ(u.created_at))}</td><td>${u.consegnato_at ? esc(evQ(u.consegnato_at)) : '—'}</td></tr>`).join('')
+        + '</tbody></table></div>';
+    }
+
+    // CSV con il punto e virgola e il BOM: Excel in italiano lo apre gia' in colonne.
+    async function esportaEvento(id) {
+      let righe;
+      try { righe = await evIscritti(id); } catch (e) { alert('Non riesco a leggere gli iscritti.'); return; }
+      if (!righe.length) { alert('Ancora nessun iscritto da esportare.'); return; }
+      const e = (EV_DATI.eventi || []).find((x) => x.id === id) || {};
+      const cella = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const testa = ['Nome', 'Email', 'Telegram', 'Arrivato da', 'Data iscrizione', 'Consegnato', 'Gia cliente'];
+      const corpo = righe.map((u) => [u.nome, u.email, u.username ? '@' + u.username : '', u.fonte === 'home' ? 'home' : 'scheda',
+        evQ(u.created_at), u.consegnato_at ? evQ(u.consegnato_at) : '', u.cliente ? 'si' : 'no'].map(cella).join(';'));
+      const csv = '\ufeff' + [testa.map(cella).join(';')].concat(corpo).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const nomeFile = String(e.nome || 'evento').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
+      a.download = 'iscritti-' + nomeFile + '.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+
+    async function copiaEmailEvento(id) {
+      let righe;
+      try { righe = await evIscritti(id); } catch (e) { alert('Non riesco a leggere gli iscritti.'); return; }
+      if (!righe.length) { alert('Ancora nessuna email da copiare.'); return; }
+      const testo = righe.map((u) => u.email).join('\n');
+      try { await navigator.clipboard.writeText(testo); alert(righe.length + ' email copiate.'); }
+      catch (e) { prompt('Copia le email da qui:', testo); }
+    }
+
+    async function consegnatiEvento(id) {
+      if (!confirm('Segno come consegnati a chi organizza tutti quelli non ancora consegnati?')) return;
+      try {
+        const r = await api('admin/eventi/consegnati', { method: 'POST', body: JSON.stringify({ id }) });
+        const d = await r.json();
+        if (!r.ok || d.error) { alert('Non riuscito: ' + (d.detail || d.error)); return; }
+        caricaEventi();
+      } catch (e) { alert('Non riuscito: controlla la connessione.'); }
+    }
+
+    Object.assign(window, { caricaEventi, nuovoEvento, modificaEvento, salvaEvento, iscrittiEvento, esportaEvento, copiaEmailEvento, consegnatiEvento });
     window.caricaStatsMessaggi = caricaStatsMessaggi;
     (function () {
       const orig = window.switchAdminTab;
       if (typeof orig !== 'function') return;
-      window.switchAdminTab = function (k) { orig.apply(this, arguments); if (k === 'msg') caricaStatsMessaggi(); if (k === 'utenti') caricaAbbandoni(); };
+      window.switchAdminTab = function (k) { orig.apply(this, arguments); if (k === 'msg') caricaStatsMessaggi(); if (k === 'utenti') caricaAbbandoni(); if (k === 'eventi') caricaEventi(); };
     })();
   </script>
 </body>

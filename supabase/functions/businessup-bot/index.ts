@@ -1070,15 +1070,20 @@ async function handleUpdate(u: any) {
 
     // /webinar: chi ha preso il posto passando dall'app.
     if (text === "/webinar") {
-      const { data: iscritti } = await supabase.from("webinar_iscritti")
-        .select("telegram_id, nome, email, created_at").order("created_at", { ascending: false })
+      // L'evento piu' recente: le liste di eventi diversi non si mescolano.
+      const { data: evUlt } = await supabase.from("eventi_app").select("id, nome").order("quando", { ascending: false }).limit(1)
+      const evU = ((evUlt ?? []) as any[])[0]
+      const { data: iscritti } = evU
+        ? await supabase.from("webinar_iscritti").select("telegram_id, nome, email, created_at")
+            .eq("evento_id", evU.id).neq("telegram_id", ADMIN_ID).order("created_at", { ascending: false })
+        : { data: [] }
       const righe = (iscritti ?? []) as any[]
       if (!righe.length) { await sendMessage(chatId, "Ancora nessuno ha lasciato i dati per il webinar."); return }
       const ids = [...new Set(righe.map((r) => r.telegram_id))]
       const { data: chi } = await supabase.from("leads").select("telegram_id, username").in("telegram_id", ids)
       const tag: Record<number, string> = {}
       for (const l of (chi ?? []) as any[]) tag[l.telegram_id] = l.username || ""
-      const fuori = [`<b>Hanno lasciato i dati dall'app: ${righe.length}</b>`, "L'iscrizione vera e' su Zoom: questi sono quelli partiti da te.", ""]
+      const fuori = [`<b>${htmlEsc(evU?.nome || "Evento")}</b>`, `Hanno lasciato i dati dall'app: <b>${righe.length}</b>`, "L'iscrizione vera e' su Zoom: questi sono quelli partiti da te.", ""]
       for (const r of righe) {
         const q = new Date(r.created_at).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
         fuori.push(`${htmlEsc(r.nome)}${tag[r.telegram_id] ? ` @${htmlEsc(tag[r.telegram_id])}` : ""}`)
@@ -1718,23 +1723,33 @@ async function apiBusinessList(telegramId?: number | null) {
     categorie: list.filter((c: any) => c.macro_categoria_id === m.id),
   }))
 
-  // Gli eventi in arrivo, per la card in home. Solo quelli di schede visibili: una
-  // scheda in bozza non deve farsi vedere dalla porta di servizio. L'admin invece
-  // li vede anche in bozza, marcati, cosi' li prova prima di accenderli.
-  const { data: conEvento } = await supabase.from("servizi")
-    .select("id, nome, stato, logo_url, logo_pieno, cta").not("cta->webinar", "is", null)
-  const adessoIso = new Date().toISOString()
-  const eventi = ((conEvento ?? []) as any[])
-    .map((x) => ({ x, w: x.cta?.webinar }))
-    .filter(({ x, w }) => w && w.quando && new Date(w.quando).toISOString() > adessoIso
-      && (x.stato === "attivo" || (telegramId === ADMIN_ID && x.stato === "bozza")))
-    .map(({ x, w }) => ({
-      servizio_id: x.id, servizio: x.nome, logo_url: x.logo_url, logo_pieno: !!x.logo_pieno,
-      bozza: x.stato !== "attivo",
-      quando: w.quando, occhiello: w.occhiello || "",
-      nome: w.nome || w.titolo || x.nome, descrizione: w.descrizione || "", dove: w.dove || "", scarsita: w.scarsita || "", bottone: w.bottone || "",
-    }))
-    .sort((a, b) => (a.quando < b.quando ? -1 : 1))
+  // Gli eventi in arrivo, per la card in home. Attivi per tutti; l'admin vede
+  // anche quelli in bozza, marcati, cosi' li prova prima di accenderli. Se la
+  // scheda e' ancora in bozza vale lo stesso: la vede solo l'admin.
+  const statiEv = telegramId === ADMIN_ID ? ["attivo", "bozza"] : ["attivo"]
+  const { data: evRighe } = await supabase.from("eventi_app")
+    .select("id, servizio_id, stato, nome, descrizione, quando, dove, scarsita, bottone")
+    .in("stato", statiEv).gt("quando", new Date().toISOString()).order("quando", { ascending: true })
+  const idsEv = [...new Set(((evRighe ?? []) as any[]).map((e) => e.servizio_id))]
+  const { data: svEv } = idsEv.length
+    ? await supabase.from("servizi").select("id, nome, logo_url, logo_pieno, stato").in("id", idsEv)
+    : { data: [] }
+  const svEvMap: Record<number, any> = {}
+  for (const x of (svEv ?? []) as any[]) svEvMap[x.id] = x
+  const eventi = ((evRighe ?? []) as any[])
+    .filter((e) => {
+      const x = svEvMap[e.servizio_id]
+      return x && x.stato !== "fermo" && (x.stato === "attivo" || telegramId === ADMIN_ID)
+    })
+    .map((e) => {
+      const x = svEvMap[e.servizio_id]
+      return {
+        evento_id: e.id, servizio_id: e.servizio_id, servizio: x.nome, logo_url: x.logo_url, logo_pieno: !!x.logo_pieno,
+        bozza: e.stato !== "attivo" || x.stato !== "attivo",
+        quando: e.quando, nome: e.nome, descrizione: e.descrizione || "", dove: e.dove || "",
+        scarsita: e.scarsita || "", bottone: e.bottone || "",
+      }
+    })
 
   return json({ macro_categorie: macroList, categorie: list, miei_voti: mieiVoti, miei_preferiti: mieiPreferiti, eventi })
 }
@@ -1940,6 +1955,14 @@ async function apiServizio(telegramId: number, servizioId: number) {
     for (const m of (macros ?? []) as any[]) macroNome[m.id] = m.nome
     categorieScheda = ((cats ?? []) as any[]).map((c) => ({ id: c.id, nome: c.nome, macro_id: c.macro_categoria_id, macro_nome: macroNome[c.macro_categoria_id] || "" }))
   }
+
+  // L'evento non sta piu' nella scheda: arriva dalla sua tabella, nella forma di
+  // prima, cosi' l'app lo trova dove lo cercava.
+  const evS = await prossimoEvento(servizioId, telegramId)
+  const ctaS: any = { ...(((servizio as any).cta) || {}) }
+  delete ctaS.webinar
+  if (evS) ctaS.webinar = formaEvento(evS)
+  ;(servizio as any).cta = ctaS
 
   return json({
     servizio,
@@ -3477,6 +3500,186 @@ async function apiAdminPresenza() {
 // messaggi partiti prima che il numero esistesse -- va al messaggio piu' recente
 // mandato prima di lei. Il video conta per un messaggio se la stessa persona lo
 // guarda dopo averlo aperto da li', sulla stessa scheda. Persone diverse, non eventi.
+// ---------- EVENTI ----------
+
+// Un evento nella forma che l'app conosce (quella di cta.webinar): cosi' la
+// scheda lo legge da dove lo leggeva, e l'app non cambia strada.
+function occhielloEvento(q: string): string {
+  const d = new Date(q)
+  const g = d.toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })
+  const h = d.toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })
+  return g.charAt(0).toUpperCase() + g.slice(1) + " · " + h
+}
+
+function formaEvento(ev: any) {
+  return {
+    id: ev.id, stato: ev.stato, quando: ev.quando, occhiello: occhielloEvento(ev.quando),
+    nome: ev.nome, titolo: ev.titolo || "", descrizione: ev.descrizione || "", testo: ev.testo || "",
+    punti: Array.isArray(ev.punti) ? ev.punti : [], dove: ev.dove || "", scarsita: ev.scarsita || "",
+    bottone: ev.bottone || "", url: ev.url, nota: ev.nota || "", consenso: ev.consenso || "",
+  }
+}
+
+// Il prossimo evento di una scheda che questa persona puo' vedere: gli attivi
+// tutti, quelli in bozza solo l'admin. Uno per scheda, il piu' vicino.
+async function prossimoEvento(servizioId: number, telegramId?: number | null): Promise<any | null> {
+  const stati = telegramId === ADMIN_ID ? ["attivo", "bozza"] : ["attivo"]
+  const { data } = await supabase.from("eventi_app").select("*").eq("servizio_id", servizioId)
+    .in("stato", stati).gt("quando", new Date().toISOString()).order("quando", { ascending: true }).limit(1)
+  return ((data ?? []) as any[])[0] || null
+}
+
+// ---------- ADMIN: EVENTI ----------
+
+const CAMPI_EVENTO = ["servizio_id", "stato", "nome", "titolo", "descrizione", "testo", "punti", "quando",
+  "dove", "scarsita", "bottone", "url", "nota", "consenso"]
+
+async function apiAdminEventiSave(body: any) {
+  const riga: any = {}
+  for (const k of CAMPI_EVENTO) if (body?.[k] !== undefined) riga[k] = body[k]
+  // I punti arrivano da un campo di testo, uno per riga.
+  if (typeof riga.punti === "string") riga.punti = riga.punti.split("\n").map((x: string) => x.trim()).filter(Boolean)
+  for (const k of ["titolo", "descrizione", "testo", "dove", "scarsita", "bottone", "nota", "consenso"]) {
+    if (typeof riga[k] === "string") riga[k] = riga[k].trim() || null
+  }
+  if (typeof riga.nome === "string") riga.nome = riga.nome.trim()
+  if (typeof riga.url === "string") riga.url = riga.url.trim()
+  if (riga.servizio_id !== undefined) riga.servizio_id = parseInt(riga.servizio_id) || null
+  const id = parseInt(body?.id) || 0
+  if (!id && (!riga.servizio_id || !riga.nome || !riga.quando || !riga.url)) {
+    return json({ error: "campi_obbligatori", detail: "Scheda, nome, data e link di iscrizione servono sempre." }, 400)
+  }
+  if (riga.url !== undefined && !/^https?:\/\//i.test(String(riga.url))) return json({ error: "link_non_valido", detail: "Il link deve iniziare con https://" }, 400)
+  if (riga.quando !== undefined && isNaN(new Date(riga.quando).getTime())) return json({ error: "data_non_valida", detail: "Data e ora non valide." }, 400)
+  if (riga.stato !== undefined && !["bozza", "attivo", "chiuso"].includes(riga.stato)) return json({ error: "stato_non_valido" }, 400)
+  riga.updated_at = new Date().toISOString()
+  const { data, error } = id
+    ? await supabase.from("eventi_app").update(riga).eq("id", id).select("*").maybeSingle()
+    : await supabase.from("eventi_app").insert(riga).select("*").maybeSingle()
+  if (error) return json({ error: "save_failed", detail: error.message }, 500)
+  return json({ ok: true, evento: data })
+}
+
+// I click che servono agli eventi, a blocchi: una select si ferma a mille righe.
+async function clickEventi(da: string): Promise<any[]> {
+  const fuori: any[] = []
+  for (let off = 0; off < 50000; off += 1000) {
+    const { data } = await supabase.from("click").select("telegram_id, azione, riferimento, dettaglio, created_at")
+      .in("azione", ["evento_visto", "apri_evento", "cambio_scheda", "webinar_posto", "webinar_zoom"])
+      .gte("created_at", da).order("created_at", { ascending: true }).range(off, off + 999)
+    const b = (data ?? []) as any[]
+    fuori.push(...b)
+    if (b.length < 1000) break
+  }
+  return fuori
+}
+
+// I numeri di ogni evento. Si contano PERSONE, non tocchi, e l'admin non conta.
+// Un click appartiene a un evento se ne porta il numero (ev:<id>); i click
+// senza numero (la linguetta, le versioni vecchie dell'app) valgono per
+// l'evento di quella scheda se cadono fra la sua creazione e sei ore dopo l'inizio.
+async function apiAdminEventi() {
+  const { data: evs } = await supabase.from("eventi_app").select("*").order("quando", { ascending: false }).limit(50)
+  const { data: schede } = await supabase.from("servizi").select("id, nome, stato").neq("stato", "fermo").order("nome")
+  const lista = (evs ?? []) as any[]
+  if (!lista.length) return json({ eventi: [], schede: schede ?? [] })
+
+  const svIds = [...new Set(lista.map((e) => e.servizio_id))]
+  const { data: sv } = await supabase.from("servizi").select("id, nome, stato, logo_url").in("id", svIds)
+  const svMap: Record<number, any> = {}
+  for (const x of (sv ?? []) as any[]) svMap[x.id] = x
+
+  const { data: iscr } = await supabase.from("webinar_iscritti")
+    .select("evento_id, telegram_id, fonte, consegnato_at, created_at").in("evento_id", lista.map((e) => e.id))
+  const idIscr = [...new Set(((iscr ?? []) as any[]).map((r) => r.telegram_id))]
+  const { data: clienti } = idIscr.length
+    ? await supabase.from("leads").select("telegram_id").in("telegram_id", idIscr).eq("is_cliente", true)
+    : { data: [] }
+  const setClienti = new Set(((clienti ?? []) as any[]).map((c) => c.telegram_id))
+
+  const primo = lista.reduce((m, e) => (e.created_at < m ? e.created_at : m), lista[0].created_at)
+  const clic = (await clickEventi(primo)).filter((c) => c.telegram_id && c.telegram_id !== ADMIN_ID)
+  const ora = Date.now()
+
+  const eventi = lista.map((e) => {
+    const inizio = new Date(e.created_at).getTime()
+    const fine = new Date(e.quando).getTime() + 6 * 3600 * 1000
+    const mio = (c: any) => {
+      const m = /^ev:(\d+)$/.exec(String(c.dettaglio || ""))
+      if (m) return parseInt(m[1]) === e.id
+      const t = new Date(c.created_at).getTime()
+      return c.riferimento === e.servizio_id && t >= inizio && t <= fine
+    }
+    const persone = (filtro: (c: any) => boolean) => new Set(clic.filter((c) => filtro(c) && mio(c)).map((c) => c.telegram_id))
+    const visti = persone((c) => c.azione === "evento_visto")
+    const aperture = persone((c) => c.azione === "apri_evento" || (c.azione === "cambio_scheda" && c.dettaglio === "ev"))
+    const zoom = persone((c) => c.azione === "webinar_posto" || c.azione === "webinar_zoom")
+    const miei = ((iscr ?? []) as any[]).filter((r) => r.evento_id === e.id && r.telegram_id !== ADMIN_ID)
+    // Chi ha lasciato i dati ha per forza aperto l'evento: se il tocco non e' stato
+    // registrato (app vecchia in cache) lo si conta lo stesso fra le aperture.
+    for (const r of miei) aperture.add(r.telegram_id)
+    const perGiorno: Record<string, number> = {}
+    for (const r of miei) {
+      const g = new Date(r.created_at).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit" })
+      perGiorno[g] = (perGiorno[g] || 0) + 1
+    }
+    const pct = (a: number, b: number) => (b ? Math.round((a * 100) / b) : null)
+    return {
+      ...e,
+      scheda: svMap[e.servizio_id]?.nome || `Scheda ${e.servizio_id}`,
+      scheda_stato: svMap[e.servizio_id]?.stato || "",
+      logo_url: svMap[e.servizio_id]?.logo_url || null,
+      passato: new Date(e.quando).getTime() < ora,
+      kpi: {
+        visti: visti.size,
+        aperture: aperture.size,
+        dati: miei.length,
+        zoom: zoom.size,
+        apertura_su_visti: pct(aperture.size, visti.size),
+        dati_su_aperture: pct(miei.length, aperture.size),
+        dati_su_visti: pct(miei.length, visti.size),
+        da_home: miei.filter((r) => r.fonte === "home").length,
+        da_scheda: miei.filter((r) => r.fonte !== "home").length,
+        da_consegnare: miei.filter((r) => !r.consegnato_at).length,
+        gia_clienti: miei.filter((r) => setClienti.has(r.telegram_id)).length,
+        per_giorno: Object.entries(perGiorno).map(([giorno, n]) => ({ giorno, n })),
+      },
+    }
+  })
+  return json({ eventi, schede: schede ?? [] })
+}
+
+async function apiAdminEventoIscritti(eventoId: number) {
+  if (!eventoId) return json({ error: "evento_richiesto" }, 400)
+  const { data: righe } = await supabase.from("webinar_iscritti")
+    .select("telegram_id, nome, email, fonte, consegnato_at, created_at").eq("evento_id", eventoId)
+    .order("created_at", { ascending: false })
+  const lista = ((righe ?? []) as any[]).filter((r) => r.telegram_id !== ADMIN_ID)
+  const ids = lista.map((r) => r.telegram_id)
+  const { data: anag } = ids.length
+    ? await supabase.from("leads").select("telegram_id, username, is_cliente").in("telegram_id", ids)
+    : { data: [] }
+  const m: Record<number, any> = {}
+  for (const l of (anag ?? []) as any[]) m[l.telegram_id] = l
+  return json({
+    iscritti: lista.map((r) => ({
+      ...r,
+      username: m[r.telegram_id]?.username || "",
+      cliente: !!m[r.telegram_id]?.is_cliente,
+    })),
+  })
+}
+
+// Segna come consegnati a chi organizza tutti quelli non ancora consegnati.
+async function apiAdminEventoConsegnati(body: any) {
+  const id = parseInt(body?.id) || 0
+  if (!id) return json({ error: "evento_richiesto" }, 400)
+  const { data, error } = await supabase.from("webinar_iscritti")
+    .update({ consegnato_at: new Date().toISOString() }).eq("evento_id", id).is("consegnato_at", null).select("telegram_id")
+  if (error) return json({ error: "save_failed", detail: error.message }, 500)
+  return json({ ok: true, segnati: (data ?? []).length })
+}
+
 // ---------- ADMIN: CHI HA ABBANDONATO ----------
 
 // La scala del percorso. L'apertura del link corto non c'e': la fanno anche le
@@ -4525,26 +4728,33 @@ serve(async (req) => {
       if (!tid) return json({ error: "unauthorized" }, 401)
       const corpo = await req.json().catch(() => ({}))
       const sid = parseInt(corpo?.servizio_id) || 0
-      if (!sid) return json({ error: "servizio_richiesto" }, 400)
+      const eidChiesto = parseInt(corpo?.evento_id) || 0
+      if (!sid && !eidChiesto) return json({ error: "evento_richiesto" }, 400)
+      // Un'app ancora in cache non manda il numero dell'evento: si prende il
+      // prossimo evento di quella scheda, che e' quello che stava guardando.
+      const ev: any = eidChiesto
+        ? (await supabase.from("eventi_app").select("*").eq("id", eidChiesto).maybeSingle()).data
+        : await prossimoEvento(sid, tid)
+      if (!ev) return json({ error: "evento_non_trovato" }, 404)
       const nome = String(corpo?.nome || "").trim().slice(0, 80)
       const email = String(corpo?.email || "").trim().toLowerCase().slice(0, 120)
-      // Gli stessi due controlli del modulo, rifatti qui: quelli davanti si
-      // aggirano, questi no.
+      // Gli stessi controlli del modulo, rifatti qui: quelli davanti si aggirano.
       if (nome.length < 3) return json({ error: "nome_richiesto" }, 400)
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ error: "email_non_valida" }, 400)
+      const fonte = corpo?.fonte === "home" ? "home" : "scheda"
       const { error: errW } = await supabase.from("webinar_iscritti")
-        .upsert({ telegram_id: tid, servizio_id: sid, nome, email },
-          { onConflict: "telegram_id,servizio_id" })
+        .upsert({ telegram_id: tid, servizio_id: ev.servizio_id, evento_id: ev.id, nome, email, fonte },
+          { onConflict: "evento_id,telegram_id" })
       if (errW) {
         console.error("webinar upsert:", errW)
         return json({ error: "save_failed" }, 500)
       }
       const { count } = await supabase.from("eventi").select("id", { count: "exact", head: true })
-        .eq("tipo", "webinar_iscritto").eq("telegram_id", tid).eq("riferimento_id", sid)
+        .eq("tipo", "webinar_iscritto").eq("telegram_id", tid).eq("dettaglio", `ev:${ev.id}`)
       if (!count) {
-        await supabase.from("eventi").insert({ tipo: "webinar_iscritto", telegram_id: tid, riferimento_id: sid })
+        await supabase.from("eventi").insert({ tipo: "webinar_iscritto", telegram_id: tid, riferimento_id: ev.servizio_id, dettaglio: `ev:${ev.id}` })
       }
-      await notificaAzione(tid, `HA LASCIATO I DATI PER IL WEBINAR — ${email}`)
+      await notificaAzione(tid, `HA LASCIATO I DATI PER «${ev.nome}» — ${email}`)
       return json({ ok: true })
     }
 
@@ -4743,6 +4953,10 @@ serve(async (req) => {
       if (sub === "admin/servizio-stats" && req.method === "GET") return await apiAdminServizioStats(parseInt(url.searchParams.get("id") || "0"))
       if (sub === "admin/messaggi-stats" && req.method === "GET") return await apiAdminMessaggiStats()
       if (sub === "admin/abbandoni" && req.method === "GET") return await apiAdminAbbandoni()
+      if (sub === "admin/eventi" && req.method === "GET") return await apiAdminEventi()
+      if (sub === "admin/eventi/save" && req.method === "POST") return await apiAdminEventiSave(await req.json())
+      if (sub === "admin/eventi/iscritti" && req.method === "GET") return await apiAdminEventoIscritti(parseInt(url.searchParams.get("id") || "0"))
+      if (sub === "admin/eventi/consegnati" && req.method === "POST") return await apiAdminEventoConsegnati(await req.json())
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()
