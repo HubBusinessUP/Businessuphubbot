@@ -243,6 +243,8 @@
 
     <!-- ===================== HUB ===================== -->
     <section class="scr on" data-s="home">
+      <!-- Evento in arrivo: sta sopra il menu, e' la prima cosa che si vede. -->
+      <div id="eventoHome"></div>
       <div class="hubtop">
         <button class="catdd" id="catDD" data-catopen="1" aria-haspopup="listbox">
           <span id="catDDtxt">Tutte le categorie</span>
@@ -260,7 +262,6 @@
         </button>
       </div>
       <nav class="macros" id="macroTabs"></nav>
-      <div id="eventoHome"></div>
       <div id="primoPiano"></div>
       <div id="listaReale"></div>
 
@@ -841,15 +842,21 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    Il conto alla rovescia e' il pezzo che si guarda, per questo ha le cifre
    larghe e allineate e sta da solo sulla sua riga. */
 #eventoHome:empty{display:none}
-#eventoHome{margin:14px 20px 0}
+#eventoHome{margin:14px 20px 4px}
+/* In cima alla home il banner deve staccare dal resto senza urlare: un fondo
+   appena caldo, il bordo acceso e una riga piena sul lato che lo ancora. */
 .ev-et{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;color:#FF8A5C;margin:0 2px 8px}
 .ev-et::after{content:'';flex:1;height:1px;background:var(--line)}
 .ev-et .pnt{width:7px;height:7px;border-radius:50%;background:#FF8A5C;animation:wbnp 2.4s infinite}
-.ev-card{display:block;width:100%;text-align:left;background:var(--s0);color:var(--tx);
-  border:1px solid rgba(255,138,92,.34);border-radius:14px;padding:14px 16px 15px;
+.ev-card{position:relative;overflow:hidden;display:block;width:100%;text-align:left;color:var(--tx);
+  background:linear-gradient(135deg,rgba(255,138,92,.16),rgba(255,138,92,.03) 55%),var(--s0);
+  border:1px solid rgba(255,138,92,.55);border-radius:14px;padding:14px 16px 15px 19px;
+  box-shadow:0 8px 24px rgba(255,138,92,.12);
   font-family:var(--sans);cursor:pointer}
 .ev-card:active{transform:scale(.99)}
+.ev-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#FF8A5C}
+.ev-card .ev-timer div{background:rgba(0,0,0,.22)}
 .ev-card + .ev-card{margin-top:10px}
 .ev-top{display:flex;align-items:center;gap:10px}
 .ev-logo{flex:none;width:34px;height:34px;border-radius:9px;background:var(--s2) center/cover no-repeat;
@@ -1466,7 +1473,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=187"></script>
+<script src="identikit.js?v=188"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1685,10 +1692,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function renderEvento(){
     var box = document.getElementById('eventoHome');
     if (!box) return;
-    // Come la vetrina: con un filtro o una ricerca accesi resta fuori, li' stai
-    // guardando un sottoinsieme preciso.
-    var filtrando = !!(FILTRO_MACRO || FILTRO_CAT || COLLEZIONE || (FILTRO_Q && FILTRO_Q.trim()));
-    var vivi = filtrando ? [] : EVENTI.filter(function(e){ return new Date(e.quando).getTime() > Date.now(); });
+    // Sta sopra il menu, fuori dalla lista: un filtro acceso non lo tocca.
+    var vivi = EVENTI.filter(function(e){ return new Date(e.quando).getTime() > Date.now(); });
     if (!vivi.length) { box.innerHTML = ''; return; }
     box.innerHTML = '<div class="ev-et"><span class="pnt"></span>' + (vivi.length > 1 ? 'Eventi' : 'Evento') + '</div>'
       + vivi.map(function(e){
