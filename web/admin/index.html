@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=172"></script>
+<script src="/identikit.js?v=182"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -489,6 +489,11 @@
         </div>
         <div id="whitelistRows"></div>
       </div>
+    </div>
+
+    <div class="section" id="secAbbandoni">
+      <div class="section-head"><h2>Chi ha abbandonato</h2><button class="btn btn-secondary btn-small" onclick="caricaAbbandoni()">Aggiorna</button></div>
+      <div id="abbList"><p class="empty">Apri questa scheda per caricare chi si è fermato.</p></div>
     </div>
 
     <div class="section" id="secMsgStats">
@@ -3172,7 +3177,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
         titles: ["Servizi", "Macro categorie", "Categorie", "Lista d'attesa"] },
       { key: "utenti", label: "Utenti", title: "Utenti", sub: "CRM, rete e comportamento delle persone",
         icon: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="18" cy="9" r="2.6"/><path d="M17 14.4c2.8.3 4.9 2.3 4.9 5.1"/>',
-        titles: ["CRM contatti", "Rete a livelli"] },
+        titles: ["Chi ha abbandonato", "CRM contatti", "Rete a livelli"] },
       { key: "coda", label: "Da validare", title: "Da validare", sub: "Tutto ciò che aspetta una tua decisione",
         icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
         titles: ["Da validare", "Suggerimenti dagli utenti", "Link affiliato da approvare", "Segnalazioni", "Whitelist domini link referral"] },
@@ -3271,6 +3276,7 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
       const stato = (u) => u.fine ? 'visto tutto' : (u.meta ? 'a metà' : (u.avvio ? 'video avviato' : 'solo aperto'));
       box.innerHTML = lista.map((m) => {
         const testo = String(m.testo || '').replace('[ricostruito] ', '');
+        const ko = (m.non_recapitati || []).map((u) => `<div class="bt-rank"><span class="nm">${esc(u.nome)}${u.username ? ` <span style="color:#64748B">@${esc(u.username)}</span>` : ''}</span><span class="vv" style="color:#F87171">${esc(u.motivo)}</span></div>`).join('');
         const gente = (m.persone || []).map((u) => `<div class="bt-rank"><span class="nm">${esc(u.nome)}${u.username ? ` <span style="color:#64748B">@${esc(u.username)}</span>` : ''}</span><span class="vv" style="color:#A78BFA">${q(u.quando)} · ${stato(u)}</span></div>`).join('');
         return `<div class="item" style="display:block">`
           + `<div class="item-meta" style="margin-bottom:6px">${q(m.quando)} · ${esc(m.tipo || '')}</div>`
@@ -3281,14 +3287,38 @@ L'invio continua in background: fra un minuto lo vedi in Statistiche.`);
           + kv(m.video_avvio || 0, 'video avviato', '#34D399') + kv(m.video_meta || 0, 'a metà', '#34D399') + kv(m.video_fine || 0, 'visto tutto', '#F59E0B')
           + `</div>`
           + ((m.persone || []).length ? `<details><summary style="cursor:pointer;color:#94A3B8;font-size:13px">Chi ha aperto (${m.persone.length})</summary><div style="margin-top:8px">${gente}</div></details>` : '')
+          + ((m.non_recapitati || []).length ? `<details><summary style="cursor:pointer;color:#94A3B8;font-size:13px">Non consegnati (${m.non_recapitati.length})</summary><div style="margin-top:8px">${ko}</div></details>` : '')
           + `</div>`;
       }).join('');
     }
+    // Ogni riga e' una persona ferma a un punto del percorso. L'ordine e' quello
+    // del percorso, non dei numeri: si legge dove si perde la gente.
+    async function caricaAbbandoni() {
+      const box = document.getElementById('abbList'); if (!box) return;
+      box.innerHTML = '<p class="empty">Carico…</p>';
+      let d;
+      try { const r = await api('admin/abbandoni'); d = await r.json(); if (!r.ok || d.error) throw 0; }
+      catch (e) { box.innerHTML = '<p class="empty">Non riesco a caricare gli abbandoni.</p>'; return; }
+      const tappe = (d.tappe || []).filter((t) => t.persone.length);
+      if (!tappe.length) { box.innerHTML = '<p class="empty">Nessuno.</p>'; return; }
+      const col = (g) => g >= 30 ? '#F87171' : (g >= 7 ? '#F59E0B' : '#34D399');
+      const riga = (p) => `<div class="bt-rank"><span class="nm">${esc(p.nome)}`
+        + (p.username ? ` <a href="https://t.me/${esc(p.username)}" target="_blank" rel="noopener" style="color:#64748B">@${esc(p.username)}</a>` : '')
+        + (p.uscito ? ' <span style="color:#F87171">· ti ha bloccato</span>' : '')
+        + `</span><span class="vv" style="color:${col(p.giorni)}">${p.giorni === 0 ? 'oggi' : 'fermo da ' + p.giorni + (p.giorni === 1 ? ' giorno' : ' giorni')}</span></div>`;
+      box.innerHTML = `<p class="empty" style="text-align:left;margin-bottom:14px">${d.totale} persone non hanno attivato niente. `
+        + `<b style="color:#F59E0B">${d.fermi7}</b> non si vedono da oltre una settimana, `
+        + `<b style="color:#F87171">${d.fermi30}</b> da oltre un mese.</p>`
+        + tappe.map((t) => `<div class="item" style="display:block">`
+          + `<div class="item-meta" style="margin-bottom:8px"><b style="color:#F8FAFC;font-size:15px">${t.persone.length}</b> · ${esc(t.nome)}</div>`
+          + `<div>${t.persone.map(riga).join('')}</div></div>`).join('');
+    }
+    window.caricaAbbandoni = caricaAbbandoni;
     window.caricaStatsMessaggi = caricaStatsMessaggi;
     (function () {
       const orig = window.switchAdminTab;
       if (typeof orig !== 'function') return;
-      window.switchAdminTab = function (k) { orig.apply(this, arguments); if (k === 'msg') caricaStatsMessaggi(); };
+      window.switchAdminTab = function (k) { orig.apply(this, arguments); if (k === 'msg') caricaStatsMessaggi(); if (k === 'utenti') caricaAbbandoni(); };
     })();
   </script>
 </body>

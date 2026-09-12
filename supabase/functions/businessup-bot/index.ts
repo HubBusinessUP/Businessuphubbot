@@ -253,11 +253,12 @@ async function answerCallback(callbackId: string, text?: string) {
   })
 }
 
-async function editMessageText(chatId: number, messageId: number, text: string) {
+async function editMessageText(chatId: number, messageId: number, text: string, parseMode?: string) {
   return fetch(`${TG_API}/editMessageText`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, message_id: messageId, text }),
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId, text,
+      ...(parseMode ? { parse_mode: parseMode } : {}) }),
   })
 }
 
@@ -353,6 +354,7 @@ async function onIscrittoUscito(uid: number) {
   const { data: lead } = await supabase.from("leads").select("referred_by, nome, username").eq("telegram_id", uid).maybeSingle()
   await supabase.from("leads").update({ attivo: false, bloccato_at: new Date().toISOString() }).eq("telegram_id", uid)
   await supabase.from("eventi").insert({ telegram_id: uid, tipo: "bot_bloccato", dettaglio: null }).then(() => {}, () => {})
+  await notificaAzione(uid, "HA BLOCCATO IL BOT")
   const sponsor = lead?.referred_by
   if (sponsor && sponsor !== ADMIN_ID) {
     // Nessun avviso di uscita: parlava di rete e di stato Partner,
@@ -503,6 +505,7 @@ async function benvenutoGruppo(chatId: number, entrati: any[], invito?: any) {
 
   for (const m of persone) {
     await supabase.from("eventi").insert({ telegram_id: m.id, tipo: "entrato_gruppo", dettaglio: dalSito ? "da:matematico" : `chat:${chatId}` }).then(() => {}, () => {})
+    await notificaAzione(m.id, dalSito ? "è entrato nel gruppo dal sito" : "è entrato nel gruppo")
   }
 }
 
@@ -655,6 +658,8 @@ async function handleStart(chatId: number, from: any, payload?: string) {
   // "gruppo" arriva dal bottone del benvenuto: si tiene la provenienza.
   const provenienza = fonteAvvio(payload) ?? (refBy ? `ref:${refBy}` : null)
   await supabase.from("eventi").insert({ telegram_id: from.id, tipo: "start", dettaglio: provenienza })
+  // Il primo start ha gia' il suo avviso dedicato: qui si segna solo chi torna.
+  if (existing) await notificaAzione(from.id, "ha riaperto il bot")
 
   const sponsorFinale = existing?.referred_by ?? refBy
 
@@ -731,7 +736,10 @@ const NEWS_SEGMENTI: Record<string, string> = {
   top: "Top 10 sponsor",
 }
 async function destinatariNews(segmento: string): Promise<number[]> {
-  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by").eq("bot_started", true)
+  // Chi ha bloccato il bot resta fuori: mandargli un annuncio non fa altro che
+  // gonfiare i non recapitati e far sembrare sbagliati i numeri veri.
+  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by")
+    .eq("bot_started", true).not("attivo", "is", false)
   const tutti = leads ?? []
   if (segmento === "partner") return tutti.filter((l: any) => l.is_partner).map((l: any) => l.telegram_id)
   if (segmento === "top") {
@@ -824,7 +832,7 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
     const res = await inviaContenuto(tid, pending.tipo, personalizza(pending.testo, tid), pending.photo_file_id, markupNews)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
-    else falliti++
+    else { falliti++; await segnaNonRecapitato(tid, String(data.description || "")) }
     await new Promise((r) => setTimeout(r, 50))
   }
   await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
@@ -994,6 +1002,60 @@ async function handleUpdate(u: any) {
       return
     }
 
+    // /verifica: chiede a Telegram, uno per uno, chi riceve ancora. Non parte
+    // nessun messaggio verso nessuno, solo l'indicatore "sta scrivendo".
+    if (text === "/verifica") {
+      await sendMessage(chatId, "Controllo chi riceve ancora i messaggi. Non arriva niente a nessuno: chiedo solo a Telegram. Un minuto.")
+      const { ok, bloccati, spariti } = await verificaRaggiungibilita()
+      const etich = (l: any) => htmlEsc([l.nome, l.cognome].filter(Boolean).join(" ") || `ID ${l.telegram_id}`) +
+        (l.username ? ` (@${htmlEsc(l.username)})` : "")
+      const righe = [`<b>Raggiungibili: ${ok}</b>`]
+      if (bloccati.length) righe.push("", `<b>Ti hanno bloccato (${bloccati.length})</b>`, ...bloccati.map(etich))
+      if (spariti.length) righe.push("", `<b>Account cancellati (${spariti.length})</b>`, ...spariti.map(etich))
+      if (!bloccati.length && !spariti.length) righe.push("", "Nessuno ti ha bloccato.")
+      righe.push("", "Da ora restano segnati: i prossimi annunci non li contano più tra i destinatari.")
+      await sendMessage(chatId, righe.join("\n"), undefined, "HTML")
+      return
+    }
+
+    // /abbandoni: dove si e' fermata la gente, e chi vale la pena risentire.
+    if (text === "/abbandoni") {
+      const persone = await riepilogoAbbandoni()
+      const righe = ["<b>Dove si è fermata la gente</b>", ""]
+      TAPPE.forEach((nome, i) => {
+        const n = persone.filter((p) => p.tappa === i).length
+        if (n) righe.push(`${n} · ${nome}`)
+      })
+      const caldi = persone
+        .filter((p) => p.tappa >= 5 && p.giorni >= 3)
+        .sort((a, b) => (b.tappa - a.tappa) || (a.giorni - b.giorni))
+        .slice(0, 10)
+      righe.push("", `Fermi da più di una settimana: <b>${persone.filter((p) => p.giorni >= 7).length}</b>`)
+      if (caldi.length) {
+        righe.push("", "<b>Da risentire per primi</b>")
+        for (const p of caldi) {
+          righe.push(`${htmlEsc(p.nome)}${p.username ? ` @${htmlEsc(p.username)}` : ""} — ${p.dove}, fermo da ${p.giorni} giorni`)
+        }
+      }
+      await sendMessage(chatId, righe.join("\n"), undefined, "HTML")
+      return
+    }
+
+    // /avvisi: accende o spegne il filo diretto con quello che fanno gli utenti.
+    if (text === "/avvisi" || text.startsWith("/avvisi ")) {
+      const arg = text.slice(7).trim().toLowerCase()
+      if (arg === "on" || arg === "off") {
+        await supabase.from("config").upsert({ chiave: "avvisi_azioni", valore: arg }, { onConflict: "chiave" })
+        await sendMessage(chatId, arg === "on"
+          ? "Avvisi accesi: ti arriva ogni mossa, un messaggio per persona che si aggiorna da solo."
+          : "Avvisi spenti. Si riaccendono con /avvisi on.")
+      } else {
+        const acceso = await avvisiAccesi()
+        await sendMessage(chatId, `Avvisi ${acceso ? "accesi" : "spenti"}.` + "\n" + "/avvisi on per accenderli, /avvisi off per spegnerli.")
+      }
+      return
+    }
+
     // /post <testo>: pubblica nel topic memorizzato. Un link YouTube dentro al
     // testo lo espande Telegram da solo, con copertina e titolo.
     if (text.startsWith("/post")) {
@@ -1089,6 +1151,144 @@ async function handleUpdate(u: any) {
   }
 }
 
+// ---------- CHI E' RAGGIUNGIBILE ----------
+
+// L'azione "sta scrivendo" non lascia niente nella chat, ma la risposta di
+// Telegram dice se quella persona riceve ancora i messaggi: e' l'unico modo
+// per sapere chi ha bloccato il bot senza scrivergli davvero.
+async function provaContatto(chatId: number): Promise<{ ok: boolean; motivo: string }> {
+  const res = await fetch(`${TG_API}/sendChatAction`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, action: "typing" }),
+  })
+  const d = await res.json().catch(() => ({}))
+  if (d.ok) return { ok: true, motivo: "" }
+  return { ok: false, motivo: String(d.description || "errore sconosciuto") }
+}
+
+// Chi ha bloccato il bot non si vede da nessuna parte: Telegram avvisa solo se
+// il blocco passa dal nostro webhook, e per anni non e' successo. Questa passata
+// lo chiede a Telegram uno per uno e allinea la colonna attivo, cosi' il numero
+// dei recapitati torna a voler dire qualcosa.
+async function verificaRaggiungibilita(): Promise<{ ok: number; bloccati: any[]; spariti: any[] }> {
+  const { data: tutti } = await supabase.from("leads")
+    .select("telegram_id, nome, cognome, username").eq("bot_started", true)
+  const bloccati: any[] = [], spariti: any[] = []
+  let ok = 0
+  for (const l of (tutti ?? []) as any[]) {
+    if (l.telegram_id === ADMIN_ID) { ok++; continue }
+    const esito = await provaContatto(l.telegram_id)
+    if (esito.ok) {
+      ok++
+      await supabase.from("leads").update({ attivo: true, bloccato_at: null }).eq("telegram_id", l.telegram_id)
+    } else {
+      const sparito = /deactivated|chat not found/i.test(esito.motivo)
+      ;(sparito ? spariti : bloccati).push(l)
+      await supabase.from("leads").update({ attivo: false, bloccato_at: new Date().toISOString() }).eq("telegram_id", l.telegram_id)
+      await supabase.from("eventi").insert({
+        telegram_id: l.telegram_id,
+        tipo: sparito ? "account_sparito" : "bot_bloccato",
+        dettaglio: esito.motivo.slice(0, 120),
+      }).then(() => {}, () => {})
+    }
+    await new Promise((r) => setTimeout(r, 40))
+  }
+  return { ok, bloccati, spariti }
+}
+
+// Un invio fallito e' sempre una persona con un nome: si segna chi e' e perche',
+// se no resta un numero che non dice niente e al giro dopo si riprova a vuoto.
+async function segnaNonRecapitato(telegramId: number, motivo: string) {
+  if (/blocked|deactivated|chat not found|kicked/i.test(motivo)) {
+    await supabase.from("leads").update({ attivo: false, bloccato_at: new Date().toISOString() })
+      .eq("telegram_id", telegramId).then(() => {}, () => {})
+  }
+  await supabase.from("eventi").insert({
+    telegram_id: telegramId, tipo: "non_recapitato", dettaglio: motivo.slice(0, 120) || "errore sconosciuto",
+  }).then(() => {}, () => {})
+}
+
+// ---------- AVVISI IN TEMPO REALE ----------
+
+// Ogni mossa di un utente arriva in chat, ma non un messaggio per mossa: la prima
+// apre un avviso e le successive lo allungano, finche' la persona sta usando
+// l'app. Si legge la sessione intera in un punto solo invece di venti notifiche
+// sparse, e se l'avviso non parte l'azione dell'utente non ne risente.
+const FEED_MINUTI = 30
+const FEED_RIGHE_MAX = 15
+
+const AZIONI_AVVISO: Record<string, string> = {
+  app_entrata: "è entrato nell'app",
+  app_uscita: "ha chiuso l'app",
+  apri_scheda: "ha aperto",
+  apre_da_annuncio: "è arrivato da un tuo messaggio",
+  apri_categorie: "sfoglia le categorie",
+  filtro_categoria: "ha filtrato per categoria",
+  richiedi_info: "HA CHIESTO INFORMAZIONI",
+  condivisione: "ha condiviso",
+  apri_gruppo: "è andato verso il gruppo",
+  link_fornitore: "È USCITO VERSO IL FORNITORE",
+  video_avvio: "ha avviato il video",
+  video_meta: "è a metà video",
+  video_fine: "ha finito il video",
+  menu: "si muove nel menu",
+  aggiorna: "ha aggiornato la lista",
+  spunta_step: "ha spuntato uno step",
+}
+
+async function avvisiAccesi(): Promise<boolean> {
+  const { data } = await supabase.from("config").select("valore").eq("chiave", "avvisi_azioni").maybeSingle()
+  return String(data?.valore || "on") !== "off"
+}
+
+async function nomeDi(telegramId: number): Promise<string> {
+  const { data: l } = await supabase.from("leads").select("nome, cognome, username").eq("telegram_id", telegramId).maybeSingle()
+  const chi = [l?.nome, l?.cognome].filter(Boolean).join(" ").trim()
+  return (chi || `ID ${telegramId}`) + (l?.username ? ` (@${l.username})` : "")
+}
+
+function oraItaliana(d: Date): string {
+  return d.toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })
+}
+
+async function notificaAzione(telegramId: number | null, riga: string) {
+  try {
+    if (!telegramId || telegramId === ADMIN_ID) return
+    if (!(await avvisiAccesi())) return
+    const chiave = `feed_${telegramId}`
+    const { data: row } = await supabase.from("config").select("valore").eq("chiave", chiave).maybeSingle()
+    let stato: any = null
+    try { stato = row ? JSON.parse(String(row.valore)) : null } catch { stato = null }
+    const ora = new Date()
+    const fresco = !!stato && ora.getTime() - new Date(stato.t).getTime() < FEED_MINUTI * 60 * 1000
+    const righe: string[] = fresco && Array.isArray(stato.r) ? stato.r : []
+    righe.push(`${oraItaliana(ora)}  ${riga}`)
+    if (righe.length > FEED_RIGHE_MAX) righe.splice(0, righe.length - FEED_RIGHE_MAX)
+    const chi = fresco && stato.chi ? String(stato.chi) : await nomeDi(telegramId)
+    const testo = `<b>${htmlEsc(chi)}</b>` + "\n\n" + righe.map((r) => htmlEsc(r)).join("\n")
+    let messageId = fresco ? Number(stato.m) || 0 : 0
+    if (messageId) {
+      const r = await editMessageText(ADMIN_ID, messageId, testo, "HTML")
+      const d = await r.json().catch(() => ({}))
+      // Se il messaggio non c'e' piu' se ne apre un altro; se l'errore e' un limite
+      // di frequenza si lascia stare: la riga e' salvata e la prossima modifica
+      // la porta su lo stesso, senza trasformare un avviso in dieci.
+      if (!d.ok && /not found|can't be edited|message to edit/i.test(String(d.description || ""))) messageId = 0
+    }
+    if (!messageId) {
+      const r = await sendMessage(ADMIN_ID, testo, undefined, "HTML")
+      const d = await r.json().catch(() => ({}))
+      messageId = Number(d?.result?.message_id) || 0
+      if (!messageId) return
+    }
+    await supabase.from("config").upsert(
+      { chiave, valore: JSON.stringify({ m: messageId, t: ora.toISOString(), r: righe, chi }) },
+      { onConflict: "chiave" },
+    )
+  } catch { /* un avviso che non parte non deve rompere l'azione dell'utente */ }
+}
+
 // ---------- LINK CORTI E CLICK ----------
 
 // Un codice breve per ogni condivisione. Sta DENTRO il link, quindi conta chi ci
@@ -1131,6 +1331,19 @@ async function apiClick(telegramId: number | null, body: any) {
     riferimento: parseInt(body?.riferimento) || null,
     dettaglio: body?.dettaglio ? String(body.dettaglio).slice(0, 120) : null,
   }).then(() => {}, () => {})
+
+  // Lo stesso click diventa una riga dell'avviso all'admin. Il nome della scheda
+  // si cerca solo se gli avvisi sono accesi: a schermo spento non si paga niente.
+  const etichetta = AZIONI_AVVISO[azione]
+  if (etichetta && telegramId && telegramId !== ADMIN_ID && (await avvisiAccesi())) {
+    const sid = parseInt(body?.riferimento) || 0
+    let dove = ""
+    if (sid) {
+      const { data: sv } = await supabase.from("servizi").select("nome").eq("id", sid).maybeSingle()
+      if (sv?.nome) dove = `: ${sv.nome}`
+    }
+    await notificaAzione(telegramId, etichetta + dove)
+  }
   return json({ ok: true })
 }
 
@@ -1447,6 +1660,7 @@ async function apiWaitlist(telegramId: number, body: any) {
   }
   await registraAccettazioneDisclaimer(telegramId, servizioId, "waitlist", DISCLAIMER_WAITLIST)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "waitlist", dettaglio: sv.nome })
+  await notificaAzione(telegramId, `si è messo in lista d'attesa: ${sv.nome}`)
 
   const { count } = await supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("servizio_id", servizioId)
   return json({ ok: true, in_lista: true, waitlist_count: count ?? 0 })
@@ -1889,7 +2103,7 @@ async function apiAttiva(telegramId: number, body: any) {
   if (!servizio_id) return json({ error: "servizio_id_richiesto" }, 400)
 
   // Non si attiva un servizio non ancora attivo: per quelli c'e' la lista d'attesa.
-  const { data: sv0 } = await supabase.from("servizi").select("stato, disclaimer_ver").eq("id", servizio_id).maybeSingle()
+  const { data: sv0 } = await supabase.from("servizi").select("nome, stato, disclaimer_ver").eq("id", servizio_id).maybeSingle()
   if (!sv0) return json({ error: "not_found" }, 404)
   if (sv0.stato !== "attivo") return json({ error: "non_attivo" }, 409)
 
@@ -1916,6 +2130,7 @@ async function apiAttiva(telegramId: number, body: any) {
   await supabase.from("leads").update({ is_cliente: true }).eq("telegram_id", telegramId)
   const refInfo = await resolveRefLinkConFonte(telegramId, servizio_id)
   await supabase.from("eventi").insert({ telegram_id: telegramId, tipo: "servizio_attivato", dettaglio: `servizio:${servizio_id}` })
+  await notificaAzione(telegramId, `HA ATTIVATO: ${sv0.nome || servizio_id}`)
 
   // Il promoter viene avvisato quando un suo invitato apre un business con il SUO link.
   if (refInfo.fonte === "sponsor" && refInfo.sponsor_id && refInfo.sponsor_id !== ADMIN_ID) {
@@ -3094,6 +3309,106 @@ async function apiAdminPresenza() {
 // messaggi partiti prima che il numero esistesse -- va al messaggio piu' recente
 // mandato prima di lei. Il video conta per un messaggio se la stessa persona lo
 // guarda dopo averlo aperto da li', sulla stessa scheda. Persone diverse, non eventi.
+// ---------- ADMIN: CHI HA ABBANDONATO ----------
+
+// La scala del percorso. L'apertura del link corto non c'e': la fanno anche le
+// anteprime di Telegram e farebbe sembrare vivo chi non si vede da un mese.
+const SCALA_AZIONI: Record<string, number> = {
+  app_entrata: 1, app_uscita: 1, menu: 1, aggiorna: 1, apri_categorie: 1, filtro_categoria: 1,
+  apri_scheda: 2, apre_da_annuncio: 2, condivisione: 2, apri_gruppo: 2,
+  video_avvio: 3, video_meta: 4, video_fine: 5,
+  richiedi_info: 6, link_fornitore: 6,
+}
+const TAPPE = [
+  "iscritto, mai entrato nell'app",
+  "è entrato, nessuna scheda aperta",
+  "ha aperto una scheda, poi basta",
+  "ha avviato il video e l'ha mollato subito",
+  "è arrivato a metà video, poi basta",
+  "ha finito il video, poi basta",
+  "ha chiesto informazioni",
+]
+
+// Le date dei lead non portano il fuso: senza la Z verrebbero lette come ora
+// locale e i giorni di silenzio uscirebbero sbagliati di due.
+function quando(v: string): number {
+  return new Date(/[Z+]/.test(v) ? v : v + "Z").getTime()
+}
+
+// Una select si ferma a mille righe: i click sono molti di piu', quindi si
+// scorrono a blocchi finche' non finiscono.
+async function tuttiIClick(): Promise<any[]> {
+  const fuori: any[] = []
+  for (let da = 0; da < 100000; da += 1000) {
+    const { data } = await supabase.from("click").select("telegram_id, azione, created_at")
+      .neq("azione", "apertura_link_corto").order("created_at", { ascending: true }).range(da, da + 999)
+    const blocco = (data ?? []) as any[]
+    fuori.push(...blocco)
+    if (blocco.length < 1000) break
+  }
+  return fuori
+}
+
+// Per ogni persona: il punto piu' avanti a cui e' arrivata e da quanti giorni
+// non si fa vedere. Chi ha attivato un business non e' un abbandono e resta fuori.
+async function riepilogoAbbandoni() {
+  const { data: leads } = await supabase.from("leads")
+    .select("telegram_id, nome, cognome, username, created_at, attivo").eq("bot_started", true)
+  const { data: att } = await supabase.from("lead_servizi").select("telegram_id")
+  const clienti = new Set(((att ?? []) as any[]).map((a) => a.telegram_id))
+  const clic = await tuttiIClick()
+  const stato: Record<number, { liv: number; ultimo: string; info: string | null }> = {}
+  for (const c of clic) {
+    if (!c.telegram_id) continue
+    const s = (stato[c.telegram_id] ||= { liv: 0, ultimo: c.created_at, info: null })
+    const liv = SCALA_AZIONI[c.azione] || 0
+    if (liv > s.liv) s.liv = liv
+    if (c.created_at > s.ultimo) s.ultimo = c.created_at
+    if (c.azione === "richiedi_info" && (!s.info || c.created_at > s.info)) s.info = c.created_at
+  }
+  const ora = Date.now()
+  const persone = ((leads ?? []) as any[])
+    .filter((l) => !clienti.has(l.telegram_id) && l.telegram_id !== ADMIN_ID)
+    .map((l) => {
+      const s = stato[l.telegram_id]
+      const ultimo = s?.ultimo || l.created_at
+      return {
+        telegram_id: l.telegram_id,
+        nome: [l.nome, l.cognome].filter(Boolean).join(" ") || `ID ${l.telegram_id}`,
+        username: l.username || "",
+        tappa: s?.liv ?? 0,
+        dove: TAPPE[s?.liv ?? 0],
+        ultimo,
+        giorni: Math.max(0, Math.floor((ora - quando(ultimo)) / 86400000)),
+        chiese_info: s?.info || null,
+        uscito: l.attivo === false,
+      }
+    })
+  return persone
+}
+
+async function apiAdminAbbandoni() {
+  const persone = await riepilogoAbbandoni()
+  const tappe = TAPPE.map((nome, i) => ({
+    tappa: i, nome,
+    persone: persone.filter((p) => p.tappa === i).sort((a, b) => a.giorni - b.giorni),
+  }))
+  return json({
+    tappe,
+    totale: persone.length,
+    fermi7: persone.filter((p) => p.giorni >= 7).length,
+    fermi30: persone.filter((p) => p.giorni >= 30).length,
+  })
+}
+// Il motivo che dà Telegram è in inglese e pieno di gergo: in chiaro dice solo
+// due cose, o quella persona ti ha bloccato o il suo account non esiste più.
+function motivoUmano(m: string): string {
+  if (/blocked/i.test(m)) return "ti ha bloccato"
+  if (/deactivated/i.test(m)) return "account cancellato"
+  if (/chat not found/i.test(m)) return "chat non trovata"
+  return m || "errore"
+}
+
 async function apiAdminMessaggiStats() {
   const { data: msgs } = await supabase.from("broadcast_log")
     .select("id, tipo, testo, destinatari_count, inviati, falliti, created_at")
@@ -3104,12 +3419,28 @@ async function apiAdminMessaggiStats() {
   const { data: aperture } = await supabase.from("click")
     .select("telegram_id, riferimento, dettaglio, created_at").eq("azione", "apre_da_annuncio").gte("created_at", primo)
   const crescenti = [...lista].sort((a, b) => (a.created_at < b.created_at ? -1 : 1))
+  // A quale messaggio appartiene una cosa successa a una certa ora: l'ultimo
+  // partito prima di lei.
+  const messaggioAllOra = (quando: string): number | null => {
+    let scelto: number | null = null
+    for (const b of crescenti) { if (b.created_at <= quando) scelto = b.id; else break }
+    return scelto
+  }
   const messaggioDi = (ap: any): number | null => {
     const m = /^ann:(\d+)$/.exec(String(ap.dettaglio || ""))
     if (m) return parseInt(m[1])
-    let scelto: number | null = null
-    for (const b of crescenti) { if (b.created_at <= ap.created_at) scelto = b.id; else break }
-    return scelto
+    return messaggioAllOra(ap.created_at)
+  }
+
+  // Chi non l'ha ricevuto, con il motivo detto da Telegram: senza i nomi, un
+  // "8 non recapitati" costringe a indovinare ogni volta chi manca.
+  const { data: respinti } = await supabase.from("eventi")
+    .select("telegram_id, dettaglio, created_at").eq("tipo", "non_recapitato").gte("created_at", primo)
+  const perMsgKo: Record<number, { telegram_id: number; motivo: string }[]> = {}
+  for (const r of (respinti ?? []) as any[]) {
+    const id = messaggioAllOra(r.created_at)
+    if (!id || !r.telegram_id) continue
+    ;(perMsgKo[id] ||= []).push({ telegram_id: r.telegram_id, motivo: String(r.dettaglio || "") })
   }
   const perMsg: Record<number, Record<number, { quando: string; scheda: number | null }>> = {}
   for (const ap of (aperture ?? []) as any[]) {
@@ -3121,12 +3452,14 @@ async function apiAdminMessaggiStats() {
     if (!prima || ap.created_at < prima.quando) m[ap.telegram_id] = { quando: ap.created_at, scheda: ap.riferimento ?? null }
   }
   const persone = [...new Set(Object.values(perMsg).flatMap((m) => Object.keys(m).map(Number)))]
+  const tuttiId = [...new Set([...persone,
+    ...Object.values(perMsgKo).flatMap((v) => v.map((x) => x.telegram_id))])]
   const { data: video } = persone.length
     ? await supabase.from("click").select("telegram_id, azione, riferimento, created_at")
         .in("azione", ["video_avvio", "video_meta", "video_fine"]).in("telegram_id", persone).gte("created_at", primo)
     : { data: [] }
-  const { data: anag } = persone.length
-    ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", persone)
+  const { data: anag } = tuttiId.length
+    ? await supabase.from("leads").select("telegram_id, nome, cognome, username").in("telegram_id", tuttiId)
     : { data: [] }
   const chi: Record<number, any> = {}
   for (const l of (anag ?? []) as any[]) chi[l.telegram_id] = l
@@ -3148,6 +3481,11 @@ async function apiAdminMessaggiStats() {
       id: b.id, tipo: b.tipo, testo: b.testo, quando: b.created_at,
       destinatari: b.destinatari_count, inviati: b.inviati, falliti: b.falliti,
       aperture: gente.length,
+      non_recapitati: (perMsgKo[b.id] || []).map((x) => ({
+        nome: [chi[x.telegram_id]?.nome, chi[x.telegram_id]?.cognome].filter(Boolean).join(" ") || `ID ${x.telegram_id}`,
+        username: chi[x.telegram_id]?.username || "",
+        motivo: motivoUmano(x.motivo),
+      })),
       video_avvio: gente.filter((g) => g.avvio).length,
       video_meta: gente.filter((g) => g.meta).length,
       video_fine: gente.filter((g) => g.fine).length,
@@ -3760,7 +4098,7 @@ async function apiAdminBroadcast(body: any) {
     const res = await sendMessage(d.telegram_id, personalizzato, markup)
     const data = await res.json().catch(() => ({}))
     if (data.ok) inviati++
-    else falliti++
+    else { falliti++; await segnaNonRecapitato(d.telegram_id, String(data.description || "")) }
     // Il limite Telegram è ~30 msg/sec: piccola pausa tra un invio e l'altro.
     await new Promise((r) => setTimeout(r, 50))
   }
@@ -4206,6 +4544,7 @@ serve(async (req) => {
       if (sub === "admin/presenza" && req.method === "GET") return await apiAdminPresenza()
       if (sub === "admin/servizio-stats" && req.method === "GET") return await apiAdminServizioStats(parseInt(url.searchParams.get("id") || "0"))
       if (sub === "admin/messaggi-stats" && req.method === "GET") return await apiAdminMessaggiStats()
+      if (sub === "admin/abbandoni" && req.method === "GET") return await apiAdminAbbandoni()
       if (sub === "admin/attivita" && req.method === "GET") return await apiAdminAttivita()
       if (sub === "admin/click" && req.method === "GET") return await apiAdminClick(url)
       if (sub === "admin/usciti" && req.method === "GET") return await apiAdminUsciti()
