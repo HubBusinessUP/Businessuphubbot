@@ -988,6 +988,10 @@ async function handleUpdate(u: any) {
   const caption = (u.message.caption || "").trim()
   const isAdmin = from?.id === ADMIN_ID
 
+  // Chi e' stato messo alla porta non riceve piu' risposta: non un rifiuto,
+  // proprio il silenzio. Un rifiuto e' ancora una conversazione.
+  if (from?.id && !isAdmin && (await eBandito(from.id))) return
+
   // ----- Flusso annunci (solo admin) -----
   if (isAdmin) {
     // /news [testo]: senza testo apre la modalità (mandami il contenuto), con testo prepara subito.
@@ -1015,6 +1019,58 @@ async function handleUpdate(u: any) {
       if (!bloccati.length && !spariti.length) righe.push("", "Nessuno ti ha bloccato.")
       righe.push("", "Da ora restano segnati: i prossimi annunci non li contano più tra i destinatari.")
       await sendMessage(chatId, righe.join("\n"), undefined, "HTML")
+      return
+    }
+
+    // /banna @nome (o l'id): fuori dal gruppo e fuori da tutto il resto.
+    if (text.startsWith("/banna") || text.startsWith("/sbanna")) {
+      const riammette = text.startsWith("/sbanna")
+      const arg = text.slice(riammette ? 7 : 6).trim()
+      if (!arg) {
+        await sendMessage(chatId, riammette ? "Chi riammetto? /sbanna @nomeutente" : "Chi mando fuori? /banna @nomeutente")
+        return
+      }
+      const chi = await trovaUtente(arg)
+      if (!chi) {
+        await sendMessage(chatId, `Non trovo ${htmlEsc(arg)} fra gli iscritti. Se non è mai passato dal bot mandami il suo id numerico.`)
+        return
+      }
+      if (chi.telegram_id === ADMIN_ID) {
+        await sendMessage(chatId, "Quello sei tu.")
+        return
+      }
+      const nomeChi = [chi.nome, chi.cognome].filter(Boolean).join(" ") || `ID ${chi.telegram_id}`
+      const esito = riammette ? await riammetti(chi.telegram_id) : await bandisci(chi.telegram_id)
+      await sendMessage(chatId,
+        `<b>${riammette ? "Riammesso" : "Fuori"}: ${htmlEsc(nomeChi)}</b>${chi.username ? ` (@${htmlEsc(chi.username)})` : ""}` + "\n\n"
+        + esito.map((r) => "· " + htmlEsc(r)).join("\n")
+        + (riammette ? "" : "\n\nDal tuo Telegram personale bloccalo tu: quello non lo può fare il bot."),
+        undefined, "HTML")
+      return
+    }
+
+    // /webinar: chi ha preso il posto passando dall'app.
+    if (text === "/webinar") {
+      const { data: iscritti } = await supabase.from("webinar_iscritti")
+        .select("telegram_id, nome, email, created_at").order("created_at", { ascending: false })
+      const righe = (iscritti ?? []) as any[]
+      if (!righe.length) { await sendMessage(chatId, "Ancora nessuno ha preso un posto."); return }
+      const ids = [...new Set(righe.map((r) => r.telegram_id))]
+      const { data: chi } = await supabase.from("leads").select("telegram_id, username").in("telegram_id", ids)
+      const tag: Record<number, string> = {}
+      for (const l of (chi ?? []) as any[]) tag[l.telegram_id] = l.username || ""
+      const fuori = [`<b>Posti presi dall'app: ${righe.length}</b>`, ""]
+      for (const r of righe) {
+        const q = new Date(r.created_at).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+        fuori.push(`${htmlEsc(r.nome)}${tag[r.telegram_id] ? ` @${htmlEsc(tag[r.telegram_id])}` : ""}`)
+        fuori.push(`<code>${htmlEsc(r.email)}</code> · ${q}`)
+        fuori.push("")
+      }
+      // In fondo le sole email una per riga: si copiano in blocco e si mandano a
+      // chi organizza senza doverle ripescare una a una.
+      fuori.push("<b>Da mandare a chi organizza</b>")
+      fuori.push(`<code>${righe.map((r) => htmlEsc(r.email)).join("\n")}</code>`)
+      await sendMessage(chatId, fuori.join("\n"), undefined, "HTML")
       return
     }
 
@@ -1149,6 +1205,79 @@ async function handleUpdate(u: any) {
     const payload = text.startsWith("/start ") ? text.slice(7).trim() : ""
     await handleStart(chatId, from, payload)
   }
+}
+
+// ---------- ALLA PORTA ----------
+
+// Bandire qualcuno non e' una cosa sola: va cacciato dal gruppo, ignorato dal
+// bot, tolto dagli annunci e lasciato fuori dall'app. Se si fa a meta' resta
+// dentro da qualche parte e ricompare.
+async function bandisci(uid: number): Promise<string[]> {
+  const fatto: string[] = []
+  const { data: l } = await supabase.from("leads").select("tags").eq("telegram_id", uid).maybeSingle()
+  const tags = Array.isArray((l as any)?.tags) ? ((l as any).tags as string[]).slice() : []
+  if (!tags.includes("bandito")) tags.push("bandito")
+  await supabase.from("leads").update({ tags, attivo: false, bloccato_at: new Date().toISOString() })
+    .eq("telegram_id", uid)
+  fatto.push("segnato: niente annunci, niente app, il bot non gli risponde piu'")
+
+  // Il gruppo e' quello memorizzato con /qui: l'id non si legge da nessun'altra parte.
+  const { data: cfg } = await supabase.from("config").select("valore").eq("chiave", "topic_post").maybeSingle()
+  const gruppo = parseInt(String(cfg?.valore || "").split(":")[0]) || 0
+  if (!gruppo) {
+    fatto.push("gruppo sconosciuto: scrivi /qui dentro il gruppo e ripeti")
+  } else {
+    const res = await fetch(`${TG_API}/banChatMember`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: gruppo, user_id: uid, revoke_messages: true }),
+    })
+    const d = await res.json().catch(() => ({}))
+    fatto.push(d.ok ? "cacciato dal gruppo, con i suoi messaggi" : `dal gruppo NO: ${d.description || "errore"}`)
+  }
+  await supabase.from("eventi").insert({ telegram_id: uid, tipo: "bandito", dettaglio: null }).then(() => {}, () => {})
+  return fatto
+}
+
+async function riammetti(uid: number): Promise<string[]> {
+  const fatto: string[] = []
+  const { data: l } = await supabase.from("leads").select("tags").eq("telegram_id", uid).maybeSingle()
+  const tags = (Array.isArray((l as any)?.tags) ? (l as any).tags as string[] : []).filter((t) => t !== "bandito")
+  await supabase.from("leads").update({ tags, attivo: true, bloccato_at: null }).eq("telegram_id", uid)
+  fatto.push("tolto il segno: torna negli annunci e nell'app")
+  const { data: cfg } = await supabase.from("config").select("valore").eq("chiave", "topic_post").maybeSingle()
+  const gruppo = parseInt(String(cfg?.valore || "").split(":")[0]) || 0
+  if (gruppo) {
+    const res = await fetch(`${TG_API}/unbanChatMember`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: gruppo, user_id: uid, only_if_banned: true }),
+    })
+    const d = await res.json().catch(() => ({}))
+    fatto.push(d.ok ? "puo' rientrare nel gruppo (serve un invito nuovo)" : `nel gruppo NO: ${d.description || "errore"}`)
+  }
+  return fatto
+}
+
+// Chiamata a ogni messaggio: una riga sola, e vale la pena pagarla.
+async function eBandito(uid: number): Promise<boolean> {
+  const { data } = await supabase.from("leads").select("tags").eq("telegram_id", uid).maybeSingle()
+  return Array.isArray((data as any)?.tags) && (data as any).tags.includes("bandito")
+}
+
+// Da @nome o da numero al telegram_id. Chi non e' mai passato dal bot non si
+// trova: Telegram non dice a chi appartiene un nome utente.
+async function trovaUtente(chi: string): Promise<any | null> {
+  const pulito = chi.trim().replace(/^@/, "")
+  if (!pulito) return null
+  if (/^\d+$/.test(pulito)) {
+    const { data } = await supabase.from("leads").select("telegram_id, nome, cognome, username")
+      .eq("telegram_id", parseInt(pulito)).maybeSingle()
+    return data ?? { telegram_id: parseInt(pulito), nome: null, cognome: null, username: null }
+  }
+  const { data } = await supabase.from("leads").select("telegram_id, nome, cognome, username")
+    .ilike("username", pulito).maybeSingle()
+  return data ?? null
 }
 
 // ---------- CHI E' RAGGIUNGIBILE ----------
@@ -1349,6 +1478,8 @@ async function apiClick(telegramId: number | null, body: any) {
 
 // ---------- API: MINI APP ----------
 async function apiMe(telegramId: number, tgUser?: any) {
+  // L'app si regge su questa chiamata: negata qui, non si apre piu'.
+  if (await eBandito(telegramId)) return json({ error: "bandito" }, 403)
   // Tiene aggiornati foto/username presi dall'initData validato, così la rete dello sponsor mostra dati Telegram reali.
   if (tgUser?.id === telegramId) {
     await supabase.from("leads").update({
@@ -4348,6 +4479,36 @@ serve(async (req) => {
       // niente di sensibile, solo "qualcuno ha premuto qualcosa".
       const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
       return await apiClick(tid, await req.json())
+    }
+
+    // Chi prende il posto al webinar resta segnato: e' l'unico modo di sapere
+    // chi ci va passando da qui, visto che l'iscrizione vera avviene altrove.
+    if (sub === "webinar" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      const corpo = await req.json().catch(() => ({}))
+      const sid = parseInt(corpo?.servizio_id) || 0
+      if (!sid) return json({ error: "servizio_richiesto" }, 400)
+      const nome = String(corpo?.nome || "").trim().slice(0, 80)
+      const email = String(corpo?.email || "").trim().toLowerCase().slice(0, 120)
+      // Gli stessi due controlli del modulo, rifatti qui: quelli davanti si
+      // aggirano, questi no.
+      if (nome.length < 3) return json({ error: "nome_richiesto" }, 400)
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ error: "email_non_valida" }, 400)
+      const { error: errW } = await supabase.from("webinar_iscritti")
+        .upsert({ telegram_id: tid, servizio_id: sid, nome, email },
+          { onConflict: "telegram_id,servizio_id" })
+      if (errW) {
+        console.error("webinar upsert:", errW)
+        return json({ error: "save_failed" }, 500)
+      }
+      const { count } = await supabase.from("eventi").select("id", { count: "exact", head: true })
+        .eq("tipo", "webinar_iscritto").eq("telegram_id", tid).eq("riferimento_id", sid)
+      if (!count) {
+        await supabase.from("eventi").insert({ tipo: "webinar_iscritto", telegram_id: tid, riferimento_id: sid })
+      }
+      await notificaAzione(tid, `HA PRESO IL POSTO AL WEBINAR — ${email}`)
+      return json({ ok: true })
     }
 
     if (sub === "click-link" && req.method === "POST") {

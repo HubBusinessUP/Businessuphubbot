@@ -1256,6 +1256,38 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .cons{font-size:12.5px;color:var(--mut);text-align:center;margin-top:9px;line-height:1.5}
 .cons a{color:var(--dim);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 /* Foglio con il testo integrale, aperto dal link. */
+/* Il riquadro di un evento con una data. Non e' una card come le altre: bordi
+   vivi e una riga d'accento in cima, perche' scade e va visto per primo. */
+.wbn{margin:0 0 18px;padding:15px 20px 18px;background:var(--s0);
+  border-top:2px solid var(--acc);border-bottom:1px solid var(--line)}
+.wbn .oc{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+.wbn .pnt{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:wbnp 2.4s infinite}
+@keyframes wbnp{0%,100%{opacity:1}50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.wbn .pnt{animation:none}}
+.wbn .man{margin-left:auto;color:var(--mut);letter-spacing:.04em}
+.wbn h3{font-size:21px;line-height:1.18;letter-spacing:-.02em;margin:11px 0 9px;text-wrap:balance}
+.wbn p{font-size:14.5px;line-height:1.62;color:var(--dim);margin:0 0 10px}
+.wbn ul{list-style:none;margin:13px 0 4px;padding:0}
+.wbn li{position:relative;padding-left:16px;margin:6px 0;font-size:14px;line-height:1.5;color:var(--tx)}
+.wbn li:before{content:'';position:absolute;left:0;top:10px;width:9px;height:1px;background:var(--acc)}
+.wbn .fine{font-size:12px;color:var(--mut);margin-top:10px;text-align:center;line-height:1.5}
+.wbn .gia{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:13px 14px;
+  border-radius:11px;background:var(--s2);font-size:14px;line-height:1.5}
+.wbn .gia b{color:var(--tx)}
+.wbn .gia svg{flex:none;width:18px;height:18px;margin-top:1px;fill:none;stroke:var(--acc);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+/* Due campi e basta: piu' cose si chiedono, meno gente arriva in fondo. */
+.wbn .wfrm{margin-top:15px;display:flex;flex-direction:column;gap:10px}
+.wbn .wl{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.wbn .wi{width:100%;box-sizing:border-box;background:var(--s2);color:var(--tx);
+  border:1px solid var(--line2);border-radius:10px;padding:13px 14px;
+  font-family:var(--sans);font-size:16px;font-weight:500;letter-spacing:normal;text-transform:none}
+.wbn .wi::placeholder{color:var(--mut)}
+.wbn .wi:focus{outline:none;border-color:var(--acc)}
+.wbn .werr{font-size:13px;color:#FF6B6B;line-height:1.45}
+.wbn .wcons{font-size:12px;color:var(--mut);line-height:1.5}
+.wbn .wfrm .cta-attiva{margin-top:2px}
 /* I fogli si appendono al body, fuori da .app: le tinte del bottone pieno
    vivono li' dentro e qui non arrivavano, cosi' il bottone restava
    trasparente. Si ridanno qui, una volta, per tutti e due. */
@@ -1377,7 +1409,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=183"></script>
+<script src="identikit.js?v=184"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2187,6 +2219,68 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     sh.style.display = 'block';
   }
 
+  // ---- WEBINAR SULLA SCHEDA ----
+  // Un evento con una data dentro una scheda: sta in cima, e quando la data e'
+  // passata sparisce da solo. Testo e link stanno nella scheda (cta.webinar),
+  // cosi' il prossimo webinar non chiede di toccare il codice.
+  function quantoManca(t){
+    var m = t - Date.now();
+    if (m <= 0) return '';
+    var ore = Math.floor(m / 3600000);
+    if (ore < 1) return 'fra ' + Math.max(1, Math.round(m / 60000)) + ' minuti';
+    if (ore < 24) return 'fra ' + ore + (ore === 1 ? ' ora' : ' ore');
+    var g = Math.round(ore / 24);
+    return g === 1 ? 'domani' : 'fra ' + g + ' giorni';
+  }
+
+  // Il nome ce l'ha gia' dato Telegram e l'email, se l'ha scritta una volta, resta
+  // sul telefono: chiedere due volte la stessa cosa fa perdere gente.
+  function nomeIniziale(){
+    try {
+      var m = localStorage.getItem('cashly_webinar_nome'); if (m) return m;
+      var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+      if (u) return ((u.first_name || '') + ' ' + (u.last_name || '')).trim();
+    } catch (e) {}
+    return '';
+  }
+  function mailIniziale(){
+    try { return localStorage.getItem('cashly_webinar_mail') || ''; } catch (e) { return ''; }
+  }
+
+  function scWebinar(d){
+    var s = d.servizio || {};
+    var w = (s.cta && s.cta.webinar) || null;
+    if (!w || !w.url || !w.quando) return '';
+    var t = new Date(w.quando).getTime();
+    if (!t || t < Date.now()) return '';
+    var segnato = false;
+    try { segnato = localStorage.getItem('cashly_webinar_' + s.id) === '1'; } catch (e) {}
+    var punti = (Array.isArray(w.punti) ? w.punti : []).map(function(x){
+      return '<li>' + esc(x) + '</li>';
+    }).join('');
+    var corpo = String(w.testo || '').split('\n').filter(function(r){ return r.trim(); })
+      .map(function(r){ return '<p>' + esc(r.trim()) + '</p>'; }).join('');
+    var manca = quantoManca(t);
+    return '<div class="wbn">'
+      + '<div class="oc"><span class="pnt"></span>' + esc(w.occhiello || 'In diretta')
+      +   (manca ? '<span class="man">' + esc(manca) + '</span>' : '') + '</div>'
+      + (w.titolo ? '<h3>' + esc(w.titolo) + '</h3>' : '')
+      + corpo
+      + (punti ? '<ul>' + punti + '</ul>' : '')
+      + (segnato
+          ? '<div class="gia"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><div>Ci sei, ti ho messo in lista. <b>Ti avviso io</b> prima che cominci.</div></div>'
+            + '<button type="button" class="cta-secondaria" data-webinar="' + s.id + '" data-riapri="1" data-url="' + esc(w.url) + '">Riapri la pagina di iscrizione</button>'
+          : '<div class="wfrm">'
+            + '<label class="wl">Nome e cognome<input class="wi" type="text" id="wbNome" value="' + esc(nomeIniziale()) + '" placeholder="Come ti chiami" autocomplete="name"></label>'
+            + '<label class="wl">Email<input class="wi" type="email" id="wbMail" value="' + esc(mailIniziale()) + '" placeholder="latua@email.it" autocomplete="email" inputmode="email"></label>'
+            + '<div class="werr" id="wbErr" hidden></div>'
+            + '<div class="wcons">' + esc(w.consenso || 'Nome ed email li mando a chi organizza, per metterti in lista. Non li uso per altro.') + '</div>'
+            + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-url="' + esc(w.url) + '">' + esc(w.bottone || 'Prendi il tuo posto') + '</button>'
+            + '</div>')
+      + '<div class="fine">' + esc(w.nota || '') + '</div>'
+      + '</div>';
+  }
+
   // ---- PRIMA DI SCRIVERE ----
   // Il bottone Richiedi apriva la chat all'istante. Chi arrivava li' spesso non
   // sapeva ancora quanto serve ne' cosa deve fare, e la conversazione ripartiva
@@ -2319,6 +2413,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // torna in Panoramica per non restare su un pannello che non c'e' piu'.
     if (!car && SC_TAB === 'car') SC_TAB = 'pan';
     return scTesta(d)
+      + scWebinar(d)
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
       +   (car ? '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>' : '')
@@ -2466,6 +2561,44 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       // bottone dentro, e li' resta il conteggio di chi scrive davvero.
       if (SC_ID) { try { traccia('prima_di_scrivere', SC_ID, (SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio ? SCHEDE[SC_ID].servizio.nome : '')); } catch(x){} }
       if (SC_ID) primaDiScrivere(SC_ID);
+      return;
+    }
+
+    // Webinar: prima si segna qui (cosi' so chi ci va e posso ricordarglielo),
+    // poi si apre la pagina di iscrizione vera, che e' di chi organizza.
+    var wb = t.closest('[data-webinar]');
+    if (wb) {
+      e.preventDefault();
+      var wid = parseInt(wb.getAttribute('data-webinar')) || 0;
+      var uw = wb.getAttribute('data-url');
+      var apri = function(){
+        try { if (tg && tg.openLink) tg.openLink(uw); else window.open(uw, '_blank'); } catch(x){ window.open(uw, '_blank'); }
+      };
+      // Il bottone "riapri" non richiede niente: e' gia' in lista.
+      if (!wid || wb.getAttribute('data-riapri')) { apri(); return; }
+      var cn = document.getElementById('wbNome'), cm = document.getElementById('wbMail');
+      var nomeW = cn ? String(cn.value || '').trim() : '';
+      var mailW = cm ? String(cm.value || '').trim() : '';
+      var box = document.getElementById('wbErr');
+      var ferma = function(msg, campo){
+        if (box) { box.textContent = msg; box.hidden = false; }
+        if (campo) { try { campo.focus(); } catch(x){} }
+      };
+      if (nomeW.length < 3) { ferma('Scrivi nome e cognome: servono a chi organizza per metterti in lista.', cn); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mailW)) { ferma("Controlla l'email: cosi' com'e' non arriva l'invito.", cm); return; }
+      try { traccia('webinar_posto', wid, (SCHEDE[wid] && SCHEDE[wid].servizio ? SCHEDE[wid].servizio.nome : '')); } catch(x){}
+      try {
+        fetch(API_URL + '/webinar', { method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
+          body: JSON.stringify({ servizio_id: wid, nome: nomeW, email: mailW }), keepalive: true }).catch(function(){});
+      } catch(x){}
+      try {
+        localStorage.setItem('cashly_webinar_' + wid, '1');
+        localStorage.setItem('cashly_webinar_nome', nomeW);
+        localStorage.setItem('cashly_webinar_mail', mailW);
+      } catch(x){}
+      ridisegnaScheda(wid);
+      apri();
       return;
     }
 
