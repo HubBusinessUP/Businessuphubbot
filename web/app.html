@@ -1428,6 +1428,25 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
    scritte finora hanno i paragrafi separati da una riga vuota, e senza questa
    regola arrivavano a schermo come un unico blocco di testo. */
 .spanor{font-size:17px;line-height:1.6;white-space:pre-line}
+/* BLOCCHI DELLA PANORAMICA. Ognuno apre con un titolo e una riga sotto; i passi
+   hanno il numero fuori dal testo, i punti no. Le immagini scorrono di lato:
+   cinque copertine in colonna sarebbero una pagina intera. */
+.sez{margin-top:26px}
+.sez-tit{font-size:19px;font-weight:700;letter-spacing:-.015em;color:var(--tx);line-height:1.25}
+.sez-sot{font-size:14.5px;color:var(--dim);margin-top:3px;line-height:1.5}
+.sez-voce{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.sez-voce:last-child{border-bottom:none}
+.sez-tit + .sez-voce,.sez-sot + .sez-voce{margin-top:8px}
+.sez-n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--s2);color:var(--acc);
+  font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.sez-vt{font-size:15.5px;font-weight:700;color:var(--tx);line-height:1.35}
+.sez-vx{font-size:14.5px;color:var(--dim);line-height:1.55;margin-top:3px}
+.sez-fila{display:flex;gap:10px;overflow-x:auto;margin:12px 0 0;padding:0 0 4px;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sez-fila::-webkit-scrollbar{display:none}
+.sez-img{flex:none;width:132px;margin:0;scroll-snap-align:start}
+.sez-img img{display:block;width:132px;height:132px;object-fit:cover;border-radius:12px;background:var(--s2)}
+.sez-img figcaption{font-size:12.5px;font-weight:600;color:var(--dim);line-height:1.35;margin-top:7px}
 .sk{font-size:16px}
 .sv{font-size:18px}
 .sd{font-size:15.5px;line-height:1.55}
@@ -1462,7 +1481,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=193"></script>
+<script src="identikit.js?v=194"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2187,6 +2206,39 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '</div></div>' + chips;
   }
 
+  // Blocchi di contenuto scritti nella scheda (cta.sezioni), uno sotto l'altro:
+  //  passi    -> numerati, perche' l'ordine conta (prima colleghi, poi...)
+  //  punti    -> titolo e testo, senza numero: non sono una sequenza
+  //  immagini -> una fila che scorre di lato, con il nome sotto
+  // Il testo arriva dal database: si esce sempre da esc(), mai HTML diretto.
+  function scSezioni(s){
+    var lista = (s.cta && Array.isArray(s.cta.sezioni)) ? s.cta.sezioni : [];
+    return lista.map(function(b){
+      if (!b) return '';
+      var testa = (b.titolo ? '<div class="sez-tit">' + esc(b.titolo) + '</div>' : '')
+        + (b.sottotitolo ? '<div class="sez-sot">' + esc(b.sottotitolo) + '</div>' : '');
+      var voci = Array.isArray(b.voci) ? b.voci : [];
+      var corpo = '';
+      if (b.tipo === 'passi' || b.tipo === 'punti') {
+        corpo = voci.map(function(v, i){
+          return '<div class="sez-voce">'
+            + (b.tipo === 'passi' ? '<span class="sez-n">' + (i + 1) + '</span>' : '')
+            + '<div style="min-width:0">'
+            +   (v.titolo ? '<div class="sez-vt">' + esc(v.titolo) + '</div>' : '')
+            +   (v.testo ? '<div class="sez-vx">' + esc(v.testo) + '</div>' : '')
+            + '</div></div>';
+        }).join('');
+      } else if (b.tipo === 'immagini') {
+        var imm = (Array.isArray(b.immagini) ? b.immagini : []).filter(function(x){ return x && /^https?:\/\//i.test(String(x.img || '')); });
+        corpo = '<div class="sez-fila">' + imm.map(function(x){
+          return '<figure class="sez-img"><img src="' + esc(x.img) + '" alt="" loading="lazy">'
+            + (x.nome ? '<figcaption>' + esc(x.nome) + '</figcaption>' : '') + '</figure>';
+        }).join('') + '</div>';
+      }
+      return corpo ? '<section class="sez">' + testa + corpo + '</section>' : '';
+    }).join('');
+  }
+
   function scPanoramica(d){
     var s = d.servizio || {};
     var t = s.panoramica || s.descrizione || '';
@@ -2198,9 +2250,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var video = vp
       ? '<div style="margin-bottom:16px"><div class="stmed" data-vpriv="' + vp + '"></div></div>'
       : (s.media_url ? ('<div style="margin-bottom:16px">' + mediaHtml(s.media_url) + '</div>') : '');
-    if (!t && !video) return '<div class="vuoto" style="padding:18px 0">Panoramica ancora da scrivere.</div>';
+    if (!t && !video && !scSezioni(s)) return '<div class="vuoto" style="padding:18px 0">Panoramica ancora da scrivere.</div>';
     return video
       + (t ? '<div class="spanor">' + esc(t) + '</div>' : '')
+      + scSezioni(s)
       + (s.requisiti ? '<div class="seyeb" style="margin-top:20px">Cosa serve per iniziare</div>'
                      + '<div class="sreq">' + esc(s.requisiti) + '</div>' : '');
   }
@@ -2584,7 +2637,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       // Con un evento in corso il fondo del prodotto sparisce: un "non ancora
       // disponibile" sotto un webinar a cui ci si puo' iscrivere confonde. L'azione
       // di questa scheda e' il modulo dell'evento.
-      + (ev ? '' : '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>');
+      // Con un evento il fondo resta se la scheda e' attiva: pulsante, Supporto e
+      // Condividi come in tutte le schede. Sparisce solo se direbbe "non ancora
+      // disponibile" sotto un webinar a cui ci si puo' iscrivere.
+      + (ev && !d.attivo ? '' : '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>');
   }
 
   function traccia(azione, riferimento, dettaglio){

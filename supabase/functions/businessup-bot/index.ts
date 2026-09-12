@@ -1932,7 +1932,9 @@ async function apiServizio(telegramId: number, servizioId: number) {
   }
 
   // Servizio non ancora attivo -> lista d'attesa al posto dell'attivazione.
-  const attivo = servizio.stato === "attivo"
+  // L'admin vede una bozza come sara' da pubblicata, pulsante compreso: e' il
+  // senso di /prova. Per tutti gli altri una bozza resta non attivabile.
+  const attivo = servizio.stato === "attivo" || (telegramId === ADMIN_ID && servizio.stato === "bozza")
   const { data: inAttesa } = await supabase.from("waitlist").select("id")
     .eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const { count: attesaCount } = await supabase.from("waitlist")
