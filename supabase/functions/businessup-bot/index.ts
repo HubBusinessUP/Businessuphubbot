@@ -1732,7 +1732,7 @@ async function apiBusinessList(telegramId?: number | null) {
       servizio_id: x.id, servizio: x.nome, logo_url: x.logo_url, logo_pieno: !!x.logo_pieno,
       bozza: x.stato !== "attivo",
       quando: w.quando, occhiello: w.occhiello || "",
-      nome: w.nome || w.titolo || x.nome, descrizione: w.descrizione || "",
+      nome: w.nome || w.titolo || x.nome, descrizione: w.descrizione || "", dove: w.dove || "", scarsita: w.scarsita || "", bottone: w.bottone || "",
     }))
     .sort((a, b) => (a.quando < b.quando ? -1 : 1))
 

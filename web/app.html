@@ -871,6 +871,16 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .ev-quando{display:flex;justify-content:space-between;align-items:center;margin-top:11px;
   font-size:12.5px;color:var(--mut)}
 .ev-quando em{font-style:normal;font-weight:700;color:#FF8A5C}
+.ev-info{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:2px;font-size:13.5px;color:var(--dim)}
+.ev-info span{display:inline-flex;align-items:center;gap:6px}
+.ev-info svg{width:15px;height:15px;fill:none;stroke:var(--mut);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* La riga di fondo tiene insieme la scarsita' e l'azione: e' li' che si decide. */
+.ev-fondo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.ev-scarso{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+  color:#FF8A5C;background:rgba(255,138,92,.1);border-radius:999px;padding:5px 10px 5px 8px}
+.ev-scarso i{width:6px;height:6px;border-radius:50%;background:#FF8A5C;animation:wbnp 1.6s infinite}
+.ev-vai{font-size:14px;font-weight:700;color:var(--tx);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.ev-scarso i,.ev-et .pnt{animation:none}}
 /* Lo stesso timer dentro la linguetta Evento, piu' stretto: la' sotto c'e' da leggere. */
 .wbn .ev-timer{margin:12px 0 4px}
 .wbn .ev-timer b{font-size:18px}
@@ -1456,7 +1466,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=186"></script>
+<script src="identikit.js?v=187"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1663,6 +1673,15 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     } catch (e) { return ''; }
   }
 
+  function quandoBreve(t){
+    try {
+      var d = new Date(t);
+      var g = d.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome', weekday: 'short', day: 'numeric', month: 'short' });
+      var h = d.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+      return g.replace(/\./g, '') + ' \u00b7 ' + h;
+    } catch (e) { return ''; }
+  }
+
   function renderEvento(){
     var box = document.getElementById('eventoHome');
     if (!box) return;
@@ -1679,13 +1698,21 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           : '<div class="ev-logo">' + esc(String(e.servizio || '?').slice(0, 2).toUpperCase()) + '</div>';
         return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
           + '<div class="ev-top">' + logo
-          +   '<div class="ev-chi"><b>' + esc(e.servizio || '') + '</b>' + esc(e.occhiello || quandoLeggibile(t)) + '</div>'
+          +   '<div class="ev-chi"><b>' + esc(e.servizio || '') + '</b>Webinar dal vivo</div>'
           +   (e.bozza ? '<span class="ev-bozza">bozza · solo tu</span>' : '')
           + '</div>'
           + '<div class="ev-nome">' + esc(e.nome) + '</div>'
-          + (e.descrizione ? '<div class="ev-desc">' + esc(e.descrizione) + '</div>' : '')
+          // Le informazioni che servono per decidere, una riga ciascuna: quando e dove.
+          + '<div class="ev-info">'
+          +   '<span><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>' + esc(quandoBreve(t)) + '</span>'
+          +   '<span><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></svg>' + esc(e.dove || 'Online') + '</span>'
+          + '</div>'
           + timerHtml(t)
-          + '<div class="ev-quando"><span>' + esc(quandoLeggibile(t)) + '</span><em>Apri &rsaquo;</em></div>'
+          // La scarsita' e' quella che dichiara chi organizza, mai un numero inventato.
+          + '<div class="ev-fondo">'
+          +   '<span class="ev-scarso"><i></i>' + esc(e.scarsita || 'Posti limitati') + '</span>'
+          +   '<span class="ev-vai">' + esc(e.bottone || 'Prendi il posto') + ' &rsaquo;</span>'
+          + '</div>'
           + '</button>';
       }).join('');
   }
@@ -1836,7 +1863,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // filtro restava acceso -> lista vuota e nessun filtro visibile da cui uscire.
     var nSalv = contaColl('salvati'), nVot = contaColl('votati');
     if (COLLEZIONE === 'salvati' && !nSalv) COLLEZIONE = '';
-    if (COLLEZIONE === 'votati'  && !nVot)  COLLEZIONE = '';
+    // Votati non ha piu' la sua pillola (Antonio): se era acceso non resterebbe
+    // niente da toccare per spegnerlo, quindi si spegne qui.
+    if (COLLEZIONE === 'votati') COLLEZIONE = '';
 
     // Niente pillola "Tutti" (Antonio). La via d'uscita dal filtro resta doppia e
     // sempre disponibile: la voce "Tutti i business" in cima alla tendina, e il
@@ -1846,7 +1875,6 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // tutte nella tendina, che e' l'unico posto dove si filtra.
     var h = '';
     if (nSalv) h += '<button class="macro' + (COLLEZIONE === 'salvati' ? ' on' : '') + '" data-macro="salvati">Salvati</button>';
-    if (nVot)  h += '<button class="macro' + (COLLEZIONE === 'votati'  ? ' on' : '') + '" data-macro="votati">Votati</button>';
     mt.innerHTML = h;
     mt.style.display = h ? '' : 'none';   // senza pillole non resta la striscia vuota
 
