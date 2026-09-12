@@ -838,15 +838,17 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    Staccata invece si legge per quello che e', una scelta editoriale.
    Il bordo e' l'unico dell'app: qui serve a dire "questa non e' in fila con le
    altre", ed e' l'unico punto dove quel segnale non ha alternative. */
-/* EVENTO. In cima alla home, sopra il menu, in due card impilate: la prima
-   dice cos'e' (logo, nome, titolo, orari), la seconda chiede di muoversi
-   (quanto manca e il pulsante). Separate, ognuna fa una cosa sola. */
+/* EVENTO. In cima alla home, sopra il menu. Una card sola: sopra cos'e'
+   (logo, nome, titolo, orari), dentro un riquadro con quanto manca e il
+   pulsante. Tutto nello stesso bordo, perche' e' una cosa sola. */
 #eventoHome:empty{display:none}
-#eventoHome{margin:14px 20px 4px;display:flex;flex-direction:column;gap:8px}
-.ev-a,.ev-b{display:block;width:100%;text-align:left;color:var(--tx);background:var(--s0);
-  border:1px solid var(--line);border-radius:14px;font-family:var(--sans);cursor:pointer}
-.ev-a:active,.ev-b:active{transform:scale(.99)}
-.ev-a{display:flex;gap:13px;align-items:flex-start;padding:14px 16px}
+#eventoHome{margin:14px 20px 4px}
+.ev-card{display:block;width:100%;text-align:left;color:var(--tx);background:var(--s0);
+  border:1px solid rgba(255,138,92,.45);border-radius:16px;padding:14px;
+  font-family:var(--sans);cursor:pointer}
+.ev-card:active{transform:scale(.99)}
+.ev-card + .ev-card{margin-top:10px}
+.ev-a{display:flex;gap:13px;align-items:flex-start;padding:2px 2px 0}
 .ev-a .flogo{flex:none;width:52px;height:52px;margin:0}
 .ev-testo{min-width:0;flex:1}
 .ev-chi{display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -856,14 +858,15 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .ev-titolo{font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:3px 0 7px;text-wrap:balance}
 .ev-orari{font-size:13.5px;font-weight:600;color:#FF8A5C}
 .ev-dove2{font-size:13px;color:var(--mut);margin-top:2px}
-/* La card del conto alla rovescia: e' quella con il colore, perche' e' quella
-   che chiede di fare qualcosa. */
-.ev-b{padding:13px 16px 14px;border-color:rgba(255,138,92,.45)}
+/* Il riquadro interno: fondo un tono sotto la card, cosi' si legge come parte
+   di lei e non come una seconda card. */
+.ev-b{margin-top:13px;padding:12px 12px 12px;border-radius:12px;background:var(--bg)}
 .ev-b-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;
   font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .ev-b-testa span{color:var(--mut)}
 .ev-b-testa em{font-style:normal;color:#FF8A5C;letter-spacing:.04em}
-.ev-b .ev-timer{margin:10px 0 12px}
+.ev-b .ev-timer{margin:9px 0 11px}
+.ev-b .ev-timer div{background:var(--s0)}
 .ev-cta{display:block;text-align:center;background:#FF8A5C;color:#2A0E04;border-radius:10px;
   padding:13px;font-size:15px;font-weight:800}
 /* Il timer a caselle resta dentro la linguetta Evento della scheda. */
@@ -1457,7 +1460,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=190"></script>
+<script src="identikit.js?v=191"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1690,9 +1693,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!vivi.length) { box.innerHTML = ''; return; }
     box.innerHTML = vivi.map(function(e){
       var t = new Date(e.quando).getTime();
-      return ''
-        // Card 1: cos'e'. Logo come nella lista, cosi' si riconosce la scheda.
-        + '<button type="button" class="ev-a" data-evento="' + e.servizio_id + '">'
+      return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
+        // Sopra: cos'e'. Logo come nella lista, cosi' si riconosce la scheda.
+        + '<div class="ev-a">'
         +   logoHtml({ logo_url: e.logo_url, logo_pieno: e.logo_pieno })
         +   '<div class="ev-testo">'
         +     '<div class="ev-chi"><span>' + esc(e.servizio || '') + '</span>'
@@ -1701,12 +1704,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         +     '<div class="ev-orari">' + esc(giornoOra(t)) + '</div>'
         +     (e.dove ? '<div class="ev-dove2">' + esc(e.dove) + '</div>' : '')
         +   '</div>'
-        + '</button>'
-        // Card 2: quanto manca, e il pulsante.
-        + '<button type="button" class="ev-b" data-evento="' + e.servizio_id + '">'
+        + '</div>'
+        // Dentro: quanto manca, e il pulsante.
+        + '<div class="ev-b">'
         +   '<div class="ev-b-testa"><span>Inizia tra</span><em>' + esc(e.scarsita || 'Posti limitati') + '</em></div>'
         +   timerHtml(t)
         +   '<span class="ev-cta">' + esc(e.bottone || 'Prendi il tuo posto') + '</span>'
+        + '</div>'
         + '</button>';
     }).join('');
   }
