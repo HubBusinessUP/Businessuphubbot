@@ -838,57 +838,40 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    Staccata invece si legge per quello che e', una scelta editoriale.
    Il bordo e' l'unico dell'app: qui serve a dire "questa non e' in fila con le
    altre", ed e' l'unico punto dove quel segnale non ha alternative. */
-/* EVENTO. Sopra In primo piano perche' scade: la vetrina resta, l'evento no.
-   Il conto alla rovescia e' il pezzo che si guarda, per questo ha le cifre
-   larghe e allineate e sta da solo sulla sua riga. */
+/* EVENTO. In cima alla home, sopra il menu. Una card sola, piatta: il bordo
+   caldo basta a staccarla dal resto. Dentro tre blocchi e nient'altro:
+   cos'e', quando e dove, quanto manca con l'azione accanto. */
 #eventoHome:empty{display:none}
 #eventoHome{margin:14px 20px 4px}
-/* In cima alla home il banner deve staccare dal resto senza urlare: un fondo
-   appena caldo, il bordo acceso e una riga piena sul lato che lo ancora. */
-.ev-et{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
-  letter-spacing:.1em;text-transform:uppercase;color:#FF8A5C;margin:0 2px 8px}
-.ev-et::after{content:'';flex:1;height:1px;background:var(--line)}
-.ev-et .pnt{width:7px;height:7px;border-radius:50%;background:#FF8A5C;animation:wbnp 2.4s infinite}
-.ev-card{position:relative;overflow:hidden;display:block;width:100%;text-align:left;color:var(--tx);
-  background:linear-gradient(135deg,rgba(255,138,92,.16),rgba(255,138,92,.03) 55%),var(--s0);
-  border:1px solid rgba(255,138,92,.55);border-radius:14px;padding:14px 16px 15px 19px;
-  box-shadow:0 8px 24px rgba(255,138,92,.12);
+.ev-card{display:block;width:100%;text-align:left;color:var(--tx);background:var(--s0);
+  border:1px solid rgba(255,138,92,.45);border-radius:14px;padding:15px 16px 14px;
   font-family:var(--sans);cursor:pointer}
 .ev-card:active{transform:scale(.99)}
-.ev-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#FF8A5C}
-.ev-card .ev-timer div{background:rgba(0,0,0,.22)}
 .ev-card + .ev-card{margin-top:10px}
-.ev-top{display:flex;align-items:center;gap:10px}
-.ev-logo{flex:none;width:34px;height:34px;border-radius:9px;background:var(--s2) center/cover no-repeat;
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--dim)}
-.ev-chi{min-width:0;font-size:12.5px;color:var(--mut);line-height:1.35}
-.ev-chi b{display:block;color:var(--dim);font-weight:600}
-.ev-bozza{margin-left:auto;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--mut);border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
-.ev-nome{font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:11px 0 5px;text-wrap:balance}
-.ev-desc{font-size:13.5px;line-height:1.55;color:var(--dim)}
-/* Le quattro caselle del timer: numeri tabellari, cosi' al passare dei secondi
-   la riga non balla. */
+.ev-occ{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#FF8A5C}
+.ev-bozza{font-size:10.5px;letter-spacing:.06em;color:var(--mut);border:1px solid var(--line2);
+  border-radius:5px;padding:2px 6px}
+.ev-nome{font-size:18px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:8px 0 4px;text-wrap:balance}
+.ev-dove{font-size:13.5px;color:var(--dim)}
+.ev-giu{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.ev-lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+/* Il conto alla rovescia in una riga sola, cifre tabellari: al passare dei
+   secondi non si sposta niente. */
+.ev-conto{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.1;margin-top:3px;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.ev-conto small{font-size:13px;font-weight:700;color:var(--mut);margin:0 3px 0 1px}
+.ev-scarso{font-size:12.5px;font-weight:700;color:#FF8A5C;margin-top:4px}
+.ev-btn{flex:none;background:#FF8A5C;color:#2A0E04;border-radius:10px;padding:11px 14px;
+  font-size:14px;font-weight:800;white-space:nowrap}
+/* Il timer a caselle resta dentro la linguetta Evento della scheda. */
 .ev-timer{display:flex;gap:6px;margin-top:13px}
 .ev-timer div{flex:1;background:var(--s2);border-radius:9px;padding:8px 0 6px;text-align:center}
 .ev-timer b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1;
   font-variant-numeric:tabular-nums;color:var(--tx)}
 .ev-timer span{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:var(--mut);margin-top:4px}
-.ev-quando{display:flex;justify-content:space-between;align-items:center;margin-top:11px;
-  font-size:12.5px;color:var(--mut)}
-.ev-quando em{font-style:normal;font-weight:700;color:#FF8A5C}
-.ev-info{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:2px;font-size:13.5px;color:var(--dim)}
-.ev-info span{display:inline-flex;align-items:center;gap:6px}
-.ev-info svg{width:15px;height:15px;fill:none;stroke:var(--mut);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* La riga di fondo tiene insieme la scarsita' e l'azione: e' li' che si decide. */
-.ev-fondo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
-.ev-scarso{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
-  color:#FF8A5C;background:rgba(255,138,92,.1);border-radius:999px;padding:5px 10px 5px 8px}
-.ev-scarso i{width:6px;height:6px;border-radius:50%;background:#FF8A5C;animation:wbnp 1.6s infinite}
-.ev-vai{font-size:14px;font-weight:700;color:var(--tx);white-space:nowrap}
-@media (prefers-reduced-motion:reduce){.ev-scarso i,.ev-et .pnt{animation:none}}
-/* Lo stesso timer dentro la linguetta Evento, piu' stretto: la' sotto c'e' da leggere. */
 .wbn .ev-timer{margin:12px 0 4px}
 .wbn .ev-timer b{font-size:18px}
 #primoPiano:empty{display:none}
@@ -1473,7 +1456,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=188"></script>
+<script src="identikit.js?v=189"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1695,31 +1678,32 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // Sta sopra il menu, fuori dalla lista: un filtro acceso non lo tocca.
     var vivi = EVENTI.filter(function(e){ return new Date(e.quando).getTime() > Date.now(); });
     if (!vivi.length) { box.innerHTML = ''; return; }
-    box.innerHTML = '<div class="ev-et"><span class="pnt"></span>' + (vivi.length > 1 ? 'Eventi' : 'Evento') + '</div>'
-      + vivi.map(function(e){
-        var t = new Date(e.quando).getTime();
-        var logo = e.logo_url
-          ? '<div class="ev-logo" style="background-image:url(&quot;' + esc(e.logo_url) + '&quot;)"></div>'
-          : '<div class="ev-logo">' + esc(String(e.servizio || '?').slice(0, 2).toUpperCase()) + '</div>';
-        return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
-          + '<div class="ev-top">' + logo
-          +   '<div class="ev-chi"><b>' + esc(e.servizio || '') + '</b>Webinar dal vivo</div>'
-          +   (e.bozza ? '<span class="ev-bozza">bozza · solo tu</span>' : '')
-          + '</div>'
-          + '<div class="ev-nome">' + esc(e.nome) + '</div>'
-          // Le informazioni che servono per decidere, una riga ciascuna: quando e dove.
-          + '<div class="ev-info">'
-          +   '<span><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>' + esc(quandoBreve(t)) + '</span>'
-          +   '<span><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></svg>' + esc(e.dove || 'Online') + '</span>'
-          + '</div>'
-          + timerHtml(t)
-          // La scarsita' e' quella che dichiara chi organizza, mai un numero inventato.
-          + '<div class="ev-fondo">'
-          +   '<span class="ev-scarso"><i></i>' + esc(e.scarsita || 'Posti limitati') + '</span>'
-          +   '<span class="ev-vai">' + esc(e.bottone || 'Prendi il posto') + ' &rsaquo;</span>'
-          + '</div>'
-          + '</button>';
-      }).join('');
+    box.innerHTML = vivi.map(function(e){
+      var t = new Date(e.quando).getTime();
+      var p = pezziTempo(t);
+      return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
+        // 1. cos'e'
+        + '<div class="ev-occ"><span>Webinar dal vivo \u00b7 ' + esc(e.servizio || '') + '</span>'
+        +   (e.bozza ? '<span class="ev-bozza">bozza \u00b7 solo tu</span>' : '') + '</div>'
+        + '<div class="ev-nome">' + esc(e.nome) + '</div>'
+        // 2. quando e dove, in una riga
+        + '<div class="ev-dove">' + esc(quandoBreve(t)) + ' \u00b7 ' + esc(e.dove || 'Online') + '</div>'
+        // 3. quanto manca e quanti posti, con l'azione accanto
+        + '<div class="ev-giu">'
+        +   '<div style="min-width:0">'
+        +     '<div class="ev-lab">Inizia tra</div>'
+        +     '<div class="ev-conto" data-timer="' + t + '">'
+        +       '<b data-u="g">' + p.g + '</b><small>g</small>'
+        +       '<b data-u="h">' + dueCifre(p.h) + '</b><small>h</small>'
+        +       '<b data-u="m">' + dueCifre(p.m) + '</b><small>m</small>'
+        +       '<b data-u="s">' + dueCifre(p.s) + '</b><small>s</small>'
+        +     '</div>'
+        +     '<div class="ev-scarso">' + esc(e.scarsita || 'Posti limitati') + '</div>'
+        +   '</div>'
+        +   '<span class="ev-btn">' + esc(e.bottone || 'Prendi il posto') + '</span>'
+        + '</div>'
+        + '</button>';
+    }).join('');
   }
 
   // Un solo orologio per tutta l'app: aggiorna i numeri di ogni timer a schermo,
