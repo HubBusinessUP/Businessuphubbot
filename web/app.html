@@ -260,6 +260,7 @@
         </button>
       </div>
       <nav class="macros" id="macroTabs"></nav>
+      <div id="eventoHome"></div>
       <div id="primoPiano"></div>
       <div id="listaReale"></div>
 
@@ -586,6 +587,9 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .sctab{background:none;border:none;padding:0 0 11px;color:var(--mut);font-family:var(--sans);
   font-size:15.5px;font-weight:600;cursor:pointer;position:relative}
 .sctab.on{color:var(--tx)}
+/* Il puntino sulla linguetta Evento: dice che dentro c'e' qualcosa con una data. */
+.sctab-pnt{display:inline-block;width:6px;height:6px;border-radius:50%;background:#FF8A5C;
+  margin-left:6px;vertical-align:2px}
 .sctab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--acc);border-radius:2px}
 .scpane{padding:16px 20px 0}
 /* Misure e voci portano il proprio margine laterale: qui va tolto, se no rientrano
@@ -833,6 +837,43 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    Staccata invece si legge per quello che e', una scelta editoriale.
    Il bordo e' l'unico dell'app: qui serve a dire "questa non e' in fila con le
    altre", ed e' l'unico punto dove quel segnale non ha alternative. */
+/* EVENTO. Sopra In primo piano perche' scade: la vetrina resta, l'evento no.
+   Il conto alla rovescia e' il pezzo che si guarda, per questo ha le cifre
+   larghe e allineate e sta da solo sulla sua riga. */
+#eventoHome:empty{display:none}
+#eventoHome{margin:14px 20px 0}
+.ev-et{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:#FF8A5C;margin:0 2px 8px}
+.ev-et::after{content:'';flex:1;height:1px;background:var(--line)}
+.ev-et .pnt{width:7px;height:7px;border-radius:50%;background:#FF8A5C;animation:wbnp 2.4s infinite}
+.ev-card{display:block;width:100%;text-align:left;background:var(--s0);color:var(--tx);
+  border:1px solid rgba(255,138,92,.34);border-radius:14px;padding:14px 16px 15px;
+  font-family:var(--sans);cursor:pointer}
+.ev-card:active{transform:scale(.99)}
+.ev-card + .ev-card{margin-top:10px}
+.ev-top{display:flex;align-items:center;gap:10px}
+.ev-logo{flex:none;width:34px;height:34px;border-radius:9px;background:var(--s2) center/cover no-repeat;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--dim)}
+.ev-chi{min-width:0;font-size:12.5px;color:var(--mut);line-height:1.35}
+.ev-chi b{display:block;color:var(--dim);font-weight:600}
+.ev-bozza{margin-left:auto;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--mut);border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
+.ev-nome{font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:11px 0 5px;text-wrap:balance}
+.ev-desc{font-size:13.5px;line-height:1.55;color:var(--dim)}
+/* Le quattro caselle del timer: numeri tabellari, cosi' al passare dei secondi
+   la riga non balla. */
+.ev-timer{display:flex;gap:6px;margin-top:13px}
+.ev-timer div{flex:1;background:var(--s2);border-radius:9px;padding:8px 0 6px;text-align:center}
+.ev-timer b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--tx)}
+.ev-timer span{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--mut);margin-top:4px}
+.ev-quando{display:flex;justify-content:space-between;align-items:center;margin-top:11px;
+  font-size:12.5px;color:var(--mut)}
+.ev-quando em{font-style:normal;font-weight:700;color:#FF8A5C}
+/* Lo stesso timer dentro la linguetta Evento, piu' stretto: la' sotto c'e' da leggere. */
+.wbn .ev-timer{margin:12px 0 4px}
+.wbn .ev-timer b{font-size:18px}
 #primoPiano:empty{display:none}
 #primoPiano{margin:14px 20px 0}
 .pp-et{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
@@ -1258,7 +1299,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 /* Foglio con il testo integrale, aperto dal link. */
 /* Il riquadro di un evento con una data. Non e' una card come le altre: bordi
    vivi e una riga d'accento in cima, perche' scade e va visto per primo. */
-.wbn{margin:0 0 18px;padding:15px 20px 18px;background:var(--s0);
+.wbn{margin:14px 0 18px;padding:15px 20px 18px;background:var(--s0);
   border-top:2px solid var(--acc);border-bottom:1px solid var(--line)}
 .wbn .oc{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;
   letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
@@ -1415,7 +1456,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=185"></script>
+<script src="identikit.js?v=186"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1594,6 +1635,77 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   // Il servizio in vetrina. Sparisce quando un filtro e' acceso o stai cercando:
   // li' stai guardando un sottoinsieme preciso, e una scheda che resta li' fuori
   // dal filtro sembra un risultato sbagliato.
+  // ---- EVENTI IN HOME ----
+  var EVENTI = [];
+
+  function dueCifre(n){ return (n < 10 ? '0' : '') + n; }
+
+  // Il timer si scrive una volta con i valori giusti e poi si aggiorna ogni
+  // secondo solo nei numeri: ridisegnare la card intera farebbe saltare il tocco.
+  function timerHtml(t){
+    var p = pezziTempo(t);
+    return '<div class="ev-timer" data-timer="' + t + '">'
+      + '<div><b data-u="g">' + p.g + '</b><span>giorni</span></div>'
+      + '<div><b data-u="h">' + dueCifre(p.h) + '</b><span>ore</span></div>'
+      + '<div><b data-u="m">' + dueCifre(p.m) + '</b><span>min</span></div>'
+      + '<div><b data-u="s">' + dueCifre(p.s) + '</b><span>sec</span></div>'
+      + '</div>';
+  }
+
+  function pezziTempo(t){
+    var m = Math.max(0, Math.floor((t - Date.now()) / 1000));
+    return { g: Math.floor(m / 86400), h: Math.floor(m % 86400 / 3600), m: Math.floor(m % 3600 / 60), s: m % 60, finito: m === 0 };
+  }
+
+  function quandoLeggibile(t){
+    try {
+      return new Date(t).toLocaleString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return ''; }
+  }
+
+  function renderEvento(){
+    var box = document.getElementById('eventoHome');
+    if (!box) return;
+    // Come la vetrina: con un filtro o una ricerca accesi resta fuori, li' stai
+    // guardando un sottoinsieme preciso.
+    var filtrando = !!(FILTRO_MACRO || FILTRO_CAT || COLLEZIONE || (FILTRO_Q && FILTRO_Q.trim()));
+    var vivi = filtrando ? [] : EVENTI.filter(function(e){ return new Date(e.quando).getTime() > Date.now(); });
+    if (!vivi.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="ev-et"><span class="pnt"></span>' + (vivi.length > 1 ? 'Eventi' : 'Evento') + '</div>'
+      + vivi.map(function(e){
+        var t = new Date(e.quando).getTime();
+        var logo = e.logo_url
+          ? '<div class="ev-logo" style="background-image:url(&quot;' + esc(e.logo_url) + '&quot;)"></div>'
+          : '<div class="ev-logo">' + esc(String(e.servizio || '?').slice(0, 2).toUpperCase()) + '</div>';
+        return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
+          + '<div class="ev-top">' + logo
+          +   '<div class="ev-chi"><b>' + esc(e.servizio || '') + '</b>' + esc(e.occhiello || quandoLeggibile(t)) + '</div>'
+          +   (e.bozza ? '<span class="ev-bozza">bozza · solo tu</span>' : '')
+          + '</div>'
+          + '<div class="ev-nome">' + esc(e.nome) + '</div>'
+          + (e.descrizione ? '<div class="ev-desc">' + esc(e.descrizione) + '</div>' : '')
+          + timerHtml(t)
+          + '<div class="ev-quando"><span>' + esc(quandoLeggibile(t)) + '</span><em>Apri &rsaquo;</em></div>'
+          + '</button>';
+      }).join('');
+  }
+
+  // Un solo orologio per tutta l'app: aggiorna i numeri di ogni timer a schermo,
+  // in home e nella linguetta. Quando uno arriva a zero ridisegna, cosi' l'evento
+  // passato sparisce senza bisogno di ricaricare.
+  setInterval(function(){
+    var tt = document.querySelectorAll('[data-timer]');
+    if (!tt.length) return;
+    var scaduto = false;
+    tt.forEach(function(el){
+      var p = pezziTempo(parseInt(el.getAttribute('data-timer')) || 0);
+      if (p.finito) scaduto = true;
+      var set = function(u, v){ var b = el.querySelector('[data-u="' + u + '"]'); if (b && b.textContent !== v) b.textContent = v; };
+      set('g', String(p.g)); set('h', dueCifre(p.h)); set('m', dueCifre(p.m)); set('s', dueCifre(p.s));
+    });
+    if (scaduto) { renderEvento(); if (SC_ID) ridisegnaScheda(SC_ID); }
+  }, 1000);
+
   function renderPrimoPiano(){
     var box = document.getElementById('primoPiano');
     if (!box) return;
@@ -1652,7 +1764,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var animare = (FILTRO_Q === ULTIMA_Q);
     ULTIMA_Q = FILTRO_Q;
     if (!lista.length) {
-      renderPrimoPiano();   // con un filtro attivo svuota la vetrina: niente card sopra il vuoto
+      renderPrimoPiano(); renderEvento();   // con un filtro attivo svuota la vetrina: niente card sopra il vuoto
       var qAtt = !!(FILTRO_Q && FILTRO_Q.trim());
       // Categoria o macro selezionata e vuota (senza ricerca in corso): invito a
       // proporre il primo prodotto. Con una ricerca attiva resta il "nessun risultato".
@@ -1667,7 +1779,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
     // Lista PIATTA, ordinata per interesse (voti + salvati). Niente piu' fasce temporali:
     // la data diceva quando l'abbiamo inserito noi, non quanto vale per chi guarda.
-    renderPrimoPiano();
+    renderPrimoPiano(); renderEvento();
     host.classList.remove('anima');
     host.innerHTML = lista.map(function(s, i){ return rowHtml(s, i); }).join('');
     if (animare) {
@@ -2270,6 +2382,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     return '<div class="wbn">'
       + '<div class="oc"><span class="pnt"></span>' + esc(w.occhiello || 'In diretta')
       +   (manca ? '<span class="man">' + esc(manca) + '</span>' : '') + '</div>'
+      + timerHtml(t)
       + (w.titolo ? '<h3>' + esc(w.titolo) + '</h3>' : '')
       + corpo
       + (punti ? '<ul>' + punti + '</ul>' : '')
@@ -2419,14 +2532,18 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // si apre sul nulla e' peggio che non averla. Se la tab attiva sparisce, si
     // torna in Panoramica per non restare su un pannello che non c'e' piu'.
     if (!car && SC_TAB === 'car') SC_TAB = 'pan';
+    // L'evento ha la sua linguetta finche' non e' passato, poi sparisce da solo.
+    var ev = scWebinar(d);
+    if (!ev && SC_TAB === 'ev') SC_TAB = 'pan';
     return scTesta(d)
-      + scWebinar(d)
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
       +   (car ? '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>' : '')
+      +   (ev ? '<button class="sctab' + (SC_TAB === 'ev' ? ' on' : '') + '" data-sctab="ev">Evento<span class="sctab-pnt"></span></button>' : '')
       + '</div>'
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
       + (car ? '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + car + '</div>' : '')
+      + (ev ? '<div class="scpane"' + (SC_TAB === 'ev' ? '' : ' hidden') + ' data-pane="ev">' + ev + '</div>' : '')
       + '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>';
   }
 
@@ -2609,6 +2726,22 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       return;
     }
 
+    // Card evento in home: apre la scheda gia' sulla linguetta Evento. apriScheda
+    // rimette Panoramica, quindi la linguetta si sceglie subito dopo; se la scheda
+    // e' gia' in memoria si ridisegna, se arriva dal server la legge da sola.
+    var evc = t.closest('[data-evento]');
+    if (evc) {
+      e.preventDefault();
+      var eid = parseInt(evc.getAttribute('data-evento')) || 0;
+      if (eid) {
+        try { traccia('apri_evento', eid); } catch(x){}
+        apriScheda(eid);
+        SC_TAB = 'ev';
+        ridisegnaScheda(eid);
+      }
+      return;
+    }
+
     // Dentro la schermata: chiudi, vai al video, oppure scrivi davvero.
     if (t.closest('[data-preclose]')) { e.preventDefault(); chiudiPrima(); return; }
     var vv = t.closest('[data-vaivideo]');
@@ -2747,6 +2880,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
         var qa=a.created_at||'', qb=b.created_at||'';
         return qa < qb ? 1 : (qa > qb ? -1 : (b.id||0)-(a.id||0));   // piu' recente prima; id come ultimo criterio
       });
+      EVENTI = Array.isArray(d.eventi) ? d.eventi : [];
       (d.miei_preferiti || []).forEach(function(id){ SAVED[id] = true; });
       (d.miei_voti || []).forEach(function(id){ VOTED[id] = true; });
       disegnaTabs();

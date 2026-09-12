@@ -1718,7 +1718,25 @@ async function apiBusinessList(telegramId?: number | null) {
     categorie: list.filter((c: any) => c.macro_categoria_id === m.id),
   }))
 
-  return json({ macro_categorie: macroList, categorie: list, miei_voti: mieiVoti, miei_preferiti: mieiPreferiti })
+  // Gli eventi in arrivo, per la card in home. Solo quelli di schede visibili: una
+  // scheda in bozza non deve farsi vedere dalla porta di servizio. L'admin invece
+  // li vede anche in bozza, marcati, cosi' li prova prima di accenderli.
+  const { data: conEvento } = await supabase.from("servizi")
+    .select("id, nome, stato, logo_url, logo_pieno, cta").not("cta->webinar", "is", null)
+  const adessoIso = new Date().toISOString()
+  const eventi = ((conEvento ?? []) as any[])
+    .map((x) => ({ x, w: x.cta?.webinar }))
+    .filter(({ x, w }) => w && w.quando && new Date(w.quando).toISOString() > adessoIso
+      && (x.stato === "attivo" || (telegramId === ADMIN_ID && x.stato === "bozza")))
+    .map(({ x, w }) => ({
+      servizio_id: x.id, servizio: x.nome, logo_url: x.logo_url, logo_pieno: !!x.logo_pieno,
+      bozza: x.stato !== "attivo",
+      quando: w.quando, occhiello: w.occhiello || "",
+      nome: w.nome || w.titolo || x.nome, descrizione: w.descrizione || "",
+    }))
+    .sort((a, b) => (a.quando < b.quando ? -1 : 1))
+
+  return json({ macro_categorie: macroList, categorie: list, miei_voti: mieiVoti, miei_preferiti: mieiPreferiti, eventi })
 }
 
 // Toggle preferito: un business salvato resta in primo piano nella lista dell'utente.
