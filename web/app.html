@@ -876,8 +876,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   font-variant-numeric:tabular-nums;color:var(--tx)}
 .ev-timer span{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:var(--mut);margin-top:4px}
-.wbn .ev-timer{margin:12px 0 4px}
-.wbn .ev-timer b{font-size:18px}
+/* Nella linguetta il riquadro sta fra l'occhiello e il titolo; senza pulsante
+   il timer chiude il riquadro, quindi niente margine sotto. */
+.wbn .ev-b{margin:12px 0 4px}
+.wbn .ev-b .ev-timer{margin-bottom:0}
 #primoPiano:empty{display:none}
 #primoPiano{margin:14px 20px 0}
 .pp-et{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
@@ -1460,7 +1462,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=191"></script>
+<script src="identikit.js?v=192"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2404,11 +2406,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }).join('');
     var corpo = String(w.testo || '').split('\n').filter(function(r){ return r.trim(); })
       .map(function(r){ return '<p>' + esc(r.trim()) + '</p>'; }).join('');
-    var manca = quantoManca(t);
     return '<div class="wbn">'
-      + '<div class="oc"><span class="pnt"></span>' + esc(w.occhiello || 'In diretta')
-      +   (manca ? '<span class="man">' + esc(manca) + '</span>' : '') + '</div>'
-      + timerHtml(t)
+      + '<div class="oc"><span class="pnt"></span>' + esc(w.occhiello || 'In diretta') + '</div>'
+      // Lo stesso riquadro della home, senza pulsante: qui l'azione e' il modulo in fondo.
+      + '<div class="ev-b"><div class="ev-b-testa"><span>Inizia tra</span><em>' + esc(w.scarsita || 'Posti limitati') + '</em></div>'
+      +   timerHtml(t) + '</div>'
       + (w.titolo ? '<h3>' + esc(w.titolo) + '</h3>' : '')
       + corpo
       + (punti ? '<ul>' + punti + '</ul>' : '')
