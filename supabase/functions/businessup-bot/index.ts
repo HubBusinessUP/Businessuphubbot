@@ -1049,17 +1049,36 @@ async function handleUpdate(u: any) {
       return
     }
 
+    // /prova 8: un bottone che apre quella scheda nell'app, anche in bozza. La
+    // lista le nasconde, ma la scheda aperta per numero si legge lo stesso: cosi'
+    // si prova prima di accendere, e nessun altro la vede.
+    if (text.startsWith("/prova")) {
+      const idP = parseInt(text.slice(6).trim()) || 0
+      if (!idP) {
+        await sendMessage(chatId, "Quale scheda? /prova seguito dal numero, per esempio /prova 8")
+        return
+      }
+      const { data: svP } = await supabase.from("servizi").select("id, nome, stato").eq("id", idP).maybeSingle()
+      if (!svP) { await sendMessage(chatId, `La scheda ${idP} non esiste.`); return }
+      const urlP = WEBAPP_URL + "/app.html?scheda=" + idP + "&_=" + Date.now()
+      await sendMessage(chatId,
+        `<b>${htmlEsc((svP as any).nome)}</b> — stato: ${htmlEsc((svP as any).stato)}` + "\n"
+          + ((svP as any).stato === "attivo" ? "È già visibile a tutti." : "Nella lista non la vede nessuno: con questo bottone la apri solo tu."),
+        { inline_keyboard: [[{ text: "Apri la scheda", web_app: { url: urlP } }]] }, "HTML")
+      return
+    }
+
     // /webinar: chi ha preso il posto passando dall'app.
     if (text === "/webinar") {
       const { data: iscritti } = await supabase.from("webinar_iscritti")
         .select("telegram_id, nome, email, created_at").order("created_at", { ascending: false })
       const righe = (iscritti ?? []) as any[]
-      if (!righe.length) { await sendMessage(chatId, "Ancora nessuno ha preso un posto."); return }
+      if (!righe.length) { await sendMessage(chatId, "Ancora nessuno ha lasciato i dati per il webinar."); return }
       const ids = [...new Set(righe.map((r) => r.telegram_id))]
       const { data: chi } = await supabase.from("leads").select("telegram_id, username").in("telegram_id", ids)
       const tag: Record<number, string> = {}
       for (const l of (chi ?? []) as any[]) tag[l.telegram_id] = l.username || ""
-      const fuori = [`<b>Posti presi dall'app: ${righe.length}</b>`, ""]
+      const fuori = [`<b>Hanno lasciato i dati dall'app: ${righe.length}</b>`, "L'iscrizione vera e' su Zoom: questi sono quelli partiti da te.", ""]
       for (const r of righe) {
         const q = new Date(r.created_at).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
         fuori.push(`${htmlEsc(r.nome)}${tag[r.telegram_id] ? ` @${htmlEsc(tag[r.telegram_id])}` : ""}`)
@@ -4507,7 +4526,7 @@ serve(async (req) => {
       if (!count) {
         await supabase.from("eventi").insert({ tipo: "webinar_iscritto", telegram_id: tid, riferimento_id: sid })
       }
-      await notificaAzione(tid, `HA PRESO IL POSTO AL WEBINAR — ${email}`)
+      await notificaAzione(tid, `HA LASCIATO I DATI PER IL WEBINAR — ${email}`)
       return json({ ok: true })
     }
 

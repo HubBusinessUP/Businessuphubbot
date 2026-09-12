@@ -1287,6 +1287,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .wbn .wi:focus{outline:none;border-color:var(--acc)}
 .wbn .werr{font-size:13px;color:#FF6B6B;line-height:1.45}
 .wbn .wcons{font-size:12px;color:var(--mut);line-height:1.5}
+/* I due passi detti prima di premere: chi sa che c'e' un secondo modulo lo
+   compila, chi non lo sa si ferma al primo convinto di aver finito. */
+.wbn .wpassi{font-size:13px;color:var(--dim);line-height:1.5;padding:10px 12px;border-radius:9px;
+  border:1px dashed var(--line2)}
+.wbn .wpassi b{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
+  border-radius:50%;background:var(--acc);color:#04210F;font-size:11px;margin-right:4px}
 .wbn .wfrm .cta-attiva{margin-top:2px}
 /* I fogli si appendono al body, fuori da .app: le tinte del bottone pieno
    vivono li' dentro e qui non arrivavano, cosi' il bottone restava
@@ -1409,7 +1415,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=184"></script>
+<script src="identikit.js?v=185"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2268,13 +2274,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + corpo
       + (punti ? '<ul>' + punti + '</ul>' : '')
       + (segnato
-          ? '<div class="gia"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><div>Ci sei, ti ho messo in lista. <b>Ti avviso io</b> prima che cominci.</div></div>'
-            + '<button type="button" class="cta-secondaria" data-webinar="' + s.id + '" data-riapri="1" data-url="' + esc(w.url) + '">Riapri la pagina di iscrizione</button>'
+          ? '<div class="gia"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg><div><b>Manca un passo: completa l\'iscrizione su Zoom.</b> È lì che ti arriva il link per entrare martedì sera. Senza quella, non sei dentro.</div></div>'
+            + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-riapri="1" data-url="' + esc(w.url) + '">Completa l\'iscrizione su Zoom</button>'
           : '<div class="wfrm">'
             + '<label class="wl">Nome e cognome<input class="wi" type="text" id="wbNome" value="' + esc(nomeIniziale()) + '" placeholder="Come ti chiami" autocomplete="name"></label>'
             + '<label class="wl">Email<input class="wi" type="email" id="wbMail" value="' + esc(mailIniziale()) + '" placeholder="latua@email.it" autocomplete="email" inputmode="email"></label>'
             + '<div class="werr" id="wbErr" hidden></div>'
-            + '<div class="wcons">' + esc(w.consenso || 'Nome ed email li mando a chi organizza, per metterti in lista. Non li uso per altro.') + '</div>'
+            + (w.consenso ? '<div class="wcons">' + esc(w.consenso) + '</div>' : '')
+            + '<div class="wpassi"><b>1</b> lasci qui nome ed email &nbsp;·&nbsp; <b>2</b> ti iscrivi su Zoom</div>'
             + '<button type="button" class="cta-attiva" data-webinar="' + s.id + '" data-url="' + esc(w.url) + '">' + esc(w.bottone || 'Prendi il tuo posto') + '</button>'
             + '</div>')
       + '<div class="fine">' + esc(w.nota || '') + '</div>'
