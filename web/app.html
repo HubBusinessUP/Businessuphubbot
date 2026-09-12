@@ -1256,12 +1256,40 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .cons{font-size:12.5px;color:var(--mut);text-align:center;margin-top:9px;line-height:1.5}
 .cons a{color:var(--dim);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 /* Foglio con il testo integrale, aperto dal link. */
-#discSheet{position:fixed;inset:0;z-index:200;display:none}
+/* I fogli si appendono al body, fuori da .app: le tinte del bottone pieno
+   vivono li' dentro e qui non arrivavano, cosi' il bottone restava
+   trasparente. Si ridanno qui, una volta, per tutti e due. */
+#discSheet{position:fixed;inset:0;z-index:200;display:none;--sec:var(--acc);--sec-on:#04210F;--sec-deep:#1BB65D}
 #discSheet .dsc-card{position:absolute;left:0;right:0;bottom:0;max-height:82vh;overflow:auto;
   background:var(--s1);border-radius:16px 16px 0 0;padding:16px 18px 22px}
 #discSheet h4{font-size:17px;font-weight:700;letter-spacing:-.02em;margin:0 0 10px}
 #discSheet .dsc-txt{font-size:14.5px;line-height:1.65;color:var(--dim)}
 #discSheet .dsc-txt b{color:var(--tx)}
+/* Il passaggio prima della chat. Sta sopra la scheda, non la sostituisce: si
+   chiude e si torna esattamente dov'era, video compreso. */
+#preSheet{position:fixed;inset:0;z-index:210;display:none;--sec:var(--acc);--sec-on:#04210F;--sec-deep:#1BB65D}
+#preSheet .pre-card{position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;
+  background:var(--s1);border-radius:16px 16px 0 0;padding:16px 18px 22px}
+#preSheet h4{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+#preSheet .pre-int{font-size:14px;line-height:1.6;color:var(--dim);margin:0 0 16px}
+/* Le righe hanno il numero fuori dal testo: si contano con l'occhio, e una
+   riga lunga non va a capo sotto il numero. */
+#preSheet .pre-r{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line2)}
+#preSheet .pre-n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--s2);
+  color:var(--dim);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+#preSheet .pre-q{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+#preSheet .pre-a{font-size:14.5px;line-height:1.55;color:var(--tx);margin-top:2px}
+#preSheet .pre-dopo{margin-top:16px;padding:13px 14px;border-radius:11px;background:var(--s2);
+  font-size:13.5px;line-height:1.6;color:var(--dim)}
+#preSheet .pre-dopo b{color:var(--tx)}
+#preSheet .pre-dt{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--tx);margin-bottom:7px}
+/* I tre passi sono una sequenza vera (broker, VPS, primo ciclo): l'elenco la
+   rispetta. Il trattino sta fuori dal testo, come i numeri qui sopra. */
+#preSheet .pre-ul{list-style:none;margin:9px 0;padding:0}
+#preSheet .pre-ul li{position:relative;padding-left:16px;margin:4px 0}
+#preSheet .pre-ul li:before{content:'';position:absolute;left:0;top:9px;width:7px;height:1px;background:var(--mut)}
+#preSheet .pre-nota{font-size:12.5px;color:var(--mut);text-align:center;margin-top:10px;line-height:1.5}
 .cta-attiva[data-wait],#wlConferma{background:#FF6B3D!important;color:#2A0E04!important}
 .cta-attiva[data-wait]:active,#wlConferma:active{background:#E85A2E!important}
 /* Ultima, cosi' vince su entrambe quando il bottone e' spento. */
@@ -1349,7 +1377,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=182"></script>
+<script src="identikit.js?v=183"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1812,6 +1840,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var sid = SC_ID || 0; if (!sid) return;
     var k = sid + ':' + azione; if (VISTO[k]) return;
     VISTO[k] = 1; traccia(azione, sid);
+    // Serve a "Prima di scrivermi": se torna domani non gli si richiede il video.
+    if (azione !== 'video_avvio') { try { localStorage.setItem('cashly_video_' + sid, '1'); } catch (e) {} }
   }
   // I file (mp4, video privati): gli eventi dei media non risalgono, si prendono in cattura.
   document.addEventListener('play', function(e){ if (e.target && e.target.tagName === 'VIDEO') segnaVideo('video_avvio'); }, true);
@@ -2157,6 +2187,94 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     sh.style.display = 'block';
   }
 
+  // ---- PRIMA DI SCRIVERE ----
+  // Il bottone Richiedi apriva la chat all'istante. Chi arrivava li' spesso non
+  // sapeva ancora quanto serve ne' cosa deve fare, e la conversazione ripartiva
+  // da zero ogni volta. Qui in mezzo si mette quello che gli chiederei comunque:
+  // chi scrive dopo averlo letto arriva gia' caldo, e il messaggio precompilato
+  // dice da quale scheda viene e se il video l'ha visto.
+
+  // Le voci che scaldano davvero, nell'ordine in cui servono. Le altre della
+  // scheda restano nella scheda: qui ne bastano quattro.
+  var PRE_ORDINE = ['budget', 'cosa serve', 'cosa devi fare', 'costi', 'profit split'];
+
+  function preVoci(s){
+    var v = (Array.isArray(s.voci) ? s.voci : []).filter(function(x){ return x && x.etichetta && x.valore; });
+    var eti = v.map(function(x){ return String(x.etichetta).toLowerCase(); });
+    // Quello che la scheda tiene in un campo suo e non fra le voci: si aggiunge,
+    // non si inventa. Se manca anche quello, la riga non compare.
+    if (eti.indexOf('budget') < 0 && s.budget_minimo) {
+      v.unshift({ etichetta: 'Budget', valore: Number(s.budget_minimo).toLocaleString('it-IT') + ' \u20AC ' + (s.budget_nota || 'minimo di capitale') });
+    }
+    if (eti.indexOf('costi') < 0 && s.costi) v.push({ etichetta: 'Costi', valore: s.costi });
+    var scelte = [];
+    PRE_ORDINE.forEach(function(k){
+      v.forEach(function(x){
+        if (scelte.indexOf(x) < 0 && String(x.etichetta).toLowerCase().indexOf(k) === 0) scelte.push(x);
+      });
+    });
+    v.forEach(function(x){ if (scelte.indexOf(x) < 0) scelte.push(x); });
+    return scelte.slice(0, 4);
+  }
+
+  // Il video l'ha visto? Resta scritto sul telefono: se torna domani non gli si
+  // richiede una cosa che ha gia' fatto.
+  function videoVisto(id){
+    if (VISTO[id + ':video_fine'] || VISTO[id + ':video_meta']) return true;
+    try { return localStorage.getItem('cashly_video_' + id) === '1'; } catch (e) { return false; }
+  }
+
+  function haVideo(s){
+    return !!((s.cta && typeof s.cta.video_privato === 'string' && s.cta.video_privato.trim()) || s.media_url);
+  }
+
+  function primaDiScrivere(id){
+    var d = SCHEDE[id]; if (!d) return;
+    var s = d.servizio || {};
+    var visto = videoVisto(id), video = haVideo(s);
+    var sh = document.getElementById('preSheet');
+    if (!sh) { sh = document.createElement('div'); sh.id = 'preSheet'; document.body.appendChild(sh); }
+    var righe = preVoci(s).map(function(x, i){
+      return '<div class="pre-r"><div class="pre-n">' + (i + 1) + '</div><div style="min-width:0">'
+        + '<div class="pre-q">' + esc(x.etichetta) + '</div>'
+        + '<div class="pre-a">' + esc(x.valore) + '</div></div></div>';
+    }).join('');
+    // Il testo che si trova gia' scritto nella chat. Dice da quale scheda arriva e
+    // a che punto e': cosi' la prima risposta non e' "di cosa stiamo parlando?".
+    var pre = 'Ciao Antonio, vorrei info su ' + (s.nome || 'un business della lista') + '. '
+      + (visto ? 'Ho letto la scheda e visto il video.' : 'Ho letto la scheda nell\'app.');
+    var url = 'https://t.me/caliblackk?text=' + encodeURIComponent(pre);
+    sh.innerHTML = '<div data-preclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div>'
+      + '<div class="pre-card">'
+      +   '<div data-preclose="1" style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px;cursor:pointer"></div>'
+      +   '<h4>Prima di scrivermi</h4>'
+      +   '<p class="pre-int">Ti rispondo io, non un assistente. Queste sono le cose che ti chiederei comunque: se te le sai già, scrivimi e partiamo da lì.</p>'
+      +   righe
+      +   (video && !visto
+            ? '<div class="pre-dopo">Nel video spiego tutto per intero. <b>Guardalo prima di scrivermi</b>: ci metti pochi minuti e le domande che farai saranno migliori.</div>'
+              + '<button type="button" class="cta-secondaria" data-vaivideo="' + id + '">Guarda il video</button>'
+            : '')
+      +   '<div class="pre-dopo">'
+      +     '<div class="pre-dt">Cosa succede quando mi scrivi</div>'
+      +     'Apriamo una <b>chat di gruppo dedicata ai tuoi cicli</b>, io e te. Dentro ci metto il bot Telegram che ti guida passo passo:'
+      +     '<ul class="pre-ul">'
+      +       '<li>l\'iscrizione ai due broker</li>'
+      +       '<li>il pagamento della VPS</li>'
+      +       '<li>l\'avvio del primo ciclo</li>'
+      +     '</ul>'
+      +     'Da lì in avanti la gestione resta in quella chat: ogni ciclo che parte e ogni ciclo che si chiude. '
+      +     'Dal bot apri la <b>dashboard</b> che tiene il conto dei cicli e delle fee, quella che vedi nel video.'
+      +   '</div>'
+      +   '<button type="button" class="cta-attiva" data-scrivi="' + id + '" data-url="' + esc(url) + '" style="margin-top:12px">Scrivimi ora</button>'
+      +   '<div class="pre-nota">Hai una domanda che non c\'entra con questa lista? Scrivimi lo stesso.</div>'
+      + '</div>';
+    sh.style.display = 'block';
+  }
+
+  function chiudiPrima(){
+    var sh = document.getElementById('preSheet'); if (sh) sh.style.display = 'none';
+  }
+
   function vaiA(nome){
     var b = document.getElementById(nome === 'scheda' ? 'goScheda' : 'goTutorial');
     if (b) b.click();
@@ -2178,10 +2296,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function schedaContattoHtml(nome){
     // Testo gia' pronto nella chat: cosi' Antonio sa subito DA QUALE prodotto arriva
     // la richiesta e l'utente non scrive a freddo. Prima la chat si apriva vuota.
-    var pre = nome ? ('?text=' + encodeURIComponent('Ciao, vorrei info su ' + nome)) : '';
-    return '<a class="cta-attiva" href="https://t.me/caliblackk' + pre + '" target="_blank" rel="noopener" data-contatto="1"'
+    // Il testo precompilato ora lo costruisce la schermata di mezzo, che sa anche
+    // se il video l'ha visto: qui basta il bottone.
+    return '<button type="button" class="cta-attiva" data-contatto="1"'
       + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px">'
-      + '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Richiedi</a>'
+      + '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Richiedi</button>'
       + '<div class="sc-azioni">'
       +   '<button class="sc-btn" data-share="1">'
       +     '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>'
@@ -2343,9 +2462,32 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var req = t.closest('[data-contatto]');
     if (req) {
       e.preventDefault();
-      if (SC_ID) { try { traccia('richiedi_info', SC_ID, (SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio ? SCHEDE[SC_ID].servizio.nome : '')); } catch(x){} }
-      var uc = req.getAttribute('href');
-      try { if (tg && tg.openLink) tg.openLink(uc); else window.open(uc, '_blank'); } catch(x){ window.open(uc, '_blank'); }
+      // Non apre piu' la chat: apre la schermata che prepara. La chat la apre il
+      // bottone dentro, e li' resta il conteggio di chi scrive davvero.
+      if (SC_ID) { try { traccia('prima_di_scrivere', SC_ID, (SCHEDE[SC_ID] && SCHEDE[SC_ID].servizio ? SCHEDE[SC_ID].servizio.nome : '')); } catch(x){} }
+      if (SC_ID) primaDiScrivere(SC_ID);
+      return;
+    }
+
+    // Dentro la schermata: chiudi, vai al video, oppure scrivi davvero.
+    if (t.closest('[data-preclose]')) { e.preventDefault(); chiudiPrima(); return; }
+    var vv = t.closest('[data-vaivideo]');
+    if (vv) {
+      e.preventDefault();
+      chiudiPrima();
+      if (SC_ID) { try { traccia('va_al_video', SC_ID); } catch(x){} }
+      SC_TAB = 'pan'; if (SC_ID) ridisegnaScheda(SC_ID);
+      var bd = document.querySelector('.body'); if (bd) bd.scrollTop = 0;
+      return;
+    }
+    var scr = t.closest('[data-scrivi]');
+    if (scr) {
+      e.preventDefault();
+      var sid = parseInt(scr.getAttribute('data-scrivi')) || SC_ID;
+      if (sid) { try { traccia('richiedi_info', sid, (SCHEDE[sid] && SCHEDE[sid].servizio ? SCHEDE[sid].servizio.nome : '')); } catch(x){} }
+      chiudiPrima();
+      var us = scr.getAttribute('data-url');
+      try { if (tg && tg.openLink) tg.openLink(us); else window.open(us, '_blank'); } catch(x){ window.open(us, '_blank'); }
       return;
     }
 
