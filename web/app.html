@@ -838,33 +838,34 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    Staccata invece si legge per quello che e', una scelta editoriale.
    Il bordo e' l'unico dell'app: qui serve a dire "questa non e' in fila con le
    altre", ed e' l'unico punto dove quel segnale non ha alternative. */
-/* EVENTO. In cima alla home, sopra il menu. Una card sola, piatta: il bordo
-   caldo basta a staccarla dal resto. Dentro tre blocchi e nient'altro:
-   cos'e', quando e dove, quanto manca con l'azione accanto. */
+/* EVENTO. In cima alla home, sopra il menu, in due card impilate: la prima
+   dice cos'e' (logo, nome, titolo, orari), la seconda chiede di muoversi
+   (quanto manca e il pulsante). Separate, ognuna fa una cosa sola. */
 #eventoHome:empty{display:none}
-#eventoHome{margin:14px 20px 4px}
-.ev-card{display:block;width:100%;text-align:left;color:var(--tx);background:var(--s0);
-  border:1px solid rgba(255,138,92,.45);border-radius:14px;padding:15px 16px 14px;
-  font-family:var(--sans);cursor:pointer}
-.ev-card:active{transform:scale(.99)}
-.ev-card + .ev-card{margin-top:10px}
-.ev-occ{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#FF8A5C}
-.ev-bozza{font-size:10.5px;letter-spacing:.06em;color:var(--mut);border:1px solid var(--line2);
-  border-radius:5px;padding:2px 6px}
-.ev-nome{font-size:18px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:8px 0 4px;text-wrap:balance}
-.ev-dove{font-size:13.5px;color:var(--dim)}
-.ev-giu{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
-.ev-lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
-/* Il conto alla rovescia in una riga sola, cifre tabellari: al passare dei
-   secondi non si sposta niente. */
-.ev-conto{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.1;margin-top:3px;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.ev-conto small{font-size:13px;font-weight:700;color:var(--mut);margin:0 3px 0 1px}
-.ev-scarso{font-size:12.5px;font-weight:700;color:#FF8A5C;margin-top:4px}
-.ev-btn{flex:none;background:#FF8A5C;color:#2A0E04;border-radius:10px;padding:11px 14px;
-  font-size:14px;font-weight:800;white-space:nowrap}
+#eventoHome{margin:14px 20px 4px;display:flex;flex-direction:column;gap:8px}
+.ev-a,.ev-b{display:block;width:100%;text-align:left;color:var(--tx);background:var(--s0);
+  border:1px solid var(--line);border-radius:14px;font-family:var(--sans);cursor:pointer}
+.ev-a:active,.ev-b:active{transform:scale(.99)}
+.ev-a{display:flex;gap:13px;align-items:flex-start;padding:14px 16px}
+.ev-a .flogo{flex:none;width:52px;height:52px;margin:0}
+.ev-testo{min-width:0;flex:1}
+.ev-chi{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:13px;font-weight:600;color:var(--dim)}
+.ev-bozza{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--mut);border:1px solid var(--line2);border-radius:5px;padding:1px 6px}
+.ev-titolo{font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.25;margin:3px 0 7px;text-wrap:balance}
+.ev-orari{font-size:13.5px;font-weight:600;color:#FF8A5C}
+.ev-dove2{font-size:13px;color:var(--mut);margin-top:2px}
+/* La card del conto alla rovescia: e' quella con il colore, perche' e' quella
+   che chiede di fare qualcosa. */
+.ev-b{padding:13px 16px 14px;border-color:rgba(255,138,92,.45)}
+.ev-b-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.ev-b-testa span{color:var(--mut)}
+.ev-b-testa em{font-style:normal;color:#FF8A5C;letter-spacing:.04em}
+.ev-b .ev-timer{margin:10px 0 12px}
+.ev-cta{display:block;text-align:center;background:#FF8A5C;color:#2A0E04;border-radius:10px;
+  padding:13px;font-size:15px;font-weight:800}
 /* Il timer a caselle resta dentro la linguetta Evento della scheda. */
 .ev-timer{display:flex;gap:6px;margin-top:13px}
 .ev-timer div{flex:1;background:var(--s2);border-radius:9px;padding:8px 0 6px;text-align:center}
@@ -1456,7 +1457,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=189"></script>
+<script src="identikit.js?v=190"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -1672,6 +1673,15 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     } catch (e) { return ''; }
   }
 
+  function giornoOra(t){
+    try {
+      var d = new Date(t);
+      var g = d.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long' });
+      var h = d.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+      return g.charAt(0).toUpperCase() + g.slice(1) + ' \u00b7 ore ' + h;
+    } catch (e) { return ''; }
+  }
+
   function renderEvento(){
     var box = document.getElementById('eventoHome');
     if (!box) return;
@@ -1680,28 +1690,23 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (!vivi.length) { box.innerHTML = ''; return; }
     box.innerHTML = vivi.map(function(e){
       var t = new Date(e.quando).getTime();
-      var p = pezziTempo(t);
-      return '<button type="button" class="ev-card" data-evento="' + e.servizio_id + '">'
-        // 1. cos'e'
-        + '<div class="ev-occ"><span>Webinar dal vivo \u00b7 ' + esc(e.servizio || '') + '</span>'
-        +   (e.bozza ? '<span class="ev-bozza">bozza \u00b7 solo tu</span>' : '') + '</div>'
-        + '<div class="ev-nome">' + esc(e.nome) + '</div>'
-        // 2. quando e dove, in una riga
-        + '<div class="ev-dove">' + esc(quandoBreve(t)) + ' \u00b7 ' + esc(e.dove || 'Online') + '</div>'
-        // 3. quanto manca e quanti posti, con l'azione accanto
-        + '<div class="ev-giu">'
-        +   '<div style="min-width:0">'
-        +     '<div class="ev-lab">Inizia tra</div>'
-        +     '<div class="ev-conto" data-timer="' + t + '">'
-        +       '<b data-u="g">' + p.g + '</b><small>g</small>'
-        +       '<b data-u="h">' + dueCifre(p.h) + '</b><small>h</small>'
-        +       '<b data-u="m">' + dueCifre(p.m) + '</b><small>m</small>'
-        +       '<b data-u="s">' + dueCifre(p.s) + '</b><small>s</small>'
-        +     '</div>'
-        +     '<div class="ev-scarso">' + esc(e.scarsita || 'Posti limitati') + '</div>'
+      return ''
+        // Card 1: cos'e'. Logo come nella lista, cosi' si riconosce la scheda.
+        + '<button type="button" class="ev-a" data-evento="' + e.servizio_id + '">'
+        +   logoHtml({ logo_url: e.logo_url, logo_pieno: e.logo_pieno })
+        +   '<div class="ev-testo">'
+        +     '<div class="ev-chi"><span>' + esc(e.servizio || '') + '</span>'
+        +       (e.bozza ? '<span class="ev-bozza">bozza \u00b7 solo tu</span>' : '') + '</div>'
+        +     '<div class="ev-titolo">' + esc(e.nome) + '</div>'
+        +     '<div class="ev-orari">' + esc(giornoOra(t)) + '</div>'
+        +     (e.dove ? '<div class="ev-dove2">' + esc(e.dove) + '</div>' : '')
         +   '</div>'
-        +   '<span class="ev-btn">' + esc(e.bottone || 'Prendi il posto') + '</span>'
-        + '</div>'
+        + '</button>'
+        // Card 2: quanto manca, e il pulsante.
+        + '<button type="button" class="ev-b" data-evento="' + e.servizio_id + '">'
+        +   '<div class="ev-b-testa"><span>Inizia tra</span><em>' + esc(e.scarsita || 'Posti limitati') + '</em></div>'
+        +   timerHtml(t)
+        +   '<span class="ev-cta">' + esc(e.bottone || 'Prendi il tuo posto') + '</span>'
         + '</button>';
     }).join('');
   }
