@@ -1539,7 +1539,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=200"></script>
+<script src="identikit.js?v=201"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -3625,9 +3625,25 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   (function(){
     var app = document.querySelector('.app');
     if (!app) return;
+    // Un video lasciato in una scheda non deve continuare a suonare in home: appena
+    // la scheda non e' piu' la schermata attiva, tutto quello che c'e' dentro va in
+    // pausa. File video con pause(); YouTube e Vimeo con il loro comando via
+    // postMessage (il player YouTube e' aperto con enablejsapi=1).
+    function fermaVideo(radice){
+      if (!radice) return;
+      radice.querySelectorAll('video').forEach(function(v){ try { if (!v.paused) v.pause(); } catch(e){} });
+      radice.querySelectorAll('iframe').forEach(function(f){
+        var src = f.getAttribute('src') || '';
+        try {
+          if (/youtube(-nocookie)?\.com/.test(src)) f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
+          else if (/vimeo\.com/.test(src)) f.contentWindow.postMessage(JSON.stringify({ method: 'pause' }), '*');
+        } catch(e){}
+      });
+    }
     function sync(){
       var on = app.querySelector('.scr.on');
       var quale = on ? on.getAttribute('data-s') : 'home';
+      app.querySelectorAll('.scr:not(.on)').forEach(fermaVideo);
       app.classList.toggle('on-home', quale === 'home');
       app.setAttribute('data-sec', quale);   // pilota --sec: arancio HUB / verde Affiliazione / blu Profilo
     }
