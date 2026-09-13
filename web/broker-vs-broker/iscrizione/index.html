@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Iscrizione · Broker vs Broker</title>
-<meta name="description" content="Gli otto passi per partire con Broker vs Broker.">
+<meta name="description" content="I passi per partire con Broker vs Broker.">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap">
 <style>
@@ -17,10 +17,10 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
-.foglio{max-width:660px;margin:0 auto;padding:34px 20px 80px}
+.foglio{max-width:660px;margin:0 auto;padding:22px 20px 60px}
 header b{font-family:var(--disp);font-weight:800;font-size:17px;letter-spacing:-.01em;display:block}
 header span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);letter-spacing:-.03em;margin:30px 0 12px;text-wrap:balance}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);letter-spacing:-.03em;margin:4px 0 12px;text-wrap:balance}
 .occhiello{color:var(--dim);font-size:16px;margin:0;max-width:52ch}
 .quanto{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 .quanto span{background:var(--s1);border:1px solid var(--line2);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--dim)}
@@ -40,20 +40,32 @@ h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);lett
 .accetto.ok{color:var(--acc)}
 .nota-acc{margin:10px 0 0;font-size:12.5px;color:var(--mut)}
 
-/* i passi sono una sequenza vera: il filo a sinistra lo dice */
-.passi{margin-top:34px;position:relative}
-.passi::before{content:"";position:absolute;left:17px;top:12px;bottom:60px;width:1px;background:var(--line2)}
-.passo{display:grid;grid-template-columns:36px 1fr;gap:16px;margin-bottom:34px;position:relative}
+/* i passi sono card in sequenza: una chiusa si sblocca quando la precedente e' fatta */
+.passi{margin-top:26px;display:flex;flex-direction:column;gap:12px}
+.passo{border:1px solid var(--line2);border-radius:12px;background:var(--s0);padding:16px}
+.testa-passo{display:flex;gap:13px;align-items:flex-start}
+.tit-passo{min-width:0}
 .num{
-  width:36px;height:36px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);
+  flex:none;width:34px;height:34px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);
   display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;
-  font-size:15px;color:var(--dim);position:relative;z-index:1
+  font-size:15px;color:var(--dim)
 }
+.passo.ok{border-color:rgba(37,207,110,.45)}
 .passo.ok .num{background:var(--acc);border-color:var(--acc);color:var(--on)}
-.testo h2{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.02em;margin:4px 0 2px}
-.testo .sot{color:var(--mut);font-size:13.5px;margin:0 0 14px}
-.testo p{font-size:15px;color:var(--dim);margin:12px 0}
-.testo b{color:var(--tx)}
+.obbl{display:inline-block;vertical-align:3px;margin-left:6px;font-family:var(--sans);font-size:10.5px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--amber);background:rgba(255,180,61,.12);border-radius:5px;padding:2px 7px}
+.corpo-passo{margin-top:12px}
+.chiusa{display:none;margin:10px 0 0;font-size:13.5px;color:var(--mut)}
+.passo.chiuso{opacity:.55}
+.passo.chiuso .corpo-passo{display:none}
+.passo.chiuso .chiusa{display:block}
+.passo.chiuso .num{color:var(--mut)}
+.supporto{margin-top:26px;text-align:center}
+.supporto .bt{display:block;background:var(--s1);color:var(--tx);border:1px solid var(--line2)}
+.tit-passo h2{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.02em;margin:3px 0 2px}
+.tit-passo .sot{color:var(--mut);font-size:13.5px;margin:0}
+.corpo-passo p{font-size:15px;color:var(--dim);margin:12px 0}
+.passo b{color:var(--tx)}
 .car{font-size:14.5px;color:var(--dim);padding:7px 0;border-bottom:1px solid var(--line)}
 .car:first-of-type{border-top:1px solid var(--line)}
 .bt{
@@ -62,8 +74,8 @@ h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);lett
 }
 .bt:hover{background:#1BB65D}
 .bt.piccolo{background:var(--s1);color:var(--tx);border:1px solid var(--line2);padding:8px 14px;font-size:13.5px;font-weight:600}
-.avviso{border-left:2px solid var(--amber);padding:2px 0 2px 13px;color:var(--dim)!important;font-size:14px!important}
-.avviso.rosso{border-color:var(--coral)}
+.avviso{background:rgba(255,180,61,.10);border-radius:8px;padding:9px 12px;color:var(--dim)!important;font-size:14px!important}
+.avviso.rosso{background:rgba(255,97,84,.10)}
 details summary{cursor:pointer;color:var(--dim);font-size:14.5px;padding:9px 0;border-top:1px solid var(--line)}
 details[open] summary{color:var(--tx)}
 pre{
@@ -82,8 +94,6 @@ a{color:var(--acc)}
 </head>
 <body>
 <div class="foglio">
-  <header><b>Broker vs Broker</b><span>iscrizione</span></header>
-
   <h1>Guida step by step all'iscrizione</h1>
 
   <div class="patto">
@@ -113,11 +123,15 @@ a{color:var(--acc)}
 
   <div class="passi">
 
-      <section class="passo">
-        <div class="num">1</div>
-        <div class="testo">
-          <h2>Total FX</h2>
-          <p class="sot">Qui arriva il bonus</p>
+      <section class="passo" data-card="1">
+        <div class="testa-passo">
+          <div class="num">1</div>
+          <div class="tit-passo">
+            <h2>Total FX <span class="obbl">Obbligatorio</span></h2>
+            <p class="sot">Qui arriva il bonus</p>
+          </div>
+        </div>
+        <div class="corpo-passo">
           
 <a class="bt" href="https://secure.totalfx.com/Registration/Main/Account?dest=live&camp=255" target="_blank" rel="noopener">Apri il conto Total FX</a>
 <div class="car">MT5 Standard · leva <b>1:1000</b> · <b>EUR</b></div>
@@ -143,13 +157,18 @@ Cordiali saluti,
 
           <label class="fatto"><input type="checkbox" data-passo="1"> Fatto</label>
         </div>
+        <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
       </section>
 
-      <section class="passo">
-        <div class="num">2</div>
-        <div class="testo">
-          <h2>Roboforex</h2>
-          <p class="sot">Qui puoi depositare subito, in USDT</p>
+      <section class="passo" data-card="2">
+        <div class="testa-passo">
+          <div class="num">2</div>
+          <div class="tit-passo">
+            <h2>Roboforex <span class="obbl">Obbligatorio</span></h2>
+            <p class="sot">Qui puoi depositare subito, in USDT</p>
+          </div>
+        </div>
+        <div class="corpo-passo">
           
 <a class="bt" href="https://rinfinity.com/a/krozt" target="_blank" rel="noopener">Apri il conto Roboforex</a>
 <div class="car">MT5 ECN · leva <b>1:500</b> · <b>EUR</b></div>
@@ -160,74 +179,61 @@ Cordiali saluti,
 
           <label class="fatto"><input type="checkbox" data-passo="2"> Fatto</label>
         </div>
+        <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
       </section>
 
-      <section class="passo">
-        <div class="num">3</div>
-        <div class="testo">
-          <h2>Fusion</h2>
-          <p class="sot">Serve per l'argento</p>
+      <section class="passo" data-card="3">
+        <div class="testa-passo">
+          <div class="num">3</div>
+          <div class="tit-passo">
+            <h2>Fusion <span class="obbl">Obbligatorio</span></h2>
+            <p class="sot">Serve per l'argento</p>
+          </div>
+        </div>
+        <div class="corpo-passo">
           <a class="bt" href="https://fusionmarkets.com/?refcode=110700" target="_blank" rel="noopener">Apri il conto Fusion</a>
 <div class="car"><b>MT5</b> · <b>Zero</b> · <b>EUR</b> · leva <b>1:500</b> · ref code <code>110700</code></div>
           <label class="fatto"><input type="checkbox" data-passo="3"> Fatto</label>
         </div>
+        <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
       </section>
 
-      <section class="passo">
-        <div class="num">4</div>
-        <div class="testo">
-          <h2>Monaxa</h2>
-          <p class="sot">Si può aprire anche dopo</p>
+      <section class="passo" data-card="4">
+        <div class="testa-passo">
+          <div class="num">4</div>
+          <div class="tit-passo">
+            <h2>Monaxa <span class="obbl">Obbligatorio</span></h2>
+            <p class="sot">L'ultimo conto da aprire</p>
+          </div>
+        </div>
+        <div class="corpo-passo">
           <a class="bt" href="https://account.monaxa.com/links/go/23033" target="_blank" rel="noopener">Apri il conto Monaxa</a>
 <div class="car">Conto MT5 STANDARD · leva 1:500 · valuta EUR</div>
           <label class="fatto"><input type="checkbox" data-passo="4"> Fatto</label>
         </div>
+        <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
       </section>
 
-      <section class="passo">
-        <div class="num">5</div>
-        <div class="testo">
-          <h2>Il tuo gruppo Telegram</h2>
-          <p class="sot">Lo crei tu</p>
+      <section class="passo" data-card="5">
+        <div class="testa-passo">
+          <div class="num">5</div>
+          <div class="tit-passo">
+            <h2>Il tuo gruppo Telegram </h2>
+            <p class="sot">Lo crei tu</p>
+          </div>
+        </div>
+        <div class="corpo-passo">
           <div class="car">Crea un gruppo e chiamalo col <b>tuo nome</b></div>
 <div class="car">Aggiungi <a href="https://t.me/caliblackk" target="_blank" rel="noopener"><b>@caliblackk</b></a> e mettilo <b>amministratore</b></div>
 <div class="car">Scrivi nel gruppo che hai finito</div>
           <label class="fatto"><input type="checkbox" data-passo="5"> Fatto</label>
         </div>
-      </section>
-
-      <section class="passo">
-        <div class="num">6</div>
-        <div class="testo">
-          <h2>Il bot</h2>
-          <p class="sot">Lo aggiungiamo noi</p>
-          <p>Appena siamo amministratori aggiungiamo il bot al gruppo e lo avviamo.</p>
-          <label class="fatto"><input type="checkbox" data-passo="6"> Fatto</label>
-        </div>
-      </section>
-
-      <section class="passo">
-        <div class="num">7</div>
-        <div class="testo">
-          <h2>VPS e dati dei conti</h2>
-          <p class="sot">Te li chiede il bot, nel gruppo</p>
-          <div class="car">Paghi la VPS: <b>25 € al mese</b>, in USDT</div>
-<div class="car">Mandi i dati di accesso dei conti</div>
-          <label class="fatto"><input type="checkbox" data-passo="7"> Fatto</label>
-        </div>
-      </section>
-
-      <section class="passo">
-        <div class="num">8</div>
-        <div class="testo">
-          <h2>Si parte</h2>
-          <p class="sot">Quando il setup è pronto</p>
-          <p>Ti avvisiamo noi: <b>bilanci i conti</b> e parte il primo ciclo.</p>
-          <label class="fatto"><input type="checkbox" data-passo="8"> Fatto</label>
-        </div>
+        <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
       </section>
   </div>
 
+
+  <div class="supporto"><a class="bt" href="https://t.me/caliblackk" target="_blank" rel="noopener">Supporto</a></div>
 
   <footer>
     Cashly fa da tramite per il servizio in affiliazione: non gestisce capitali
@@ -255,16 +261,28 @@ acc.addEventListener("change", function () {
   segna(stato);
   acc.closest(".accetto").classList.toggle("ok", acc.checked);
 });
+// Una card si apre solo se tutte quelle prima sono fatte. Se si toglie la
+// spunta a una card, quelle dopo si richiudono: la sequenza resta vera.
+var card = Array.prototype.slice.call(document.querySelectorAll(".passo[data-card]"));
+function aggiorna() {
+  var aperta = true;
+  card.forEach(function (el) {
+    var n = el.dataset.card;
+    var fatta = !!stato[n];
+    el.classList.toggle("chiuso", !aperta);
+    el.classList.toggle("ok", aperta && fatta);
+    el.querySelector("input[data-passo]").checked = fatta;
+    aperta = aperta && fatta;
+  });
+}
 document.querySelectorAll("input[data-passo]").forEach(function (c) {
-  var n = c.dataset.passo;
-  c.checked = !!stato[n];
-  c.closest(".passo").classList.toggle("ok", c.checked);
   c.addEventListener("change", function () {
-    stato[n] = c.checked;
+    stato[c.dataset.passo] = c.checked;
     segna(stato);
-    c.closest(".passo").classList.toggle("ok", c.checked);
+    aggiorna();
   });
 });
+aggiorna();
 document.querySelectorAll("[data-copia]").forEach(function (b) {
   b.addEventListener("click", function () {
     var t = document.getElementById(b.dataset.copia).textContent;
