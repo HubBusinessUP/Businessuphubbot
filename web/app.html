@@ -1539,7 +1539,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=199"></script>
+<script src="identikit.js?v=200"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2749,7 +2749,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     if (s.solo_contatto) {
       return '<button type="button" class="cta-attiva" data-contatto="1"'
         + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px">'
-        + '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Richiedi</button>';
+        // Il testo del pulsante si puo' scrivere nella scheda (cta.attiva); senza, "Inizia".
+        + esc((s.cta && s.cta.attiva) || 'Inizia') + '</button>';
     }
     return _schedaBody(d);
   }
