@@ -591,6 +591,16 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    deve riconoscere subito da dove viene, per questo logo/titolo/sottotitolo
    restano nello stesso ordine. */
 .sctesta{display:flex;align-items:center;gap:14px;padding:16px 20px 4px}
+/* SCHEDA A CARD. Testa e pulsante sono due card una sotto l'altra: la prima dice
+   cos'e', la seconda cosa fare. Stessa larghezza e stesso bordo, cosi' si leggono
+   come una colonna sola; le linguette sotto restano fuori dalle card. */
+.sc-card{margin:12px 20px 0;background:var(--s0);border:1px solid var(--line);border-radius:16px}
+.sc-head{margin-top:14px;padding-bottom:12px}
+.sc-head .sctesta{padding:14px 14px 2px}
+.sc-head .sccat{padding-left:14px;padding-right:14px}
+.sc-cta{padding:12px}
+.sc-cta .cta-attiva{margin-top:0}
+.scfondo .sc-azioni{margin-top:0}
 .sctesta .flogo{width:62px;height:62px;border-radius:15px;font-size:25px}
 .sctit{flex:1;min-width:0}
 .sctit h1{margin:0;font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.25;color:var(--tx)}
@@ -1516,7 +1526,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=196"></script>
+<script src="identikit.js?v=197"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2602,12 +2612,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // a che punto e': cosi' la prima risposta non e' "di cosa stiamo parlando?".
     var pre = 'Ciao Antonio, vorrei info su ' + (s.nome || 'un business della lista') + '. '
       + (visto ? 'Ho letto la scheda e visto il video.' : 'Ho letto la scheda nell\'app.');
-    var url = 'https://t.me/caliblackk?text=' + encodeURIComponent(pre);
+    // Il pulsante apre la guida all'iscrizione: e' li' che si fanno i passi, e chi
+    // arriva in chat ci arriva gia' con i conti aperti.
+    var url = 'https://hub.cashlypro.com/broker-vs-broker/iscrizione/';
     sh.innerHTML = '<div data-preclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div>'
       + '<div class="pre-card">'
       +   '<div data-preclose="1" style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px;cursor:pointer"></div>'
-      +   '<h4>Prima di scrivermi</h4>'
-      +   '<p class="pre-int">Ti rispondo io, non un assistente. Queste sono le cose che ti chiederei comunque: se te le sai già, scrivimi e partiamo da lì.</p>'
+      +   '<h4>Cosa devi sapere prima di iniziare</h4>'
+      +   '<p class="pre-int">Le cose da avere chiare prima di aprire i conti. Poi la guida ti porta passo passo fino al primo ciclo.</p>'
       +   righe
       +   (video && !visto
             ? '<div class="pre-dopo">Nel video spiego tutto per intero. <b>Guardalo prima di scrivermi</b>: ci metti pochi minuti e le domande che farai saranno migliori.</div>'
@@ -2624,8 +2636,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +     'Da lì in avanti la gestione resta in quella chat: ogni ciclo che parte e ogni ciclo che si chiude. '
       +     'Dal bot apri la <b>dashboard</b> che tiene il conto dei cicli e delle fee, quella che vedi nel video.'
       +   '</div>'
-      +   '<button type="button" class="cta-attiva" data-scrivi="' + id + '" data-url="' + esc(url) + '" style="margin-top:12px">Scrivimi ora</button>'
-      +   '<div class="pre-nota">Hai una domanda che non c\'entra con questa lista? Scrivimi lo stesso.</div>'
+      +   '<button type="button" class="cta-attiva" data-scrivi="' + id + '" data-url="' + esc(url) + '" style="margin-top:12px">Apri la guida all\'iscrizione</button>'
+      +   '<div class="pre-nota">Hai una domanda prima di iniziare? Usa Supporto in fondo alla scheda.</div>'
       + '</div>';
     sh.style.display = 'block';
   }
@@ -2666,6 +2678,29 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '</div>';
   }
 
+  // Solo l'azione del prodotto, senza Supporto e Condividi: quelli stanno in
+  // fondo alla scheda, uguali per tutti. I prodotti che si chiudono in chat
+  // hanno Richiedi; gli altri il pulsante verso il fornitore (o "non ancora
+  // disponibile" se non si possono attivare).
+  function ctaScheda(d){
+    var s = d.servizio || {};
+    if (s.solo_contatto) {
+      return '<button type="button" class="cta-attiva" data-contatto="1"'
+        + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px">'
+        + '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Richiedi</button>';
+    }
+    return _schedaBody(d);
+  }
+
+  function azioniScheda(){
+    return '<div class="sc-azioni">'
+      +   '<a class="sc-btn" href="https://t.me/caliblackk" target="_blank" rel="noopener" data-ext="1">'
+      +     '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.3A8 8 0 0 1 13 4a8 8 0 0 1 8 8Z"/></svg>Supporto</a>'
+      +   '<button class="sc-btn" data-share="1">'
+      +     '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Condividi</button>'
+      + '</div>';
+  }
+
   function schedaScreenHtml(d){
     var s0 = d.servizio || {};
     // I prodotti che si chiudono in chat mostrano tutto quello che hanno, come
@@ -2680,8 +2715,12 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // L'evento ha la sua linguetta finche' non e' passato, poi sparisce da solo.
     var ev = scWebinar(d);
     if (!ev && SC_TAB === 'ev') SC_TAB = 'pan';
-    return scTesta(d)
-      + (ev ? '<div style="margin:14px 20px 0">' + bannerEventoScheda(d) + '</div>' : '')
+    // Con un evento e la scheda non attivabile il pulsante non c'e': un "non
+    // ancora disponibile" sotto un webinar a cui ci si puo' iscrivere confonde.
+    var cta = (ev && !d.attivo) ? '' : ctaScheda(d);
+    return '<div class="sc-card sc-head">' + scTesta(d) + '</div>'
+      + (cta ? '<div class="sc-card sc-cta">' + cta + '</div>' : '')
+      + (ev ? '<div style="margin:10px 20px 0">' + bannerEventoScheda(d) + '</div>' : '')
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
       +   (car ? '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>' : '')
@@ -2690,13 +2729,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + '<div class="scpane"' + (SC_TAB === 'pan' ? '' : ' hidden') + ' data-pane="pan">' + scPanoramica(d) + '</div>'
       + (car ? '<div class="scpane"' + (SC_TAB === 'car' ? '' : ' hidden') + ' data-pane="car">' + car + '</div>' : '')
       + (ev ? '<div class="scpane"' + (SC_TAB === 'ev' ? '' : ' hidden') + ' data-pane="ev">' + ev + '</div>' : '')
-      // Con un evento in corso il fondo del prodotto sparisce: un "non ancora
-      // disponibile" sotto un webinar a cui ci si puo' iscrivere confonde. L'azione
-      // di questa scheda e' il modulo dell'evento.
-      // Con un evento il fondo resta se la scheda e' attiva: pulsante, Supporto e
-      // Condividi come in tutte le schede. Sparisce solo se direbbe "non ancora
-      // disponibile" sotto un webinar a cui ci si puo' iscrivere.
-      + (ev && !d.attivo ? '' : '<div class="scfondo">' + (s0.solo_contatto ? schedaContattoHtml(s0.nome) : schedaHtml(d)) + '</div>');
+      // In fondo, uguali per tutte le schede.
+      + '<div class="scfondo">' + azioniScheda() + '</div>';
   }
 
   function traccia(azione, riferimento, dettaglio){

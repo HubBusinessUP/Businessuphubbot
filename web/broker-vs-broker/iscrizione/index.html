@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iscrizione · Broker vs Broker</title>
+<meta name="description" content="Gli otto passi per partire con Broker vs Broker.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap">
+<style>
+:root{
+  --bg:#131418; --s0:#191B20; --s1:#1F2128; --line:#262932; --line2:#333845;
+  --tx:#F6F7F9; --dim:#AAB0BB; --mut:#7B828F; --acc:#25CF6E; --on:#04210F;
+  --amber:#FFB43D; --coral:#FF6154;
+  --sans:'Inter',-apple-system,system-ui,sans-serif;
+  --disp:'Manrope',-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+.foglio{max-width:660px;margin:0 auto;padding:34px 20px 80px}
+header b{font-family:var(--disp);font-weight:800;font-size:17px;letter-spacing:-.01em;display:block}
+header span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);letter-spacing:-.03em;margin:30px 0 12px;text-wrap:balance}
+.occhiello{color:var(--dim);font-size:16px;margin:0;max-width:52ch}
+.quanto{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.quanto span{background:var(--s1);border:1px solid var(--line2);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--dim)}
+
+/* il patto in breve: si legge in dieci secondi, il testo lungo sta sotto */
+.patto{margin:28px 0 0;border:1px solid var(--line2);border-radius:10px;background:var(--s0);padding:20px 20px 18px}
+.patto h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0 0 12px;letter-spacing:-.02em}
+.patto ul{margin:0;padding:0;list-style:none}
+.patto li{font-size:14.5px;color:var(--dim);padding:8px 0 8px 22px;position:relative;border-bottom:1px solid var(--line)}
+.patto li::before{content:"";position:absolute;left:4px;top:15px;width:7px;height:7px;border-radius:2px;background:var(--acc)}
+.patto b{color:var(--tx)}
+.patto details{margin-top:12px}
+.patto summary{cursor:pointer;color:var(--mut);font-size:13.5px;padding:8px 0}
+.patto details p{font-size:13.5px;color:var(--dim)}
+.accetto{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14.5px;color:var(--dim);cursor:pointer;user-select:none}
+.accetto input{width:18px;height:18px;accent-color:var(--acc);flex:none}
+.accetto.ok{color:var(--acc)}
+.nota-acc{margin:10px 0 0;font-size:12.5px;color:var(--mut)}
+
+/* i passi sono una sequenza vera: il filo a sinistra lo dice */
+.passi{margin-top:34px;position:relative}
+.passi::before{content:"";position:absolute;left:17px;top:12px;bottom:60px;width:1px;background:var(--line2)}
+.passo{display:grid;grid-template-columns:36px 1fr;gap:16px;margin-bottom:34px;position:relative}
+.num{
+  width:36px;height:36px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;
+  font-size:15px;color:var(--dim);position:relative;z-index:1
+}
+.passo.ok .num{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.testo h2{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.02em;margin:4px 0 2px}
+.testo .sot{color:var(--mut);font-size:13.5px;margin:0 0 14px}
+.testo p{font-size:15px;color:var(--dim);margin:12px 0}
+.testo b{color:var(--tx)}
+.car{font-size:14.5px;color:var(--dim);padding:7px 0;border-bottom:1px solid var(--line)}
+.car:first-of-type{border-top:1px solid var(--line)}
+.bt{
+  display:inline-block;background:var(--acc);color:var(--on);text-decoration:none;font-weight:700;
+  padding:12px 20px;border-radius:6px;margin:6px 0 10px;font-size:15px;border:0;cursor:pointer;font-family:inherit
+}
+.bt:hover{background:#1BB65D}
+.bt.piccolo{background:var(--s1);color:var(--tx);border:1px solid var(--line2);padding:8px 14px;font-size:13.5px;font-weight:600}
+.avviso{border-left:2px solid var(--amber);padding:2px 0 2px 13px;color:var(--dim)!important;font-size:14px!important}
+.avviso.rosso{border-color:var(--coral)}
+details summary{cursor:pointer;color:var(--dim);font-size:14.5px;padding:9px 0;border-top:1px solid var(--line)}
+details[open] summary{color:var(--tx)}
+pre{
+  background:var(--s0);border:1px solid var(--line);border-radius:6px;padding:14px;
+  white-space:pre-wrap;word-break:break-word;font-size:12.5px;color:var(--dim);font-family:ui-monospace,Menlo,Consolas,monospace
+}
+.fatto{display:inline-flex;align-items:center;gap:9px;margin-top:12px;font-size:14px;color:var(--mut);cursor:pointer;user-select:none}
+.fatto input{width:17px;height:17px;accent-color:var(--acc)}
+.passo.ok .fatto{color:var(--acc)}
+.fine{border:1px solid var(--line2);border-radius:10px;background:var(--s0);padding:24px 22px;margin-top:10px}
+.fine h2{font-family:var(--disp);font-weight:800;font-size:22px;margin:0 0 8px;letter-spacing:-.02em}
+.fine p{color:var(--dim);font-size:15px;margin:0 0 16px}
+footer{margin-top:40px;color:var(--mut);font-size:12.5px;line-height:1.6;border-top:1px solid var(--line);padding-top:18px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="foglio">
+  <header><b>Broker vs Broker</b><span>iscrizione</span></header>
+
+  <h1>Guida step by step all'iscrizione</h1>
+
+  <div class="patto">
+    <h2>Prima di cominciare</h2>
+    <ul>
+      <li><b>Il capitale resta tuo</b>, sui conti intestati a te.</li>
+      <li><b>Nessuna garanzia di risultato.</b></li>
+      <li><b>Commissione 50% del profitto</b>, solo sui cicli in guadagno.</li>
+      <li><b>VPS 25 € al mese.</b> Nessun vincolo, smetti quando vuoi.</li>
+    </ul>
+    <details><summary>Leggi le condizioni per esteso</summary>
+
+<p>Leggere con attenzione prima di procedere.</p>
+<p>Cashly è uno strumento di condivisione e fa da tramite per il servizio in affiliazione: non gestisce capitali, non esegue operazioni e non è titolare del servizio.</p>
+<p><b>Il capitale resta al titolare.</b> I conti sono intestati al cliente e restano nella sua piena disponibilità, compresi accessi e prelievi.</p>
+<p><b>Nessuna garanzia di risultato.</b> La strategia riduce l'esposizione al mercato ma non elimina i rischi: spread, errori umani, imprevisti tecnici e variazioni delle condizioni applicate dai broker possono ridurre o azzerare il profitto di un ciclo.</p>
+<p>Il rendimento varia da ciclo a ciclo.</p>
+<p><b>Commissione: 50% del profitto netto</b>, dovuta solo sui cicli chiusi in guadagno. In assenza di profitto non è dovuta alcuna commissione.</p>
+<p><b>VPS e gestione: 25 € al mese</b> (circa 28 USDT) per ogni coppia di conti, con scadenza il 21. Copre il server sincronizzato e l'assistenza operativa.</p>
+<p><b>Nessun vincolo di durata.</b> È possibile interrompere in qualsiasi momento e ritirare il capitale.</p>
+<p><b>Nessuna consulenza finanziaria.</b> Non vengono fornite raccomandazioni personalizzate né consulenza in materia di investimenti. Ogni decisione sul proprio capitale resta di esclusiva competenza del cliente.</p>
+<p>Proseguendo si dichiara di aver letto e compreso quanto sopra.</p>
+    </details>
+    <label class="accetto"><input type="checkbox" id="acc"> Ho letto e accetto</label>
+    <p class="nota-acc">L'accettazione che vale te la chiede il bot nel gruppo.</p>
+  </div>
+
+  <div class="passi">
+
+      <section class="passo">
+        <div class="num">1</div>
+        <div class="testo">
+          <h2>Total FX</h2>
+          <p class="sot">Qui arriva il bonus</p>
+          
+<a class="bt" href="https://secure.totalfx.com/Registration/Main/Account?dest=live&camp=255" target="_blank" rel="noopener">Apri il conto Total FX</a>
+<div class="car">MT5 Standard · leva <b>1:1000</b> · <b>EUR</b></div>
+<p class="avviso rosso"><b>Non depositare</b> finché non ti diamo l'ok.</p>
+<details><summary>Ho già un conto Total FX</summary>
+<p>Va collegato a noi: manda questa mail a <b>cz@totalfx.com</b> dall'indirizzo del
+conto, oggetto <b>Richiesta cambio IB</b>.</p>
+<div class="copia"><pre id="mail-ib">Buongiorno,
+
+con la presente richiedo il cambio di Introducing Broker per il mio conto di trading.
+
+Numero conto: [IL TUO NUMERO]
+
+Chiedo il trasferimento sotto l'IB corrispondente a questo link:
+https://secure.totalfx.com/Registration/Main/Account?dest=live&camp=255
+
+Confermo che la richiesta è volontaria e autorizzo il cambio.
+
+Cordiali saluti,
+[Nome e Cognome]</pre>
+<button class="bt piccolo" data-copia="mail-ib">Copia il testo</button></div>
+</details>
+
+          <label class="fatto"><input type="checkbox" data-passo="1"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">2</div>
+        <div class="testo">
+          <h2>Roboforex</h2>
+          <p class="sot">Qui puoi depositare subito, in USDT</p>
+          
+<a class="bt" href="https://rinfinity.com/a/krozt" target="_blank" rel="noopener">Apri il conto Roboforex</a>
+<div class="car">MT5 ECN · leva <b>1:500</b> · <b>EUR</b></div>
+<div class="car">Swap Free · Hedging · codice <b>krozt</b></div>
+<details><summary>Ho già un conto Roboforex</summary>
+<p>Dall'area personale apri un <b>conto trading nuovo</b> con codice
+<b>krozt</b>.</p></details>
+
+          <label class="fatto"><input type="checkbox" data-passo="2"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">3</div>
+        <div class="testo">
+          <h2>Fusion</h2>
+          <p class="sot">Serve per l'argento</p>
+          <a class="bt" href="https://fusionmarkets.com/?refcode=110700" target="_blank" rel="noopener">Apri il conto Fusion</a>
+<div class="car"><b>MT5</b> · <b>Zero</b> · <b>EUR</b> · leva <b>1:500</b> · ref code <code>110700</code></div>
+          <label class="fatto"><input type="checkbox" data-passo="3"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">4</div>
+        <div class="testo">
+          <h2>Monaxa</h2>
+          <p class="sot">Si può aprire anche dopo</p>
+          <a class="bt" href="https://account.monaxa.com/links/go/23033" target="_blank" rel="noopener">Apri il conto Monaxa</a>
+<div class="car">Conto MT5 STANDARD · leva 1:500 · valuta EUR</div>
+          <label class="fatto"><input type="checkbox" data-passo="4"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">5</div>
+        <div class="testo">
+          <h2>Il tuo gruppo Telegram</h2>
+          <p class="sot">Lo crei tu</p>
+          <div class="car">Crea un gruppo e chiamalo col <b>tuo nome</b></div>
+<div class="car">Aggiungi <a href="https://t.me/caliblackk" target="_blank" rel="noopener"><b>@caliblackk</b></a> e mettilo <b>amministratore</b></div>
+<div class="car">Scrivi nel gruppo che hai finito</div>
+          <label class="fatto"><input type="checkbox" data-passo="5"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">6</div>
+        <div class="testo">
+          <h2>Il bot</h2>
+          <p class="sot">Lo aggiungiamo noi</p>
+          <p>Appena siamo amministratori aggiungiamo il bot al gruppo e lo avviamo.</p>
+          <label class="fatto"><input type="checkbox" data-passo="6"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">7</div>
+        <div class="testo">
+          <h2>VPS e dati dei conti</h2>
+          <p class="sot">Te li chiede il bot, nel gruppo</p>
+          <div class="car">Paghi la VPS: <b>25 € al mese</b>, in USDT</div>
+<div class="car">Mandi i dati di accesso dei conti</div>
+          <label class="fatto"><input type="checkbox" data-passo="7"> Fatto</label>
+        </div>
+      </section>
+
+      <section class="passo">
+        <div class="num">8</div>
+        <div class="testo">
+          <h2>Si parte</h2>
+          <p class="sot">Quando il setup è pronto</p>
+          <p>Ti avvisiamo noi: <b>bilanci i conti</b> e parte il primo ciclo.</p>
+          <label class="fatto"><input type="checkbox" data-passo="8"> Fatto</label>
+        </div>
+      </section>
+  </div>
+
+
+  <footer>
+    Cashly fa da tramite per il servizio in affiliazione: non gestisce capitali
+    e non esegue operazioni. Nessuna consulenza finanziaria, nessuna garanzia di
+    risultato. I risultati passati non sono una garanzia di quelli futuri.
+  </footer>
+</div>
+
+<script>
+// le spunte restano su questo telefono, cosi' si riprende da dove si era
+// rimasti; niente viene mandato da nessuna parte
+var CHIAVE = "bvb-iscrizione";
+function leggi() {
+  try { return JSON.parse(localStorage.getItem(CHIAVE) || "{}"); } catch (e) { return {}; }
+}
+function segna(stato) {
+  try { localStorage.setItem(CHIAVE, JSON.stringify(stato)); } catch (e) {}
+}
+var stato = leggi();
+var acc = document.getElementById("acc");
+acc.checked = !!stato.accettato;
+acc.closest(".accetto").classList.toggle("ok", acc.checked);
+acc.addEventListener("change", function () {
+  stato.accettato = acc.checked;
+  segna(stato);
+  acc.closest(".accetto").classList.toggle("ok", acc.checked);
+});
+document.querySelectorAll("input[data-passo]").forEach(function (c) {
+  var n = c.dataset.passo;
+  c.checked = !!stato[n];
+  c.closest(".passo").classList.toggle("ok", c.checked);
+  c.addEventListener("change", function () {
+    stato[n] = c.checked;
+    segna(stato);
+    c.closest(".passo").classList.toggle("ok", c.checked);
+  });
+});
+document.querySelectorAll("[data-copia]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var t = document.getElementById(b.dataset.copia).textContent;
+    var ok = function () { b.textContent = "Copiato"; setTimeout(function () { b.textContent = "Copia il testo"; }, 2000); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { b.textContent = "Copialo a mano"; });
+    else b.textContent = "Copialo a mano";
+  });
+});
+</script>
+</body>
+</html>
