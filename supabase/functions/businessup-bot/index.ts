@@ -211,8 +211,9 @@ async function notifyUser(chatId: number, text: string, btnText: string, path: s
   }
 }
 
-async function sendPhoto(chatId: number, photoFileId: string, caption?: string, markup?: any) {
-  const body: any = { chat_id: chatId, photo: photoFileId }
+async function sendPhoto(chatId: number, photoFileId: string, caption?: string, markup?: any, threadId?: number) {
+  // photo accetta sia il file_id di Telegram sia un indirizzo https dell'immagine.
+  const body: any = { chat_id: chatId, photo: photoFileId, ...(threadId ? { message_thread_id: threadId } : {}) }
   if (caption) body.caption = caption
   if (markup) body.reply_markup = markup
   return fetch(`${TG_API}/sendPhoto`, {
@@ -4518,7 +4519,11 @@ async function cronPostProgrammati() {
     const [gruppoStr, threadStr] = String(dati.dove).split(":")
     const gruppo = parseInt(gruppoStr)
     const thread = threadStr ? parseInt(threadStr) : undefined
-    const res = await sendMessage(gruppo, String(dati.testo), undefined, undefined, thread)
+    // Con una foto il testo va sotto come didascalia (massimo 1024 caratteri);
+    // senza, resta un messaggio di solo testo come prima.
+    const res = dati.foto
+      ? await sendPhoto(gruppo, String(dati.foto), String(dati.testo).slice(0, 1024), undefined, thread)
+      : await sendMessage(gruppo, String(dati.testo), undefined, undefined, thread)
     const esito = await res.json().catch(() => ({}))
 
     if (esito.ok) {
