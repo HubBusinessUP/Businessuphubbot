@@ -1494,6 +1494,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 .sez-vx{font-size:14.5px;color:var(--dim);line-height:1.55;margin-top:3px}
 /* L'immagine sotto la voce prende tutta la larghezza del testo: una schermata
    stretta non si legge. */
+/* I pulsanti link della voce: affiancati, stessi bottoni di Supporto e Condividi. */
+.sez-link{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.sez-link .sc-btn{flex:1 1 140px;min-height:42px;font-size:14px;text-decoration:none}
 .sez-vimg{display:block;width:100%;height:auto;margin-top:10px;border-radius:10px;
   border:1px solid var(--line);background:var(--s2)}
 .sez-fila{display:flex;gap:10px;overflow-x:auto;margin:12px 0 0;padding:0 0 4px;
@@ -1536,7 +1539,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=198"></script>
+<script src="identikit.js?v=199"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2283,6 +2286,11 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
             +   (v.testo ? '<div class="sez-vx">' + esc(v.testo) + '</div>' : '')
             // Solo http(s): un indirizzo diverso qui finirebbe dritto nel DOM.
             +   (v.img && /^https?:\/\//i.test(String(v.img)) ? '<img class="sez-vimg" src="' + esc(v.img) + '" alt="" loading="lazy">' : '')
+            // Pulsanti link sotto la voce. Solo http(s). a[data-ext] li apre con
+            // Telegram e si ferma li': non finiscono fra le uscite verso il fornitore.
+            +   (Array.isArray(v.link) && v.link.length ? '<div class="sez-link">' + v.link.filter(function(k){ return k && /^https?:\/\//i.test(String(k.url || '')); }).map(function(k){
+                  return '<a class="sc-btn" href="' + esc(k.url) + '" target="_blank" rel="noopener" data-ext="1">' + esc(k.testo || 'Apri') + '</a>';
+                }).join('') + '</div>' : '')
             + '</div></div>';
         }).join('');
       } else if (b.tipo === 'immagini') {
