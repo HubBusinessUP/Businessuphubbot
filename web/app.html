@@ -1393,6 +1393,16 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 #discSheet .dsc-txt b{color:var(--tx)}
 /* Il passaggio prima della chat. Sta sopra la scheda, non la sostituisce: si
    chiude e si torna esattamente dov'era, video compreso. */
+/* GUIDA DENTRO L'APP. Tutto schermo, sopra ogni cosa: una barra corta per tornare
+   alla scheda e sotto la pagina della guida, che ha gia' il suo stile. */
+#guidaApp{position:fixed;inset:0;z-index:260;display:flex;flex-direction:column;background:#131418}
+.gd-barra{flex:none;display:flex;align-items:center;gap:10px;padding:10px 14px;
+  padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--line);background:var(--s0)}
+.gd-barra span{font-size:14px;font-weight:700;color:var(--tx)}
+.gd-chiudi{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--acc);
+  font-family:var(--sans);font-size:14.5px;font-weight:600;padding:6px 4px;cursor:pointer}
+.gd-chiudi svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.gd-frame{flex:1;width:100%;border:0;background:#131418}
 #preSheet{position:fixed;inset:0;z-index:210;display:none;--sec:var(--acc);--sec-on:#04210F;--sec-deep:#1BB65D}
 #preSheet .pre-card{position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;
   background:var(--s1);border-radius:16px 16px 0 0;padding:16px 18px 22px}
@@ -1526,7 +1536,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=197"></script>
+<script src="identikit.js?v=198"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2614,7 +2624,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       + (visto ? 'Ho letto la scheda e visto il video.' : 'Ho letto la scheda nell\'app.');
     // Il pulsante apre la guida all'iscrizione: e' li' che si fanno i passi, e chi
     // arriva in chat ci arriva gia' con i conti aperti.
-    var url = 'https://hub.cashlypro.com/broker-vs-broker/iscrizione/';
+    var url = '/broker-vs-broker/iscrizione/';
     sh.innerHTML = '<div data-preclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div>'
       + '<div class="pre-card">'
       +   '<div data-preclose="1" style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px;cursor:pointer"></div>'
@@ -2640,6 +2650,50 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       +   '<div class="pre-nota">Hai una domanda prima di iniziare? Usa Supporto in fondo alla scheda.</div>'
       + '</div>';
     sh.style.display = 'block';
+  }
+
+  // ---- GUIDA DENTRO L'APP ----
+  // Le pagine di hub.cashlypro.com stanno sullo stesso dominio dell'app: si
+  // caricano in un riquadro a tutto schermo e si possono leggere e toccare da qui.
+  // Cosi' chi segue la guida non esce da Telegram.
+  function stessaOrigine(url){
+    try { return new URL(url, location.href).origin === location.origin; } catch (e) { return false; }
+  }
+
+  function chiudiGuida(){
+    var g = document.getElementById('guidaApp');
+    if (g) g.remove();
+    try { if (tg && tg.BackButton) { tg.BackButton.offClick(chiudiGuida); tg.BackButton.hide(); } } catch (e) {}
+  }
+
+  function apriGuida(url, sid){
+    chiudiGuida();
+    var g = document.createElement('div');
+    g.id = 'guidaApp';
+    g.innerHTML = '<div class="gd-barra"><button type="button" class="gd-chiudi" data-gdchiudi="1">'
+      + '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Scheda</button>'
+      + '<span>Guida all\'iscrizione</span></div>'
+      + '<iframe class="gd-frame" title="Guida all\'iscrizione"></iframe>';
+    document.body.appendChild(g);
+    var fr = g.querySelector('iframe');
+    // I link dentro la guida: quelli verso fuori (broker, Telegram) si aprono con
+    // Telegram, perche' dentro la webview un target=_blank non va da nessuna parte.
+    fr.addEventListener('load', function(){
+      try {
+        fr.contentDocument.addEventListener('click', function(ev){
+          var a = ev.target.closest && ev.target.closest('a[href]');
+          if (!a) return;
+          var h = a.href;
+          if (!/^https?:/i.test(h) || stessaOrigine(h)) return;
+          ev.preventDefault();
+          try { traccia('guida_link', sid || null, (a.textContent || '').trim().slice(0, 40)); } catch (x) {}
+          try { if (tg && tg.openLink) tg.openLink(h); else window.open(h, '_blank'); } catch (x) { window.open(h, '_blank'); }
+        });
+      } catch (x) {}
+    });
+    fr.src = url;
+    try { if (tg && tg.BackButton) { tg.BackButton.onClick(chiudiGuida); tg.BackButton.show(); } } catch (e) {}
+    try { traccia('guida_aperta', sid || null, 'iscrizione'); } catch (x) {}
   }
 
   function chiudiPrima(){
@@ -2945,6 +2999,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       var bd = document.querySelector('.body'); if (bd) bd.scrollTop = 0;
       return;
     }
+    if (t.closest('[data-gdchiudi]')) { e.preventDefault(); chiudiGuida(); return; }
     var scr = t.closest('[data-scrivi]');
     if (scr) {
       e.preventDefault();
@@ -2952,6 +3007,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
       if (sid) { try { traccia('richiedi_info', sid, (SCHEDE[sid] && SCHEDE[sid].servizio ? SCHEDE[sid].servizio.nome : '')); } catch(x){} }
       chiudiPrima();
       var us = scr.getAttribute('data-url');
+      // Una pagina del nostro sito (la guida) si apre dentro l'app; la chat o un
+      // sito esterno continuano ad aprirsi con Telegram.
+      if (stessaOrigine(us)) { apriGuida(us, sid); return; }
       try { if (tg && tg.openLink) tg.openLink(us); else window.open(us, '_blank'); } catch(x){ window.open(us, '_blank'); }
       return;
     }
