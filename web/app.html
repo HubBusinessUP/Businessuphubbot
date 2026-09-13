@@ -273,6 +273,17 @@
         <span><b>Il gruppo Cashly</b><i>Domande, confronto e novita sui business in lista</i></span>
         <svg class="freccia" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
       </a>
+      <!-- Footer legale: una volta sola in fondo, invece che sotto ogni pulsante. -->
+      <footer class="piede">
+        <p>Cashly è una directory di servizi di terzi: li elenca e li descrive, non li gestisce, e di ogni servizio risponde chi lo offre. I contenuti sono informativi e non sono consulenza finanziaria: operare sui mercati comporta rischi, fino alla perdita del capitale. Alcuni link sono di affiliazione: se attivi un servizio da qui, Cashly può ricevere una commissione.</p>
+        <nav>
+          <a href="https://cashlypro.com/privacy" target="_blank" rel="noopener" data-ext="1">Privacy</a>
+          <a href="https://cashlypro.com/cookie" target="_blank" rel="noopener" data-ext="1">Cookie</a>
+          <a href="https://cashlypro.com/affiliate-disclosure" target="_blank" rel="noopener" data-ext="1">Affiliazioni</a>
+          <a href="https://t.me/caliblackk" target="_blank" rel="noopener" data-ext="1">Supporto</a>
+        </nav>
+        <small>© 2026 Cashly</small>
+      </footer>
     </section>
 
     <!-- ===================== SCHEDA PRODOTTO (schermata dedicata) ===================== -->
@@ -281,6 +292,17 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Directory
       </button>
       <div id="scBody"></div>
+      <!-- Footer legale: una volta sola in fondo, invece che sotto ogni pulsante. -->
+      <footer class="piede">
+        <p>Cashly è una directory di servizi di terzi: li elenca e li descrive, non li gestisce, e di ogni servizio risponde chi lo offre. I contenuti sono informativi e non sono consulenza finanziaria: operare sui mercati comporta rischi, fino alla perdita del capitale. Alcuni link sono di affiliazione: se attivi un servizio da qui, Cashly può ricevere una commissione.</p>
+        <nav>
+          <a href="https://cashlypro.com/privacy" target="_blank" rel="noopener" data-ext="1">Privacy</a>
+          <a href="https://cashlypro.com/cookie" target="_blank" rel="noopener" data-ext="1">Cookie</a>
+          <a href="https://cashlypro.com/affiliate-disclosure" target="_blank" rel="noopener" data-ext="1">Affiliazioni</a>
+          <a href="https://t.me/caliblackk" target="_blank" rel="noopener" data-ext="1">Supporto</a>
+        </nav>
+        <small>© 2026 Cashly</small>
+      </footer>
     </section>
 
   </div>
@@ -867,6 +889,8 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
 .ev-b-testa em{font-style:normal;color:#FF8A5C;letter-spacing:.04em}
 .ev-b .ev-timer{margin:9px 0 11px}
 .ev-b .ev-timer div{background:var(--s0)}
+.ev-scheda .ev-b .ev-timer{margin-bottom:0}
+.ev-apri{margin-top:11px;font-size:13.5px;font-weight:700;color:#FF8A5C;text-align:center}
 .ev-cta{display:block;text-align:center;background:#FF8A5C;color:#2A0E04;border-radius:10px;
   padding:13px;font-size:15px;font-weight:800}
 /* Il timer a caselle resta dentro la linguetta Evento della scheda. */
@@ -880,6 +904,13 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
    il timer chiude il riquadro, quindi niente margine sotto. */
 .wbn .ev-b{margin:12px 0 4px}
 .wbn .ev-b .ev-timer{margin-bottom:0}
+/* FOOTER. Piccolo e spento: e' da leggere se lo si cerca, non da notare. I link
+   sono sottolineati perche' qui sono l'unico segno che si possono toccare. */
+.piede{margin:34px 20px 28px;padding-top:18px;border-top:1px solid var(--line)}
+.piede p{margin:0;font-size:12px;line-height:1.6;color:var(--mut)}
+.piede nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px}
+.piede a{font-size:12.5px;color:var(--dim);text-decoration:underline;text-underline-offset:3px}
+.piede small{display:block;margin-top:10px;font-size:11.5px;color:var(--mut)}
 #primoPiano:empty{display:none}
 #primoPiano{margin:14px 20px 0}
 .pp-et{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
@@ -1485,7 +1516,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=195"></script>
+<script src="identikit.js?v=196"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2399,10 +2430,8 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // e' la differenza fra una directory e una vetrina. Un servizio puo' avere un
     // testo suo (cta.trasparenza: chi e' cliente, chi ha un'affiliazione, i
     // rischi); se non ce l'ha resta la riga comune a tutti.
-    var trasp = (s.cta && typeof s.cta.trasparenza === 'string') ? s.cta.trasparenza.trim() : '';
-    out += '<div class="cons">' + (trasp ? esc(trasp)
-         : 'Servizio di un fornitore terzo: di ogni conseguenza risponde lui.'
-         + ' Cashly puo ricevere una commissione se attivi da questo link.') + '</div>';
+    // La riga di trasparenza sotto il pulsante non c'e' piu' (Antonio): il
+    // disclaimer, le policy e le affiliazioni stanno nel footer dell'app.
     return out;
   }
 
@@ -2456,6 +2485,26 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   }
   function mailIniziale(){
     try { return localStorage.getItem('cashly_webinar_mail') || ''; } catch (e) { return ''; }
+  }
+
+  // Il banner dell'evento dentro la scheda: lo stesso della home, senza logo e
+  // nome (sono gia' nella testa della scheda) e senza pulsante. Toccarlo apre
+  // la linguetta Evento, dove c'e' il modulo.
+  function bannerEventoScheda(d){
+    var s = d.servizio || {};
+    var w = (s.cta && s.cta.webinar) || null;
+    if (!w || !w.quando) return '';
+    var t = new Date(w.quando).getTime();
+    if (!t || t < Date.now()) return '';
+    return '<button type="button" class="ev-card ev-scheda" data-sctab="ev">'
+      + '<div class="ev-chi"><span>Webinar dal vivo</span>' + (w.stato && w.stato !== 'attivo' ? '<span class="ev-bozza">bozza \u00b7 solo tu</span>' : '') + '</div>'
+      + '<div class="ev-titolo">' + esc(w.nome || w.titolo || '') + '</div>'
+      + '<div class="ev-orari">' + esc(giornoOra(t)) + '</div>'
+      + (w.dove ? '<div class="ev-dove2">' + esc(w.dove) + '</div>' : '')
+      + '<div class="ev-b"><div class="ev-b-testa"><span>Inizia tra</span><em>' + esc(w.scarsita || 'Posti limitati') + '</em></div>'
+      +   timerHtml(t) + '</div>'
+      + '<div class="ev-apri">Iscriviti nella linguetta Evento \u203a</div>'
+      + '</button>';
   }
 
   function scWebinar(d){
@@ -2632,6 +2681,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     var ev = scWebinar(d);
     if (!ev && SC_TAB === 'ev') SC_TAB = 'pan';
     return scTesta(d)
+      + (ev ? '<div style="margin:14px 20px 0">' + bannerEventoScheda(d) + '</div>' : '')
       + '<div class="sctabs">'
       +   '<button class="sctab' + (SC_TAB === 'pan' ? ' on' : '') + '" data-sctab="pan">Panoramica</button>'
       +   (car ? '<button class="sctab' + (SC_TAB === 'car' ? ' on' : '') + '" data-sctab="car">Caratteristiche</button>' : '')
