@@ -68,6 +68,13 @@ h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);lett
 .passo b{color:var(--tx)}
 .car{font-size:14.5px;color:var(--dim);padding:7px 0;border-bottom:1px solid var(--line)}
 .car:first-of-type{border-top:1px solid var(--line)}
+/* come aprire il conto: il pezzo da non sbagliare, quindi in evidenza e a righe */
+.conto{margin:4px 0 12px;border:1px solid rgba(37,207,110,.35);background:rgba(37,207,110,.07);border-radius:10px;padding:12px 14px 6px}
+.conto-tit{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+.conto-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.conto-r:last-child{border-bottom:none}
+.conto-r span{font-size:14px;color:var(--dim)}
+.conto-r b{font-size:15.5px;color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
 .bt{
   display:inline-block;background:var(--acc);color:var(--on);text-decoration:none;font-weight:700;
   padding:12px 20px;border-radius:6px;margin:6px 0 10px;font-size:15px;border:0;cursor:pointer;font-family:inherit
@@ -134,7 +141,7 @@ a{color:var(--acc)}
         <div class="corpo-passo">
           
 <a class="bt" href="https://secure.totalfx.com/Registration/Main/Account?dest=live&camp=255" target="_blank" rel="noopener">Apri il conto Total FX</a>
-<div class="car">MT5 Standard · leva <b>1:1000</b> · <b>EUR</b></div>
+<div class="conto"><div class="conto-tit">Come aprire il conto trading</div><div class="conto-r"><span>Piattaforma</span><b>MT5</b></div><div class="conto-r"><span>Tipo di conto</span><b>Standard</b></div><div class="conto-r"><span>Leva</span><b>1:1000</b></div><div class="conto-r"><span>Valuta</span><b>EUR</b></div></div>
 <p class="avviso rosso"><b>Non depositare</b> finché non ti diamo l'ok.</p>
 <details><summary>Ho già un conto Total FX</summary>
 <p>Va collegato a noi: manda questa mail a <b>cz@totalfx.com</b> dall'indirizzo del
@@ -171,8 +178,7 @@ Cordiali saluti,
         <div class="corpo-passo">
           
 <a class="bt" href="https://rinfinity.com/a/krozt" target="_blank" rel="noopener">Apri il conto Roboforex</a>
-<div class="car">MT5 ECN · leva <b>1:500</b> · <b>EUR</b></div>
-<div class="car">Swap Free · Hedging · codice <b>krozt</b></div>
+<div class="conto"><div class="conto-tit">Come aprire il conto trading</div><div class="conto-r"><span>Piattaforma</span><b>MT5</b></div><div class="conto-r"><span>Tipo di conto</span><b>ECN</b></div><div class="conto-r"><span>Leva</span><b>1:500</b></div><div class="conto-r"><span>Valuta</span><b>EUR</b></div><div class="conto-r"><span>Opzioni</span><b>Swap Free · Hedging</b></div><div class="conto-r"><span>Codice affiliato</span><b>krozt</b></div></div>
 <details><summary>Ho già un conto Roboforex</summary>
 <p>Dall'area personale apri un <b>conto trading nuovo</b> con codice
 <b>krozt</b>.</p></details>
@@ -192,7 +198,7 @@ Cordiali saluti,
         </div>
         <div class="corpo-passo">
           <a class="bt" href="https://fusionmarkets.com/?refcode=110700" target="_blank" rel="noopener">Apri il conto Fusion</a>
-<div class="car"><b>MT5</b> · <b>Zero</b> · <b>EUR</b> · leva <b>1:500</b> · ref code <code>110700</code></div>
+<div class="conto"><div class="conto-tit">Come aprire il conto trading</div><div class="conto-r"><span>Piattaforma</span><b>MT5</b></div><div class="conto-r"><span>Tipo di conto</span><b>Zero</b></div><div class="conto-r"><span>Valuta</span><b>EUR</b></div><div class="conto-r"><span>Leva</span><b>1:500</b></div><div class="conto-r"><span>Codice affiliato</span><b>110700</b></div></div>
           <label class="fatto"><input type="checkbox" data-passo="3"> Fatto</label>
         </div>
         <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
@@ -208,7 +214,7 @@ Cordiali saluti,
         </div>
         <div class="corpo-passo">
           <a class="bt" href="https://account.monaxa.com/links/go/23033" target="_blank" rel="noopener">Apri il conto Monaxa</a>
-<div class="car">Conto MT5 STANDARD · leva 1:500 · valuta EUR</div>
+<div class="conto"><div class="conto-tit">Come aprire il conto trading</div><div class="conto-r"><span>Piattaforma</span><b>MT5</b></div><div class="conto-r"><span>Tipo di conto</span><b>Standard</b></div><div class="conto-r"><span>Leva</span><b>1:500</b></div><div class="conto-r"><span>Valuta</span><b>EUR</b></div></div>
           <label class="fatto"><input type="checkbox" data-passo="4"> Fatto</label>
         </div>
         <p class="chiusa">Segna come fatto il passo precedente per aprire questo.</p>
