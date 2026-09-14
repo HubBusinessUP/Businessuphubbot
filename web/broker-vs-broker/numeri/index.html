@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I numeri · Broker vs Broker</title>
+<meta name="description" content="I numeri veri del servizio Broker vs Broker: profitto generato, cicli chiusi, capitale in gestione.">
+<meta property="og:title" content="I numeri · Broker vs Broker">
+<meta property="og:description" content="Quanto ha prodotto il servizio, aggiornato da solo.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#131418; --s0:#191B20; --line:#262932; --line2:#333845;
+  --tx:#F6F7F9; --dim:#AAB0BB; --mut:#7B828F; --acc:#25CF6E; --amber:#FFB43D;
+  --sans:'Inter',-apple-system,system-ui,sans-serif;
+  --disp:'Manrope',-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.foglio{max-width:1120px;margin:0 auto;padding:44px 26px 70px}
+.cima{display:flex;align-items:baseline;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.cima b{font-family:var(--disp);font-size:16px;font-weight:800;letter-spacing:-.01em}
+.cima span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+
+/* il pezzo che rompe la griglia: il numero grosso appoggiato sulla curva */
+.testa{position:relative;margin:34px 0 0;border-bottom:1px solid var(--line);padding-bottom:6px}
+.testa svg{display:block;width:100%;height:220px}
+.grosso{position:absolute;left:0;bottom:14px;pointer-events:none}
+.grosso .et{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.grosso .v{
+  font-family:var(--disp);font-weight:800;letter-spacing:-.04em;line-height:.92;
+  font-size:clamp(46px,9vw,104px);color:var(--acc);margin-top:8px;
+  text-shadow:0 6px 34px rgba(19,20,24,.92)
+}
+.grosso .so{margin-top:10px;color:var(--dim);font-size:13.5px;max-width:32ch}
+.estremi{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:10px}
+
+.riquadri{display:grid;grid-template-columns:repeat(4,1fr);border-left:1px solid var(--line);margin:34px 0 0}
+.riq{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:17px 19px 19px}
+.riq:nth-child(-n+4){border-top:1px solid var(--line)}
+.riq .et{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.riq .v{font-family:var(--disp);font-size:26px;font-weight:700;letter-spacing:-.025em;margin-top:7px;font-variant-numeric:tabular-nums}
+.riq .so{margin-top:5px;font-size:12px;color:var(--mut)}
+
+/* il conto mio: sta di traverso rispetto al resto, di proposito */
+.mio{
+  display:grid;grid-template-columns:minmax(200px,.8fr) repeat(3,1fr);
+  border:1px solid var(--line2);border-radius:6px;margin:34px 0 0;background:var(--s0);overflow:hidden
+}
+.mio .titolo{padding:20px 22px;border-right:1px solid var(--line)}
+.mio .titolo b{font-family:var(--disp);font-size:17px;font-weight:800;letter-spacing:-.02em;display:block}
+.mio .titolo span{display:block;margin-top:7px;font-size:12.5px;color:var(--mut);line-height:1.5}
+.mio .d{padding:20px 22px;border-right:1px solid var(--line)}
+.mio .d:last-child{border-right:0}
+.mio .d .et{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.mio .d .v{font-family:var(--disp);font-size:25px;font-weight:700;letter-spacing:-.025em;margin-top:6px;font-variant-numeric:tabular-nums}
+.mio .d .v.ac{color:var(--acc)}
+.mio .d .so{margin-top:5px;font-size:12px;color:var(--mut)}
+
+.sez{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:40px 0 12px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:9px 4px;text-align:right}
+th:first-child,td:first-child{text-align:left;font-variant-numeric:normal}
+th{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--line2)}
+td{border-bottom:1px solid var(--line)}
+tbody tr:last-child td{font-weight:700}
+.piede{margin-top:36px;color:var(--mut);font-size:12px;border-top:1px solid var(--line);padding-top:16px;line-height:1.6}
+.vecchi{color:var(--amber);font-size:12px;margin-top:10px}
+@media(max-width:760px){
+  .riquadri{grid-template-columns:repeat(2,1fr)}
+  .riq:nth-child(-n+4){border-top:0}
+  .riq:nth-child(-n+2){border-top:1px solid var(--line)}
+  .testa svg{height:170px}
+  .grosso{position:static;margin-top:-34px}
+  .mio{grid-template-columns:1fr 1fr}
+  .mio .titolo{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line)}
+  .mio .d:nth-child(3){border-right:0}
+}
+</style>
+</head>
+<body>
+<div class="foglio">
+  <div class="cima"><b>Broker vs Broker</b><span id="quando">i numeri</span></div>
+
+  <div class="testa">
+    <svg id="curva" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <div class="grosso">
+      <div class="et">Profitto generato</div>
+      <div class="v" id="lordo">—</div>
+      <div class="so" id="sotto"></div>
+    </div>
+  </div>
+  <div class="estremi"><span id="dal"></span><span id="al"></span></div>
+
+  <div class="riquadri" id="riquadri"></div>
+  <div class="mio" id="mio" hidden></div>
+
+  <div class="sez">Settimana per settimana</div>
+  <table>
+    <thead><tr><th>Settimana</th><th>Cicli</th><th>Profitto</th></tr></thead>
+    <tbody id="settimane"></tbody>
+  </table>
+
+  <div class="piede">
+    Numeri veri, presi dai cicli chiusi e pagati. La pagina si aggiorna da
+    sola a ogni apertura. Le durate sono calcolate sui cicli che passano dal
+    bot, dove l'ora di avvio e quella di chiusura sono registrate.<br>
+    I risultati passati non sono una promessa su quelli futuri.
+    <div class="vecchi" id="avviso" hidden></div>
+  </div>
+</div>
+
+<script id="ultimi" type="application/json">{"aggiornato":"2026-09-14T10:03:38.305Z","cicli":377,"clienti":33,"lordo":112968,"aiClienti":56733,"capitale":132117,"rendimento":85.5,"migliore":1567,"per10k":490.3,"ore":24.3,"oreTipiche":21.4,"oreMin":3.5,"conDurata":56,"giorni":49,"cicliGiorno":7.7,"dal":"2026-07-28","ultimo":"2026-09-14","curva":[["2026-07-28",662],["2026-07-29",989],["2026-07-30",1818],["2026-07-31",2936],["2026-08-02",3704],["2026-08-03",4284],["2026-08-04",5527],["2026-08-05",8315],["2026-08-06",11683],["2026-08-07",14476],["2026-08-10",18288],["2026-08-11",21092],["2026-08-12",23904],["2026-08-13",29395],["2026-08-14",34092],["2026-08-17",35278],["2026-08-18",38773],["2026-08-19",47919],["2026-08-20",53412],["2026-08-21",59700],["2026-08-24",63964],["2026-08-25",70350],["2026-08-26",72754],["2026-08-27",77597],["2026-08-28",86791],["2026-08-31",87145],["2026-09-01",91419],["2026-09-02",94672],["2026-09-03",102722],["2026-09-04",110022],["2026-09-07",111760],["2026-09-08",113110],["2026-09-09",113395],["2026-09-10",114459],["2026-09-11",113006],["2026-09-14",112968]],"settimane":[{"dal":"2026-07-27","cicli":16,"profitto":3704},{"dal":"2026-08-03","cicli":32,"profitto":10772},{"dal":"2026-08-10","cicli":60,"profitto":19616},{"dal":"2026-08-17","cicli":79,"profitto":25608},{"dal":"2026-08-24","cicli":83,"profitto":27091},{"dal":"2026-08-31","cicli":82,"profitto":23231},{"dal":"2026-09-07","cicli":24,"profitto":2984},{"dal":"2026-09-14","cicli":1,"profitto":-37}],"mio":{"cicli":24,"capitale":6000,"profitto":6844,"rendimento":114.1}}</script>
+<script>
+const API = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/bvb2/api/pubblico";
+
+const eur0 = (n) => "€ " + Math.round(Number(n) || 0).toLocaleString("it-IT", { useGrouping: "always" });
+const eur2 = (n) => "€ " + (Number(n) || 0).toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const numIt = (n, d = 1) => (Number(n) || 0).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const dataIt = (s) => s ? new Date(s).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
+const gg = (s) => new Date(s).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" });
+const ore = (h) => h == null ? "—" : h < 24 ? numIt(h) + " h" : Math.floor(h / 24) + "g " + Math.round(h % 24) + "h";
+
+const riq = (et, v, so) => `<div class="riq"><div class="et">${et}</div><div class="v">${v}</div>`
+  + (so ? `<div class="so">${so}</div>` : "") + `</div>`;
+
+function disegna(d, vecchi) {
+  document.getElementById("lordo").textContent = eur0(d.lordo);
+  document.getElementById("sotto").textContent = `su ${d.cicli} cicli chiusi in ${d.giorni} giorni`;
+  document.getElementById("quando").textContent = "i numeri al " + dataIt(d.ultimo);
+  document.getElementById("dal").textContent = dataIt(d.dal);
+  document.getElementById("al").textContent = dataIt(d.ultimo);
+
+  document.getElementById("riquadri").innerHTML = [
+    riq("Capitale in gestione", eur0(d.capitale), "su " + d.clienti + " conti"),
+    riq("Cicli chiusi", d.cicli, numIt(d.cicliGiorno) + " al giorno"),
+    riq("Rimasto ai clienti", eur0(d.aiClienti), "netto, dopo le commissioni"),
+    riq("Rendimento sul capitale", d.rendimento != null ? numIt(d.rendimento) + "%" : "—", "in " + d.giorni + " giorni"),
+    riq("Resa media a ciclo", d.per10k != null ? eur2(d.per10k) : "—", "ogni 10.000 € di capitale"),
+    riq("Durata media di un ciclo", ore(d.ore), d.oreMin != null ? "la più corta " + ore(d.oreMin) : ""),
+    riq("Il ciclo migliore", eur0(d.migliore), "in una volta sola"),
+    riq("Giorni di attività", d.giorni, "dal " + dataIt(d.dal)),
+  ].join("");
+
+  const m = d.mio;
+  if (m && m.cicli) {
+    document.getElementById("mio").hidden = false;
+    document.getElementById("mio").innerHTML = `
+      <div class="titolo"><b>Il mio conto</b>
+        <span>Lo stesso servizio, sul mio capitale. Gli stessi cicli, gli stessi broker.</span></div>
+      <div class="d"><div class="et">Capitale</div><div class="v">${eur0(m.capitale)}</div></div>
+      <div class="d"><div class="et">Profitto</div><div class="v ac">${eur0(m.profitto)}</div>
+        <div class="so">su ${m.cicli} cicli</div></div>
+      <div class="d"><div class="et">Rendimento</div><div class="v ac">${m.rendimento != null ? numIt(m.rendimento) + "%" : "—"}</div></div>`;
+  }
+
+  document.getElementById("settimane").innerHTML = (d.settimane || []).map((w) => {
+    const fine = new Date(new Date(w.dal).getTime() + 6 * 864e5);
+    return `<tr><td>${gg(w.dal)} → ${gg(fine)}</td><td>${w.cicli}</td><td>${eur0(w.profitto)}</td></tr>`;
+  }).join("");
+
+  const c = d.curva || [];
+  if (c.length > 2) {
+    const W = 1000, H = 220, max = c[c.length - 1][1] || 1;
+    const px = (i) => i / (c.length - 1) * W, py = (v) => H - v / max * H;
+    const linea = c.map((p, i) => (i ? "L" : "M") + px(i).toFixed(1) + " " + py(p[1]).toFixed(1)).join(" ");
+    document.getElementById("curva").innerHTML =
+      `<path d="${linea} L${W} ${H} L0 ${H} Z" fill="rgba(37,207,110,.13)"></path>`
+      + `<path d="${linea}" fill="none" stroke="#25CF6E" stroke-width="2"
+           vector-effect="non-scaling-stroke" stroke-linejoin="round"></path>`;
+  }
+
+  const av = document.getElementById("avviso");
+  av.hidden = !vecchi;
+  if (vecchi) av.textContent = "Non riesco a leggere i numeri di adesso: questi sono quelli dell'ultimo aggiornamento.";
+}
+
+// prima si mostra l'ultima fotografia, cosi' la pagina non e' mai vuota;
+// poi si va a prendere quella di adesso e si ridisegna
+const salvati = JSON.parse(document.getElementById("ultimi").textContent || "{}");
+if (salvati && salvati.cicli) disegna(salvati, true);
+
+fetch(API, { cache: "no-store" })
+  .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+  .then((d) => disegna(d, false))
+  .catch(() => {
+    if (!salvati || !salvati.cicli) {
+      document.getElementById("sotto").textContent = "Numeri momentaneamente non raggiungibili.";
+    }
+  });
+</script>
+</body>
+</html>
