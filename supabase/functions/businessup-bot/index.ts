@@ -739,11 +739,10 @@ const NEWS_SEGMENTI: Record<string, string> = {
 async function destinatariNews(segmento: string): Promise<number[]> {
   // Chi ha bloccato il bot resta fuori: mandargli un annuncio non fa altro che
   // gonfiare i non recapitati e far sembrare sbagliati i numeri veri.
-  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by, notifiche")
+  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by, notifiche_categoria")
     .eq("bot_started", true).not("attivo", "is", false)
-  // Chi ha spento "News ed eventi" (/notifiche) resta fuori: gonfiare un annuncio
-  // con chi non lo vuole non aiuta nessuno, ne' lui ne' i numeri di chi legge.
-  const tutti = ((leads ?? []) as any[]).filter((l) => conNotificheDefault(l.notifiche).news)
+  // Chi ha scelto "Solo nuovi prodotti" resta fuori: /news e' sempre una news.
+  const tutti = ((leads ?? []) as any[]).filter((l) => ["tutto", "news"].includes(l.notifiche_categoria))
   if (segmento === "partner") return tutti.filter((l: any) => l.is_partner).map((l: any) => l.telegram_id)
   if (segmento === "top") {
     const conteggio: Record<number, number> = {}
@@ -930,27 +929,6 @@ async function handleUpdate(u: any) {
     const fromId = cb.from?.id
     const chatId = cb.message?.chat?.id
     const messageId = cb.message?.message_id
-    // Le tre spunte di /notifiche: valgono per chi le tocca, chiunque sia.
-    if (cb.data?.startsWith("notif:") && fromId) {
-      const chiave = cb.data.slice("notif:".length)
-      if (chiave === "chiudi") {
-        await answerCallback(cb.id)
-        if (chatId && messageId) await editMessageText(chatId, messageId, "Preferenze salvate.")
-        return
-      }
-      if ((NOTIFICHE_ORDINE as readonly string[]).includes(chiave)) {
-        const pref = await leggiNotifiche(fromId)
-        ;(pref as any)[chiave] = !(pref as any)[chiave]
-        await supabase.from("leads").update({ notifiche: pref }).eq("telegram_id", fromId)
-        const { testo, tastiera } = testoENotificheHtml(pref)
-        await answerCallback(cb.id, (pref as any)[chiave] ? "Acceso" : "Spento")
-        if (chatId && messageId) await editMessageText(chatId, messageId, testo, "HTML", tastiera)
-      } else {
-        await answerCallback(cb.id)
-      }
-      return
-    }
-
     if (fromId !== ADMIN_ID) { await answerCallback(cb.id); return }
     if (cb.data?.startsWith("news_send:")) {
       const segmento = cb.data.slice("news_send:".length)
@@ -1249,10 +1227,13 @@ async function handleUpdate(u: any) {
     if (ytId) { await inviaTranscript(chatId, ytId); return }
   }
 
-  // /notifiche: aperto a chiunque, non solo all'admin. E' la lista stile
-  // newsletter con cui ognuno sceglie cosa ricevere.
+  // /notifiche: aperto a chiunque, non solo all'admin. Apre la pagina dove si
+  // sceglie cosa ricevere -- non piu' bottoni dentro la chat.
   if (text === "/notifiche" && from?.id) {
-    await apriNotifiche(chatId, from.id)
+    const urlN = WEBAPP_URL + "/notifiche.html?_=" + Date.now()
+    await sendMessage(chatId,
+      "Scegli cosa vuoi ricevere: puoi cambiarla quando vuoi.",
+      { inline_keyboard: [[{ text: "Apri le notifiche", web_app: { url: urlN } }]] })
     return
   }
 
@@ -1475,55 +1456,38 @@ async function notificaAzione(telegramId: number | null, riga: string) {
 
 // ---------- NOTIFICHE: cosa vuole ricevere ogni persona ----------
 
-// Tre argomenti indipendenti, come una newsletter con piu' liste, non una
-// scelta unica si/no. Chi non ha mai aperto /notifiche riceve tutto: scegliere
-// serve a RIDURRE quello che arriva, mai ad aggiungerlo da solo.
-const NOTIFICHE_DEFAULT = { nuovi: true, news: true, servizi: true }
-const NOTIFICHE_TESTI: Record<string, string> = {
-  nuovi: "Nuovi prodotti in lista",
-  news: "News ed eventi (annunci, webinar)",
-  servizi: "Aggiornamenti dei servizi che segui",
-}
-const NOTIFICHE_ORDINE = ["nuovi", "news", "servizi"] as const
+// UNA categoria alla volta, non spunte indipendenti: e' la scelta che si fa
+// nella pagina /notifiche.html. Chi non ha mai scelto resta su "tutto", che e'
+// il comportamento di sempre: scegliere serve a restringere, mai ad aggiungere.
+// "Tutto" e' un sovrainsieme: chi lo tiene riceve anche i messaggi delle altre
+// due categorie, chi sceglie "news" o "nuovi" riceve SOLO quella.
+const CATEGORIE_NOTIFICA = ["tutto", "news", "nuovi"] as const
+type CategoriaNotifica = typeof CATEGORIE_NOTIFICA[number]
 
-function conNotificheDefault(v: any): typeof NOTIFICHE_DEFAULT {
-  return { ...NOTIFICHE_DEFAULT, ...(v && typeof v === "object" ? v : {}) }
-}
-
-async function leggiNotifiche(telegramId: number): Promise<typeof NOTIFICHE_DEFAULT> {
-  const { data } = await supabase.from("leads").select("notifiche").eq("telegram_id", telegramId).maybeSingle()
-  return conNotificheDefault((data as any)?.notifiche)
+async function leggiCategoria(telegramId: number): Promise<CategoriaNotifica> {
+  const { data } = await supabase.from("leads").select("notifiche_categoria").eq("telegram_id", telegramId).maybeSingle()
+  const v = (data as any)?.notifiche_categoria
+  return (CATEGORIE_NOTIFICA as readonly string[]).includes(v) ? v : "tutto"
 }
 
-// Il messaggio con le spunte: una riga per argomento, ✅ o ⬜, e sotto un tasto
-// per ognuna che la accende o la spegne. Si ridisegna dopo ogni tocco, sempre
-// nello stesso messaggio: non si accumulano conferme una sopra l'altra.
-function testoENotificheHtml(pref: typeof NOTIFICHE_DEFAULT) {
-  const righe = NOTIFICHE_ORDINE.map((k) => (pref[k] ? "✅ " : "⬜ ") + NOTIFICHE_TESTI[k])
-  const testo = "<b>Cosa vuoi ricevere</b>" + "\n\n" + "Tocca una voce per accenderla o spegnerla." + "\n\n" + righe.join("\n")
-  const tastiera = {
-    inline_keyboard: [
-      ...NOTIFICHE_ORDINE.map((k) => [{ text: (pref[k] ? "✅ " : "⬜ ") + NOTIFICHE_TESTI[k], callback_data: "notif:" + k }]),
-      [{ text: "Chiudi", callback_data: "notif:chiudi" }],
-    ],
-  }
-  return { testo, tastiera }
-}
-
-async function apriNotifiche(chatId: number, telegramId: number) {
-  const pref = await leggiNotifiche(telegramId)
-  const { testo, tastiera } = testoENotificheHtml(pref)
-  await sendMessage(chatId, testo, tastiera, "HTML")
-}
-
-// I tre invii che raggiungono piu' persone alla volta, filtrati per chi ha
-// acceso quell'argomento. Chi ha bloccato il bot resta fuori comunque.
-async function destinatariPerTopic(topic: "nuovi" | "news" | "servizi"): Promise<number[]> {
-  const { data } = await supabase.from("leads").select("telegram_id, notifiche")
+// Chi riceve un messaggio di una certa categoria: se stessa, piu' chi ha scelto
+// "tutto". Chi ha bloccato il bot resta fuori comunque.
+async function destinatariCategoria(categoria: "news" | "nuovi"): Promise<number[]> {
+  const { data } = await supabase.from("leads").select("telegram_id")
     .eq("bot_started", true).not("attivo", "is", false)
-  return ((data ?? []) as any[])
-    .filter((l) => conNotificheDefault(l.notifiche)[topic])
-    .map((l) => l.telegram_id)
+    .in("notifiche_categoria", ["tutto", categoria])
+  return ((data ?? []) as any[]).map((l) => l.telegram_id)
+}
+
+// Chi segue un prodotto specifico (spunta nella sua scheda), per il broadcast
+// mirato dall'admin: indipendente dalla categoria generale.
+async function destinatariSeguonoServizio(servizioId: number): Promise<{ telegram_id: number; nome: string }[]> {
+  const { data: segue } = await supabase.from("servizio_follow").select("telegram_id").eq("servizio_id", servizioId)
+  const ids = ((segue ?? []) as any[]).map((r) => r.telegram_id)
+  if (!ids.length) return []
+  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, bot_started")
+    .in("telegram_id", ids).eq("bot_started", true).not("attivo", "is", false)
+  return ((leads ?? []) as any[]).map((l) => ({ telegram_id: l.telegram_id, nome: l.nome || l.username || `ID ${l.telegram_id}` }))
 }
 
 // ---------- LINK CORTI E CLICK ----------
@@ -2044,6 +2008,8 @@ async function apiServizio(telegramId: number, servizioId: number) {
 
   // L'evento non sta piu' nella scheda: arriva dalla sua tabella, nella forma di
   // prima, cosi' l'app lo trova dove lo cercava.
+  const { data: followRow } = await supabase.from("servizio_follow").select("telegram_id")
+    .eq("telegram_id", telegramId).eq("servizio_id", servizioId).maybeSingle()
   const evS = await prossimoEvento(servizioId, telegramId)
   const ctaS: any = { ...(((servizio as any).cta) || {}) }
   delete ctaS.webinar
@@ -2068,6 +2034,7 @@ async function apiServizio(telegramId: number, servizioId: number) {
     mio_link: mioLink || null,
     step_progress: { ultimo_step: progressoOk?.ultimo_step ?? 0, completato: !!progressoOk?.completato },
     disclaimer: { ver: DISCLAIMER_VER, attivazione: DISCLAIMER_ATTIVAZIONE, waitlist: DISCLAIMER_WAITLIST, checkbox: DISCLAIMER_CHECKBOX },
+    segue: !!followRow,
   })
 }
 
@@ -2705,6 +2672,39 @@ async function apiAdminSuggerimentiDelete(body: any) {
   return json({ ok: true })
 }
 
+// ---------- NOTIFICHE: API per la pagina e per la scheda ----------
+
+async function apiNotificheMie(telegramId: number) {
+  const categoria = await leggiCategoria(telegramId)
+  const { data: seguiti } = await supabase.from("servizio_follow").select("servizio_id").eq("telegram_id", telegramId)
+  return json({ categoria, servizi_seguiti: ((seguiti ?? []) as any[]).map((r) => r.servizio_id) })
+}
+
+async function apiNotificheSalva(telegramId: number, body: any) {
+  const categoria = String(body?.categoria || "")
+  if (!(CATEGORIE_NOTIFICA as readonly string[]).includes(categoria)) return json({ error: "categoria_non_valida" }, 400)
+  const { error } = await supabase.from("leads").update({ notifiche_categoria: categoria }).eq("telegram_id", telegramId)
+  if (error) return json({ error: "save_failed", detail: error.message }, 500)
+  return json({ ok: true, categoria })
+}
+
+// Segui/non seguire un prodotto dalla sua scheda: una riga sola, upsert o delete.
+async function apiServizioSegui(telegramId: number, body: any) {
+  const servizioId = parseInt(body?.servizio_id) || 0
+  const segui = !!body?.segui
+  if (!servizioId) return json({ error: "servizio_richiesto" }, 400)
+  if (segui) {
+    const { error } = await supabase.from("servizio_follow")
+      .upsert({ telegram_id: telegramId, servizio_id: servizioId }, { onConflict: "telegram_id,servizio_id" })
+    if (error) return json({ error: "save_failed", detail: error.message }, 500)
+  } else {
+    const { error } = await supabase.from("servizio_follow")
+      .delete().eq("telegram_id", telegramId).eq("servizio_id", servizioId)
+    if (error) return json({ error: "save_failed", detail: error.message }, 500)
+  }
+  return json({ ok: true, segue: segui })
+}
+
 // ---------- ADMIN: CATEGORIE & SERVIZI ----------
 async function apiAdminMacroCategorieList() {
   const { data } = await supabase.from("macro_categorie").select("*").order("ordine")
@@ -2946,7 +2946,7 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number, 
   // che aprono una categoria -- quelli che meritano di piu' l'annuncio -- non lo
   // facevano partire. Chi non vuole piu' riceverli blocca il bot, e il blocco lo
   // gestiamo gia'.
-  const destinatari = await destinatariPerTopic("nuovi")
+  const destinatari = await destinatariCategoria("nuovi")
   if (!destinatari.length) return
   const { data: cat } = await supabase.from("categorie").select("nome").eq("id", categoriaId).maybeSingle()
 
@@ -4498,14 +4498,12 @@ async function apiAdminTemplateDelete(body: any) {
 
 // Risolve i destinatari di un broadcast in base al filtro scelto.
 async function risolviDestinatari(filtro: any): Promise<{ telegram_id: number; nome: string }[]> {
-  // Come /news: chi ha bloccato il bot resta fuori (prima non lo escludeva, e
-  // l'invio falliva sempre su di lui), e chi ha spento "News ed eventi" pure.
+  // Chi ha bloccato il bot resta fuori sempre (prima non lo escludeva, e l'invio
+  // falliva su di lui a vuoto).
   const { data: leads } = await supabase.from("leads")
-    .select("telegram_id, nome, username, referred_by, is_cliente, pipeline_override, bot_started, notifiche")
+    .select("telegram_id, nome, username, referred_by, is_cliente, pipeline_override, bot_started, notifiche_categoria")
     .eq("bot_started", true).not("attivo", "is", false)
-  const tutti = ((leads ?? []) as any[])
-    .filter((l) => conNotificheDefault(l.notifiche).news)
-    .map((l) => ({ ...l, display: l.nome || l.username || `ID ${l.telegram_id}` }))
+  const tutti = ((leads ?? []) as any[]).map((l) => ({ ...l, display: l.nome || l.username || `ID ${l.telegram_id}` }))
   const tipo = filtro?.tipo || "tutti"
 
   let selezionati = tutti
@@ -4522,6 +4520,13 @@ async function risolviDestinatari(filtro: any): Promise<{ telegram_id: number; n
     const { data: att } = await supabase.from("lead_servizi").select("telegram_id").eq("servizio_id", servizioId)
     const haAttivato = new Set((att ?? []).map((a: any) => a.telegram_id))
     selezionati = tutti.filter((l: any) => !haAttivato.has(l.telegram_id))
+  } else if (tipo === "categoria_news" || tipo === "categoria_nuovi") {
+    const cat = tipo === "categoria_news" ? "news" : "nuovi"
+    selezionati = tutti.filter((l: any) => ["tutto", cat].includes(l.notifiche_categoria))
+  } else if (tipo === "segue_servizio") {
+    const servizioId = parseInt(filtro?.servizio_id) || 0
+    const chi = await destinatariSeguonoServizio(servizioId)
+    return chi
   }
   return selezionati.map((l: any) => ({ telegram_id: l.telegram_id, nome: l.display }))
 }
@@ -4770,6 +4775,24 @@ serve(async (req) => {
       if (!tid) return json({ error: "unauthorized" }, 401)
       const servizioId = parseInt(url.searchParams.get("id") || "0")
       return await apiServizio(tid, servizioId)
+    }
+
+    if (sub === "notifiche/mie" && req.method === "GET") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiNotificheMie(tid)
+    }
+
+    if (sub === "notifiche/salva" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiNotificheSalva(tid, await req.json())
+    }
+
+    if (sub === "servizio/segui" && req.method === "POST") {
+      const tid = await validateInitData(req.headers.get("x-telegram-init-data") || "")
+      if (!tid) return json({ error: "unauthorized" }, 401)
+      return await apiServizioSegui(tid, await req.json())
     }
 
     if (sub === "affiliazione" && req.method === "GET") {

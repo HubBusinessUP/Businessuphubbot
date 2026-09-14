@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Cashly · Notifiche</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#131418; --s0:#191B20; --s1:#1F2128; --s2:#272A32;
+  --line:#262932; --line2:#333845;
+  --tx:#F6F7F9; --dim:#AAB0BB; --mut:#7B828F;
+  --acc:#25CF6E; --on:#04210F;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;letter-spacing:-.006em}
+.wrap{max-width:460px;margin:0 auto;padding:20px 20px calc(28px + env(safe-area-inset-bottom))}
+h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px}
+.spiega{font-size:14.5px;line-height:1.6;color:var(--dim);margin:0 0 22px}
+.spiega b{color:var(--tx)}
+
+/* Le tre righe di scelta: una scheda intera e' toccabile, il pallino dice lo stato */
+.opz{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--s0)}
+.riga{display:flex;align-items:flex-start;gap:13px;padding:15px 16px;cursor:pointer;
+  border-bottom:1px solid var(--line);background:none;width:100%;text-align:left;color:inherit;font-family:inherit}
+.riga:last-child{border-bottom:none}
+.riga:active{background:var(--s1)}
+.pallino{flex:none;width:21px;height:21px;border-radius:50%;border:2px solid var(--line2);
+  margin-top:2px;position:relative}
+.riga.on .pallino{border-color:var(--acc)}
+.riga.on .pallino::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--acc)}
+.rtesto{min-width:0}
+.rtit{font-size:15.5px;font-weight:700;color:var(--tx);line-height:1.3}
+.rsot{font-size:13px;color:var(--mut);margin-top:2px;line-height:1.45}
+
+.salva{display:block;width:100%;margin-top:18px;background:var(--acc);color:var(--on);border:0;
+  border-radius:12px;padding:15px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer}
+.salva:active{transform:scale(.98)}
+.salva[disabled]{background:var(--s2);color:var(--mut)}
+.esito{text-align:center;font-size:13.5px;color:var(--acc);margin-top:10px;min-height:18px}
+
+.divisore{display:flex;align-items:center;gap:10px;margin:28px 0 16px;color:var(--mut);
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.divisore::before,.divisore::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.nota{border:1px dashed var(--line2);border-radius:12px;padding:14px 15px;font-size:13.5px;
+  line-height:1.6;color:var(--dim)}
+.nota b{color:var(--tx)}
+
+.skel{height:64px;border-radius:14px;background:var(--s0);margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Notifiche</h1>
+  <p class="spiega">Scegli <b>una categoria</b>: puoi cambiarla quando vuoi, da qui o scrivendo <b>/notifiche</b> al bot. Chi non sceglie nulla resta su <b>Tutto</b>.</p>
+
+  <div class="opz" id="opzioni">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </div>
+
+  <button class="salva" id="btnSalva" disabled>Salva</button>
+  <p class="esito" id="esito"></p>
+
+  <div class="divisore">Aggiornamenti per un prodotto</div>
+  <div class="nota">Su ogni scheda della directory trovi la spunta <b>«Ricevi aggiornamenti per questo servizio»</b>. È indipendente dalla scelta qui sopra: puoi seguire solo i business che ti interessano, anche se qui hai scelto «Solo news» o «Solo nuovi prodotti».</div>
+</div>
+
+<script>
+var API_URL = "https://jwpbopkoscqooovfvwqn.supabase.co/functions/v1/businessup-bot";
+var tg = window.Telegram && window.Telegram.WebApp;
+try { tg && tg.ready && tg.ready(); tg && tg.expand && tg.expand(); } catch(e){}
+var initData = (tg && tg.initData) || "";
+var HDRS = initData ? { "x-telegram-init-data": initData } : {};
+
+var OPZIONI = [
+  { v: "tutto", tit: "Tutto", sot: "News, eventi e nuovi prodotti: non ti perdi niente." },
+  { v: "news",  tit: "Solo news", sot: "Annunci ed eventi, come i webinar. Niente avvisi sui nuovi prodotti." },
+  { v: "nuovi", tit: "Solo nuovi prodotti", sot: "Solo quando aggiungiamo un business nuovo in lista." },
+];
+
+var scelta = "tutto";
+
+function disegna(){
+  var box = document.getElementById("opzioni");
+  box.innerHTML = OPZIONI.map(function(o){
+    return '<button type="button" class="riga' + (o.v === scelta ? ' on' : '') + '" data-v="' + o.v + '">'
+      + '<span class="pallino"></span>'
+      + '<span class="rtesto"><span class="rtit">' + o.tit + '</span><span class="rsot">' + o.sot + '</span></span>'
+      + '</button>';
+  }).join('');
+}
+
+document.getElementById("opzioni").addEventListener("click", function(e){
+  var r = e.target.closest("[data-v]");
+  if (!r) return;
+  scelta = r.getAttribute("data-v");
+  disegna();
+  document.getElementById("btnSalva").disabled = false;
+  document.getElementById("esito").textContent = "";
+});
+
+document.getElementById("btnSalva").addEventListener("click", function(){
+  var b = this;
+  b.disabled = true;
+  b.textContent = "Salvo…";
+  fetch(API_URL + "/notifiche/salva", {
+    method: "POST",
+    headers: Object.assign({ "Content-Type": "application/json" }, HDRS),
+    body: JSON.stringify({ categoria: scelta }),
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    b.textContent = "Salva";
+    if (d && d.ok) {
+      document.getElementById("esito").textContent = "Salvato.";
+      try { tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("success"); } catch(e){}
+    } else {
+      document.getElementById("esito").textContent = "Non salvato, riprova.";
+      b.disabled = false;
+    }
+  })
+  .catch(function(){
+    b.textContent = "Salva";
+    document.getElementById("esito").textContent = "Non salvato: controlla la connessione.";
+    b.disabled = false;
+  });
+});
+
+fetch(API_URL + "/notifiche/mie", { headers: HDRS, cache: "no-store" })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d && d.categoria) scelta = d.categoria;
+    disegna();
+  })
+  .catch(function(){ disegna(); });
+</script>
+</body>
+</html>

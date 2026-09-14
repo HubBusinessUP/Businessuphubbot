@@ -7,7 +7,7 @@
 <!-- Il meta qui sopra i browser lo ignorano per la cache HTTP, e il server manda
      max-age=600: da solo non basta. identikit.js e' il meccanismo vero, lo stesso
      delle altre pagine: confronta la build col server e ricarica da solo. -->
-<script src="/identikit.js?v=201"></script>
+<script src="/identikit.js?v=202"></script>
 <!-- Il pannello sta su un dominio pubblico: almeno non deve finire nei motori di
      ricerca. Non e' una protezione (quella e' la chiave), e' igiene. -->
 <meta name="robots" content="noindex, nofollow, noarchive" />
@@ -547,6 +547,9 @@
             <option value="stadio">Solo uno stadio pipeline</option>
             <option value="top_sponsor">Solo Top 10 sponsor</option>
             <option value="no_servizio">Chi NON ha attivato un business specifico</option>
+            <option value="categoria_news">Chi ha scelto "News" nelle notifiche</option>
+            <option value="categoria_nuovi">Chi ha scelto "Nuovi prodotti" nelle notifiche</option>
+            <option value="segue_servizio">Chi segue un business specifico (dalla scheda)</option>
           </select>
         </div>
         <div class="field" id="bcStadioField" style="display:none"><label>Stadio</label>
@@ -2346,7 +2349,7 @@
     function onBcFiltroChange() {
       const f = document.getElementById("bcFiltro").value;
       document.getElementById("bcStadioField").style.display = f === "stadio" ? "" : "none";
-      document.getElementById("bcServizioField").style.display = f === "no_servizio" ? "" : "none";
+      document.getElementById("bcServizioField").style.display = (f === "no_servizio" || f === "segue_servizio") ? "" : "none";
     }
 
     function renderBcServizi() {
