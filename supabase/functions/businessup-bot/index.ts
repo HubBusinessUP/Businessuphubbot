@@ -840,7 +840,15 @@ async function preparaNews(chatId: number, tipo: string, testo: string, mediaFil
   const caption = testo
     ? `ANTEPRIMA — ecco come arriverà.\n\n${testoAnteprima}\n\nA chi lo invio?`
     : "ANTEPRIMA — ecco come arriverà (solo il media).\n\nA chi lo invio?"
-  await inviaContenuto(chatId, tipo, caption, mediaFileId || null, markup)
+  // La didascalia di una foto/video su Telegram non puo' superare 1024
+  // caratteri: oltre quella soglia l'invio fallisce senza errore visibile.
+  // In quel caso mando il media da solo e il testo (coi bottoni) a parte.
+  if (mediaFileId && caption.length > 1024) {
+    await inviaContenuto(chatId, tipo, null, mediaFileId)
+    await sendMessage(chatId, caption, markup)
+  } else {
+    await inviaContenuto(chatId, tipo, caption, mediaFileId || null, markup)
+  }
 }
 
 // Attiva la modalità "in attesa del contenuto": il prossimo messaggio dell'admin diventa l'annuncio.
