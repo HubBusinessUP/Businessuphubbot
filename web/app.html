@@ -217,6 +217,9 @@
     <button id="refreshBtn" aria-label="Aggiorna">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4.5V11h-6"/></svg>
     </button>
+    <button id="notifBtn" aria-label="Notifiche">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
     <button id="shareBtn" aria-label="Condividi"><svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
   </div>
   <div class="body">
@@ -832,6 +835,10 @@ body{background:#0F1115;color:var(--tx);font-family:var(--sans);-webkit-font-smo
   border:1px solid transparent;color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .hdr #refreshBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .hdr #refreshBtn:active{transform:scale(.94)}
+.hdr #notifBtn{flex-shrink:0;width:42px;height:42px;border-radius:999px;background:var(--s1);
+  border:1px solid transparent;color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hdr #notifBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hdr #notifBtn:active{transform:scale(.94)}
 /* La rotella gira finche' la pagina non riparte: senza, il tocco non lascia
    traccia e sembra non aver funzionato. */
 .hdr #refreshBtn.gira svg{animation:ruota .7s linear infinite}
@@ -1550,7 +1557,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=202"></script>
+<script src="identikit.js?v=203"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2685,14 +2692,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     try { if (tg && tg.BackButton) { tg.BackButton.offClick(chiudiGuida); tg.BackButton.hide(); } } catch (e) {}
   }
 
-  function apriGuida(url, sid){
+  function apriGuida(url, sid, titolo, azioneTraccia){
     chiudiGuida();
     var g = document.createElement('div');
     g.id = 'guidaApp';
     g.innerHTML = '<div class="gd-barra"><button type="button" class="gd-chiudi" data-gdchiudi="1">'
       + '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Scheda</button>'
-      + '<span>Guida all\'iscrizione</span></div>'
-      + '<iframe class="gd-frame" title="Guida all\'iscrizione"></iframe>';
+      + '<span>' + esc(titolo || 'Guida all\'iscrizione') + '</span></div>'
+      + '<iframe class="gd-frame" title="' + esc(titolo || 'Guida all\'iscrizione') + '"></iframe>';
     document.body.appendChild(g);
     var fr = g.querySelector('iframe');
     // I link dentro la guida: quelli verso fuori (broker, Telegram) si aprono con
@@ -2712,7 +2719,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     });
     fr.src = url;
     try { if (tg && tg.BackButton) { tg.BackButton.onClick(chiudiGuida); tg.BackButton.show(); } } catch (e) {}
-    try { traccia('guida_aperta', sid || null, 'iscrizione'); } catch (x) {}
+    try { traccia(azioneTraccia || 'guida_aperta', sid || null, 'iscrizione'); } catch (x) {}
   }
 
   function chiudiPrima(){
@@ -3804,6 +3811,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     window.__openShare = openSheet;   // riusato dal bottone Condividi dentro ogni scheda
     var sb=document.getElementById('shareBtn');
     if(sb) sb.addEventListener('click', function(){ openSheet(); });
+
+    // Notifiche: sempre dentro la Mini App, come la guida all'iscrizione.
+    var nb = document.getElementById('notifBtn');
+    if (nb) nb.addEventListener('click', function(){
+      if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('light'); } catch(x){} }
+      apriGuida('/notifiche.html?_=' + Date.now(), null, 'Notifiche', 'notifiche_aperte');
+    });
 
     // AGGIORNA. Ricarica saltando la cache: dentro Telegram la webview resta viva
     // anche per giorni e puo' servire una versione vecchia. Il marker in query e'
