@@ -2589,7 +2589,7 @@ async function apiAdminSuggerimentoApprova(body: any) {
   // Al proponente: accettata, la pubblichiamo a breve. NON diciamo "e' gia' nella
   // lista" (e' una bozza) e NON avvisiamo tutti gli iscritti: quello lo fa Antonio
   // quando la scheda e' completa, dal tasto "Invia avviso".
-  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata accettata!</b>\n\nLa prepariamo e la pubblichiamo a breve nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`)
+  await notifyUser(sug.telegram_id, `✅ <b>La tua candidatura "${htmlEsc(sug.nome)}" è stata accettata!</b>\n\nLa prepariamo e la pubblichiamo a breve nella Business List.${reward ? "\n🎁 Come premio per la segnalazione di qualità, il tuo link affiliato è stato attivato su questo business." : ""}`, "Apri la Business List", "/app.html")
   return json({ ok: true, servizio_id: nuovo.id })
 }
 
