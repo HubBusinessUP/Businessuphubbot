@@ -263,6 +263,16 @@ async function editMessageText(chatId: number, messageId: number, text: string, 
   })
 }
 
+// Cambia SOLO i bottoni, lasciando il messaggio com'e': funziona sia su un
+// testo sia su una foto o un video, dove editMessageText non e' permesso.
+async function editMessageReplyMarkup(chatId: number, messageId: number, markup: any) {
+  return fetch(`${TG_API}/editMessageReplyMarkup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId, reply_markup: markup }),
+  })
+}
+
 // Verifica la firma initData di una Telegram Mini App; ritorna telegram_id se valida.
 async function validateInitData(initData: string): Promise<number | null> {
   try {
@@ -732,6 +742,7 @@ async function inviaContenuto(chatId: number, tipo: string, testo: string | null
 // Destinatari di un annuncio dalla chat, per segmento scelto dall'admin.
 const NEWS_SEGMENTI: Record<string, string> = {
   tutti: "Tutti gli iscritti",
+  nuovi: "Chi ha scelto Nuovi prodotti",
   partner: "Solo Partner",
   lead: "Chi non ha attivato nessun business",
   top: "Top 10 sponsor",
@@ -741,8 +752,21 @@ async function destinatariNews(segmento: string): Promise<number[]> {
   // gonfiare i non recapitati e far sembrare sbagliati i numeri veri.
   const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by, notifiche_categoria")
     .eq("bot_started", true).not("attivo", "is", false)
-  // Chi ha scelto "Solo nuovi prodotti" resta fuori: /news e' sempre una news.
-  const tutti = ((leads ?? []) as any[]).filter((l) => ["tutto", "news"].includes(l.notifiche_categoria))
+  const base = (leads ?? []) as any[]
+
+  // "Nuovi prodotti": categoria a se', non "news".
+  if (segmento === "nuovi") return base.filter((l) => ["tutto", "nuovi"].includes(l.notifiche_categoria)).map((l) => l.telegram_id)
+  // Chi segue un business specifico: indipendente dalla categoria generale,
+  // e' la spunta sulla scheda del prodotto.
+  if (segmento.startsWith("segue:")) {
+    const servizioId = parseInt(segmento.slice("segue:".length)) || 0
+    const chi = await destinatariSeguonoServizio(servizioId)
+    return chi.map((c) => c.telegram_id)
+  }
+
+  // Tutti / Partner / Lead / Top restano come sempre: filtrati per chi ha
+  // scelto "News" o "Tutto", perche' /news e' sempre una news.
+  const tutti = base.filter((l) => ["tutto", "news"].includes(l.notifiche_categoria))
   if (segmento === "partner") return tutti.filter((l: any) => l.is_partner).map((l: any) => l.telegram_id)
   if (segmento === "top") {
     const conteggio: Record<number, number> = {}
@@ -757,17 +781,50 @@ async function destinatariNews(segmento: string): Promise<number[]> {
   return tutti.map((l: any) => l.telegram_id)
 }
 
+// L'etichetta del segmento: quelle fisse vengono dalla mappa, "segue:<id>"
+// va a prendere il nome vero del business.
+async function etichettaSegmento(segmento: string): Promise<string> {
+  if (NEWS_SEGMENTI[segmento]) return NEWS_SEGMENTI[segmento]
+  if (segmento.startsWith("segue:")) {
+    const servizioId = parseInt(segmento.slice("segue:".length)) || 0
+    const { data: sv } = await supabase.from("servizi").select("nome").eq("id", servizioId).maybeSingle()
+    return `Chi segue ${(sv as any)?.nome || "questo business"}`
+  }
+  return segmento
+}
+
+// La tastiera per scegliere un business specifico da seguire: un bottone per
+// ogni servizio attivo, col numero di chi lo segue.
+async function menuSegueServizi() {
+  const { data: servizi } = await supabase.from("servizi").select("id, nome").eq("stato", "attivo").order("nome")
+  const { data: follow } = await supabase.from("servizio_follow").select("servizio_id")
+  const conteggio: Record<number, number> = {}
+  for (const f of (follow ?? []) as any[]) conteggio[f.servizio_id] = (conteggio[f.servizio_id] ?? 0) + 1
+  const righe = ((servizi ?? []) as any[]).map((sv) => ([{
+    text: `${sv.nome} (${conteggio[sv.id] ?? 0})`, callback_data: `news_segue:${sv.id}`,
+  }]))
+  return {
+    inline_keyboard: [
+      ...righe,
+      [{ text: "‹ Indietro", callback_data: "news_back" }],
+      [{ text: "❌ Annulla", callback_data: "news_cancel" }],
+    ],
+  }
+}
+
 // Prepara un annuncio (testo o media): lo salva come "pending" e mostra l'anteprima con la scelta del destinatario.
 async function preparaNews(chatId: number, tipo: string, testo: string, mediaFileId?: string) {
   await supabase.from("broadcast_pending").upsert(
     { telegram_id: ADMIN_ID, tipo, testo: testo || null, photo_file_id: mediaFileId || null },
     { onConflict: "telegram_id" },
   )
-  const [nTutti, nPartner, nLead, nTop] = await Promise.all([
-    destinatariNews("tutti"), destinatariNews("partner"), destinatariNews("lead"), destinatariNews("top"),
+  const [nTutti, nPartner, nLead, nTop, nNuovi] = await Promise.all([
+    destinatariNews("tutti"), destinatariNews("partner"), destinatariNews("lead"), destinatariNews("top"), destinatariNews("nuovi"),
   ].map((p) => p.then((l) => l.length)))
   const markup = { inline_keyboard: [
     [{ text: `👥 Tutti (${nTutti})`, callback_data: "news_send:tutti" }],
+    [{ text: `🆕 Chi ha scelto Nuovi prodotti (${nNuovi})`, callback_data: "news_send:nuovi" }],
+    [{ text: "📦 Chi segue un business specifico ›", callback_data: "news_segue_menu" }],
     [{ text: `🤝 Solo Partner (${nPartner})`, callback_data: "news_send:partner" }],
     [{ text: `🌱 Chi non ha attivato nulla (${nLead})`, callback_data: "news_send:lead" }],
     [{ text: `⭐ Top 10 sponsor (${nTop})`, callback_data: "news_send:top" }],
@@ -930,16 +987,44 @@ async function handleUpdate(u: any) {
     const chatId = cb.message?.chat?.id
     const messageId = cb.message?.message_id
     if (fromId !== ADMIN_ID) { await answerCallback(cb.id); return }
-    if (cb.data?.startsWith("news_send:")) {
-      const segmento = cb.data.slice("news_send:".length)
+    if (cb.data?.startsWith("news_send:") || cb.data?.startsWith("news_segue:")) {
+      const segmento = cb.data.startsWith("news_segue:")
+        ? "segue:" + cb.data.slice("news_segue:".length)
+        : cb.data.slice("news_send:".length)
+      const etichetta = await etichettaSegmento(segmento)
       await answerCallback(cb.id, "Invio in corso...")
-      if (chatId) await sendMessage(chatId, `Invio in corso a: ${NEWS_SEGMENTI[segmento] || segmento}...`)
+      if (chatId) await sendMessage(chatId, `Invio in corso a: ${etichetta}...`)
       const { inviati, falliti } = await inviaNews(segmento)
-      if (chatId) await sendMessage(chatId, `✅ Annuncio inviato a "${NEWS_SEGMENTI[segmento] || segmento}".\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+      if (chatId) await sendMessage(chatId, `✅ Annuncio inviato a "${etichetta}".\nRecapitati: ${inviati}${falliti ? ` · Non recapitati: ${falliti}` : ""}`)
+    } else if (cb.data === "news_segue_menu") {
+      const menu = await menuSegueServizi()
+      if (!menu.inline_keyboard.length || menu.inline_keyboard.length <= 2) {
+        await answerCallback(cb.id, "Nessun business attivo ha ancora chi lo segue.")
+      } else {
+        await answerCallback(cb.id)
+        if (chatId && messageId) await editMessageReplyMarkup(chatId, messageId, menu)
+      }
+    } else if (cb.data === "news_back") {
+      await answerCallback(cb.id)
+      const [nTutti, nPartner, nLead, nTop, nNuovi] = await Promise.all([
+        destinatariNews("tutti"), destinatariNews("partner"), destinatariNews("lead"), destinatariNews("top"), destinatariNews("nuovi"),
+      ].map((p) => p.then((l) => l.length)))
+      const markup = { inline_keyboard: [
+        [{ text: `👥 Tutti (${nTutti})`, callback_data: "news_send:tutti" }],
+        [{ text: `🆕 Chi ha scelto Nuovi prodotti (${nNuovi})`, callback_data: "news_send:nuovi" }],
+        [{ text: "📦 Chi segue un business specifico ›", callback_data: "news_segue_menu" }],
+        [{ text: `🤝 Solo Partner (${nPartner})`, callback_data: "news_send:partner" }],
+        [{ text: `🌱 Chi non ha attivato nulla (${nLead})`, callback_data: "news_send:lead" }],
+        [{ text: `⭐ Top 10 sponsor (${nTop})`, callback_data: "news_send:top" }],
+        [{ text: "❌ Annulla", callback_data: "news_cancel" }],
+      ] }
+      if (chatId && messageId) await editMessageReplyMarkup(chatId, messageId, markup)
     } else if (cb.data === "news_cancel") {
       await supabase.from("broadcast_pending").delete().eq("telegram_id", ADMIN_ID)
       await answerCallback(cb.id, "Annullato")
-      if (chatId && messageId) await editMessageText(chatId, messageId, "Annuncio annullato.")
+      // Un nuovo messaggio, non una modifica: editMessageText fallirebbe se
+      // l'anteprima era una foto o un video (non e' testo).
+      if (chatId) await sendMessage(chatId, "Annuncio annullato.")
     } else {
       await answerCallback(cb.id)
     }
