@@ -254,12 +254,12 @@ async function answerCallback(callbackId: string, text?: string) {
   })
 }
 
-async function editMessageText(chatId: number, messageId: number, text: string, parseMode?: string) {
+async function editMessageText(chatId: number, messageId: number, text: string, parseMode?: string, markup?: any) {
   return fetch(`${TG_API}/editMessageText`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, message_id: messageId, text,
-      ...(parseMode ? { parse_mode: parseMode } : {}) }),
+      ...(parseMode ? { parse_mode: parseMode } : {}), ...(markup ? { reply_markup: markup } : {}) }),
   })
 }
 
@@ -739,9 +739,11 @@ const NEWS_SEGMENTI: Record<string, string> = {
 async function destinatariNews(segmento: string): Promise<number[]> {
   // Chi ha bloccato il bot resta fuori: mandargli un annuncio non fa altro che
   // gonfiare i non recapitati e far sembrare sbagliati i numeri veri.
-  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by")
+  const { data: leads } = await supabase.from("leads").select("telegram_id, is_partner, referred_by, notifiche")
     .eq("bot_started", true).not("attivo", "is", false)
-  const tutti = leads ?? []
+  // Chi ha spento "News ed eventi" (/notifiche) resta fuori: gonfiare un annuncio
+  // con chi non lo vuole non aiuta nessuno, ne' lui ne' i numeri di chi legge.
+  const tutti = ((leads ?? []) as any[]).filter((l) => conNotificheDefault(l.notifiche).news)
   if (segmento === "partner") return tutti.filter((l: any) => l.is_partner).map((l: any) => l.telegram_id)
   if (segmento === "top") {
     const conteggio: Record<number, number> = {}
@@ -928,6 +930,27 @@ async function handleUpdate(u: any) {
     const fromId = cb.from?.id
     const chatId = cb.message?.chat?.id
     const messageId = cb.message?.message_id
+    // Le tre spunte di /notifiche: valgono per chi le tocca, chiunque sia.
+    if (cb.data?.startsWith("notif:") && fromId) {
+      const chiave = cb.data.slice("notif:".length)
+      if (chiave === "chiudi") {
+        await answerCallback(cb.id)
+        if (chatId && messageId) await editMessageText(chatId, messageId, "Preferenze salvate.")
+        return
+      }
+      if ((NOTIFICHE_ORDINE as readonly string[]).includes(chiave)) {
+        const pref = await leggiNotifiche(fromId)
+        ;(pref as any)[chiave] = !(pref as any)[chiave]
+        await supabase.from("leads").update({ notifiche: pref }).eq("telegram_id", fromId)
+        const { testo, tastiera } = testoENotificheHtml(pref)
+        await answerCallback(cb.id, (pref as any)[chiave] ? "Acceso" : "Spento")
+        if (chatId && messageId) await editMessageText(chatId, messageId, testo, "HTML", tastiera)
+      } else {
+        await answerCallback(cb.id)
+      }
+      return
+    }
+
     if (fromId !== ADMIN_ID) { await answerCallback(cb.id); return }
     if (cb.data?.startsWith("news_send:")) {
       const segmento = cb.data.slice("news_send:".length)
@@ -1226,6 +1249,13 @@ async function handleUpdate(u: any) {
     if (ytId) { await inviaTranscript(chatId, ytId); return }
   }
 
+  // /notifiche: aperto a chiunque, non solo all'admin. E' la lista stile
+  // newsletter con cui ognuno sceglie cosa ricevere.
+  if (text === "/notifiche" && from?.id) {
+    await apriNotifiche(chatId, from.id)
+    return
+  }
+
   if (text === "/start" || text.startsWith("/start ")) {
     const payload = text.startsWith("/start ") ? text.slice(7).trim() : ""
     await handleStart(chatId, from, payload)
@@ -1441,6 +1471,59 @@ async function notificaAzione(telegramId: number | null, riga: string) {
       { onConflict: "chiave" },
     )
   } catch { /* un avviso che non parte non deve rompere l'azione dell'utente */ }
+}
+
+// ---------- NOTIFICHE: cosa vuole ricevere ogni persona ----------
+
+// Tre argomenti indipendenti, come una newsletter con piu' liste, non una
+// scelta unica si/no. Chi non ha mai aperto /notifiche riceve tutto: scegliere
+// serve a RIDURRE quello che arriva, mai ad aggiungerlo da solo.
+const NOTIFICHE_DEFAULT = { nuovi: true, news: true, servizi: true }
+const NOTIFICHE_TESTI: Record<string, string> = {
+  nuovi: "Nuovi prodotti in lista",
+  news: "News ed eventi (annunci, webinar)",
+  servizi: "Aggiornamenti dei servizi che segui",
+}
+const NOTIFICHE_ORDINE = ["nuovi", "news", "servizi"] as const
+
+function conNotificheDefault(v: any): typeof NOTIFICHE_DEFAULT {
+  return { ...NOTIFICHE_DEFAULT, ...(v && typeof v === "object" ? v : {}) }
+}
+
+async function leggiNotifiche(telegramId: number): Promise<typeof NOTIFICHE_DEFAULT> {
+  const { data } = await supabase.from("leads").select("notifiche").eq("telegram_id", telegramId).maybeSingle()
+  return conNotificheDefault((data as any)?.notifiche)
+}
+
+// Il messaggio con le spunte: una riga per argomento, ✅ o ⬜, e sotto un tasto
+// per ognuna che la accende o la spegne. Si ridisegna dopo ogni tocco, sempre
+// nello stesso messaggio: non si accumulano conferme una sopra l'altra.
+function testoENotificheHtml(pref: typeof NOTIFICHE_DEFAULT) {
+  const righe = NOTIFICHE_ORDINE.map((k) => (pref[k] ? "✅ " : "⬜ ") + NOTIFICHE_TESTI[k])
+  const testo = "<b>Cosa vuoi ricevere</b>" + "\n\n" + "Tocca una voce per accenderla o spegnerla." + "\n\n" + righe.join("\n")
+  const tastiera = {
+    inline_keyboard: [
+      ...NOTIFICHE_ORDINE.map((k) => [{ text: (pref[k] ? "✅ " : "⬜ ") + NOTIFICHE_TESTI[k], callback_data: "notif:" + k }]),
+      [{ text: "Chiudi", callback_data: "notif:chiudi" }],
+    ],
+  }
+  return { testo, tastiera }
+}
+
+async function apriNotifiche(chatId: number, telegramId: number) {
+  const pref = await leggiNotifiche(telegramId)
+  const { testo, tastiera } = testoENotificheHtml(pref)
+  await sendMessage(chatId, testo, tastiera, "HTML")
+}
+
+// I tre invii che raggiungono piu' persone alla volta, filtrati per chi ha
+// acceso quell'argomento. Chi ha bloccato il bot resta fuori comunque.
+async function destinatariPerTopic(topic: "nuovi" | "news" | "servizi"): Promise<number[]> {
+  const { data } = await supabase.from("leads").select("telegram_id, notifiche")
+    .eq("bot_started", true).not("attivo", "is", false)
+  return ((data ?? []) as any[])
+    .filter((l) => conNotificheDefault(l.notifiche)[topic])
+    .map((l) => l.telegram_id)
 }
 
 // ---------- LINK CORTI E CLICK ----------
@@ -2863,8 +2946,7 @@ async function notificaNuovoServizio(nomeServizio: string, categoriaId: number, 
   // che aprono una categoria -- quelli che meritano di piu' l'annuncio -- non lo
   // facevano partire. Chi non vuole piu' riceverli blocca il bot, e il blocco lo
   // gestiamo gia'.
-  const { data: iscritti } = await supabase.from("leads").select("telegram_id").eq("bot_started", true)
-  const destinatari = [...new Set((iscritti ?? []).map((l: any) => l.telegram_id))]
+  const destinatari = await destinatariPerTopic("nuovi")
   if (!destinatari.length) return
   const { data: cat } = await supabase.from("categorie").select("nome").eq("id", categoriaId).maybeSingle()
 
@@ -4416,8 +4498,14 @@ async function apiAdminTemplateDelete(body: any) {
 
 // Risolve i destinatari di un broadcast in base al filtro scelto.
 async function risolviDestinatari(filtro: any): Promise<{ telegram_id: number; nome: string }[]> {
-  const { data: leads } = await supabase.from("leads").select("telegram_id, nome, username, referred_by, is_cliente, pipeline_override, bot_started").eq("bot_started", true)
-  const tutti = (leads ?? []).map((l: any) => ({ ...l, display: l.nome || l.username || `ID ${l.telegram_id}` }))
+  // Come /news: chi ha bloccato il bot resta fuori (prima non lo escludeva, e
+  // l'invio falliva sempre su di lui), e chi ha spento "News ed eventi" pure.
+  const { data: leads } = await supabase.from("leads")
+    .select("telegram_id, nome, username, referred_by, is_cliente, pipeline_override, bot_started, notifiche")
+    .eq("bot_started", true).not("attivo", "is", false)
+  const tutti = ((leads ?? []) as any[])
+    .filter((l) => conNotificheDefault(l.notifiche).news)
+    .map((l) => ({ ...l, display: l.nome || l.username || `ID ${l.telegram_id}` }))
   const tipo = filtro?.tipo || "tutti"
 
   let selezionati = tutti
