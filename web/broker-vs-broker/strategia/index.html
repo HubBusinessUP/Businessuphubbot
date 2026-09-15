@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guida · Broker vs Broker</title>
+<meta name="description" content="Come funziona la strategia Broker vs Broker e i termini da sapere.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap">
+<style>
+:root{
+  --bg:#131418; --s0:#191B20; --s1:#1F2128; --line:#262932; --line2:#333845;
+  --tx:#F6F7F9; --dim:#AAB0BB; --mut:#7B828F; --acc:#25CF6E; --on:#04210F;
+  --amber:#FFB43D; --coral:#FF6154;
+  --sans:'Inter',-apple-system,system-ui,sans-serif;
+  --disp:'Manrope',-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+.foglio{max-width:660px;margin:0 auto;padding:22px 20px 60px}
+header b{font-family:var(--disp);font-weight:800;font-size:17px;letter-spacing:-.01em;display:block}
+header span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);letter-spacing:-.03em;margin:4px 0 12px;text-wrap:balance}
+.occhiello{color:var(--dim);font-size:16px;margin:0;max-width:52ch}
+.quanto{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.quanto span{background:var(--s1);border:1px solid var(--line2);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--dim)}
+
+/* il patto in breve: si legge in dieci secondi, il testo lungo sta sotto */
+.patto{margin:28px 0 0;border:1px solid var(--line2);border-radius:10px;background:var(--s0);padding:20px 20px 18px}
+.patto h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0 0 12px;letter-spacing:-.02em}
+.patto ul{margin:0;padding:0;list-style:none}
+.patto li{font-size:14.5px;color:var(--dim);padding:8px 0 8px 22px;position:relative;border-bottom:1px solid var(--line)}
+.patto li::before{content:"";position:absolute;left:4px;top:15px;width:7px;height:7px;border-radius:2px;background:var(--acc)}
+.patto b{color:var(--tx)}
+.patto details{margin-top:12px}
+.patto summary{cursor:pointer;color:var(--mut);font-size:13.5px;padding:8px 0}
+.patto details p{font-size:13.5px;color:var(--dim)}
+.accetto{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14.5px;color:var(--dim);cursor:pointer;user-select:none}
+.accetto input{width:18px;height:18px;accent-color:var(--acc);flex:none}
+.accetto.ok{color:var(--acc)}
+.nota-acc{margin:10px 0 0;font-size:12.5px;color:var(--mut)}
+
+/* i passi sono card in sequenza: una chiusa si sblocca quando la precedente e' fatta */
+.passi{margin-top:26px;display:flex;flex-direction:column;gap:12px}
+.passo{border:1px solid var(--line2);border-radius:12px;background:var(--s0);padding:16px}
+.testa-passo{display:flex;gap:13px;align-items:flex-start}
+.tit-passo{min-width:0}
+.num{
+  flex:none;width:34px;height:34px;border-radius:50%;background:var(--s1);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;
+  font-size:15px;color:var(--dim)
+}
+.passo.ok{border-color:rgba(37,207,110,.45)}
+.passo.ok .num{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.obbl{display:inline-block;vertical-align:3px;margin-left:6px;font-family:var(--sans);font-size:10.5px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--amber);background:rgba(255,180,61,.12);border-radius:5px;padding:2px 7px}
+.corpo-passo{margin-top:12px}
+.chiusa{display:none;margin:10px 0 0;font-size:13.5px;color:var(--mut)}
+.passo.chiuso{opacity:.55}
+.passo.chiuso .corpo-passo{display:none}
+.passo.chiuso .chiusa{display:block}
+.passo.chiuso .num{color:var(--mut)}
+/* la strategia in un testo unico, e i termini come glossario compatto */
+.spiega{margin-top:34px}
+.spiega h2{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.02em;margin:0 0 10px}
+.spiega h2 + p{margin-top:0}
+.spiega p{font-size:15.5px;color:var(--dim);margin:0 0 30px;max-width:62ch}
+.spiega p b{color:var(--tx)}
+.spiega dl{margin:0;display:grid;grid-template-columns:minmax(120px,max-content) 1fr;column-gap:18px}
+.spiega dt{font-weight:700;font-size:14.5px;color:var(--tx);padding:10px 0;border-top:1px solid var(--line)}
+.spiega dd{margin:0;font-size:14.5px;color:var(--dim);padding:10px 0;border-top:1px solid var(--line)}
+@media(max-width:480px){
+  .spiega dl{grid-template-columns:1fr}
+  .spiega dd{border-top:0;padding-top:0}
+}
+.supporto{margin-top:26px;text-align:center}
+.supporto .bt{display:block;background:var(--s1);color:var(--tx);border:1px solid var(--line2)}
+.tit-passo h2{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.02em;margin:3px 0 2px}
+.tit-passo .sot{color:var(--mut);font-size:13.5px;margin:0}
+.corpo-passo p{font-size:15px;color:var(--dim);margin:12px 0}
+.passo b{color:var(--tx)}
+.car{font-size:14.5px;color:var(--dim);padding:7px 0;border-bottom:1px solid var(--line)}
+.car:first-of-type{border-top:1px solid var(--line)}
+/* come aprire il conto: il pezzo da non sbagliare, quindi in evidenza e a righe */
+.conto{margin:4px 0 12px;border:1px solid var(--line2);background:var(--s1);border-radius:10px;padding:12px 14px 6px}
+.conto-tit{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.conto-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.conto-r:last-child{border-bottom:none}
+.conto-r span{font-size:14px;color:var(--dim)}
+.conto-r b{font-size:15.5px;color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
+.bt{
+  display:inline-block;background:var(--acc);color:var(--on);text-decoration:none;font-weight:700;
+  padding:12px 20px;border-radius:6px;margin:6px 0 10px;font-size:15px;border:0;cursor:pointer;font-family:inherit
+}
+.bt:hover{background:#1BB65D}
+.bt.piccolo{background:var(--s1);color:var(--tx);border:1px solid var(--line2);padding:8px 14px;font-size:13.5px;font-weight:600}
+.avviso{background:rgba(255,180,61,.10);border-radius:8px;padding:9px 12px;color:var(--dim)!important;font-size:14px!important}
+.avviso.rosso{background:rgba(255,97,84,.10)}
+details summary{cursor:pointer;color:var(--dim);font-size:14.5px;padding:9px 0;border-top:1px solid var(--line)}
+details[open] summary{color:var(--tx)}
+pre{
+  background:var(--s0);border:1px solid var(--line);border-radius:6px;padding:14px;
+  white-space:pre-wrap;word-break:break-word;font-size:12.5px;color:var(--dim);font-family:ui-monospace,Menlo,Consolas,monospace
+}
+.fatto{display:inline-flex;align-items:center;gap:9px;margin-top:12px;font-size:14px;color:var(--mut);cursor:pointer;user-select:none}
+.fatto input{width:17px;height:17px;accent-color:var(--acc)}
+.passo.ok .fatto{color:var(--acc)}
+.fine{border:1px solid var(--line2);border-radius:10px;background:var(--s0);padding:24px 22px;margin-top:10px}
+.fine h2{font-family:var(--disp);font-weight:800;font-size:22px;margin:0 0 8px;letter-spacing:-.02em}
+.fine p{color:var(--dim);font-size:15px;margin:0 0 16px}
+footer{margin-top:40px;color:var(--mut);font-size:12.5px;line-height:1.6;border-top:1px solid var(--line);padding-top:18px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="foglio">
+  <h1>Guida Broker vs Broker</h1>
+
+  <div class="spiega" style="margin-top:6px">
+    <h2>Come funziona la strategia</h2>
+    <p>Ogni ciclo parte con i due conti bilanciati, Total FX e il secondo broker,
+    senza bonus iniziale, e la strategia lavora fino alla chiusura del primo step.
+    Se il profitto finisce su <b>Total FX</b>, il ciclo è concluso: si preleva, si
+    paga la commissione, si ribilanciano i conti e si può iniziare un nuovo ciclo.
+    Se invece il profitto finisce su <b>Roboforex, Monaxa o Fusion</b>, il primo
+    step è comunque concluso e si passa al <b>secondo step dello stesso ciclo</b>:
+    non è un ciclo nuovo. Il secondo step si attiva con il bonus su Total FX e,
+    una volta ricevuto il bonus, parte la seconda fase operativa, che serve a
+    completare il ciclo già iniziato. Alla fine del secondo step il ciclo è
+    definitivamente concluso e, dopo il ribilanciamento dei conti, sei pronto per
+    il ciclo successivo. Il bonus si richiede solo nel secondo step, e solo se su
+    Total FX non hai già un bonus disponibile e non usato: <b>35% con Petrolio o
+    Silver</b>, <b>30% con Oro o Nasdaq</b>.</p>
+
+    <h2>Termini da sapere</h2>
+    <dl>
+      <dt>Ciclo</dt><dd>L'operazione completa, dalla partenza con i conti bilanciati alla chiusura. Può durare uno o due step.</dd>
+      <dt>1° step</dt><dd>La prima fase del ciclo. Se il profitto è su Total FX, il ciclo finisce qui.</dd>
+      <dt>2° step</dt><dd>La seconda fase dello stesso ciclo, quando il profitto del primo step è sull'altro broker. Parte con il bonus su Total FX.</dd>
+      <dt>Conti bilanciati</dt><dd>I due conti con la stessa cifra: metà del capitale ciascuno.</dd>
+      <dt>Asset</dt><dd>Lo strumento su cui lavora il ciclo: Oro, Silver, Petrolio o Nasdaq. Decide la percentuale del bonus.</dd>
+      <dt>Bonus</dt><dd>L'accredito di Total FX sul conto per il secondo step: 30% o 35% di metà capitale, in base all'asset.</dd>
+      <dt>Reset NBP</dt><dd>Negative Balance Protection: il broker riporta a zero un conto rimasto in negativo. Si chiede dal bot.</dd>
+      <dt>Ribilanciamento</dt><dd>Riportare i due conti alla stessa cifra prima di un nuovo ciclo.</dd>
+      <dt>Commissione</dt><dd>Il 50% del profitto, solo sui cicli chiusi in guadagno, pagata in USDT.</dd>
+    </dl>
+  </div>
+
+  <div class="supporto"><a class="bt" href="https://t.me/caliblackk" target="_blank" rel="noopener">Supporto</a></div>
+
+  <footer>
+    Cashly fa da tramite per il servizio in affiliazione: non gestisce capitali
+    e non esegue operazioni. Nessuna consulenza finanziaria, nessuna garanzia di
+    risultato. I risultati passati non sono una garanzia di quelli futuri.
+  </footer>
+</div>
+</body>
+</html>
