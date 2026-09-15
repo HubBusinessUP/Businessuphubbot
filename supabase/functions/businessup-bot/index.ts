@@ -892,7 +892,13 @@ async function inviaNews(segmento: string): Promise<{ inviati: number; falliti: 
   const annId = (logN as any)?.id || 0
   const urlNews = WEBAPP_URL + "/app.html?" + (vetrina ? "scheda=" + (vetrina as any).id + "&" : "")
     + "fonte=annuncio&" + (annId ? "ann=" + annId + "&" : "") + "_=" + Date.now()
-  const markupNews = { inline_keyboard: [[{ text: vetrina ? "Apri la scheda" : "Apri la lista", web_app: { url: urlNews } }]] }
+  // Secondo bottone su ogni annuncio: chi si sente scritto troppo spesso non deve
+  // bloccare il bot per farlo, puo' scendere di categoria da qui in un tocco.
+  const urlNotificheNews = WEBAPP_URL + "/notifiche.html?_=" + Date.now()
+  const markupNews = { inline_keyboard: [
+    [{ text: vetrina ? "Apri la scheda" : "Apri la lista", web_app: { url: urlNews } }],
+    [{ text: "🔔 Modifica notifiche", web_app: { url: urlNotificheNews } }],
+  ] }
 
   let inviati = 0, falliti = 0
   for (const tid of destinatari) {
