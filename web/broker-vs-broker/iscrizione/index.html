@@ -60,6 +60,19 @@ h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);lett
 .passo.chiuso .corpo-passo{display:none}
 .passo.chiuso .chiusa{display:block}
 .passo.chiuso .num{color:var(--mut)}
+/* la strategia in un testo unico, e i termini come glossario compatto */
+.spiega{margin-top:34px}
+.spiega h2{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.02em;margin:0 0 10px}
+.spiega h2 + p{margin-top:0}
+.spiega p{font-size:15.5px;color:var(--dim);margin:0 0 30px;max-width:62ch}
+.spiega p b{color:var(--tx)}
+.spiega dl{margin:0;display:grid;grid-template-columns:minmax(120px,max-content) 1fr;column-gap:18px}
+.spiega dt{font-weight:700;font-size:14.5px;color:var(--tx);padding:10px 0;border-top:1px solid var(--line)}
+.spiega dd{margin:0;font-size:14.5px;color:var(--dim);padding:10px 0;border-top:1px solid var(--line)}
+@media(max-width:480px){
+  .spiega dl{grid-template-columns:1fr}
+  .spiega dd{border-top:0;padding-top:0}
+}
 .supporto{margin-top:26px;text-align:center}
 .supporto .bt{display:block;background:var(--s1);color:var(--tx);border:1px solid var(--line2)}
 .tit-passo h2{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.02em;margin:3px 0 2px}
@@ -126,6 +139,36 @@ a{color:var(--acc)}
     </details>
     <label class="accetto"><input type="checkbox" id="acc"> Ho letto e accetto</label>
     <p class="nota-acc">L'accettazione che vale te la chiede il bot nel gruppo.</p>
+  </div>
+
+  <div class="spiega">
+    <h2>Come funziona la strategia</h2>
+    <p>Ogni ciclo parte con i due conti bilanciati, Total FX e il secondo broker,
+    senza bonus iniziale, e la strategia lavora fino alla chiusura del primo step.
+    Se il profitto finisce su <b>Total FX</b>, il ciclo è concluso: si preleva, si
+    paga la commissione, si ribilanciano i conti e si può iniziare un nuovo ciclo.
+    Se invece il profitto finisce su <b>Roboforex, Monaxa o Fusion</b>, il primo
+    step è comunque concluso e si passa al <b>secondo step dello stesso ciclo</b>:
+    non è un ciclo nuovo. Il secondo step si attiva con il bonus su Total FX e,
+    una volta ricevuto il bonus, parte la seconda fase operativa, che serve a
+    completare il ciclo già iniziato. Alla fine del secondo step il ciclo è
+    definitivamente concluso e, dopo il ribilanciamento dei conti, sei pronto per
+    il ciclo successivo. Il bonus si richiede solo nel secondo step, e solo se su
+    Total FX non hai già un bonus disponibile e non usato: <b>35% con Petrolio o
+    Silver</b>, <b>30% con Oro o Nasdaq</b>.</p>
+
+    <h2>Termini da sapere</h2>
+    <dl>
+      <dt>Ciclo</dt><dd>L'operazione completa, dalla partenza con i conti bilanciati alla chiusura. Può durare uno o due step.</dd>
+      <dt>1° step</dt><dd>La prima fase del ciclo. Se il profitto è su Total FX, il ciclo finisce qui.</dd>
+      <dt>2° step</dt><dd>La seconda fase dello stesso ciclo, quando il profitto del primo step è sull'altro broker. Parte con il bonus su Total FX.</dd>
+      <dt>Conti bilanciati</dt><dd>I due conti con la stessa cifra: metà del capitale ciascuno.</dd>
+      <dt>Asset</dt><dd>Lo strumento su cui lavora il ciclo: Oro, Silver, Petrolio o Nasdaq. Decide la percentuale del bonus.</dd>
+      <dt>Bonus</dt><dd>L'accredito di Total FX sul conto per il secondo step: 30% o 35% di metà capitale, in base all'asset.</dd>
+      <dt>Reset NBP</dt><dd>Negative Balance Protection: il broker riporta a zero un conto rimasto in negativo. Si chiede dal bot.</dd>
+      <dt>Ribilanciamento</dt><dd>Riportare i due conti alla stessa cifra prima di un nuovo ciclo.</dd>
+      <dt>Commissione</dt><dd>Il 50% del profitto, solo sui cicli chiusi in guadagno, pagata in USDT.</dd>
+    </dl>
   </div>
 
   <div class="passi">
