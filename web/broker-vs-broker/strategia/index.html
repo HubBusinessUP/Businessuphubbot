@@ -60,7 +60,32 @@ h1{font-family:var(--disp);font-weight:800;font-size:clamp(27px,6.6vw,38px);lett
 .passo.chiuso .corpo-passo{display:none}
 .passo.chiuso .chiusa{display:block}
 .passo.chiuso .num{color:var(--mut)}
-/* la strategia in un testo unico, e i termini come glossario compatto */
+/* la strategia divisa per step: etichetta a sinistra, contenuto a destra;
+   il bivio del 1° step affianca i due esiti, cosi' si vede la scelta */
+.spiega .intro{font-size:16px;margin:0 0 18px}
+.fase{display:grid;grid-template-columns:78px 1fr;gap:16px;padding:20px 0;border-top:1px solid var(--line2)}
+.fase-n{font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--tx);padding-top:2px}
+.fase-c h3{font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:-.02em;margin:0 0 8px}
+.punti{margin:0;padding:0;list-style:none}
+.punti li{font-size:15px;color:var(--dim);padding:5px 0 5px 18px;position:relative}
+.punti li::before{content:"";position:absolute;left:2px;top:14px;width:6px;height:6px;border-radius:50%;background:var(--mut)}
+.punti b,.bivio b,.nota-fase b{color:var(--tx)}
+.spiega .bivio-t{font-size:14px;color:var(--mut);margin:12px 0 8px}
+.bivio{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bivio > div{border:1px solid var(--line2);border-radius:8px;background:var(--s0);padding:12px 13px}
+.bivio span{display:block;font-size:12.5px;color:var(--mut)}
+.bivio b{display:block;font-family:var(--disp);font-size:16.5px;margin:3px 0 4px;letter-spacing:-.01em}
+.bivio small{display:block;font-size:13px;color:var(--dim);line-height:1.45}
+.spiega .nota-fase{font-size:14px;margin:12px 0 0;color:var(--dim)}
+.perc{display:flex;gap:26px;margin-top:12px}
+.perc b{display:block;font-family:var(--disp);font-weight:800;font-size:30px;letter-spacing:-.03em;color:var(--tx);line-height:1.1}
+.perc span{font-size:13.5px;color:var(--mut)}
+.spiega h2.dopo{margin-top:30px}
+@media(max-width:480px){
+  .fase{grid-template-columns:1fr;gap:6px}
+  .bivio{grid-template-columns:1fr}
+}
+/* i termini come glossario compatto */
 .spiega{margin-top:34px}
 .spiega h2{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.02em;margin:0 0 10px}
 .spiega h2 + p{margin-top:0}
@@ -118,21 +143,55 @@ a{color:var(--acc)}
 
   <div class="spiega" style="margin-top:6px">
     <h2>Come funziona la strategia</h2>
-    <p>Ogni ciclo parte con i due conti bilanciati, Total FX e il secondo broker,
-    senza bonus iniziale, e la strategia lavora fino alla chiusura del primo step.
-    Se il profitto finisce su <b>Total FX</b>, il ciclo è concluso: si preleva, si
-    paga la commissione, si ribilanciano i conti e si può iniziare un nuovo ciclo.
-    Se invece il profitto finisce su <b>Roboforex, Monaxa o Fusion</b>, il primo
-    step è comunque concluso e si passa al <b>secondo step dello stesso ciclo</b>:
-    non è un ciclo nuovo. Il secondo step si attiva con il bonus su Total FX e,
-    una volta ricevuto il bonus, parte la seconda fase operativa, che serve a
-    completare il ciclo già iniziato. Alla fine del secondo step il ciclo è
-    definitivamente concluso e, dopo il ribilanciamento dei conti, sei pronto per
-    il ciclo successivo. Il bonus si richiede solo nel secondo step, e solo se su
-    Total FX non hai già un bonus disponibile e non usato: <b>35% con Petrolio o
-    Silver</b>, <b>30% con Oro o Nasdaq</b>.</p>
+    <p class="intro">Ogni ciclo lavora su due conti bilanciati: <b>Total FX</b> e un
+    secondo broker, <b>Roboforex, Fusion o Monaxa</b>. Un ciclo si chiude in
+    <b>uno o due step</b>.</p>
 
-    <h2>Termini da sapere</h2>
+    <div class="fase">
+      <div class="fase-n">1° step</div>
+      <div class="fase-c">
+        <h3>Inizio del ciclo</h3>
+        <ul class="punti">
+          <li>Parti con i due conti <b>bilanciati</b>, senza bonus.</li>
+          <li>La strategia lavora fino alla chiusura del primo step.</li>
+        </ul>
+        <p class="bivio-t">Poi dipende da dove finisce il profitto:</p>
+        <div class="bivio">
+          <div><span>Profitto su Total FX</span><b>Ciclo concluso</b><small>Prelievo, commissione e ribilanciamento. Poi puoi iniziare un nuovo ciclo.</small></div>
+          <div><span>Profitto su Roboforex, Fusion o Monaxa</span><b>Si passa al 2° step</b><small>Dello stesso ciclo: non è un ciclo nuovo.</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fase">
+      <div class="fase-n">2° step</div>
+      <div class="fase-c">
+        <h3>Completamento del ciclo</h3>
+        <ul class="punti">
+          <li>Si attiva con il <b>bonus su Total FX</b>.</li>
+          <li>Ricevuto il bonus, parte la seconda fase operativa.</li>
+          <li>A fine step il ciclo è <b>concluso</b>: ribilanci i conti e sei pronto per il ciclo successivo.</li>
+        </ul>
+        <p class="nota-fase"><b>Importante:</b> il 2° step non è un ciclo nuovo. Completa quello già in corso.</p>
+      </div>
+    </div>
+
+    <div class="fase">
+      <div class="fase-n">Bonus</div>
+      <div class="fase-c">
+        <h3>Quando si chiede e quanto</h3>
+        <ul class="punti">
+          <li>Solo nel <b>2° step</b>.</li>
+          <li>Solo se su Total FX <b>non hai già un bonus</b> disponibile e non usato.</li>
+        </ul>
+        <div class="perc">
+          <div><b>35%</b><span>Petrolio · Silver</span></div>
+          <div><b>30%</b><span>Oro · Nasdaq</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="dopo">Termini da sapere</h2>
     <dl>
       <dt>Ciclo</dt><dd>L'operazione completa, dalla partenza con i conti bilanciati alla chiusura. Può durare uno o due step.</dd>
       <dt>1° step</dt><dd>La prima fase del ciclo. Se il profitto è su Total FX, il ciclo finisce qui.</dd>
