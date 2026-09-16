@@ -576,15 +576,11 @@ const BENVENUTI_BOT_SITO: { testo: string; bottone: string }[] = [
 // entra nel testo: dire "ecco la lista" a chi si aspettava una cosa precisa
 // e' il modo piu' rapido per farlo uscire.
 const BENVENUTI_BOT_SCHEDA: { testo: string; bottone: string }[] = [
-  { testo: `Ciao {nome}.
+  { testo: `Ciao {nome} 👋
 
-Ti hanno condiviso <b>{business}</b>. La scheda è qui sotto: cosa serve, quanto costa, come funziona.`, bottone: "Apri la scheda" },
-  { testo: `{nome}, benvenuto.
+<b>Cashly</b> è la raccolta di business e servizi online selezionati. Per ognuno c'è una scheda che spiega in chiaro cosa serve, quanto costa e come funziona.
 
-Apri <b>{business}</b> qui sotto: c'è tutto quello che serve per capire se fa per te.`, bottone: "Vedi la scheda" },
-  { testo: `Ciao {nome}.
-
-Ecco <b>{business}</b>, la scheda che ti hanno mandato.`, bottone: "Apri la scheda" },
+Ti hanno condiviso <b>{business}</b>: premi qui sotto e accedi direttamente alla sua scheda.`, bottone: "Apri la scheda" },
 ]
 
 // Da dove arriva chi preme Avvia. Il sito passa start=tmpro; il gruppo start=gruppo.
