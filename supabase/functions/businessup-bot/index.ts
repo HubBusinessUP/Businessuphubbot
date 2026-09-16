@@ -1103,6 +1103,28 @@ async function handleUpdate(u: any) {
       return
     }
 
+    // /pubblicasito: richiama il Deploy Hook di Vercel per cashlypro.com, cosi'
+    // le schede di Cashly Hub li' sopra si aggiornano senza dover fare push a
+    // mano sul repo del sito. L'URL del hook si imposta una volta sola:
+    // insert into businessup.config (chiave, valore) values ('vercel_deploy_hook_sito', '<url>');
+    if (text === "/pubblicasito") {
+      const { data: hookCfg } = await supabase.from("config").select("valore").eq("chiave", "vercel_deploy_hook_sito").maybeSingle()
+      const hookUrl = hookCfg?.valore
+      if (!hookUrl) {
+        await sendMessage(chatId, "Non ho l'indirizzo del Deploy Hook di Vercel per il sito. Crealo su Vercel (Project cashly -> Settings -> Git -> Deploy Hooks) e salvalo con una query SQL su businessup.config (chiave: vercel_deploy_hook_sito).")
+        return
+      }
+      await sendMessage(chatId, "Pubblico su cashlypro.com...")
+      try {
+        const r = await fetch(hookUrl, { method: "POST" })
+        if (r.ok) await sendMessage(chatId, "✅ Deploy avviato. Il sito si aggiorna in 1-2 minuti.")
+        else await sendMessage(chatId, `Deploy non avviato (${r.status}).`)
+      } catch (e) {
+        await sendMessage(chatId, "Errore di rete verso Vercel: " + String((e as any)?.message || e))
+      }
+      return
+    }
+
     // /verifica: chiede a Telegram, uno per uno, chi riceve ancora. Non parte
     // nessun messaggio verso nessuno, solo l'indicatore "sta scrivendo".
     if (text === "/verifica") {
