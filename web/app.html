@@ -1446,6 +1446,9 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 #preSheet .pre-nota{font-size:12.5px;color:var(--mut);text-align:center;margin-top:10px;line-height:1.5}
 .cta-attiva[data-wait],#wlConferma{background:#FF6B3D!important;color:#2A0E04!important}
 .cta-attiva[data-wait]:active,#wlConferma:active{background:#E85A2E!important}
+/* Servizio in pausa: stesso arancione del wait, il colore dice "aspetta" anche qui. */
+.cta-attiva[data-pausa]{background:#FF6B3D!important;color:#2A0E04!important}
+.cta-attiva[data-pausa]:active{background:#E85A2E!important}
 /* Ultima, cosi' vince su entrambe quando il bottone e' spento. */
 .cta-attiva[disabled]{background:var(--s2)!important;color:var(--mut)!important;border-color:var(--line2)!important}
 /* Il secondario ha la stessa forma del principale ma non il pieno d'accento: due
@@ -1557,7 +1560,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=203"></script>
+<script src="identikit.js?v=204"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2765,12 +2768,63 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
   function ctaScheda(d){
     var s = d.servizio || {};
     if (s.solo_contatto) {
+      // In pausa: niente chat diretta, si propone solo la lista d'attesa per la riapertura.
+      if (s.stato === 'pausa') {
+        return '<button type="button" class="cta-attiva" data-pausa="' + s.id + '"'
+          + ' style="display:flex;align-items:center;justify-content:center;gap:9px">In pausa</button>';
+      }
       return '<button type="button" class="cta-attiva" data-contatto="1"'
         + ' style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px">'
         // Il testo del pulsante si puo' scrivere nella scheda (cta.attiva); senza, "Inizia".
         + esc((s.cta && s.cta.attiva) || 'Inizia') + '</button>';
     }
     return _schedaBody(d);
+  }
+
+  // ---- IN PAUSA: mettersi in lista per la riapertura ----
+  // Stesso schema del webinar: si segna in locale per non richiedere due volte,
+  // il server (waitlist) resta la fonte vera se l'app si riapre altrove.
+  function apriInLista(id){
+    var s = (SCHEDE[id] && SCHEDE[id].servizio) || {};
+    var chiave = 'cashly_lista_' + id;
+    var gia = false;
+    try { gia = localStorage.getItem(chiave) === '1'; } catch (e) {}
+    var sh = document.getElementById('pausaSheet');
+    if (!sh) { sh = document.createElement('div'); sh.id = 'pausaSheet'; document.body.appendChild(sh); }
+    if (gia) {
+      sh.innerHTML = '<div data-pzclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
+        + '<div class="dsc-card"><div style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px"></div>'
+        + '<h4>Sei già in lista</h4><div class="dsc-txt">Ti avvisiamo qui appena <b>' + esc(s.nome || '') + '</b> riparte.</div>'
+        + '<button type="button" data-pzclose="1" class="cta-attiva" style="margin-top:18px">Ho capito</button></div>';
+      sh.style.display = 'block';
+      return;
+    }
+    sh.innerHTML = '<div data-pzclose="1" style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>'
+      + '<div class="dsc-card"><div style="width:38px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 14px"></div>'
+      + '<h4>' + esc(s.nome || '') + ' è in pausa</h4>'
+      + '<div class="dsc-txt">' + DISC_FALLBACK.waitlist + '</div>'
+      + '<label style="display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:12.5px;line-height:1.5;color:var(--mut)">'
+      +   '<input type="checkbox" id="pzCheck" style="margin-top:2px;flex-shrink:0">' + esc(DISC_FALLBACK.checkbox)
+      + '</label>'
+      + '<button type="button" id="pzConferma" data-pausaconferma="' + id + '" class="cta-attiva" style="margin-top:14px">Sì, mettimi in lista</button>'
+      + '<button type="button" data-pzclose="1" class="cta-attiva" style="margin-top:8px;background:var(--s2)!important;color:var(--mut)!important">Non ora</button></div>';
+    sh.style.display = 'block';
+  }
+  function inListaConferma(id, btn){
+    var chk = document.getElementById('pzCheck');
+    if (!chk || !chk.checked) { toast('Spunta la casella per confermare'); return; }
+    btn.disabled = true; btn.textContent = 'Un attimo...';
+    fetch(API_URL + '/waitlist', { method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, HDRS),
+      body: JSON.stringify({ servizio_id: id, disclaimer_accettato: true }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d || d.error) { toast('Non ci sono riuscito, riprova'); btn.disabled = false; btn.textContent = 'Sì, mettimi in lista'; return; }
+        try { localStorage.setItem('cashly_lista_' + id, '1'); } catch (e) {}
+        var sh = document.getElementById('pausaSheet'); if (sh) sh.style.display = 'none';
+        toast('Fatto: ti avvisiamo qui alla riapertura');
+      })
+      .catch(function(){ toast('Non ci sono riuscito, riprova'); btn.disabled = false; btn.textContent = 'Sì, mettimi in lista'; });
   }
 
   // La spunta "segui questo servizio" e' indipendente dalla categoria generale
@@ -2974,6 +3028,14 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     }
     var dx = t.closest('[data-dscclose]');
     if (dx) { e.stopPropagation(); var ds = document.getElementById('discSheet'); if (ds) ds.style.display = 'none'; return; }
+
+    // Servizio in pausa: apre la sheet che propone la lista d'attesa.
+    var pz = t.closest('[data-pausa]');
+    if (pz) { e.preventDefault(); apriInLista(parseInt(pz.getAttribute('data-pausa')) || 0); return; }
+    var pzc = t.closest('[data-pausaconferma]');
+    if (pzc) { e.preventDefault(); inListaConferma(parseInt(pzc.getAttribute('data-pausaconferma')) || 0, pzc); return; }
+    var pzx = t.closest('[data-pzclose]');
+    if (pzx) { e.stopPropagation(); var ps = document.getElementById('pausaSheet'); if (ps) ps.style.display = 'none'; return; }
 
     // lista d'attesa per i servizi non ancora attivi
     var req = t.closest('[data-contatto]');
