@@ -1560,7 +1560,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=205"></script>
+<script src="identikit.js?v=206"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2279,9 +2279,10 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
           return '<span class="sccat-chip">' + (mostraMacro ? esc(c.macro_nome) + ' <b>&rsaquo;</b> ' : '') + esc(c.nome) + '</span>';
         }).join('') + '</div>'
       : '';
+    // In pausa niente sottotitolo: la scheda ha gia' la testa ridotta a nome + CTA.
     return '<div class="sctesta">' + logoHtml(s)
       + '<div class="sctit"><h1>' + esc(s.nome || '') + '</h1>'
-      + (s.descrizione ? '<p>' + esc(s.descrizione) + '</p>' : '')
+      + (s.descrizione && s.stato !== 'pausa' ? '<p>' + esc(s.descrizione) + '</p>' : '')
       + '</div></div>' + chips;
   }
 
