@@ -1560,7 +1560,7 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
 
 </style>
 
-<script src="identikit.js?v=204"></script>
+<script src="identikit.js?v=205"></script>
 <script>
 /* ===== LIVE: Telegram + dati reali (design del prototipo intatto) ===== */
 (function(){
@@ -2861,6 +2861,13 @@ textarea.pf-i{resize:vertical;min-height:84px;font-weight:500;line-height:1.45}
     // Con un evento e la scheda non attivabile il pulsante non c'e': un "non
     // ancora disponibile" sotto un webinar a cui ci si puo' iscrivere confonde.
     var cta = (ev && !d.attivo) ? '' : ctaScheda(d);
+    // In pausa non c'e' niente da sfogliare: solo la testa, la CTA (lista d'attesa)
+    // e le azioni di fondo. Panoramica e Caratteristiche torneranno con il servizio.
+    if (s0.stato === 'pausa') {
+      return '<div class="sc-card sc-head">' + scTesta(d) + '</div>'
+        + (cta ? '<div class="sc-card sc-cta">' + cta + '</div>' : '')
+        + '<div class="scfondo">' + azioniScheda(d) + '</div>';
+    }
     return '<div class="sc-card sc-head">' + scTesta(d) + '</div>'
       + (cta ? '<div class="sc-card sc-cta">' + cta + '</div>' : '')
       + (ev ? '<div style="margin:10px 20px 0">' + bannerEventoScheda(d) + '</div>' : '')
